@@ -494,7 +494,7 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <% if (isAdmin) { %>
                             <li>
-                                <a class="dropdown-item" href="#">
+                                <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/authorization">
                                     <i class="bi bi-people-fill"></i>
                                     <span>Quản lý người dùng</span>
                                 </a>

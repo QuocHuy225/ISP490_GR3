@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * DAO class for User operations including login, register, and other user-related functions
@@ -378,5 +380,130 @@ public class DAOUser {
         user.setDeleted(rs.getBoolean("IsDeleted"));
         
         return user;
+    }
+    
+    /**
+     * Get all users from database (excluding deleted users)
+     * @return List of all users
+     */
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM user WHERE IsDeleted = FALSE ORDER BY Created_At DESC";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting all users: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return users;
+    }
+    
+    /**
+     * Update user role
+     * @param userId User ID
+     * @param newRole New role for the user
+     * @param updatedBy Who is making the update
+     * @return true if role update successful, false otherwise
+     */
+    public boolean updateUserRole(String userId, User.Role newRole, String updatedBy) {
+        // Check if user exists and is not deleted
+        User user = getUserById(userId);
+        if (user == null) {
+            System.out.println("User not found: " + userId);
+            return false;
+        }
+        
+        // Prevent updating admin role
+        if (user.getRole() == User.Role.ADMIN) {
+            System.out.println("Cannot update role for admin user: " + userId);
+            return false;
+        }
+        
+        // Prevent setting role to admin
+        if (newRole == User.Role.ADMIN) {
+            System.out.println("Cannot set role to admin: " + userId);
+            return false;
+        }
+        
+        String sql = "UPDATE user SET Role = ?, Updated_By = ?, Updated_At = ? WHERE id = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, newRole.getValue());
+            ps.setString(2, updatedBy);
+            ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+            ps.setString(4, userId);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error updating user role: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get users by specific role
+     * @param role Role to filter by
+     * @return List of users with the specified role
+     */
+    public List<User> getUsersByRole(User.Role role) {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM user WHERE Role = ? AND IsDeleted = FALSE ORDER BY Created_At DESC";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, role.getValue());
+            ResultSet rs = ps.executeQuery();
+            
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting users by role: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return users;
+    }
+    
+    /**
+     * Get total count of users by role
+     * @param role Role to count
+     * @return Number of users with the specified role
+     */
+    public int getUserCountByRole(User.Role role) {
+        String sql = "SELECT COUNT(*) FROM user WHERE Role = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, role.getValue());
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting user count by role: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return 0;
     }
 } 

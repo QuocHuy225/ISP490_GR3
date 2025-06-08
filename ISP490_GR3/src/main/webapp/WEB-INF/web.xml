@@ -25,60 +25,10 @@
         <welcome-file>jsp/landing.jsp</welcome-file>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
-    
-    <!-- Servlet Definitions -->
-    <!-- Homepage Controller -->
-    <servlet>
-        <servlet-name>HomepageController</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.HomepageController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>HomepageController</servlet-name>
-        <url-pattern>/homepage</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>HomepageController</servlet-name>
-        <url-pattern>/home</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>HomepageController</servlet-name>
-        <url-pattern>/dashboard</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Authentication Controller -->
-    <servlet>
-        <servlet-name>AuthenticationController</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.AuthenticationController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>AuthenticationController</servlet-name>
-        <url-pattern>/auth/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- User Profile Controller -->
-    <servlet>
-        <servlet-name>UserProfileController</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.UserProfileController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>UserProfileController</servlet-name>
-        <url-pattern>/user/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Logout Servlet -->
-    <servlet>
-        <servlet-name>LogoutServlet</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.LogoutServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>LogoutServlet</servlet-name>
-        <url-pattern>/logout</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Error Pages -->
+      
     <error-page>
         <error-code>404</error-code>
-        <location>/jsp/error/404.jsp</location>
+<location>/jsp/error/404.jsp</location>
     </error-page>
     <error-page>
         <error-code>500</error-code>
