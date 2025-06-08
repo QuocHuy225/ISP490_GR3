@@ -780,32 +780,29 @@
                     <form action="${pageContext.request.contextPath}/user/change-password" method="post" id="changePasswordForm">
                         <div class="form-floating mb-3">
                             <div class="password-field">
-                                <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                <input type="password" class="form-control" id="currentPassword" name="currentPassword" placeholder="Mật khẩu hiện tại" required>
                                 <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')">
                                     <i class="bi bi-eye" id="currentPasswordIcon"></i>
                                 </button>
                             </div>
-                            <label for="currentPassword" class="required">Mật khẩu hiện tại</label>
                         </div>
                         
                         <div class="form-floating mb-3">
                             <div class="password-field">
-                                <input type="password" class="form-control" id="newPassword" name="newPassword" minlength="6" required>
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" minlength="6" placeholder="Mật khẩu mới" required>
                                 <button type="button" class="password-toggle" onclick="togglePassword('newPassword')">
                                     <i class="bi bi-eye" id="newPasswordIcon"></i>
                                 </button>
                             </div>
-                            <label for="newPassword" class="required">Mật khẩu mới</label>
                         </div>
                         
                         <div class="form-floating mb-3">
                             <div class="password-field">
-                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" minlength="6" required>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" minlength="6" placeholder="Xác nhận mật khẩu mới" required>
                                 <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
                                     <i class="bi bi-eye" id="confirmPasswordIcon"></i>
                                 </button>
                             </div>
-                            <label for="confirmPassword" class="required">Xác nhận mật khẩu mới</label>
                             <div id="passwordMismatch" class="text-danger mt-1" style="display: none;">
                                 <i class="bi bi-exclamation-triangle me-1"></i>
                                 Mật khẩu xác nhận không khớp
