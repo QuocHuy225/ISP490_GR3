@@ -1,0 +1,382 @@
+package com.mycompany.isp490_gr3.dao;
+
+import com.mycompany.isp490_gr3.model.User;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.UUID;
+
+/**
+ * DAO class for User operations including login, register, and other user-related functions
+ */
+public class DAOUser {
+    
+    /**
+     * Authenticate user login
+     * @param email User's email
+     * @param password User's password (plain text)
+     * @return User object if login successful, null otherwise
+     */
+    public User login(String email, String password) {
+        String hashedPassword = hashPassword(password);
+        String sql = "SELECT * FROM user WHERE Email = ? AND Password = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, email);
+            ps.setString(2, hashedPassword);
+            
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToUser(rs);
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error during login: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Register a new user
+     * @param user User object to register
+     * @return true if registration successful, false otherwise
+     */
+    public boolean register(User user) {
+        // Check if email already exists
+        if (isEmailExists(user.getEmail())) {
+            System.out.println("Email already exists: " + user.getEmail());
+            return false;
+        }
+        
+        String sql = "INSERT INTO user (id, FullName, Email, Password, Phone, Dob, Gender, Address, Role, Created_At) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            // Generate unique ID
+            String userId = generateUserId();
+            
+            ps.setString(1, userId);
+            ps.setString(2, user.getFullName());
+            ps.setString(3, user.getEmail());
+            ps.setString(4, hashPassword(user.getPassword()));
+            ps.setString(5, user.getPhone());
+            ps.setDate(6, user.getDob());
+            ps.setString(7, user.getGender() != null ? user.getGender().getValue() : null);
+            ps.setString(8, user.getAddress());
+            ps.setString(9, user.getRole().getValue());
+            ps.setTimestamp(10, new Timestamp(System.currentTimeMillis()));
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error during registration: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if email already exists in database
+     * @param email Email to check
+     * @return true if email exists, false otherwise
+     */
+    public boolean isEmailExists(String email) {
+        String sql = "SELECT COUNT(*) FROM user WHERE Email = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error checking email existence: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get user by ID
+     * @param userId User ID
+     * @return User object if found, null otherwise
+     */
+    public User getUserById(String userId) {
+        String sql = "SELECT * FROM user WHERE id = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, userId);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return mapResultSetToUser(rs);
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting user by ID: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get user by email
+     * @param email User email
+     * @return User object if found, null otherwise
+     */
+    public User getUserByEmail(String email) {
+        String sql = "SELECT * FROM user WHERE Email = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return mapResultSetToUser(rs);
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting user by email: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Update user information
+     * @param user User object with updated information
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateUser(User user) {
+        String sql = "UPDATE user SET FullName = ?, Phone = ?, Dob = ?, Gender = ?, Address = ?, Updated_At = ? WHERE id = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, user.getFullName());
+            ps.setString(2, user.getPhone());
+            ps.setDate(3, user.getDob());
+            ps.setString(4, user.getGender() != null ? user.getGender().getValue() : null);
+            ps.setString(5, user.getAddress());
+            ps.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
+            ps.setString(7, user.getId());
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error updating user: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Change user password
+     * @param userId User ID
+     * @param newPassword New password (plain text)
+     * @return true if password change successful, false otherwise
+     */
+    public boolean changePassword(String userId, String newPassword) {
+        String hashedPassword = hashPassword(newPassword);
+        String sql = "UPDATE user SET Password = ?, Updated_At = ? WHERE id = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, hashedPassword);
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            ps.setString(3, userId);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error changing password: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get user by Google ID
+     * @param googleId Google OAuth ID
+     * @return User object if found, null otherwise
+     */
+    public User getUserByGoogleId(String googleId) {
+        String sql = "SELECT * FROM user WHERE GoogleId = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, googleId);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return mapResultSetToUser(rs);
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting user by Google ID: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Register user with Google OAuth
+     * @param user User object with Google information
+     * @return true if registration successful, false otherwise
+     */
+    public boolean registerWithGoogle(User user) {
+        // Check if email already exists
+        if (isEmailExists(user.getEmail())) {
+            System.out.println("Email already exists: " + user.getEmail());
+            return false;
+        }
+        
+        String sql = "INSERT INTO user (id, FullName, Email, GoogleId, Role, Created_At) VALUES (?, ?, ?, ?, ?, ?)";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            // Generate unique ID
+            String userId = generateUserId();
+            
+            ps.setString(1, userId);
+            ps.setString(2, user.getFullName());
+            ps.setString(3, user.getEmail());
+            ps.setString(4, user.getGoogleId());
+            ps.setString(5, user.getRole().getValue());
+            ps.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
+            
+            int result = ps.executeUpdate();
+            if (result > 0) {
+                user.setId(userId); // Set the generated ID back to the user object
+                return true;
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error during Google registration: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Link existing user account with Google ID
+     * @param email User's email
+     * @param googleId Google OAuth ID
+     * @return true if linking successful, false otherwise
+     */
+    public boolean linkGoogleAccount(String email, String googleId) {
+        String sql = "UPDATE user SET GoogleId = ?, Updated_At = ? WHERE Email = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, googleId);
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            ps.setString(3, email);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error linking Google account: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Hash password using SHA-256
+     * @param password Plain text password
+     * @return Hashed password
+     */
+    private String hashPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println("Error hashing password: " + e.getMessage());
+            e.printStackTrace();
+            return password; // Return original password if hashing fails
+        }
+    }
+    
+    /**
+     * Generate unique user ID
+     * @return Generated user ID
+     */
+    private String generateUserId() {
+        return "USR" + String.format("%03d", (int)(Math.random() * 1000));
+    }
+    
+    /**
+     * Map ResultSet to User object
+     * @param rs ResultSet from database query
+     * @return User object
+     * @throws SQLException if error occurs during mapping
+     */
+    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getString("id"));
+        user.setFullName(rs.getString("FullName"));
+        user.setEmail(rs.getString("Email"));
+        user.setPassword(rs.getString("Password"));
+        user.setPhone(rs.getString("Phone"));
+        user.setDob(rs.getDate("Dob"));
+        String genderStr = rs.getString("Gender");
+        if (genderStr != null && !genderStr.trim().isEmpty()) {
+            user.setGender(User.Gender.fromString(genderStr));
+        }
+        user.setAddress(rs.getString("Address"));
+        user.setRole(User.Role.fromString(rs.getString("Role")));
+        user.setGoogleId(rs.getString("GoogleId"));
+        user.setCreatedAt(rs.getTimestamp("Created_At"));
+        user.setUpdatedBy(rs.getString("Updated_By"));
+        user.setUpdatedAt(rs.getTimestamp("Updated_At"));
+        user.setDeleted(rs.getBoolean("IsDeleted"));
+        
+        return user;
+    }
+} 
