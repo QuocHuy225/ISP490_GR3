@@ -17,7 +17,9 @@ import java.util.List;
 @WebServlet(name = "AuthorizationController", urlPatterns = {
     "/admin/authorization",
     "/admin/authorization/view",
-    "/admin/authorization/update"
+    "/admin/authorization/update",
+    "/admin/authorization/delete",
+    "/admin/authorization/restore"
 })
 public class AuthorizationController extends HttpServlet {
     
@@ -49,11 +51,12 @@ public class AuthorizationController extends HttpServlet {
         }
         
         String pathInfo = request.getServletPath();
+        String showDeleted = request.getParameter("showDeleted");
         
         switch (pathInfo) {
             case "/admin/authorization":
             case "/admin/authorization/view":
-                showAuthorizationPage(request, response);
+                showAuthorizationPage(request, response, showDeleted != null);
                 break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -85,6 +88,12 @@ public class AuthorizationController extends HttpServlet {
             case "/admin/authorization/update":
                 updateUserRole(request, response, currentUser);
                 break;
+            case "/admin/authorization/delete":
+                deleteUser(request, response, currentUser);
+                break;
+            case "/admin/authorization/restore":
+                restoreUser(request, response, currentUser);
+                break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -93,26 +102,48 @@ public class AuthorizationController extends HttpServlet {
     /**
      * Show authorization management page
      */
-    private void showAuthorizationPage(HttpServletRequest request, HttpServletResponse response)
+    private void showAuthorizationPage(HttpServletRequest request, HttpServletResponse response, boolean showDeleted)
             throws ServletException, IOException {
         
         try {
-            // Get all users
-            List<User> allUsers = daoUser.getAllUsers();
+            // Get filter and search parameters
+            String roleFilter = request.getParameter("roleFilter");
+            String sortOrder = request.getParameter("sortOrder"); // "newest" or "oldest"
+            String emailSearch = request.getParameter("emailSearch");
             
-            // Get user counts by role for statistics
-            int doctorCount = daoUser.getUserCountByRole(User.Role.DOCTOR);
-            int receptionistCount = daoUser.getUserCountByRole(User.Role.RECEPTIONIST);
-            int patientCount = daoUser.getUserCountByRole(User.Role.PATIENT);
-            int adminCount = daoUser.getUserCountByRole(User.Role.ADMIN);
+            List<User> users;
+            if (showDeleted) {
+                // Get deleted users with filters
+                users = daoUser.getDeletedUsersWithFilters(roleFilter, sortOrder, emailSearch);
+                request.setAttribute("showDeleted", true);
+                request.setAttribute("deletedUsers", users);
+            } else {
+                // Get active users with filters
+                users = daoUser.getAllUsersWithFilters(roleFilter, sortOrder, emailSearch);
+                request.setAttribute("allUsers", users);
+                
+                // Get user counts by role for statistics (only for unfiltered results)
+                if (roleFilter == null && emailSearch == null) {
+                    int doctorCount = daoUser.getUserCountByRole(User.Role.DOCTOR);
+                    int receptionistCount = daoUser.getUserCountByRole(User.Role.RECEPTIONIST);
+                    int patientCount = daoUser.getUserCountByRole(User.Role.PATIENT);
+                    int adminCount = daoUser.getUserCountByRole(User.Role.ADMIN);
+                    
+                    request.setAttribute("doctorCount", doctorCount);
+                    request.setAttribute("receptionistCount", receptionistCount);
+                    request.setAttribute("patientCount", patientCount);
+                    request.setAttribute("adminCount", adminCount);
+                    request.setAttribute("totalUsers", users.size());
+                } else {
+                    // For filtered results, show actual filtered count
+                    request.setAttribute("totalUsers", users.size());
+                }
+            }
             
-            // Set attributes for JSP
-            request.setAttribute("allUsers", allUsers);
-            request.setAttribute("doctorCount", doctorCount);
-            request.setAttribute("receptionistCount", receptionistCount);
-            request.setAttribute("patientCount", patientCount);
-            request.setAttribute("adminCount", adminCount);
-            request.setAttribute("totalUsers", allUsers.size());
+            // Set filter parameters for JSP
+            request.setAttribute("roleFilter", roleFilter);
+            request.setAttribute("sortOrder", sortOrder);
+            request.setAttribute("emailSearch", emailSearch);
             
             // Forward to authorization page
             request.getRequestDispatcher("/jsp/authorization.jsp").forward(request, response);
@@ -138,7 +169,7 @@ public class AuthorizationController extends HttpServlet {
         if (userId == null || userId.trim().isEmpty() || 
             newRoleStr == null || newRoleStr.trim().isEmpty()) {
             request.setAttribute("errorMessage", "Thông tin không hợp lệ.");
-            showAuthorizationPage(request, response);
+            showAuthorizationPage(request, response, false);
             return;
         }
         
@@ -157,7 +188,7 @@ public class AuthorizationController extends HttpServlet {
                     break;
                 default:
                     request.setAttribute("errorMessage", "Quyền hạn không hợp lệ.");
-                    showAuthorizationPage(request, response);
+                    showAuthorizationPage(request, response, false);
                     return;
             }
             
@@ -165,21 +196,21 @@ public class AuthorizationController extends HttpServlet {
             User targetUser = daoUser.getUserById(userId);
             if (targetUser == null) {
                 request.setAttribute("errorMessage", "Không tìm thấy người dùng.");
-                showAuthorizationPage(request, response);
+                showAuthorizationPage(request, response, false);
                 return;
             }
             
             // Prevent updating admin users
             if (targetUser.getRole() == User.Role.ADMIN) {
                 request.setAttribute("errorMessage", "Không thể thay đổi quyền hạn của tài khoản Admin.");
-                showAuthorizationPage(request, response);
+                showAuthorizationPage(request, response, false);
                 return;
             }
             
             // Prevent self-update
             if (targetUser.getId().equals(currentUser.getId())) {
                 request.setAttribute("errorMessage", "Bạn không thể thay đổi quyền hạn của chính mình.");
-                showAuthorizationPage(request, response);
+                showAuthorizationPage(request, response, false);
                 return;
             }
             
@@ -205,6 +236,87 @@ public class AuthorizationController extends HttpServlet {
         }
         
         // Redirect to authorization page
-        showAuthorizationPage(request, response);
+        showAuthorizationPage(request, response, false);
+    }
+    
+    /**
+     * Delete/Disable user (soft delete)
+     */
+    private void deleteUser(HttpServletRequest request, HttpServletResponse response, User currentUser)
+            throws ServletException, IOException {
+        
+        String userId = request.getParameter("userId");
+        
+        if (userId == null || userId.trim().isEmpty()) {
+            request.setAttribute("errorMessage", "Thông tin không hợp lệ.");
+            showAuthorizationPage(request, response, false);
+            return;
+        }
+        
+        try {
+            User targetUser = daoUser.getUserById(userId);
+            if (targetUser == null) {
+                request.setAttribute("errorMessage", "Không tìm thấy người dùng.");
+                showAuthorizationPage(request, response, false);
+                return;
+            }
+            
+            // Prevent deleting admin users
+            if (targetUser.getRole() == User.Role.ADMIN) {
+                request.setAttribute("errorMessage", "Không thể xóa tài khoản Admin.");
+                showAuthorizationPage(request, response, false);
+                return;
+            }
+            
+            // Prevent self-delete  
+            if (targetUser.getId().equals(currentUser.getId())) {
+                request.setAttribute("errorMessage", "Bạn không thể xóa tài khoản của chính mình.");
+                showAuthorizationPage(request, response, false);
+                return;
+            }
+            
+            boolean success = daoUser.deleteUser(userId);
+            if (success) {
+                request.setAttribute("successMessage", "Đã xóa tài khoản " + targetUser.getFullName());
+            } else {
+                request.setAttribute("errorMessage", "Không thể xóa tài khoản. Vui lòng thử lại.");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error deleting user: " + e.getMessage());
+            request.setAttribute("errorMessage", "Lỗi hệ thống: Không thể xóa tài khoản.");
+        }
+        
+        showAuthorizationPage(request, response, false);
+    }
+    
+    /**
+     * Restore deleted user
+     */
+    private void restoreUser(HttpServletRequest request, HttpServletResponse response, User currentUser) 
+            throws ServletException, IOException {
+        
+        String userId = request.getParameter("userId");
+        
+        if (userId == null || userId.trim().isEmpty()) {
+            request.setAttribute("errorMessage", "Thông tin không hợp lệ.");
+            showAuthorizationPage(request, response, true);
+            return;
+        }
+        
+        try {
+            boolean success = daoUser.restoreUser(userId);
+            if (success) {
+                request.setAttribute("successMessage", "Đã khôi phục tài khoản thành công.");
+            } else {
+                request.setAttribute("errorMessage", "Không thể khôi phục tài khoản. Vui lòng thử lại.");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error restoring user: " + e.getMessage());
+            request.setAttribute("errorMessage", "Lỗi hệ thống: Không thể khôi phục tài khoản.");
+        }
+        
+        showAuthorizationPage(request, response, true);
     }
 } 

@@ -506,4 +506,186 @@ public class DAOUser {
         
         return 0;
     }
+    
+    /**
+     * Soft delete user (set IsDeleted to TRUE)
+     * @param userId User ID to delete
+     * @return true if deletion successful, false otherwise
+     */
+    public boolean deleteUser(String userId) {
+        String sql = "UPDATE user SET IsDeleted = TRUE, Updated_At = ? WHERE id = ? AND IsDeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            ps.setString(2, userId);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error deleting user: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Restore deleted user (set IsDeleted to FALSE)
+     * @param userId User ID to restore
+     * @return true if restoration successful, false otherwise
+     */
+    public boolean restoreUser(String userId) {
+        String sql = "UPDATE user SET IsDeleted = FALSE, Updated_At = ? WHERE id = ? AND IsDeleted = TRUE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            ps.setString(2, userId);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error restoring user: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get all deleted users
+     * @return List of deleted users
+     */
+    public List<User> getDeletedUsers() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM user WHERE IsDeleted = TRUE ORDER BY Updated_At DESC";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting deleted users: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return users;  
+    }
+    
+    /**
+     * Get all active users with filters
+     * @param roleFilter Role to filter by (can be null)
+     * @param sortOrder Sort order: "newest" or "oldest" (can be null)
+     * @param emailSearch Email to search for (can be null)
+     * @return List of filtered users
+     */
+    public List<User> getAllUsersWithFilters(String roleFilter, String sortOrder, String emailSearch) {
+        List<User> users = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM user WHERE IsDeleted = FALSE");
+        List<Object> parameters = new ArrayList<>();
+        
+        // Add role filter
+        if (roleFilter != null && !roleFilter.trim().isEmpty() && !roleFilter.equals("all")) {
+            sql.append(" AND Role = ?");
+            parameters.add(roleFilter);
+        }
+        
+        // Add email search
+        if (emailSearch != null && !emailSearch.trim().isEmpty()) {
+            sql.append(" AND (Email LIKE ? OR FullName LIKE ?)");
+            String searchPattern = "%" + emailSearch.trim() + "%";
+            parameters.add(searchPattern);
+            parameters.add(searchPattern);
+        }
+        
+        // Add sort order
+        if ("oldest".equals(sortOrder)) {
+            sql.append(" ORDER BY Created_At ASC");
+        } else {
+            sql.append(" ORDER BY Created_At DESC"); // Default to newest first
+        }
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            // Set parameters
+            for (int i = 0; i < parameters.size(); i++) {
+                ps.setObject(i + 1, parameters.get(i));
+            }
+            
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting filtered users: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return users;
+    }
+    
+    /**
+     * Get deleted users with filters
+     * @param roleFilter Role to filter by (can be null)
+     * @param sortOrder Sort order: "newest" or "oldest" (can be null)
+     * @param emailSearch Email to search for (can be null)
+     * @return List of filtered deleted users
+     */
+    public List<User> getDeletedUsersWithFilters(String roleFilter, String sortOrder, String emailSearch) {
+        List<User> users = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM user WHERE IsDeleted = TRUE");
+        List<Object> parameters = new ArrayList<>();
+        
+        // Add role filter
+        if (roleFilter != null && !roleFilter.trim().isEmpty() && !roleFilter.equals("all")) {
+            sql.append(" AND Role = ?");
+            parameters.add(roleFilter);
+        }
+        
+        // Add email search
+        if (emailSearch != null && !emailSearch.trim().isEmpty()) {
+            sql.append(" AND (Email LIKE ? OR FullName LIKE ?)");
+            String searchPattern = "%" + emailSearch.trim() + "%";
+            parameters.add(searchPattern);
+            parameters.add(searchPattern);
+        }
+        
+        // Add sort order (use Updated_At for deleted users)
+        if ("oldest".equals(sortOrder)) {
+            sql.append(" ORDER BY Updated_At ASC");
+        } else {
+            sql.append(" ORDER BY Updated_At DESC"); // Default to newest first
+        }
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            // Set parameters
+            for (int i = 0; i < parameters.size(); i++) {
+                ps.setObject(i + 1, parameters.get(i));
+            }
+            
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting filtered deleted users: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return users;
+    }
 } 
