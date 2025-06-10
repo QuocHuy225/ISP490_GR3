@@ -1,0 +1,161 @@
+:root {
+    --primary: #2C3E50;
+    --primary-foreground: #FFFFFF;
+    --secondary: #FFFFFF;
+    --secondary-foreground: #333333;
+    --accent: #3498DB;
+    --accent-foreground: #FFFFFF;
+    --background: #F8F9FA;
+    --foreground: #333333;
+    --card: #FFFFFF;
+    --card-foreground: #333333;
+    --border: #DEE2E6;
+    --input: #E9ECEF;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--background);
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+}
+
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    transition: all 0.3s ease-in-out;
+    min-height: 100vh;
+    position: fixed;
+    z-index: 1000;
+}
+
+#sidebar.active {
+    margin-left: -250px;
+    transform: translateX(-100%);
+}
+
+#sidebar .sidebar-header {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+#sidebar ul.components {
+    padding: 20px 0;
+}
+
+#sidebar ul li a {
+    padding: 10px 20px;
+    display: block;
+    color: var(--primary-foreground);
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+#sidebar ul li a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#sidebar ul li.active > a {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#content {
+    width: calc(100% - 250px);
+    margin-left: 250px;
+    transition: all 0.3s ease-in-out;
+}
+
+#sidebar.active + #content {
+    width: 100%;
+    margin-left: 0;
+}
+
+.navbar {
+    background: var(--card);
+    padding: 15px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-container {
+    width: 40%;
+}
+
+.notification-icon i {
+    font-size: 1.2rem;
+    color: var(--foreground);
+}
+
+.stats-cards .card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.stats-cards .card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-cards .card-body {
+    padding: 1.5rem;
+}
+
+.stats-cards h5 {
+    color: var(--foreground);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.stats-cards h2 {
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.stats-cards .trend {
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.bi {
+    margin-right: 8px;
+}
+
+.dropdown-toggle::after {
+    display: none;
+}
+
+.dropdown-menu {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid var(--border);
+}
+
+.dropdown-item:hover {
+    background-color: var(--input);
+}
+
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -250px;
+        transform: translateX(-100%);
+    }
+    #sidebar.active {
+        margin-left: 0;
+        transform: translateX(0);
+    }
+    #content {
+        width: 100%;
+        margin-left: 0;
+    }
+    .search-container {
+        width: 100%;
+        margin: 10px 0;
+    }
+}
