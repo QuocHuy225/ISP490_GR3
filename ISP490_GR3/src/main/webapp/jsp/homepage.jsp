@@ -86,7 +86,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/medical-supplies">
                         <i class="bi bi-gear-fill"></i> Quản lý vật tư
                     </a>
                 </li>
@@ -97,7 +97,7 @@
                 </li>
                 <% } else if (currentRole == User.Role.DOCTOR) { %>
                 <!-- Menu cho Bác sĩ -->
-                <li class="active">
+                <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
                     </a>
@@ -129,7 +129,7 @@
                 </li>
                 <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
                 <!-- Menu cho Lễ tân -->
-                <li class="active">
+                <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
                     </a>
@@ -147,7 +147,7 @@
                
                 <% } else { %>
                 <!-- Menu cho Bệnh nhân (PATIENT) -->
-                <li class="active">
+                <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
                     </a>

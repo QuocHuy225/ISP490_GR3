@@ -431,7 +431,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/medical-supplies">
                         <i class="bi bi-gear-fill"></i> Quản lý vật tư
                     </a>
                 </li>
