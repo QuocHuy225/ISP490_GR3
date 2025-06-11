@@ -72,12 +72,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if (resetFilterButton) {
         resetFilterButton.addEventListener('click', function (event) {
             event.preventDefault(); // Ngăn chặn hành vi mặc định của HTML.
-            // Đảm bảo '${pageContext.request.contextPath}' được phân giải ở phía server nếu đây là file JSP
-            // Lưu ý: Trong file JS tĩnh, pageContext không khả dụng. Thay thế bằng path cứng hoặc đặt biến global từ JSP.
-            window.location.href = './appointments'; // Hoặc lấy từ biến global đã đặt trong JSP
+            // Điều hướng đến URL cơ sở để reset tất cả các tham số
+            window.location.href = './appointments'; 
         });
     }
 
+    /**
+     * Hàm hiển thị một thông báo Bootstrap Toast.
+     * Cần có một phần tử `<div id="toastContainer" class="toast-container"></div>`
+     * trong HTML của bạn để chứa các toast.
+     * @param {string} message Nội dung thông báo.
+     * @param {string} type Loại toast (e.g., 'success', 'danger', 'info', 'warning').
+     */
     function showBootstrapToast(message, type = 'info') {
         const toastContainer = document.getElementById('toastContainer');
         if (!toastContainer) {
@@ -133,11 +139,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Kiểm tra tính hợp lệ của form bằng validation tích hợp của HTML5
             if (addAppointmentForm.checkValidity()) {
-                // Ở đây bạn sẽ gửi dữ liệu form qua AJAX nếu không muốn tải lại trang
-                // Để đơn giản, hiện tại form sẽ được gửi thông thường (như trong HTML)
-                // và Controller sẽ xử lý.
-
-                // Mô phỏng thành công và ẩn modal như code gốc (nếu bạn vẫn dùng AJAX)
                 showBootstrapToast('Form hợp lệ! Lịch hẹn sẽ được xử lý.', 'success');
 
                 const modalElement = document.getElementById('addAppointmentModal');
@@ -172,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const selectedCheckboxes = document.querySelectorAll('input[name="selectedAppointments"]:checked');
             
-            // --- BỔ SUNG: Thu thập các ID DUY NHẤT để đảm bảo không gửi trùng lặp ---
+            // --- Thu thập các ID DUY NHẤT để đảm bảo không gửi trùng lặp ---
             const uniqueAppointmentIds = new Set();
             selectedCheckboxes.forEach(checkbox => {
                 uniqueAppointmentIds.add(checkbox.value);
@@ -213,32 +214,131 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // --- NEW LOGIC FOR SINGLE APPOINTMENT ACTIONS ---
+
+    // Handle "Update" button click to populate the modal
+    const updateAppointmentModalEl = document.getElementById('updateAppointmentModal');
+    if (updateAppointmentModalEl) {
+        updateAppointmentModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+
+            // Extract info from data-bs-* attributes
+            const id = button.getAttribute('data-id');
+            const code = button.getAttribute('data-code');
+            const patientId = button.getAttribute('data-patient-id');
+            const doctorId = button.getAttribute('data-doctor-id');
+            const slotId = button.getAttribute('data-slot-id');
+            const status = button.getAttribute('data-status');
+
+            // Get modal elements
+            const modalTitle = updateAppointmentModalEl.querySelector('.modal-title');
+            const updateAppointmentIdInput = updateAppointmentModalEl.querySelector('#updateAppointmentId');
+            const updateAppointmentCodeInput = updateAppointmentModalEl.querySelector('#updateAppointmentCode');
+            const updatePatientIdInput = updateAppointmentModalEl.querySelector('#updatePatientId');
+            const updateDoctorIdInput = updateAppointmentModalEl.querySelector('#updateDoctorId');
+            const updateSlotIdInput = updateAppointmentModalEl.querySelector('#updateSlotId');
+            const updateStatusSelect = updateAppointmentModalEl.querySelector('#updateStatus');
+
+            // Populate the modal fields
+            if (modalTitle) modalTitle.textContent = `Cập nhật lịch hẹn ID: ${id}`;
+            if (updateAppointmentIdInput) updateAppointmentIdInput.value = id;
+            if (updateAppointmentCodeInput) updateAppointmentCodeInput.value = code;
+            if (updatePatientIdInput) updatePatientIdInput.value = patientId;
+            if (updateDoctorIdInput) updateDoctorIdInput.value = doctorId;
+            if (updateSlotIdInput) updateSlotIdInput.value = slotId;
+            if (updateStatusSelect) updateStatusSelect.value = status;
+        });
+
+        // Handle Update Form submission
+        const updateAppointmentForm = document.getElementById('updateAppointmentForm');
+        if (updateAppointmentForm) {
+            updateAppointmentForm.addEventListener('submit', function(event) {
+                if (!updateAppointmentForm.checkValidity()) {
+                    event.preventDefault(); // Prevent form submission if invalid
+                    event.stopPropagation(); // Stop propagation to prevent default behavior
+                    updateAppointmentForm.classList.add('was-validated');
+                    showBootstrapToast('Vui lòng điền đầy đủ các thông tin bắt buộc để cập nhật.', 'warning');
+                } else {
+                    // Form is valid, allow submission. No toast here as Controller will redirect with message.
+                    // This toast would be hidden quickly by the redirect anyway.
+                    // showBootstrapToast('Đang gửi yêu cầu cập nhật...', 'info');
+                }
+            });
+        }
+    }
+
+
+    // Handle "Delete Single" button click to populate the modal
+    const confirmSingleDeleteModalEl = document.getElementById('confirmSingleDeleteModal');
+    if (confirmSingleDeleteModalEl) {
+        confirmSingleDeleteModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+            const id = button.getAttribute('data-id'); // Extract ID from data-id attribute
+
+            const singleDeleteAppointmentIdSpan = confirmSingleDeleteModalEl.querySelector('#singleDeleteAppointmentIdSpan');
+            if (singleDeleteAppointmentIdSpan) {
+                singleDeleteAppointmentIdSpan.textContent = id;
+            }
+
+            // Set up the click handler for the confirmation button inside the modal
+            const confirmSingleDeleteButton = document.getElementById('confirmSingleDeleteButton');
+            if (confirmSingleDeleteButton) {
+                confirmSingleDeleteButton.onclick = function () {
+                    // Create a hidden form to submit the single delete request
+                    const singleDeleteForm = document.createElement('form');
+                    singleDeleteForm.setAttribute('method', 'post');
+                    singleDeleteForm.setAttribute('action', `${window.location.origin}${window.location.pathname}`); // Submits to current servlet
+
+                    const actionInput = document.createElement('input');
+                    actionInput.setAttribute('type', 'hidden');
+                    actionInput.setAttribute('name', 'action');
+                    actionInput.setAttribute('value', 'deleteSingle'); // NEW action for single delete
+                    singleDeleteForm.appendChild(actionInput);
+
+                    const idInput = document.createElement('input');
+                    idInput.setAttribute('type', 'hidden');
+                    idInput.setAttribute('name', 'appointmentId'); // Name must match Controller parameter
+                    idInput.setAttribute('value', id);
+                    singleDeleteForm.appendChild(idInput);
+
+                    document.body.appendChild(singleDeleteForm); // Append to body to submit
+                    confirmSingleDeleteModalEl.modalInstance.hide(); // Hide the Bootstrap modal (if using modal.hide() on the instance)
+                    // If you don't have modalInstance, you can manually hide it with jQuery or specific Bootstrap methods:
+                    // const modal = bootstrap.Modal.getInstance(confirmSingleDeleteModalEl);
+                    // if (modal) modal.hide();
+                    
+                    singleDeleteForm.submit(); // Submit the form
+                };
+            }
+        });
+        // Store the modal instance on the element for easier access if needed
+        confirmSingleDeleteModalEl.modalInstance = new bootstrap.Modal(confirmSingleDeleteModalEl);
+    }
+
+
     // Logic để hiển thị hoặc ẩn bảng dựa trên biến global
-    // Biến shouldShowTable được mong đợi là được thiết lập từ server-side (ví dụ: JSP)
+    // Biến searchPerformed và hasResults được mong đợi là được thiết lập từ server-side (ví dụ: JSP)
     const isSearchPerformed = window.GLOBAL_IS_SEARCH_PERFORMED;
-    const hasAppointments = window.GLOBAL_HAS_APPOINTMENTS;
+    const hasResults = window.GLOBAL_HAS_RESULTS;
 
     const appointmentListSection = document.querySelector('.appointment-list-section');
     const noResultsMessageElement = document.getElementById('noResultsMessage');
+    const tableBody = appointmentListSection ? appointmentListSection.querySelector('tbody') : null;
 
-    if (appointmentListSection && noResultsMessageElement) {
+    if (appointmentListSection && noResultsMessageElement && tableBody) {
+        // Luôn hiển thị phần bảng (appointmentListSection)
+        appointmentListSection.style.display = 'block';
+
         if (isSearchPerformed) { // Nếu tìm kiếm đã được thực hiện
-            if (hasAppointments) { // Và có kết quả
-                appointmentListSection.style.display = 'block';
-                noResultsMessageElement.style.display = 'none';
+            if (hasResults) { // Và có kết quả
+                noResultsMessageElement.style.display = 'none'; // Ẩn thông báo "Không có kết quả"
             } else { // Tìm kiếm đã thực hiện nhưng không có kết quả
-                appointmentListSection.style.display = 'none';
-                noResultsMessageElement.style.display = 'block';
+                noResultsMessageElement.style.display = 'block'; // Hiện thông báo "Không có kết quả"
                 noResultsMessageElement.innerHTML = 'Không tìm thấy lịch hẹn nào phù hợp với tiêu chí tìm kiếm.';
-                noResultsMessageElement.dataset.defaultMessage = 'set';
             }
         } else { // Khi trang tải lần đầu (chưa có tìm kiếm nào được thực hiện)
-            appointmentListSection.style.display = 'none';
-            noResultsMessageElement.style.display = 'block';
-            if (noResultsMessageElement.innerHTML.trim() === '' || noResultsMessageElement.dataset.defaultMessage !== 'set') {
-                noResultsMessageElement.innerHTML = 'Vui lòng sử dụng chức năng tìm kiếm để hiển thị danh sách lịch hẹn.';
-                noResultsMessageElement.dataset.defaultMessage = 'set';
-            }
+            noResultsMessageElement.style.display = 'block'; // Hiện thông báo "Vui lòng sử dụng tìm kiếm"
+            noResultsMessageElement.innerHTML = 'Vui lòng sử dụng chức năng tìm kiếm để hiển thị danh sách lịch hẹn.';
         }
     }
 });

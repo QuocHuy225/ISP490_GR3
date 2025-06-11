@@ -192,13 +192,13 @@
                     </button>
                 </div>
             </form>
-            <div class="appointment-list-section animate-fade-in" style="display: none;"> 
+            <div class="appointment-list-section animate-fade-in">  
                 <div class="appointment-list-header">
                     <h5>Danh sách Lịch hẹn (${totalRecords} kết quả)</h5>
                     <div class="d-flex gap-2">
                         <form id="deleteMultipleForm" action="${pageContext.request.contextPath}/appointments" method="post" style="display:inline;">
                             <input type="hidden" name="action" value="deleteMultiple">
-                            <button type="submit" class="btn btn-danger btn-delete-selected" onclick="return confirm('Bạn có chắc chắn muốn xóa các lịch hẹn đã chọn?');">
+                            <button type="submit" class="btn btn-danger btn-delete-selected">
                                 <i class="bi bi-trash"></i> Xóa đã chọn
                             </button>
                         </form>
@@ -220,7 +220,7 @@
                                 <th>Họ và tên</th>
                                 <th>Số điện thoại</th>
                                 <th>Địa chỉ</th>
-                                <th>Bác sĩ phụ trách</th> 
+                                <th>Bác sĩ phụ trách</th>
                                 <th>Trạng thái</th>
                                 <th>Thao tác</th>
                             </tr>
@@ -235,24 +235,35 @@
                                     <td>${appointment.patientId}</td>
                                     <td>${appointment.patientName}</td>
                                     <td>${appointment.patientPhoneNumber}</td>
-                                    <td>${appointment.patientAddress}</td>                                   
+                                    <td>${appointment.patientAddress}</td>
                                     <td>${appointment.doctorName}</td>
                                     <td>${appointment.status}</td>
                                     <td>
-                                        <%-- ĐÃ SỬA: Dùng appointment.id cho data-id --%>
-                                        <button type="button" class="btn btn-action btn-edit" data-id="${appointment.id}" title="Chỉnh sửa">
+                                        <button type="button" class="btn btn-action btn-edit" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#updateAppointmentModal"
+                                                data-id="${appointment.id}"
+                                                data-code="${appointment.appointmentCode}"
+                                                data-patient-id="${appointment.patientId}"
+                                                data-doctor-id="${appointment.doctorId}"
+                                                data-slot-id="${appointment.slotId}"
+                                                data-status="${appointment.status}"
+                                                title="Chỉnh sửa">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
-                                        <%-- ĐÃ SỬA: Dùng appointment.id cho data-id --%>
-                                        <button type="button" class="btn btn-action btn-danger" data-id="${appointment.id}" title="Xóa" onclick="alert('Xóa từng lịch hẹn chưa được triển khai. Vui lòng sử dụng tính năng xóa nhiều.')">
+                                        <button type="button" class="btn btn-action btn-danger btn-delete-single" 
+                                                data-id="${appointment.id}"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#confirmSingleDeleteModal"
+                                                title="Xóa">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </td>
                                 </tr>
                             </c:forEach>
-                            <c:if test="${empty currentPageAppointments}">
+                            <c:if test="${empty currentPageAppointments && requestScope.searchPerformed}">
                                 <tr>
-                                    <td colspan="11" class="text-center">Không tìm thấy lịch hẹn nào.</td> 
+                                    <td colspan="11" class="text-center">Không tìm thấy lịch hẹn nào.</td>
                                 </tr>
                             </c:if>
                         </tbody>
@@ -294,10 +305,11 @@
         <script>
             // Các biến này được đặt từ Controller của bạn
             window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
-            window.GLOBAL_HAS_APPOINTMENTS = ${not empty requestScope.currentPageAppointments};
+            window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
         </script>
         <script src="${pageContext.request.contextPath}/js/appointment.js"></script>
 
+        <%-- Modal Thêm lịch hẹn mới (Giữ nguyên) --%>
         <div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -310,7 +322,7 @@
                             <input type="hidden" name="action" value="addAppointment">
 
                             <div class="mb-3">
-                                <label for="addAppointmentCode" class="form-label">Mã lịch hẹn (Tùy chọn)</label>
+                                <label for="addAppointmentCode" class="form-label">Mã lịch hẹn</label>
                                 <input type="text" class="form-control" id="addAppointmentCode" name="appointmentCode" placeholder="Mã lịch hẹn">
                             </div>
 
@@ -320,12 +332,12 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="addDoctorId" class="form-label">Mã bác sĩ phụ trách <span class="text-danger">*</span></label>
+                                <label for="addDoctorId" class="form-label">Bác sĩ phụ trách <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="addDoctorId" name="doctorId" required placeholder="Nhập mã bác sĩ">
                             </div>
 
                             <div class="mb-3">
-                                <label for="addSlotId" class="form-label">Mã Slot <span class="text-danger">*</span></label>
+                                <label for="addSlotId" class="form-label">Slot <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="addSlotId" name="slotId" required placeholder="Nhập mã slot">
                             </div>
 
@@ -348,7 +360,59 @@
             </div>
         </div>
 
-        <%-- Modal xác nhận xóa --%>
+        <%-- NEW Modal Cập nhật lịch hẹn --%>
+        <div class="modal fade" id="updateAppointmentModal" tabindex="-1" aria-labelledby="updateAppointmentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="updateAppointmentModalLabel">Cập nhật lịch hẹn</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="updateAppointmentForm" action="${pageContext.request.contextPath}/appointments" method="post">
+                            <input type="hidden" name="action" value="updateAppointment">
+                            <input type="hidden" name="id" id="updateAppointmentId">
+
+                            <div class="mb-3">
+                                <label for="updateAppointmentCode" class="form-label">Mã lịch hẹn</label>
+                                <input type="text" class="form-control" id="updateAppointmentCode" name="appointmentCode" placeholder="Mã lịch hẹn" readonly disable>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="updatePatientId" class="form-label">Mã bệnh nhân <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="updatePatientId" name="patientId" required placeholder="Nhập mã bệnh nhân">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="updateDoctorId" class="form-label">Bác sĩ phụ trách <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="updateDoctorId" name="doctorId" required placeholder="Nhập mã bác sĩ">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="updateSlotId" class="form-label">Slot <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="updateSlotId" name="slotId" required placeholder="Nhập mã slot">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="updateStatus" class="form-label">Trạng thái</label>
+                                <select class="form-select" id="updateStatus" name="status">
+                                    <option value="pending">Đang chờ</option>
+                                    <option value="confirmed">Đã xác nhận</option>
+                                    <option value="done">Hoàn thành</option>
+                                    <option value="cancelled">Đã hủy</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" form="updateAppointmentForm" class="btn btn-primary">Cập nhật</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%-- Modal xác nhận xóa nhiều (Giữ nguyên) --%>
         <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -367,6 +431,27 @@
                 </div>
             </div>
         </div>
+
+        <%-- NEW Modal xác nhận xóa TỪNG LỊCH HẸN --%>
+        <div class="modal fade" id="confirmSingleDeleteModal" tabindex="-1" aria-labelledby="confirmSingleDeleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmSingleDeleteModalLabel">Xác nhận xóa lịch hẹn</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Bạn có chắc chắn muốn xóa lịch hẹn có ID: <span id="singleDeleteAppointmentIdSpan"></span> không?
+                        Hành động này sẽ xóa mềm bản ghi.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-danger" id="confirmSingleDeleteButton">Xóa</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
         <%!
             // Hàm trợ giúp để tạo lại các tham số lọc cho phân trang
@@ -402,10 +487,10 @@
                     params.append("&recordsPerPage=").append(rp);
                 }
 
-                if (request.getParameter("submitSearch") != null) {
-                    params.append("&submitSearch=true");
-                }
-
+                // IMPORTANT: Always append submitSearch=true for pagination links
+                // This ensures the Controller always considers it a "search" request
+                // when navigating between pages, even if no explicit filter changed.
+                params.append("&submitSearch=true");
 
                 return params.toString();
             }
