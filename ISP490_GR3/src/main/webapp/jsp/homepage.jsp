@@ -140,25 +140,11 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/appointments">
                         <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
                     </a>
                 </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-people"></i> Quản lý bệnh nhân
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-receipt"></i> Thanh toán
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-hospital"></i> Dịch vụ
-                    </a>
-                </li>
+               
                 <% } else { %>
                 <!-- Menu cho Bệnh nhân (PATIENT) -->
                 <li class="active">
