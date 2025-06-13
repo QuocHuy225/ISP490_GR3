@@ -404,6 +404,7 @@
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
+                <% if (currentRole == User.Role.ADMIN) { %>
                 <!-- Menu cho Admin -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
@@ -416,7 +417,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/services">
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
                     </a>
                 </li>
@@ -440,6 +441,89 @@
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
                 </li>
+                <% } else if (currentRole == User.Role.DOCTOR) { %>
+                <!-- Menu cho Bác sĩ -->
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-calendar-check"></i> Lịch khám bệnh
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-file-medical"></i> Hồ sơ bệnh án
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-people"></i> Danh sách bệnh nhân
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-journal-medical"></i> Chỉ định dịch vụ
+                    </a>
+                </li>
+                <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
+                <!-- Menu cho Lễ tân -->
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/appointments">
+                        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
+                    </a>
+                </li>
+               
+                <% } else { %>
+                <!-- Menu cho Bệnh nhân (PATIENT) -->
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-file-medical"></i> Hồ sơ sức khỏe
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-hospital"></i> Dịch vụ
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
+                    </a>
+                </li>
+                <% } %>
             </ul>
         </nav>
 
