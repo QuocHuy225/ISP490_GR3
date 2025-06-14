@@ -12,7 +12,27 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Controller for handling user authorization/role management
+ * =====================================================
+ * AuthorizationController - CONTROLLER PHÂN QUYỀN NGƯỜI DÙNG
+ * 
+ * Chức năng: Xử lý các request liên quan đến phân quyền và quản lý người dùng
+ * URL patterns: 
+ * - /admin/authorization (xem danh sách)
+ * - /admin/authorization/view (xem chi tiết)
+ * - /admin/authorization/update (cập nhật quyền)
+ * - /admin/authorization/delete (xóa người dùng)
+ * - /admin/authorization/restore (khôi phục người dùng)
+ * 
+ * DAO sử dụng: DAOUser
+ * JSP tương ứng: authorization.jsp
+ * 
+ * Các chức năng chính:
+ * - Quản lý quyền người dùng (Admin, Doctor, Receptionist, Patient)
+ * - Xem danh sách người dùng với lọc/tìm kiếm
+ * - Xóa/khôi phục người dùng (soft delete)
+ * - Thống kê số lượng người dùng theo role
+ * - Chỉ Admin mới được truy cập
+ * =====================================================
  */
 @WebServlet(name = "AuthorizationController", urlPatterns = {
     "/admin/authorization",
@@ -122,22 +142,7 @@ public class AuthorizationController extends HttpServlet {
                 users = daoUser.getAllUsersWithFilters(roleFilter, sortOrder, emailSearch);
                 request.setAttribute("allUsers", users);
                 
-                // Get user counts by role for statistics (only for unfiltered results)
-                if (roleFilter == null && emailSearch == null) {
-                    int doctorCount = daoUser.getUserCountByRole(User.Role.DOCTOR);
-                    int receptionistCount = daoUser.getUserCountByRole(User.Role.RECEPTIONIST);
-                    int patientCount = daoUser.getUserCountByRole(User.Role.PATIENT);
-                    int adminCount = daoUser.getUserCountByRole(User.Role.ADMIN);
-                    
-                    request.setAttribute("doctorCount", doctorCount);
-                    request.setAttribute("receptionistCount", receptionistCount);
-                    request.setAttribute("patientCount", patientCount);
-                    request.setAttribute("adminCount", adminCount);
-                    request.setAttribute("totalUsers", users.size());
-                } else {
-                    // For filtered results, show actual filtered count
-                    request.setAttribute("totalUsers", users.size());
-                }
+
             }
             
             // Set filter parameters for JSP

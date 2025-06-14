@@ -40,61 +40,7 @@
                 gap: 10px;
             }
 
-            .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 20px;
-                margin-bottom: 30px;
-            }
 
-            .stat-card {
-                background: white;
-                border-radius: 15px;
-                padding: 25px;
-                box-shadow: 0 5px 25px rgba(3, 96, 217, 0.1);
-                transition: all 0.3s ease;
-                border-left: 4px solid transparent;
-            }
-
-            .stat-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 40px rgba(3, 96, 217, 0.15);
-            }
-
-            .stat-card.admin {
-                border-left-color: #dc3545;
-            }
-            .stat-card.doctor {
-                border-left-color: #28a745;
-            }
-            .stat-card.receptionist {
-                border-left-color: #ffc107;
-            }
-            .stat-card.patient {
-                border-left-color: #17a2b8;
-            }
-            .stat-card.total {
-                border-left-color: #0360D9;
-            }
-
-            .stat-number {
-                font-size: 3rem;
-                font-weight: 700;
-                margin: 0;
-                color: #2B3674;
-            }
-
-            .stat-label {
-                color: #A3AED0;
-                font-size: 1.1rem;
-                margin-top: 10px;
-            }
-
-            .stat-icon {
-                font-size: 2.5rem;
-                opacity: 0.3;
-                float: right;
-            }
 
             .users-table {
                 margin: 0;
@@ -275,10 +221,6 @@
             }
 
             @media (max-width: 768px) {
-                .stats-grid {
-                    grid-template-columns: 1fr;
-                }
-                
                 .users-table th,
                 .users-table td {
                     padding: 15px 10px;
@@ -332,6 +274,133 @@
                 opacity: 0.6;
                 pointer-events: none;
             }
+
+            /* Statistics Cards Styles */
+            .stats-card {
+                background: white;
+                border-radius: 15px;
+                padding: 20px;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+                transition: all 0.3s ease;
+                border-left: 4px solid transparent;
+                height: 100px;
+            }
+
+            .stats-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            }
+
+            .stats-card.total {
+                border-left-color: #6c757d;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            }
+
+            .stats-card.admin {
+                border-left-color: #dc3545;
+                background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            }
+
+            .stats-card.doctor {
+                border-left-color: #28a745;
+                background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            }
+
+            .stats-card.receptionist {
+                border-left-color: #ffc107;
+                background: linear-gradient(135deg, #fffbf0 0%, #fef5e7 100%);
+            }
+
+            .stats-card.patient {
+                border-left-color: #17a2b8;
+                background: linear-gradient(135deg, #f0fdff 0%, #c4f1f9 100%);
+            }
+
+
+
+            .stats-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.8rem;
+                flex-shrink: 0;
+            }
+
+            .stats-card.total .stats-icon {
+                background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+                color: white;
+            }
+
+            .stats-card.admin .stats-icon {
+                background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                color: white;
+            }
+
+            .stats-card.doctor .stats-icon {
+                background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+                color: white;
+            }
+
+            .stats-card.receptionist .stats-icon {
+                background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+                color: white;
+            }
+
+            .stats-card.patient .stats-icon {
+                background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+                color: white;
+            }
+
+
+
+            .stats-content {
+                flex: 1;
+            }
+
+            .stats-number {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #2B3674;
+                line-height: 1;
+                margin-bottom: 5px;
+            }
+
+            .stats-label {
+                font-size: 0.9rem;
+                color: #A3AED0;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            /* Responsive stats cards */
+            @media (max-width: 768px) {
+                .stats-card {
+                    padding: 15px;
+                    height: 80px;
+                    gap: 10px;
+                }
+                
+                .stats-icon {
+                    width: 45px;
+                    height: 45px;
+                    font-size: 1.4rem;
+                }
+                
+                .stats-number {
+                    font-size: 1.5rem;
+                }
+                
+                .stats-label {
+                    font-size: 0.8rem;
+                }
+            }
         </style>
     </head>
     <body>
@@ -380,11 +449,6 @@
         List<User> allUsers = (List<User>) request.getAttribute("allUsers");
         List<User> deletedUsers = (List<User>) request.getAttribute("deletedUsers");
         Boolean showDeleted = (Boolean) request.getAttribute("showDeleted");
-        Integer doctorCount = (Integer) request.getAttribute("doctorCount");
-        Integer receptionistCount = (Integer) request.getAttribute("receptionistCount");
-        Integer patientCount = (Integer) request.getAttribute("patientCount");
-        Integer adminCount = (Integer) request.getAttribute("adminCount");
-        Integer totalUsers = (Integer) request.getAttribute("totalUsers");
         
         String successMessage = (String) request.getAttribute("successMessage");
         String errorMessage = (String) request.getAttribute("errorMessage");
@@ -422,7 +486,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/medicines">
                         <i class="bi bi-hospital"></i> Quản lý kho thuốc
                     </a>
                 </li>
@@ -545,7 +609,7 @@
 
                     <div class="navbar-search mx-auto">
                         <i class="bi bi-search"></i>
-                        <input type="text" class="form-control" placeholder="Tìm kiếm bệnh nhân, lịch hẹn, hồ sơ...">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm">
                     </div>
 
                     <div class="dropdown user-dropdown">
@@ -591,43 +655,6 @@
 
             <!-- Main Content Area - Authorization Management -->
             <div class="container-fluid mt-4">
-                <!-- Page Header -->
-                <div class="auth-container">
-                    <div class="auth-header">
-                        <div>
-                            <i class="bi bi-shield-check me-2"></i>
-                            <% if (isShowingDeleted) { %>
-                            Tài khoản đã xóa
-                            <% } else { %>
-                            Quản lý Phân quyền
-                            <% } %>
-                        </div>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <% if (isShowingDeleted) { %>
-                            <a href="${pageContext.request.contextPath}/admin/authorization" class="btn btn-light btn-sm">
-                                <i class="bi bi-people"></i>
-                                Xem tài khoản hoạt động
-                            </a>
-                            <% } else { %>
-                            <a href="${pageContext.request.contextPath}/admin/authorization?showDeleted=true" class="btn btn-warning btn-sm">
-                                <i class="bi bi-trash"></i>
-                                Xem tài khoản đã xóa
-                            </a>
-                            <% } %>
-                        </div>
-                    </div>
-
-                    <div class="p-4">
-                        <p class="mb-0 text-muted">
-                            <% if (isShowingDeleted) { %>
-                            Danh sách các tài khoản đã bị xóa
-                            <% } else { %>
-                            Quản lý và phân quyền cho tất cả người dùng trong hệ thống
-                            <% } %>
-                        </p>
-                    </div>
-                </div>
-
                 <!-- Success/Error Messages -->
                 <% if (successMessage != null) { %>
                 <div class="alert alert-success">
@@ -643,65 +670,45 @@
                 </div>
                 <% } %>
 
-                <!-- Statistics Cards (only show for active users) -->
-                <% if (!isShowingDeleted) { %>
-                <div class="stats-grid">
-                    <div class="stat-card total">
-                        <div class="stat-icon">
-                            <i class="bi bi-people"></i>
-                        </div>
-                        <h2 class="stat-number"><%= totalUsers != null ? totalUsers : 0 %></h2>
-                        <p class="stat-label">Tổng số người dùng</p>
-                    </div>
-
-                    <div class="stat-card admin">
-                        <div class="stat-icon">
-                            <i class="bi bi-shield-fill"></i>
-                        </div>
-                        <h2 class="stat-number"><%= adminCount != null ? adminCount : 0 %></h2>
-                        <p class="stat-label">Quản trị viên</p>
-                    </div>
-
-                    <div class="stat-card doctor">
-                        <div class="stat-icon">
-                            <i class="bi bi-person-fill-check"></i>
-                        </div>
-                        <h2 class="stat-number"><%= doctorCount != null ? doctorCount : 0 %></h2>
-                        <p class="stat-label">Bác sĩ</p>
-                    </div>
-
-                    <div class="stat-card receptionist">
-                        <div class="stat-icon">
-                            <i class="bi bi-person-badge"></i>
-                        </div>
-                        <h2 class="stat-number"><%= receptionistCount != null ? receptionistCount : 0 %></h2>
-                        <p class="stat-label">Lễ tân</p>
-                    </div>
-
-                    <div class="stat-card patient">
-                        <div class="stat-icon">
-                            <i class="bi bi-person"></i>
-                        </div>
-                        <h2 class="stat-number"><%= patientCount != null ? patientCount : 0 %></h2>
-                        <p class="stat-label">Bệnh nhân</p>
-                    </div>
-                </div>
-                <% } %>
-
-                <!-- Filter and Search Section -->
+                <!-- Quản lý Phân quyền và Bộ lọc -->
                 <div class="auth-container mb-4">
                     <div class="auth-header">
                         <div>
-                            <i class="bi bi-funnel me-2"></i>
-                            Bộ lọc và tìm kiếm
+                            <i class="bi bi-shield-check me-2"></i>
+                            <% if (isShowingDeleted) { %>
+                            Tài khoản đã xóa
+                            <% } else { %>
+                            Quản lý Phân quyền
+                            <% } %>
                         </div>
-                        <button type="button" class="btn btn-light btn-sm" onclick="clearFilters()">
-                            <i class="bi bi-x-circle"></i>
-                            Xóa bộ lọc
-                        </button>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-light btn-sm" onclick="clearFilters()">
+                                <i class="bi bi-x-circle"></i>
+                                Xóa bộ lọc
+                            </button>
+                            <% if (isShowingDeleted) { %>
+                            <a href="${pageContext.request.contextPath}/admin/authorization" class="btn btn-light btn-sm">
+                                <i class="bi bi-people"></i>
+                                Xem tài khoản hoạt động
+                            </a>
+                            <% } else { %>
+                            <a href="${pageContext.request.contextPath}/admin/authorization?showDeleted=true" class="btn btn-warning btn-sm">
+                                <i class="bi bi-trash"></i>
+                                Xem tài khoản đã xóa
+                            </a>
+                            <% } %>
+                        </div>
                     </div>
-                    
+
                     <div class="p-4">
+                        <p class="mb-4 text-muted">
+                            <% if (isShowingDeleted) { %>
+                            Danh sách các tài khoản đã bị xóa
+                            <% } else { %>
+                            Quản lý và phân quyền cho tất cả người dùng trong hệ thống
+                            <% } %>
+                        </p>
+                        
                         <form method="get" action="${pageContext.request.contextPath}/admin/authorization" id="filterForm">
                             <% if (isShowingDeleted) { %>
                                 <input type="hidden" name="showDeleted" value="true">
@@ -709,7 +716,7 @@
                             
                             <div class="row g-3 align-items-end">
                                 <!-- Role Filter -->
-                                <div class="col-md-3">
+                                <div class="col-md">
                                     <label for="roleFilter" class="form-label fw-semibold">
                                         <i class="bi bi-person-badge me-1"></i>Lọc theo quyền
                                     </label>
@@ -733,7 +740,7 @@
                                 </div>
                                 
                                 <!-- Sort Order -->
-                                <div class="col-md-3">
+                                <div class="col-md">
                                     <label for="sortOrder" class="form-label fw-semibold">
                                         <i class="bi bi-sort-down me-1"></i>Sắp xếp theo thời gian
                                     </label>
@@ -748,7 +755,7 @@
                                 </div>
                                 
                                 <!-- Email Search -->
-                                <div class="col-md-4">
+                                <div class="col-md">
                                     <label for="emailSearch" class="form-label fw-semibold">
                                         <i class="bi bi-search me-1"></i>Tìm kiếm
                                     </label>
@@ -757,8 +764,8 @@
                                            value="<%= emailSearch != null ? emailSearch : "" %>">
                                 </div>
                                 
-                                <!-- Filter Button -->
-                                <div class="col-md-2">
+                                <!-- Filter Button - Ẩn vì đã có auto-submit -->
+                                <div class="col-md-2" style="display: none;">
                                     <button type="submit" class="btn btn-primary w-100">
                                         <i class="bi bi-search me-1"></i>
                                         Lọc
@@ -798,6 +805,111 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- Statistics Container -->
+                <% 
+                // Tính toán thống kê số lượng theo role (chỉ cho tài khoản hoạt động)
+                if (!isShowingDeleted && allUsers != null) {
+                    int totalUsers = allUsers.size();
+                    int adminCount = 0, doctorCount = 0, receptionistCount = 0, patientCount = 0;
+                    
+                    for (User user : allUsers) {
+                        switch (user.getRole()) {
+                            case ADMIN:
+                                adminCount++;
+                                break;
+                            case DOCTOR:
+                                doctorCount++;
+                                break;
+                            case RECEPTIONIST:
+                                receptionistCount++;
+                                break;
+                            case PATIENT:
+                                patientCount++;
+                                break;
+                        }
+                    }
+                %>
+                <div class="auth-container mb-4">
+                    <div class="auth-header">
+                        <div>
+                            <i class="bi bi-bar-chart me-2"></i>
+                            Thống kê tài khoản theo quyền
+                        </div>
+                    </div>
+                    
+                    <div class="p-4">
+                        <div class="row g-3">
+                            <!-- Tổng số tài khoản -->
+                            <div class="col-md">
+                                <div class="stats-card total">
+                                    <div class="stats-icon">
+                                        <i class="bi bi-people-fill"></i>
+                                    </div>
+                                    <div class="stats-content">
+                                        <div class="stats-number"><%= totalUsers %></div>
+                                        <div class="stats-label">Tổng số</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Admin -->
+                            <div class="col-md">
+                                <div class="stats-card admin">
+                                    <div class="stats-icon">
+                                        <i class="bi bi-shield-fill-check"></i>
+                                    </div>
+                                    <div class="stats-content">
+                                        <div class="stats-number"><%= adminCount %></div>
+                                        <div class="stats-label">Quản trị viên</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Doctor -->
+                            <div class="col-md">
+                                <div class="stats-card doctor">
+                                    <div class="stats-icon">
+                                        <i class="bi bi-heart-pulse-fill"></i>
+                                    </div>
+                                    <div class="stats-content">
+                                        <div class="stats-number"><%= doctorCount %></div>
+                                        <div class="stats-label">Bác sĩ</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Receptionist -->
+                            <div class="col-md">
+                                <div class="stats-card receptionist">
+                                    <div class="stats-icon">
+                                        <i class="bi bi-person-workspace"></i>
+                                    </div>
+                                    <div class="stats-content">
+                                        <div class="stats-number"><%= receptionistCount %></div>
+                                        <div class="stats-label">Lễ tân</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Patient -->
+                            <div class="col-md">
+                                <div class="stats-card patient">
+                                    <div class="stats-icon">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <div class="stats-content">
+                                        <div class="stats-number"><%= patientCount %></div>
+                                        <div class="stats-label">Bệnh nhân</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+
+                        </div>
+                    </div>
+                </div>
+                <% } %>
 
                 <!-- Users Table -->
                 <div class="auth-container">
@@ -1018,8 +1130,8 @@
                         });
                     });
 
-                    // Filter and search functionality
-                    function clearFilters() {
+                    // Filter and search functionality - Expose to global scope
+                    window.clearFilters = function() {
                         const form = document.getElementById('filterForm');
                         
                         // Reset all form fields
@@ -1031,7 +1143,7 @@
                         form.submit();
                     }
 
-                    function removeFilter(filterName) {
+                    window.removeFilter = function(filterName) {
                         const form = document.getElementById('filterForm');
                         
                         if (filterName === 'roleFilter') {

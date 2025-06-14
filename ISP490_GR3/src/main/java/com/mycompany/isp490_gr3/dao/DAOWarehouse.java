@@ -8,6 +8,12 @@ import java.util.List;
 
 public class DAOWarehouse {
     
+    // =====================================================
+    // PHẦN QUẢN LÝ VẬT TƯ Y TẾ (MEDICAL SUPPLIES)
+    // Bảng database: medical_supply
+    // Model: MedicalSupply
+    // =====================================================
+    
     // Get all medical supplies
     public List<MedicalSupply> getAllSupplies() {
         List<MedicalSupply> supplies = new ArrayList<>();

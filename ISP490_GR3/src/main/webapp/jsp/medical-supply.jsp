@@ -89,7 +89,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/medicines">
                         <i class="bi bi-hospital"></i> Quản lý kho thuốc
                     </a>
                 </li>
@@ -212,7 +212,7 @@
 
                     <div class="navbar-search mx-auto">
                         <i class="bi bi-search"></i>
-                        <input type="text" class="form-control" placeholder="Tìm kiếm bệnh nhân, lịch hẹn, hồ sơ...">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm">
                     </div>
 
                     <div class="dropdown user-dropdown">
@@ -414,13 +414,16 @@
                                                 </tr>
                                                 <% } %>
                                             <% } else { %>
-                                                <tr>
-                                                    <td colspan="6" class="text-center">
-                                                        <i class="bi bi-inbox me-2"></i>
-                                                        <%= searchKeyword != null && !searchKeyword.trim().isEmpty() ? 
-                                                            "Không tìm thấy vật tư nào phù hợp" : "Chưa có vật tư nào trong kho" %>
-                                                    </td>
-                                                </tr>
+                                                <!-- Chỉ hiển thị thông báo khi không có search keyword (tức là lần đầu truy cập trang) -->
+                                                <!-- Khi search không có kết quả thì không hiển thị gì (bảng trống) -->
+                                                <% if (searchKeyword == null || searchKeyword.trim().isEmpty()) { %>
+                                                    <tr>
+                                                        <td colspan="6" class="text-center">
+                                                            <i class="bi bi-inbox me-2"></i>
+                                                            Chưa có vật tư nào trong kho
+                                                        </td>
+                                                    </tr>
+                                                <% } %>
                                             <% } %>
                                         </tbody>
                                     </table>
@@ -633,7 +636,7 @@
                     "searching": false, // Disable built-in search
                     "language": {
                         "lengthMenu": "Hiển thị _MENU_ mục",
-                        "zeroRecords": "Không tìm thấy dữ liệu",
+                        "zeroRecords": "", // Không hiển thị thông báo khi không có dữ liệu
                         "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
                         "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
                         "infoFiltered": "(lọc từ _MAX_ tổng số mục)",

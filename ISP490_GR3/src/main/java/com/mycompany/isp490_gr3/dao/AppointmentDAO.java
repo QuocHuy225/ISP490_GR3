@@ -14,6 +14,23 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * =====================================================
+ * AppointmentDAO - QUẢN LÝ LỊCH HẸN KHÁM BỆNH
+ * 
+ * Chức năng: Xử lý tất cả các thao tác liên quan đến lịch hẹn
+ * Bảng database: appointments (liên kết với patients, doctors, slots)
+ * Model tương ứng: Appointment
+ * URL liên quan: /appointments
+ * 
+ * Các chức năng chính:
+ * - Tạo/cập nhật/xóa lịch hẹn
+ * - Quản lý trạng thái lịch hẹn
+ * - Phân trang và lọc lịch hẹn
+ * - Liên kết với bệnh nhân, bác sĩ, slot thời gian
+ * - Soft delete (xóa mềm) và hard delete
+ * =====================================================
+ */
 public class AppointmentDAO {
     private static final Logger LOGGER = Logger.getLogger(AppointmentDAO.class.getName());
     private Connection connection;

@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
-@WebServlet(name = "WarehouseController", urlPatterns = {"/admin/medical-supplies", "/admin/medical-supplies/*"})
+@WebServlet(name = "WarehouseController", urlPatterns = {"/admin/medical-supplies", "/admin/medical-supplies/*", "/admin/medicines", "/admin/medicines/*"})
 public class WarehouseController extends HttpServlet {
 
     private DAOWarehouse warehouseDAO;
@@ -38,6 +38,25 @@ public class WarehouseController extends HttpServlet {
             return;
         }
         
+        String path = request.getRequestURI();
+        
+        // Phân chia xử lý theo đường dẫn URL
+        if (path.contains("/admin/medicines")) {
+            // XỬ LÝ YÊU CẦU LIÊN QUAN ĐÊN KHO THUỐC
+
+        } else {
+            // XỬ LÝ YÊU CẦU LIÊN QUAN ĐÊN VẬT TƯ Y TẾ
+            handleSupplyRequests(request, response);
+        }
+    }
+    
+    // =====================================================
+    // PHẦN XỬ LÝ YÊU CẦU GET CHO VẬT TƯ Y TẾ
+    // URL: /admin/medical-supplies
+    // =====================================================
+    private void handleSupplyRequests(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
@@ -58,7 +77,7 @@ public class WarehouseController extends HttpServlet {
                 break;
         }
     }
-
+    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -72,6 +91,25 @@ public class WarehouseController extends HttpServlet {
         if (!checkAdminAccess(request, response)) {
             return;
         }
+        
+        String path = request.getRequestURI();
+        
+        // Phân chia xử lý theo đường dẫn URL
+        if (path.contains("/admin/medicines")) {
+            // XỬ LÝ YÊU CẦU POST LIÊN QUAN ĐÊN KHO THUỐC
+
+        } else {
+            // XỬ LÝ YÊU CẦU POST LIÊN QUAN ĐÊN VẬT TƯ Y TẾ
+            handleSupplyPostRequests(request, response);
+        }
+    }
+    
+    // =====================================================
+    // PHẦN XỬ LÝ YÊU CẦU POST CHO VẬT TƯ Y TẾ
+    // Các action: add, update, delete, addStock
+    // =====================================================
+    private void handleSupplyPostRequests(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         
         String action = request.getParameter("action");
         if (action == null) {
@@ -132,6 +170,10 @@ public class WarehouseController extends HttpServlet {
         
         return true;
     }
+    
+    // =====================================================
+    // CÁC PHƯƠNG THỨC XỬ LÝ CHO VẬT TƯ Y TẾ
+    // =====================================================
     
     private void handleListSupplies(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
