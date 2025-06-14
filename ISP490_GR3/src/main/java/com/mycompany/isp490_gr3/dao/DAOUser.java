@@ -13,7 +13,22 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * DAO class for User operations including login, register, and other user-related functions
+ * =====================================================
+ * DAOUser - QUẢN LÝ NGƯỜI DÙNG HỆ THỐNG
+ * 
+ * Chức năng: Xử lý tất cả các thao tác liên quan đến người dùng
+ * Bảng database: user
+ * Model tương ứng: User
+ * URL liên quan: /auth/*, /admin/authorization, /user/profile
+ * 
+ * Các chức năng chính:
+ * - Đăng nhập/đăng ký (bao gồm Google OAuth)
+ * - Quản lý thông tin cá nhân
+ * - Phân quyền người dùng (Admin, Doctor, Receptionist, Patient)
+ * - Đổi mật khẩu, liên kết tài khoản Google
+ * - Xóa/khôi phục người dùng (soft delete)
+ * - Tìm kiếm và lọc người dùng
+ * =====================================================
  */
 public class DAOUser {
     

@@ -6,6 +6,24 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * =====================================================
+ * DAOService - QUẢN LÝ DỊCH VỤ Y TẾ
+ * 
+ * Chức năng: Xử lý tất cả các thao tác liên quan đến dịch vụ y tế
+ * Bảng database: medical_services
+ * Model tương ứng: MedicalService
+ * URL liên quan: /admin/services
+ * 
+ * Các chức năng chính:
+ * - Lấy danh sách dịch vụ y tế
+ * - Tìm kiếm dịch vụ theo nhóm/tên
+ * - Thêm/sửa/xóa dịch vụ
+ * - Quản lý nhóm dịch vụ
+ * =====================================================
+ */
+
 public class DAOService {
     
     // Get all medical services

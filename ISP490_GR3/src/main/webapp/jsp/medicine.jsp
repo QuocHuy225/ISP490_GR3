@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
-<%@ page import="com.mycompany.isp490_gr3.model.MedicalService" %>
+<%@ page import="com.mycompany.isp490_gr3.model.Medicine" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.text.DecimalFormat" %>
 <!DOCTYPE html>
@@ -9,7 +9,7 @@
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quản lý dịch vụ y tế - Ánh Dương Clinic</title>
+        <title>Quản lý kho thuốc - Ánh Dương Clinic</title>
         <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <!-- Bootstrap CSS -->
@@ -56,13 +56,13 @@
             userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
         }
         
-        // Get services data
-        List<MedicalService> services = (List<MedicalService>) request.getAttribute("services");
-        List<String> serviceGroups = (List<String>) request.getAttribute("serviceGroups");
+        // Get medicines data
+        List<Medicine> medicines = (List<Medicine>) request.getAttribute("medicines");
+        List<String> medicineUnits = (List<String>) request.getAttribute("medicineUnits");
         String searchKeyword = (String) request.getAttribute("searchKeyword");
-        String selectedGroup = (String) request.getAttribute("selectedGroup");
         
-        DecimalFormat df = new DecimalFormat("#,###");
+        // Format for currency display
+        DecimalFormat currencyFormatter = new DecimalFormat("#,###");
         %>
 
         <!-- Sidebar -->
@@ -83,12 +83,12 @@
                         <i class="bi bi-people-fill"></i> Quản lý người dùng
                     </a>
                 </li>
-                <li class="active">
+                <li>
                     <a href="${pageContext.request.contextPath}/admin/services">
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
                     </a>
                 </li>
-                <li>
+                <li class="active">
                     <a href="${pageContext.request.contextPath}/admin/medicines">
                         <i class="bi bi-hospital"></i> Quản lý kho thuốc
                     </a>
@@ -193,7 +193,7 @@
                 <% } %>
             </ul>
         </nav>
-            
+
         <!-- Main Content -->
         <div id="content">
             <!-- Top Navbar -->
@@ -262,7 +262,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <h2 class="text-primary">
-                            <i class="bi bi-file-medical me-2"></i>Quản lý dịch vụ y tế
+                            <i class="bi bi-hospital me-2"></i>Quản lý kho thuốc
                         </h2>
                     </div>
                 </div>
@@ -276,11 +276,15 @@
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="bi bi-check-circle me-2"></i>
                     <% if ("added".equals(success)) { %>
-                        Thêm dịch vụ thành công!
+                        Thêm thuốc thành công!
                     <% } else if ("updated".equals(success)) { %>
-                        Cập nhật thông tin dịch vụ thành công!
+                        Cập nhật thông tin thuốc thành công!
                     <% } else if ("deleted".equals(success)) { %>
-                        Xóa dịch vụ thành công!
+                        Xóa thuốc thành công!
+                    <% } else if ("stock_updated".equals(success)) { %>
+                        Cập nhật số lượng tồn kho thành công!
+                    <% } else if ("stock_added".equals(success)) { %>
+                        Thêm số lượng vào kho thành công!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -289,48 +293,52 @@
                 <% if (error != null) { %>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <% if ("missing_fields".equals(error)) { %>
+                    <% if ("access_denied".equals(error)) { %>
+                        Bạn không có quyền truy cập chức năng này!
+                    <% } else if ("missing_fields".equals(error)) { %>
                         Vui lòng điền đầy đủ thông tin!
-                    <% } else if ("invalid_price".equals(error)) { %>
-                        Giá dịch vụ phải lớn hơn 0!
-                    <% } else if ("service_exists".equals(error)) { %>
-                        Dịch vụ này đã tồn tại trong hệ thống!
-                    <% } else if ("add_failed".equals(error)) { %>
-                        Thêm dịch vụ thất bại!
-                    <% } else if ("update_failed".equals(error)) { %>
-                        Cập nhật dịch vụ thất bại!
-                    <% } else if ("delete_failed".equals(error)) { %>
-                        Xóa dịch vụ thất bại!
+                    <% } else if ("invalid_values".equals(error)) { %>
+                        Giá trị nhập vào không hợp lệ!
                     <% } else if ("invalid_format".equals(error)) { %>
                         Định dạng dữ liệu không hợp lệ!
-                    <% } else { %>
-                        Có lỗi xảy ra. Vui lòng thử lại!
+                    <% } else if ("add_failed".equals(error)) { %>
+                        Thêm thuốc thất bại!
+                    <% } else if ("update_failed".equals(error)) { %>
+                        Cập nhật thất bại!
+                    <% } else if ("delete_failed".equals(error)) { %>
+                        Xóa thuốc thất bại!
+                    <% } else if ("invalid_quantity".equals(error)) { %>
+                        Số lượng phải lớn hơn 0!
+                    <% } else if ("stock_add_failed".equals(error)) { %>
+                        Thêm số lượng vào kho thất bại!
+                    <% } else if ("medicine_exists".equals(error)) { %>
+                        Thuốc này đã tồn tại! Vui lòng sử dụng chức năng "Thêm số lượng" để tăng số lượng tồn kho.
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
                 <% } %>
 
-                <!-- Search and Add Service Section -->
+                <!-- Search and Add Section -->
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body">
-                                <div class="row g-3">
+                                <div class="row align-items-center">
                                     <div class="col-md-8">
-                                        <form method="GET" action="${pageContext.request.contextPath}/admin/services" class="d-flex">
+                                        <form method="GET" action="${pageContext.request.contextPath}/admin/medicines" class="d-flex">
                                             <input type="hidden" name="action" value="search">
                                             <div class="input-group">
                                                 <span class="input-group-text">
                                                     <i class="bi bi-search"></i>
                                                 </span>
                                                 <input type="text" class="form-control" name="keyword" 
-                                                       placeholder="Tìm kiếm theo tên dịch vụ..." 
+                                                       placeholder="Tìm kiếm theo tên thuốc..." 
                                                        value="<%= searchKeyword != null ? searchKeyword : "" %>">
                                                 <button class="btn btn-primary" type="submit">
                                                     Tìm kiếm
                                                 </button>
                                                 <% if (searchKeyword != null && !searchKeyword.trim().isEmpty()) { %>
-                                                <a href="${pageContext.request.contextPath}/admin/services" class="btn btn-outline-secondary">
+                                                <a href="${pageContext.request.contextPath}/admin/medicines" class="btn btn-outline-secondary">
                                                     <i class="bi bi-x-circle"></i>
                                                 </a>
                                                 <% } %>
@@ -338,8 +346,8 @@
                                         </form>
                                     </div>
                                     <div class="col-md-4">
-                                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                                            <i class="bi bi-plus-circle me-2"></i>Thêm dịch vụ
+                                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
+                                            <i class="bi bi-plus-circle me-2"></i>Thêm thuốc
                                         </button>
                                     </div>
                                 </div>
@@ -348,13 +356,13 @@
                     </div>
                 </div>
 
-                <!-- Services Table -->
+                <!-- Medicines Table -->
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title mb-0">
-                                    <i class="bi bi-table me-2"></i>Danh sách dịch vụ y tế
+                                    <i class="bi bi-table me-2"></i>Danh sách thuốc
                                     <% if (searchKeyword != null && !searchKeyword.trim().isEmpty()) { %>
                                     <span class="badge bg-primary ms-2">Kết quả tìm kiếm: "<%= searchKeyword %>"</span>
                                     <% } %>
@@ -362,32 +370,43 @@
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table id="servicesTable" class="table table-striped table-hover">
+                                    <table id="medicinesTable" class="table table-striped table-hover">
                                         <thead class="table-dark">
                                             <tr>
                                                 <th>ID</th>
-                                                <th>Nhóm dịch vụ</th>
-                                                <th>Tên dịch vụ</th>
-                                                <th>Giá (VNĐ)</th>
+                                                <th>Tên thuốc</th>
+                                                <th>Đơn vị tính</th>
+                                                <th>Đơn giá (VNĐ)</th>
+                                                <th>Số lượng tồn kho</th>
                                                 <th>Thao tác</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <% if (services != null && !services.isEmpty()) {
-                                                for (MedicalService service : services) { %>
+                                            <% if (medicines != null && !medicines.isEmpty()) { %>
+                                                <% for (Medicine medicine : medicines) { %>
                                                 <tr>
-                                                    <td><%= service.getServicesId() %></td>
-                                                    <td><%= service.getServiceGroup() %></td>
-                                                    <td><%= service.getServiceName() %></td>
-                                                    <td><%= df.format(service.getPrice()) %></td>
+                                                    <td><%= medicine.getExamMedicineId() %></td>
+                                                    <td><%= medicine.getMedicineName() %></td>
+                                                    <td><%= medicine.getUnitOfMeasure() %></td>
+                                                    <td><%= currencyFormatter.format(medicine.getUnitPrice()) %></td>
+                                                    <td>
+                                                        <span class="badge <%= medicine.getStockQuantity() < 10 ? "bg-danger" : medicine.getStockQuantity() < 20 ? "bg-warning" : "bg-success" %>">
+                                                            <%= medicine.getStockQuantity() %>
+                                                        </span>
+                                                    </td>
                                                     <td>
                                                         <button type="button" class="btn btn-sm btn-primary me-1" 
-                                                                onclick="editService(<%= service.getServicesId() %>)" 
+                                                                onclick="editMedicine(<%= medicine.getExamMedicineId() %>)" 
                                                                 title="Chỉnh sửa">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
+                                                        <button type="button" class="btn btn-sm btn-info me-1" 
+                                                                onclick="addStock(<%= medicine.getExamMedicineId() %>)" 
+                                                                title="Thêm số lượng">
+                                                            <i class="bi bi-plus"></i>
+                                                        </button>
                                                         <button type="button" class="btn btn-sm btn-danger" 
-                                                                onclick="deleteService(<%= service.getServicesId() %>, '<%= service.getServiceName() %>')" 
+                                                                onclick="deleteMedicine(<%= medicine.getExamMedicineId() %>, '<%= medicine.getMedicineName() %>')" 
                                                                 title="Xóa">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
@@ -395,13 +414,14 @@
                                                 </tr>
                                                 <% } %>
                                             <% } else { %>
-                                                <!-- Chỉ hiển thị thông báo khi không có search keyword và không có filter group -->
-                                                <!-- Khi search/filter không có kết quả thì không hiển thị gì (bảng trống) -->
-                                                <% String keyword = (String) request.getAttribute("searchKeyword");
-                                                   String group = (String) request.getAttribute("selectedGroup"); %>
-                                                <% if ((keyword == null || keyword.trim().isEmpty()) && (group == null || group.trim().isEmpty())) { %>
+                                                <!-- Chỉ hiển thị thông báo khi không có search keyword (tức là lần đầu truy cập trang) -->
+                                                <!-- Khi search không có kết quả thì không hiển thị gì (bảng trống) -->
+                                                <% if (searchKeyword == null || searchKeyword.trim().isEmpty()) { %>
                                                     <tr>
-                                                        <td colspan="5" class="text-center">Không có dịch vụ nào</td>
+                                                        <td colspan="6" class="text-center">
+                                                            <i class="bi bi-inbox me-2"></i>
+                                                            Chưa có thuốc nào trong kho
+                                                        </td>
                                                     </tr>
                                                 <% } %>
                                             <% } %>
@@ -415,39 +435,49 @@
             </div>
         </div>
 
-        <!-- Add Service Modal -->
-        <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
+        <!-- Add Medicine Modal -->
+        <div class="modal fade" id="addMedicineModal" tabindex="-1" aria-labelledby="addMedicineModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="addServiceModalLabel">
-                            <i class="bi bi-plus-circle me-2"></i>Thêm dịch vụ
+                        <h5 class="modal-title" id="addMedicineModalLabel">
+                            <i class="bi bi-plus-circle me-2"></i>Thêm thuốc
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form method="POST" action="${pageContext.request.contextPath}/admin/services">
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/medicines">
                         <div class="modal-body">
                             <input type="hidden" name="action" value="add">
                             
                             <div class="mb-3">
-                                <label for="addServiceGroup" class="form-label">Nhóm dịch vụ <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addServiceGroup" name="serviceGroup" placeholder="Nhập tên nhóm dịch vụ" required>
+                                <label for="addMedicineName" class="form-label">Tên thuốc <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addMedicineName" name="medicineName" placeholder="Nhập tên thuốc" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addServiceName" class="form-label">Tên dịch vụ <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addServiceName" name="serviceName" placeholder="Nhập tên dịch vụ" required>
+                                <label for="addUnitOfMeasure" class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addUnitOfMeasure" name="unitOfMeasure" placeholder="Nhập đơn vị tính (Viên, Lọ, Hộp...)" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addPrice" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="addPrice" name="price" min="0" step="0.01" placeholder="Nhập giá dịch vụ" required>
+                                <label for="addUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" min="0" step="0.01" placeholder="Nhập đơn giá" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="addStockQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" min="1" placeholder="Nhập số lượng" required>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Lưu ý:</strong> Chức năng này chỉ để thêm thuốc mới. Để tăng số lượng thuốc đã có, vui lòng sử dụng nút "Thêm số lượng" ở bảng.
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                             <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle me-2"></i>Thêm dịch vụ
+                                <i class="bi bi-check-circle me-2"></i>Thêm thuốc
                             </button>
                         </div>
                     </form>
@@ -455,34 +485,39 @@
             </div>
         </div>
 
-        <!-- Edit Service Modal -->
-        <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true">
+        <!-- Edit Medicine Modal -->
+        <div class="modal fade" id="editMedicineModal" tabindex="-1" aria-labelledby="editMedicineModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editServiceModalLabel">
-                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa dịch vụ
+                        <h5 class="modal-title" id="editMedicineModalLabel">
+                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa thuốc
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form method="POST" action="${pageContext.request.contextPath}/admin/services">
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/medicines">
                         <div class="modal-body">
                             <input type="hidden" name="action" value="update">
-                            <input type="hidden" id="editServiceId" name="serviceId">
+                            <input type="hidden" id="editMedicineId" name="medicineId">
                             
                             <div class="mb-3">
-                                <label for="editServiceGroup" class="form-label">Nhóm dịch vụ <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editServiceGroup" name="serviceGroup" required>
+                                <label for="editMedicineName" class="form-label">Tên thuốc <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editMedicineName" name="medicineName" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editServiceName" class="form-label">Tên dịch vụ <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editServiceName" name="serviceName" required>
+                                <label for="editUnitOfMeasure" class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editUnitOfMeasure" name="unitOfMeasure" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editPrice" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="editPrice" name="price" min="0" step="0.01" required>
+                                <label for="editUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editUnitPrice" name="unitPrice" min="0" step="0.01" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editStockQuantity" class="form-label">Số lượng tồn kho <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editStockQuantity" name="stockQuantity" min="0" required>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -496,25 +531,60 @@
             </div>
         </div>
 
+        <!-- Add Stock Modal -->
+        <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addStockModalLabel">
+                            <i class="bi bi-plus me-2"></i>Thêm số lượng vào kho
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/medicines">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="addStock">
+                            <input type="hidden" id="addStockMedicineId" name="medicineId">
+                            
+                            <div class="mb-3">
+                                <label for="additionalQuantity" class="form-label">Số lượng thêm vào <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="additionalQuantity" name="additionalQuantity" min="1" required>
+                                <div class="form-text">Nhập số lượng muốn thêm vào kho</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-info">
+                                <i class="bi bi-check-circle me-2"></i>Thêm vào kho
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Delete Confirmation Modal -->
         <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="deleteConfirmModalLabel">
+                        <h5 class="modal-title text-danger" id="deleteConfirmModalLabel">
                             <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Bạn có chắc chắn muốn xóa dịch vụ: <strong id="deleteServiceName"></strong>?</p>
-                        <p class="text-danger">Hành động này không thể hoàn tác!</p>
+                        <p>Bạn có chắc chắn muốn xóa thuốc <strong id="deleteMedicineName"></strong> không?</p>
+                        <p class="text-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Hành động này không thể hoàn tác!
+                        </p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <form method="POST" action="${pageContext.request.contextPath}/admin/services" style="display: inline;">
+                        <form method="POST" action="${pageContext.request.contextPath}/admin/medicines" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
-                            <input type="hidden" id="deleteServiceId" name="serviceId">
+                            <input type="hidden" id="deleteMedicineId" name="medicineId">
                             <button type="submit" class="btn btn-danger">
                                 <i class="bi bi-trash me-2"></i>Xóa
                             </button>
@@ -524,66 +594,93 @@
             </div>
         </div>
 
+        <!-- Bootstrap Bundle with Popper -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-        <!-- Bootstrap JS -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <!-- DataTables JS -->
         <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-
+        
         <script>
-            $(document).ready(function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 // Sidebar toggle
-                $('#sidebarCollapse').on('click', function () {
-                    $('#sidebar').toggleClass('active');
-                    $('#content').toggleClass('active');
+                const sidebarCollapse = document.getElementById('sidebarCollapse');
+                const sidebar = document.getElementById('sidebar');
+                const content = document.getElementById('content');
+
+                sidebarCollapse.addEventListener('click', function () {
+                    sidebar.classList.toggle('collapsed');
+                    content.classList.toggle('expanded');
                 });
 
+                // Responsive sidebar
+                function checkWidth() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.add('collapsed');
+                        content.classList.add('expanded');
+                    } else {
+                        sidebar.classList.remove('collapsed');
+                        content.classList.remove('expanded');
+                    }
+                }
+
+                // Initial check
+                checkWidth();
+
+                // Listen for window resize
+                window.addEventListener('resize', checkWidth);
+
                 // Initialize DataTable
-                $('#servicesTable').DataTable({
-                    "searching": false,
+                $('#medicinesTable').DataTable({
+                    "searching": false, // Disable built-in search
                     "language": {
-                        "lengthMenu": "Hiển thị _MENU_ dịch vụ mỗi trang",
+                        "lengthMenu": "Hiển thị _MENU_ mục",
                         "zeroRecords": "", // Không hiển thị thông báo khi không có dữ liệu
-                        "info": "Hiển thị trang _PAGE_ của _PAGES_",
-                        "infoEmpty": "Không có dịch vụ",
-                        "infoFiltered": "(lọc từ _MAX_ tổng số dịch vụ)",
+                        "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                        "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
+                        "infoFiltered": "(lọc từ _MAX_ tổng số mục)",
                         "paginate": {
                             "first": "Đầu",
                             "last": "Cuối",
                             "next": "Tiếp",
                             "previous": "Trước"
                         }
-                    },
-                    "pageLength": 10,
-                    "responsive": true
+                    }
                 });
+
             });
 
-            // Edit service function
-            function editService(serviceId) {
+            // Edit medicine function
+            function editMedicine(medicineId) {
                 var contextPath = '<%= request.getContextPath() %>';
-                fetch(contextPath + '/admin/services?action=get&id=' + serviceId)
+                fetch(contextPath + '/admin/medicines?action=get&id=' + medicineId)
                     .then(response => response.json())
                     .then(data => {
-                        document.getElementById('editServiceId').value = data.servicesId;
-                        document.getElementById('editServiceGroup').value = data.serviceGroup;
-                        document.getElementById('editServiceName').value = data.serviceName;
-                        document.getElementById('editPrice').value = data.price;
+                        document.getElementById('editMedicineId').value = data.examMedicineId;
+                        document.getElementById('editMedicineName').value = data.medicineName;
+                        document.getElementById('editUnitOfMeasure').value = data.unitOfMeasure;
+                        document.getElementById('editUnitPrice').value = data.unitPrice;
+                        document.getElementById('editStockQuantity').value = data.stockQuantity;
                         
-                        new bootstrap.Modal(document.getElementById('editServiceModal')).show();
+                        new bootstrap.Modal(document.getElementById('editMedicineModal')).show();
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('Không thể tải thông tin dịch vụ!');
+                        alert('Không thể tải thông tin thuốc!');
                     });
             }
 
-            // Delete service function
-            function deleteService(serviceId, serviceName) {
-                document.getElementById('deleteServiceId').value = serviceId;
-                document.getElementById('deleteServiceName').textContent = serviceName;
+            // Add stock function
+            function addStock(medicineId) {
+                document.getElementById('addStockMedicineId').value = medicineId;
+                new bootstrap.Modal(document.getElementById('addStockModal')).show();
+            }
+
+            // Delete medicine function
+            function deleteMedicine(medicineId, medicineName) {
+                document.getElementById('deleteMedicineId').value = medicineId;
+                document.getElementById('deleteMedicineName').textContent = medicineName;
                 new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
             }
         </script>
