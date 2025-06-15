@@ -1,6 +1,7 @@
 package com.mycompany.isp490_gr3.dao;
 
 import com.mycompany.isp490_gr3.model.MedicalSupply;
+import com.mycompany.isp490_gr3.model.Medicine;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
@@ -249,5 +250,247 @@ public class DAOWarehouse {
         }
         
         return groups;
+    }
+    
+    // =====================================================
+    // PHẦN QUẢN LÝ KHO THUỐC (MEDICINES)
+    // Bảng database: examination_medicines
+    // Model: Medicine
+    // =====================================================
+    
+    // Get all medicines
+    public List<Medicine> getAllMedicines() {
+        List<Medicine> medicines = new ArrayList<>();
+        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at FROM examination_medicines ORDER BY medicine_name";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                Medicine medicine = new Medicine();
+                medicine.setExamMedicineId(rs.getInt("exam_medicine_id"));
+                medicine.setMedicineName(rs.getString("medicine_name"));
+                medicine.setQuantity(rs.getObject("quantity", Integer.class));
+                medicine.setUnitOfMeasure(rs.getString("unit_of_measure"));
+                medicine.setUnitPrice(rs.getBigDecimal("unit_price"));
+                medicine.setStockQuantity(rs.getInt("stock_quantity"));
+                medicine.setCreatedAt(rs.getTimestamp("created_at"));
+                medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
+                medicines.add(medicine);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting all medicines: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return medicines;
+    }
+    
+    // Search medicines by name
+    public List<Medicine> searchMedicines(String keyword) {
+        List<Medicine> medicines = new ArrayList<>();
+        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at " +
+                    "FROM examination_medicines WHERE medicine_name LIKE ? ORDER BY medicine_name";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            String searchKeyword = "%" + keyword + "%";
+            stmt.setString(1, searchKeyword);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Medicine medicine = new Medicine();
+                    medicine.setExamMedicineId(rs.getInt("exam_medicine_id"));
+                    medicine.setMedicineName(rs.getString("medicine_name"));
+                    medicine.setQuantity(rs.getObject("quantity", Integer.class));
+                    medicine.setUnitOfMeasure(rs.getString("unit_of_measure"));
+                    medicine.setUnitPrice(rs.getBigDecimal("unit_price"));
+                    medicine.setStockQuantity(rs.getInt("stock_quantity"));
+                    medicine.setCreatedAt(rs.getTimestamp("created_at"));
+                    medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    medicines.add(medicine);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error searching medicines: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return medicines;
+    }
+    
+    // Get medicine by ID
+    public Medicine getMedicineById(int medicineId) {
+        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at " +
+                    "FROM examination_medicines WHERE exam_medicine_id = ?";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, medicineId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Medicine medicine = new Medicine();
+                    medicine.setExamMedicineId(rs.getInt("exam_medicine_id"));
+                    medicine.setMedicineName(rs.getString("medicine_name"));
+                    medicine.setQuantity(rs.getObject("quantity", Integer.class));
+                    medicine.setUnitOfMeasure(rs.getString("unit_of_measure"));
+                    medicine.setUnitPrice(rs.getBigDecimal("unit_price"));
+                    medicine.setStockQuantity(rs.getInt("stock_quantity"));
+                    medicine.setCreatedAt(rs.getTimestamp("created_at"));
+                    medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    return medicine;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting medicine by ID: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    // Check if medicine exists by name and unit
+    public Medicine findExistingMedicine(String medicineName, String unitOfMeasure) {
+        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at " +
+                    "FROM examination_medicines WHERE medicine_name = ? AND unit_of_measure = ?";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, medicineName);
+            stmt.setString(2, unitOfMeasure);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Medicine medicine = new Medicine();
+                    medicine.setExamMedicineId(rs.getInt("exam_medicine_id"));
+                    medicine.setMedicineName(rs.getString("medicine_name"));
+                    medicine.setQuantity(rs.getObject("quantity", Integer.class));
+                    medicine.setUnitOfMeasure(rs.getString("unit_of_measure"));
+                    medicine.setUnitPrice(rs.getBigDecimal("unit_price"));
+                    medicine.setStockQuantity(rs.getInt("stock_quantity"));
+                    medicine.setCreatedAt(rs.getTimestamp("created_at"));
+                    medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    return medicine;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error finding existing medicine: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    // Add new medicine
+    public boolean addMedicine(Medicine medicine) {
+        String sql = "INSERT INTO examination_medicines (medicine_name, unit_of_measure, unit_price, stock_quantity) VALUES (?, ?, ?, ?)";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, medicine.getMedicineName());
+            stmt.setString(2, medicine.getUnitOfMeasure());
+            stmt.setBigDecimal(3, medicine.getUnitPrice());
+            stmt.setInt(4, medicine.getStockQuantity());
+            
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error adding medicine: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    // Update medicine stock quantity
+    public boolean updateMedicineStockQuantity(int medicineId, int additionalQuantity) {
+        String sql = "UPDATE examination_medicines SET stock_quantity = stock_quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE exam_medicine_id = ?";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, additionalQuantity);
+            stmt.setInt(2, medicineId);
+            
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error updating medicine stock quantity: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    // Update medicine information
+    public boolean updateMedicine(Medicine medicine) {
+        String sql = "UPDATE examination_medicines SET medicine_name = ?, unit_of_measure = ?, unit_price = ?, stock_quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE exam_medicine_id = ?";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, medicine.getMedicineName());
+            stmt.setString(2, medicine.getUnitOfMeasure());
+            stmt.setBigDecimal(3, medicine.getUnitPrice());
+            stmt.setInt(4, medicine.getStockQuantity());
+            stmt.setInt(5, medicine.getExamMedicineId());
+            
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error updating medicine: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    // Delete medicine
+    public boolean deleteMedicine(int medicineId) {
+        String sql = "DELETE FROM examination_medicines WHERE exam_medicine_id = ?";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, medicineId);
+            
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error deleting medicine: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    // Get all distinct medicine units
+    public List<String> getAllMedicineUnits() {
+        List<String> units = new ArrayList<>();
+        String sql = "SELECT DISTINCT unit_of_measure FROM examination_medicines ORDER BY unit_of_measure";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                units.add(rs.getString("unit_of_measure"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting medicine units: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return units;
     }
 } 
