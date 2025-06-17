@@ -119,6 +119,7 @@ public class Medicine {
     public void setIsdeleted(boolean isdeleted) {
         this.isdeleted = isdeleted;
     }
+    
     @Override
     public String toString() {
         return "Medicine{" +
