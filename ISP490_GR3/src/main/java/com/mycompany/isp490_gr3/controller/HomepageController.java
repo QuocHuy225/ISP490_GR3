@@ -9,7 +9,22 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
-@WebServlet(name = "HomepageController", urlPatterns = {"/homepage", "/home", "/dashboard"})
+@WebServlet(name = "HomepageController", urlPatterns = {"/homepage"})
+/**
+ * =====================================================
+ * HomepageController - CONTROLLER TRANG CHỦ
+ * 
+ * Chức năng: Xử lý request hiển thị trang chủ chính
+ * URL patterns: /homepage
+ * JSP tương ứng: homepage.jsp
+ * 
+ * Các chức năng chính:
+ * - Hiển thị trang chủ với menu theo role
+ * - Kiểm tra trạng thái đăng nhập
+ * - Chuyển hướng phù hợp cho từng role
+ * - Dashboard chính của hệ thống
+ * =====================================================
+ */
 public class HomepageController extends HttpServlet {
 
     @Override

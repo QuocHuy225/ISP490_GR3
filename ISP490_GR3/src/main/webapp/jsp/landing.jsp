@@ -18,7 +18,7 @@
         <!-- AOS Animation -->
         <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
         <!-- Custom CSS -->
-        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="css/landing.css">
     </head>
     <body>
         <!-- Header -->
@@ -749,81 +749,9 @@
                                     }
                                 });
 
-                                // Floating animation
-                                const style = document.createElement('style');
-                                style.textContent = `
-                @keyframes float {
-                    0%, 100% { transform: translateY(0px) rotate(0deg); }
-                    50% { transform: translateY(-20px) rotate(180deg); }
-                }
-                .hover-lift {
-                    transition: transform 0.3s ease, box-shadow 0.3s ease;
-                }
-                .hover-lift:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
-                }
-                .bg-gradient {
-                    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
-                }
-            `;
-                                document.head.appendChild(style);
+                                // All styles are now in landing.css
         </script>
 
-        <!-- Custom Styles for Enhanced UI -->
-        <style>
-            @keyframes float {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                50% { transform: translateY(-20px) rotate(180deg); }
-            }
-            
-            .login-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4) !important;
-                background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
-            }
-            
-            .register-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(30, 64, 175, 0.4) !important;
-                background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%) !important;
-            }
-            
-            .google-btn:hover {
-                background-color: #f8fafc;
-                border-color: #2563eb;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            }
-            
-            .form-control:focus {
-                box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.15);
-                border-color: #2563eb;
-            }
-            
-            .modal-content {
-                animation: modalSlideIn 0.3s ease-out;
-            }
-            
-            @keyframes modalSlideIn {
-                from {
-                    transform: scale(0.7) translateY(-50px);
-                    opacity: 0;
-                }
-                to {
-                    transform: scale(1) translateY(0);
-                    opacity: 1;
-                }
-            }
-            
-            .form-floating > label {
-                color: #6b7280;
-                font-weight: 500;
-            }
-            
-            .z-index-2 {
-                z-index: 2;
-            }
-        </style>
+        <!-- All custom styles moved to landing.css -->
     </body>
 </html>

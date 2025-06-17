@@ -13,411 +13,32 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <!-- Bootstrap Icons -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-        <!-- Custom CSS -->
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-        <style>
-            :root {
-                --primary-color: #0360D9;
-                --primary-dark: #0246a3;
-                --primary-light: #e3f2fd;
-                --white: #ffffff;
-                --text-dark: #2B3674;
-                --text-light: #A3AED0;
-                --body-bg: #f8f9fa;
-                --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, #00d4ff 100%);
-                --shadow-light: 0 5px 25px rgba(3, 96, 217, 0.1);
-                --shadow-medium: 0 10px 40px rgba(3, 96, 217, 0.15);
-            }
-
-            * {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-                -webkit-font-smoothing: antialiased;
-                -moz-osx-font-smoothing: grayscale;
-            }
-
-            body {
-                background-color: var(--body-bg);
-                color: var(--text-dark);
-            }
-
-            /* Sidebar Styles */
-            #sidebar {
-                min-width: 250px;
-                max-width: 250px;
-                min-height: 100vh;
-                background: var(--primary-color);
-                color: var(--white);
-                transition: all 0.3s;
-                position: fixed;
-                left: 0;
-                top: 0;
-                z-index: 1000;
-                box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-            }
-
-            #sidebar.collapsed {
-                margin-left: -250px;
-            }
-
-            #sidebar .sidebar-header {
-                padding: 20px;
-                background: var(--primary-dark);
-                text-align: center;
-            }
-
-            #sidebar .sidebar-header h3 {
-                color: var(--white);
-                margin: 0;
-                font-weight: 700;
-                font-size: 1.5rem;
-            }
-
-            #sidebar ul.components {
-                padding: 20px 0;
-            }
-
-            #sidebar ul li a {
-                padding: 15px 20px;
-                font-size: 1.1em;
-                display: flex;
-                align-items: center;
-                color: var(--white);
-                text-decoration: none;
-                transition: all 0.3s;
-                border-radius: 8px;
-                margin: 4px 8px;
-            }
-
-            #sidebar ul li a:hover {
-                background: var(--primary-dark);
-                transform: translateX(5px);
-            }
-
-            #sidebar ul li a i {
-                margin-right: 10px;
-                font-size: 1.2em;
-            }
-
-            #sidebar ul li.active > a {
-                background: var(--primary-dark);
-                border-left: 4px solid var(--white);
-            }
-
-            /* Admin only menu items */
-            .admin-only {
-                display: none;
-            }
-
-            /* Main Content Styles */
-            #content {
-                width: calc(100% - 250px);
-                min-height: 100vh;
-                transition: all 0.3s;
-                position: absolute;
-                top: 0;
-                right: 0;
-            }
-
-            #content.expanded {
-                width: 100%;
-            }
-
-            /* Navbar Styles */
-            .top-navbar {
-                background: var(--white);
-                padding: 1rem;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                margin-bottom: 2rem;
-                position: sticky;
-                top: 0;
-                z-index: 1020;
-                width: 100%;
-            }
-
-            .navbar-search {
-                max-width: 600px;
-                width: 100%;
-                position: relative;
-            }
-
-            .navbar-search input {
-                padding: 0.8rem 1rem 0.8rem 3rem;
-                border-radius: 30px;
-                border: 2px solid #e0e0e0;
-                background: #f8f9fa;
-                font-size: 1.1rem;
-                transition: all 0.3s ease;
-            }
-
-            .navbar-search input:focus {
-                border-color: var(--primary-color);
-                box-shadow: 0 0 0 0.2rem rgba(3, 96, 217, 0.25);
-            }
-
-            .navbar-search i {
-                position: absolute;
-                left: 1.2rem;
-                top: 50%;
-                transform: translateY(-50%);
-                color: var(--text-light);
-                font-size: 1.2rem;
-            }
-
-            /* Enhanced Dropdown Styling */
-            .user-dropdown {
-                position: relative;
-            }
-
-            .dropdown-toggle {
-                background: linear-gradient(135deg, var(--primary-color), #00d4ff) !important;
-                border: none !important;
-                border-radius: 50px !important;
-                padding: 0.75rem 1.5rem !important;
-                color: white !important;
-                font-weight: 600 !important;
-                box-shadow: var(--shadow-light) !important;
-                transition: all 0.3s ease !important;
-                text-decoration: none !important;
-                display: flex !important;
-                align-items: center !important;
-                gap: 0.75rem !important;
-            }
-
-            .dropdown-toggle:hover {
-                transform: translateY(-2px) !important;
-                box-shadow: var(--shadow-medium) !important;
-                color: white !important;
-            }
-
-            .dropdown-toggle:focus {
-                box-shadow: var(--shadow-medium) !important;
-                color: white !important;
-            }
-
-            .dropdown-toggle::after {
-                border: none !important;
-                content: '\f282' !important;
-                font-family: 'Bootstrap Icons' !important;
-                margin-left: 0.5rem !important;
-                transition: transform 0.3s ease !important;
-            }
-
-            .dropdown-toggle[aria-expanded="true"]::after {
-                transform: rotate(180deg) !important;
-            }
-
-            .dropdown-menu {
-                border: none !important;
-                border-radius: 20px !important;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-                padding: 1rem 0 !important;
-                margin-top: 0.5rem !important;
-                backdrop-filter: blur(20px) !important;
-                background: rgba(255, 255, 255, 0.95) !important;
-                min-width: 280px !important;
-            }
-
-            .dropdown-item {
-                padding: 0.75rem 1.5rem !important;
-                font-weight: 500 !important;
-                transition: all 0.3s ease !important;
-                border: none !important;
-                background: none !important;
-                display: flex !important;
-                align-items: center !important;
-                gap: 0.75rem !important;
-                color: var(--text-dark) !important;
-                text-decoration: none !important;
-                margin: 0.25rem 0 !important;
-            }
-
-            .dropdown-item:hover {
-                background: linear-gradient(135deg, var(--primary-light), rgba(0, 212, 255, 0.1)) !important;
-                color: var(--primary-dark) !important;
-                transform: translateX(5px) !important;
-                padding-left: 2rem !important;
-            }
-
-            .dropdown-item i {
-                font-size: 1.1rem !important;
-                width: 20px !important;
-                text-align: center !important;
-            }
-
-            .dropdown-item.text-danger {
-                color: #dc3545 !important;
-            }
-
-            .dropdown-item.text-danger:hover {
-                background: linear-gradient(135deg, #fee, #fdd) !important;
-                color: #c82333 !important;
-            }
-
-            .dropdown-divider {
-                margin: 0.5rem 1rem !important;
-                border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
-                background: none !important;
-            }
-
-            /* User profile image styling */
-            .user-profile-icon {
-                width: 45px !important;
-                height: 45px !important;
-                border-radius: 50% !important;
-                background: rgba(255, 255, 255, 0.2) !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                border: 2px solid rgba(255, 255, 255, 0.3) !important;
-                backdrop-filter: blur(10px) !important;
-            }
-
-            .user-info {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-start !important;
-            }
-
-            .user-name {
-                font-size: 1rem !important;
-                font-weight: 600 !important;
-                margin: 0 !important;
-                line-height: 1.2 !important;
-            }
-
-            .user-role {
-                font-size: 0.8rem !important;
-                opacity: 0.8 !important;
-                margin: 0 !important;
-                line-height: 1.2 !important;
-                text-transform: uppercase !important;
-                letter-spacing: 0.5px !important;
-            }
-
-            /* Dashboard Cards */
-            .stat-card {
-                background: var(--white);
-                border-radius: 15px;
-                padding: 1.5rem;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-                transition: all 0.3s ease;
-            }
-
-            .stat-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            }
-
-            .stat-icon {
-                width: 60px;
-                height: 60px;
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.8rem;
-                margin-bottom: 1rem;
-            }
-
-            .stat-icon.primary {
-                background: var(--primary-light);
-                color: var(--primary-color);
-            }
-
-            .stat-icon.success {
-                background: #e6f4ea;
-                color: #34a853;
-            }
-
-            .stat-icon.info {
-                background: #e8f0fe;
-                color: #4285f4;
-            }
-
-            .stat-icon.warning {
-                background: #fef7e6;
-                color: #fbbc04;
-            }
-
-            .stat-value {
-                font-size: 2rem;
-                font-weight: 700;
-                margin-bottom: 0.5rem;
-                color: var(--text-dark);
-            }
-
-            .stat-label {
-                color: var(--text-light);
-                font-size: 0.9rem;
-            }
-
-            /* Animations */
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(20px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            .animate-fade-in {
-                animation: fadeIn 0.5s ease forwards;
-            }
-
-            /* Responsive */
-            @media (max-width: 768px) {
-                #sidebar {
-                    margin-left: -250px;
-                }
-                #sidebar.active {
-                    margin-left: 0;
-                }
-                #content {
-                    width: 100%;
-                }
-                .top-navbar {
-                    margin-left: 0;
-                }
-                
-                .dropdown-toggle {
-                    padding: 0.5rem 1rem !important;
-                }
-                
-                .user-info {
-                    display: none !important;
-                }
-                
-                .dropdown-menu {
-                    min-width: 250px !important;
-                }
-            }
-
-            /* Debug info */
-            .debug-info {
-                background: #f8f9fa;
-                border: 1px solid #dee2e6;
-                border-radius: 5px;
-                padding: 10px;
-                margin: 10px;
-                font-family: monospace;
-                font-size: 12px;
-            }
-        </style>
+        <!-- Homepage specific CSS -->
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
     </head>
     <body>
         <%
         // Get user role for access control
         Object userRole = session.getAttribute("userRole");
-        boolean isAdmin = false;
+        User.Role currentRole = null;
+        
         if (userRole != null) {
             if (userRole instanceof User.Role) {
-                isAdmin = ((User.Role) userRole) == User.Role.ADMIN;
+                currentRole = (User.Role) userRole;
             } else {
-                isAdmin = "Admin".equals(userRole.toString());
+                // Try to parse from string
+                try {
+                    currentRole = User.Role.valueOf(userRole.toString().toUpperCase());
+                } catch (Exception e) {
+                    // Fallback to parsing from display value
+                    currentRole = User.Role.fromString(userRole.toString());
+                }
             }
+        }
+        
+        // Default to PATIENT if no role found
+        if (currentRole == null) {
+            currentRole = User.Role.PATIENT;
         }
         
         // Get user information
@@ -430,21 +51,60 @@
             userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
         }
         %>
-        
+
         <!-- Sidebar -->
         <nav id="sidebar">
             <div class="sidebar-header">
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
+                <% if (currentRole == User.Role.ADMIN) { %>
+                <!-- Menu cho Admin -->
                 <li class="active">
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/authorization">
+                        <i class="bi bi-people-fill"></i> Quản lý người dùng
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/services">
+                        <i class="bi bi-file-medical"></i> Quản lý dịch vụ
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medicines">
+                        <i class="bi bi-hospital"></i> Quản lý kho thuốc
+                    </a>
+                </li>
+                <li>
                     <a href="#">
+                        <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-supplies">
+                        <i class="bi bi-gear-fill"></i> Quản lý vật tư
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
+                    </a>
+                </li>
+                <% } else if (currentRole == User.Role.DOCTOR) { %>
+                <!-- Menu cho Bác sĩ -->
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
                     </a>
                 </li>
                 <li>
                     <a href="#">
-                        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
+                        <i class="bi bi-calendar-check"></i> Lịch khám bệnh
                     </a>
                 </li>
                 <li>
@@ -454,9 +114,70 @@
                 </li>
                 <li>
                     <a href="#">
+                        <i class="bi bi-people"></i> Danh sách bệnh nhân
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-journal-medical"></i> Chỉ định dịch vụ
+                    </a>
+                </li>
+                <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
+                <!-- Menu cho Lễ tân -->
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/appointments">
+                        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
+                    </a>
+                </li>
+               
+                <% } else { %>
+                <!-- Menu cho Bệnh nhân (PATIENT) -->
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-file-medical"></i> Hồ sơ sức khỏe
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
                         <i class="bi bi-hospital"></i> Dịch vụ
                     </a>
                 </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
+                    </a>
+                </li>
+                <% } %>
             </ul>
         </nav>
 
@@ -478,7 +199,7 @@
 
                     <div class="navbar-search mx-auto">
                         <i class="bi bi-search"></i>
-                        <input type="text" class="form-control" placeholder="Tìm kiếm bệnh nhân, lịch hẹn, hồ sơ...">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm">
                     </div>
 
                     <div class="dropdown user-dropdown">
@@ -492,15 +213,6 @@
                             </div>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <% if (isAdmin) { %>
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/authorization">
-                                    <i class="bi bi-people-fill"></i>
-                                    <span>Quản lý người dùng</span>
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <% } %>
                             <li>
                                 <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
                                     <i class="bi bi-person-fill"></i>
@@ -530,7 +242,215 @@
                     </div>
                 </div>
             </nav>
+
+            <!-- Main Content Area -->
+            <div class="container-fluid mt-4">
+                <!-- Welcome Section -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="welcome-banner">
+                            <div class="card-body text-center py-5 px-4">
+                                <h1 class="display-3 fw-bold mb-4 welcome-title">
+                                    Chào mừng đến với <span style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.4);">Phòng khám Ánh Dương</span>
+                                </h1>
+                                <p class="lead mb-4 welcome-subtitle" style="font-size: 1.3rem;">
+                                    Sức khỏe của bạn là ưu tiên hàng đầu của chúng tôi
+                                </p>
+                                <div class="mt-4">
+                                    <span class="badge bg-light text-dark px-4 py-2 me-3" style="font-size: 1rem;">
+                                        <i class="bi bi-shield-check me-2"></i>An toàn
+                                    </span>
+                                    <span class="badge bg-light text-dark px-4 py-2 me-3" style="font-size: 1rem;">
+                                        <i class="bi bi-heart me-2"></i>Chất lượng
+                                    </span>
+                                    <span class="badge bg-light text-dark px-4 py-2" style="font-size: 1rem;">
+                                        <i class="bi bi-people me-2"></i>Tận tâm
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clinic Introduction -->
+                <div class="row mb-5">
+                    <div class="col-lg-6 mb-4">
+                        <div class="enhanced-card h-100 animate-fadeInUp">
+                            <div class="card-body p-5">
+                                <h3 class="card-title text-primary-custom mb-4">
+                                    <i class="bi bi-hospital me-2"></i>Về Phòng khám Ánh Dương
+                                </h3>
+                                <p class="card-text text-secondary-custom mb-4" style="line-height: 1.7;">
+                                    Phòng khám Ánh Dương được thành lập với sứ mệnh mang đến dịch vụ chăm sóc sức khỏe chất lượng cao, 
+                                    tận tâm và chuyên nghiệp cho cộng đồng. Với đội ngũ bác sĩ giàu kinh nghiệm và trang thiết bị hiện đại, 
+                                    chúng tôi cam kết cung cấp dịch vụ y tế tốt nhất.
+                                </p>
+                                <div class="row mt-4">
+                                    <div class="col-6">
+                                        <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+                                            <h3 class="stat-number mb-2">10+</h3>
+                                            <small class="text-secondary-custom fw-semibold">Năm kinh nghiệm</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+                                            <h3 class="stat-number mb-2">5000+</h3>
+                                            <small class="text-secondary-custom fw-semibold">Bệnh nhân tin tưởng</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 mb-4">
+                        <div class="enhanced-card h-100 animate-fadeInUp">
+                            <div class="card-body p-5">
+                                <h3 class="card-title text-primary-custom mb-4">
+                                    <i class="bi bi-geo-alt me-2"></i>Thông tin liên hệ
+                                </h3>
+                                <div class="contact-info">
+                                    <div class="d-flex align-items-center mb-4 contact-item p-3">
+                                        <i class="bi bi-building text-primary-custom me-3" style="font-size: 1.4rem;"></i>
+                                        <div>
+                                            <strong class="d-block text-dark mb-1">Địa chỉ:</strong>
+                                            <span class="text-secondary-custom">123 Đường ABC, Phường XYZ, Quận 1, TP.HCM</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-4 contact-item p-3">
+                                        <i class="bi bi-telephone text-primary-custom me-3" style="font-size: 1.4rem;"></i>
+                                        <div>
+                                            <strong class="d-block text-dark mb-1">Điện thoại:</strong>
+                                            <span class="text-secondary-custom">(028) 1234 5678</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-4 contact-item p-3">
+                                        <i class="bi bi-envelope text-primary-custom me-3" style="font-size: 1.4rem;"></i>
+                                        <div>
+                                            <strong class="d-block text-dark mb-1">Email:</strong>
+                                            <span class="text-secondary-custom">info@anhduongclinic.com</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center contact-item p-3">
+                                        <i class="bi bi-clock text-primary-custom me-3" style="font-size: 1.4rem;"></i>
+                                        <div>
+                                            <strong class="d-block text-dark mb-1">Giờ làm việc:</strong>
+                                            <span class="text-secondary-custom">Thứ 2 - Thứ 7: 8:00 - 20:00</span><br>
+                                            <span class="text-secondary-custom">Chủ nhật: 8:00 - 17:00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services Overview -->
+                <div class="row mb-5 pattern-bg py-5">
+                    <div class="col-12">
+                        <h3 class="text-center section-header text-primary-custom">
+                            <i class="bi bi-heart-pulse me-2"></i>Dịch vụ nổi bật
+                        </h3>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="service-card text-center h-100">
+                            <div class="card-body p-4">
+                                <div class="service-icon mb-4">
+                                    <i class="bi bi-heart-pulse text-primary-custom" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title text-dark fw-bold mb-3">Khám tổng quát</h5>
+                                <p class="card-text text-secondary-custom">
+                                    Khám sức khỏe định kỳ và tư vấn y tế chuyên nghiệp với đội ngũ bác sĩ giàu kinh nghiệm
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="service-card text-center h-100">
+                            <div class="card-body p-4">
+                                <div class="service-icon mb-4">
+                                    <i class="bi bi-prescription2 text-primary-custom" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title text-dark fw-bold mb-3">Tư vấn thuốc</h5>
+                                <p class="card-text text-secondary-custom">
+                                    Hướng dẫn sử dụng thuốc an toàn và hiệu quả cho mọi lứa tuổi
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="service-card text-center h-100">
+                            <div class="card-body p-4">
+                                <div class="service-icon mb-4">
+                                    <i class="bi bi-calendar-check text-primary-custom" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title text-dark fw-bold mb-3">Đặt lịch online</h5>
+                                <p class="card-text text-secondary-custom">
+                                    Đặt lịch khám dễ dàng, tiện lợi 24/7 qua hệ thống trực tuyến
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="service-card text-center h-100">
+                            <div class="card-body p-4">
+                                <div class="service-icon mb-4">
+                                    <i class="bi bi-shield-check text-primary-custom" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title text-dark fw-bold mb-3">Bảo mật thông tin</h5>
+                                <p class="card-text text-secondary-custom">
+                                    Cam kết bảo mật tuyệt đối thông tin cá nhân và y tế của bệnh nhân
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Why Choose Us -->
+                <div class="row mb-5">
+                    <div class="col-12 mb-5">
+                        <h3 class="text-center section-header text-primary-custom">
+                            <i class="bi bi-star me-2"></i>Tại sao chọn Phòng khám Ánh Dương?
+                        </h3>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <div class="text-center p-4">
+                            <div class="feature-icon mb-4">
+                                <i class="bi bi-people-fill text-primary-custom" style="font-size: 4.5rem;"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-3">Đội ngũ chuyên nghiệp</h5>
+                            <p class="text-secondary-custom" style="line-height: 1.6;">
+                                Bác sĩ có trình độ cao, nhiều năm kinh nghiệm trong lĩnh vực y tế, được đào tạo bài bản và cập nhật kiến thức thường xuyên
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <div class="text-center p-4">
+                            <div class="feature-icon mb-4">
+                                <i class="bi bi-gear-fill text-primary-custom" style="font-size: 4.5rem;"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-3">Trang thiết bị hiện đại</h5>
+                            <p class="text-secondary-custom" style="line-height: 1.6;">
+                                Đầu tư trang thiết bị y tế tiên tiến nhập khẩu từ các nước phát triển, đảm bảo chính xác trong chẩn đoán và điều trị
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <div class="text-center p-4">
+                            <div class="feature-icon mb-4">
+                                <i class="bi bi-heart-fill text-primary-custom" style="font-size: 4.5rem;"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-3">Dịch vụ tận tâm</h5>
+                            <p class="text-secondary-custom" style="line-height: 1.6;">
+                                Luôn đặt sức khỏe và sự hài lòng của bệnh nhân lên hàng đầu, phục vụ với tinh thần trách nhiệm cao
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -562,11 +482,11 @@
 
                 // Listen for window resize
                 window.addEventListener('resize', checkWidth);
-                
+
                 // Enhanced dropdown animations
                 const dropdownToggle = document.getElementById('userDropdown');
                 const dropdownMenu = dropdownToggle.nextElementSibling;
-                
+
                 dropdownToggle.addEventListener('show.bs.dropdown', function () {
                     dropdownMenu.style.opacity = '0';
                     dropdownMenu.style.transform = 'translateY(-10px)';

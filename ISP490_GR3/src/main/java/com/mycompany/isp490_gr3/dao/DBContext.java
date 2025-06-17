@@ -4,6 +4,19 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * =====================================================
+ * DBContext - QUẢN LÝ KẾT NỐI CƠ SỞ DỮ LIỆU
+ * 
+ * Chức năng: Cung cấp kết nối đến MySQL database
+ * Database: MySQL
+ * 
+ * Chức năng chính:
+ * - Tạo và quản lý kết nối database
+ * - Cấu hình connection string
+ * - Xử lý pool connection
+ * =====================================================
+ */
 public class DBContext {
     private static final String JDBC_URL = "jdbc:mysql://localhost:3306/clinicdb?useSSL=false&allowPublicKeyRetrieval=true";
     private static final String JDBC_USER = "root";

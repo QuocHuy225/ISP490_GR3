@@ -17,6 +17,23 @@ import jakarta.servlet.http.HttpSession;
  * Controller for handling user profile operations
  */
 @WebServlet(name = "UserProfileController", urlPatterns = {"/user/*"})
+/**
+ * =====================================================
+ * UserProfileController - CONTROLLER HỒ SƠ CÁ NHÂN
+ * 
+ * Chức năng: Xử lý các request liên quan đến quản lý hồ sơ cá nhân
+ * URL patterns: /user/profile, /user/profile/*
+ * DAO sử dụng: DAOUser
+ * JSP tương ứng: profile.jsp, change-password.jsp
+ * 
+ * Các chức năng chính:
+ * - Xem thông tin hồ sơ cá nhân
+ * - Cập nhật thông tin cá nhân (tên, SĐT, địa chỉ)
+ * - Đổi mật khẩu
+ * - Quản lý tài khoản Google liên kết
+ * - Tất cả user đăng nhập đều có thể truy cập
+ * =====================================================
+ */
 public class UserProfileController extends HttpServlet {
     
     private DAOUser daoUser;

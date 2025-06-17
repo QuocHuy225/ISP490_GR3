@@ -19,6 +19,24 @@ import jakarta.servlet.http.HttpSession;
  * Controller for handling authentication requests (login and register)
  */
 @WebServlet(name = "AuthenticationController", urlPatterns = {"/auth/*"})
+/**
+ * =====================================================
+ * AuthenticationController - CONTROLLER XÁC THỰC NGƯỜI DÙNG
+ * 
+ * Chức năng: Xử lý các request liên quan đến đăng nhập/đăng ký
+ * URL patterns: /auth/*, /login, /register, /logout
+ * DAO sử dụng: DAOUser
+ * JSP tương ứng: login.jsp, register.jsp, landing.jsp
+ * 
+ * Các chức năng chính:
+ * - Đăng nhập (email/password và Google OAuth)
+ * - Đăng ký tài khoản mới
+ * - Đăng xuất và quản lý session
+ * - Xác thực và phân quyền
+ * - Chuyển hướng sau đăng nhập theo role
+ * - Liên kết tài khoản Google
+ * =====================================================
+ */
 public class AuthenticationController extends HttpServlet {
     
     private DAOUser daoUser;
