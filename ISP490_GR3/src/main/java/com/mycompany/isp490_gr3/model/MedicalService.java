@@ -14,9 +14,11 @@ public class MedicalService {
     private BigDecimal price;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private boolean isdeleted;
     
     // Default constructor
     public MedicalService() {
+        this.isdeleted = false;
     }
     
     // Constructor for adding new service
@@ -24,17 +26,19 @@ public class MedicalService {
         this.serviceGroup = serviceGroup;
         this.serviceName = serviceName;
         this.price = price;
+        this.isdeleted = false;
     }
     
     // Full constructor
     public MedicalService(int servicesId, String serviceGroup, String serviceName, 
-                         BigDecimal price, Timestamp createdAt, Timestamp updatedAt) {
+                         BigDecimal price, Timestamp createdAt, Timestamp updatedAt, boolean isdeleted) {
         this.servicesId = servicesId;
         this.serviceGroup = serviceGroup;
         this.serviceName = serviceName;
         this.price = price;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.isdeleted = isdeleted;
     }
     
     // Getters and Setters
@@ -86,6 +90,14 @@ public class MedicalService {
         this.updatedAt = updatedAt;
     }
     
+    public boolean isIsdeleted() {
+        return isdeleted;
+    }
+    
+    public void setIsdeleted(boolean isdeleted) {
+        this.isdeleted = isdeleted;
+    }
+    
     @Override
     public String toString() {
         return "MedicalService{" +
@@ -95,6 +107,7 @@ public class MedicalService {
                 ", price=" + price +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
+                ", isdeleted=" + isdeleted +
                 '}';
     }
 } 

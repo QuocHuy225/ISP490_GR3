@@ -589,28 +589,6 @@
                                 
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="bi bi-calendar3"></i>
-                                        Ngày sinh
-                                    </div>
-                                    <div class="info-value <%= ((User) request.getAttribute("user")).getDob() == null ? "empty" : "" %>">
-                                        <%= ((User) request.getAttribute("user")).getDob() != null ? 
-                                            ((User) request.getAttribute("user")).getDob().toString() : "Chưa cập nhật" %>
-                                    </div>
-                                </div>
-                                
-                                <div class="info-item">
-                                    <div class="info-label">
-                                        <i class="bi bi-gender-ambiguous"></i>
-                                        Giới tính
-                                    </div>
-                                    <div class="info-value <%= ((User) request.getAttribute("user")).getGender() == null ? "empty" : "" %>">
-                                        <%= ((User) request.getAttribute("user")).getGender() != null ? 
-                                            ((User) request.getAttribute("user")).getGender().getValue() : "Chưa cập nhật" %>
-                                    </div>
-                                </div>
-                                
-                                <div class="info-item">
-                                    <div class="info-label">
                                         <i class="bi bi-clock-history"></i>
                                         Ngày tạo tài khoản
                                     </div>
@@ -618,17 +596,6 @@
                                         <%= ((User) request.getAttribute("user")).getCreatedAt() != null ? 
                                             ((User) request.getAttribute("user")).getCreatedAt().toString() : "Không xác định" %>
                                     </div>
-                                </div>
-                            </div>
-                            
-                            <div class="info-item mt-3">
-                                <div class="info-label">
-                                    <i class="bi bi-geo-alt-fill"></i>
-                                    Địa chỉ
-                                </div>
-                                <div class="info-value <%= ((User) request.getAttribute("user")).getAddress() == null ? "empty" : "" %>">
-                                    <%= ((User) request.getAttribute("user")).getAddress() != null ? 
-                                        ((User) request.getAttribute("user")).getAddress() : "Chưa cập nhật" %>
                                 </div>
                             </div>
                         </div>
@@ -684,49 +651,6 @@
                                     </label>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <input type="date" class="form-control" id="dob" name="dob" 
-                                           value="<%= ((User) request.getAttribute("user")).getDob() != null ? 
-                                                   ((User) request.getAttribute("user")).getDob().toString() : "" %>"
-                                           placeholder="Ngày sinh">
-                                    <label for="dob">
-                                        <i class="bi bi-calendar3 me-1"></i>Ngày sinh
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <select class="form-select" id="gender" name="gender">
-                                        <option value="">-- Chọn giới tính --</option>
-                                        <option value="Nam" <%= ((User) request.getAttribute("user")).getGender() != null && 
-                                                               ((User) request.getAttribute("user")).getGender().getValue().equals("Nam") ? 
-                                                               "selected" : "" %>>Nam</option>
-                                        <option value="Nữ" <%= ((User) request.getAttribute("user")).getGender() != null && 
-                                                              ((User) request.getAttribute("user")).getGender().getValue().equals("Nữ") ? 
-                                                              "selected" : "" %>>Nữ</option>
-                                        <option value="Khác" <%= ((User) request.getAttribute("user")).getGender() != null && 
-                                                                ((User) request.getAttribute("user")).getGender().getValue().equals("Khác") ? 
-                                                                "selected" : "" %>>Khác</option>
-                                    </select>
-                                    <label for="gender">
-                                        <i class="bi bi-gender-ambiguous me-1"></i>Giới tính
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-floating mb-3">
-                            <textarea class="form-control" id="address" name="address" rows="3" 
-                                      placeholder="Nhập địa chỉ của bạn..." style="height: 100px;"><%= ((User) request.getAttribute("user")).getAddress() != null ? 
-                                                                                 ((User) request.getAttribute("user")).getAddress() : "" %></textarea>
-                            <label for="address">
-                                <i class="bi bi-geo-alt me-1"></i>Địa chỉ
-                            </label>
                         </div>
                         
                         <!-- Read-only fields info -->

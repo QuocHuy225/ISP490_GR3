@@ -196,29 +196,6 @@ public class UserProfileController extends HttpServlet {
         // Update user information
         user.setFullName(fullName.trim());
         user.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
-        user.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
-        
-        // Set date of birth
-        if (dobStr != null && !dobStr.trim().isEmpty()) {
-            try {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                java.util.Date utilDate = sdf.parse(dobStr);
-                user.setDob(new Date(utilDate.getTime()));
-            } catch (ParseException e) {
-                session.setAttribute("errorMessage", "Định dạng ngày sinh không hợp lệ");
-                response.sendRedirect(request.getContextPath() + "/user/profile");
-                return;
-            }
-        } else {
-            user.setDob(null);
-        }
-        
-        // Set gender
-        if (genderStr != null && !genderStr.trim().isEmpty()) {
-            user.setGender(User.Gender.fromString(genderStr));
-        } else {
-            user.setGender(null);
-        }
         
         // Update in database
         boolean updateSuccess = daoUser.updateUser(user);

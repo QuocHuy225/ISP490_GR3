@@ -18,7 +18,7 @@ public class DAOWarehouse {
     // Get all medical supplies
     public List<MedicalSupply> getAllSupplies() {
         List<MedicalSupply> supplies = new ArrayList<>();
-        String sql = "SELECT supply_id, supply_group, supply_name, quantity, unit_price, stock_quantity, created_at, updated_at FROM medical_supply ORDER BY supply_group, supply_name";
+        String sql = "SELECT supply_id, supply_group, supply_name, quantity, unit_price, stock_quantity, created_at, updated_at, isdeleted FROM medical_supply WHERE isdeleted = FALSE ORDER BY supply_group, supply_name";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -34,6 +34,7 @@ public class DAOWarehouse {
                 supply.setStockQuantity(rs.getInt("stock_quantity"));
                 supply.setCreatedAt(rs.getTimestamp("created_at"));
                 supply.setUpdatedAt(rs.getTimestamp("updated_at"));
+                supply.setIsdeleted(rs.getBoolean("isdeleted"));
                 supplies.add(supply);
             }
         } catch (SQLException e) {
@@ -47,8 +48,8 @@ public class DAOWarehouse {
     // Search supplies by group or name
     public List<MedicalSupply> searchSupplies(String keyword) {
         List<MedicalSupply> supplies = new ArrayList<>();
-        String sql = "SELECT supply_id, supply_group, supply_name, quantity, unit_price, stock_quantity, created_at, updated_at " +
-                    "FROM medical_supply WHERE supply_group LIKE ? OR supply_name LIKE ? ORDER BY supply_group, supply_name";
+        String sql = "SELECT supply_id, supply_group, supply_name, quantity, unit_price, stock_quantity, created_at, updated_at, isdeleted " +
+                    "FROM medical_supply WHERE (supply_group LIKE ? OR supply_name LIKE ?) AND isdeleted = FALSE ORDER BY supply_group, supply_name";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -68,6 +69,7 @@ public class DAOWarehouse {
                     supply.setStockQuantity(rs.getInt("stock_quantity"));
                     supply.setCreatedAt(rs.getTimestamp("created_at"));
                     supply.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    supply.setIsdeleted(rs.getBoolean("isdeleted"));
                     supplies.add(supply);
                 }
             }
@@ -81,8 +83,8 @@ public class DAOWarehouse {
     
     // Get supply by ID
     public MedicalSupply getSupplyById(int supplyId) {
-        String sql = "SELECT supply_id, supply_group, supply_name, quantity, unit_price, stock_quantity, created_at, updated_at " +
-                    "FROM medical_supply WHERE supply_id = ?";
+        String sql = "SELECT supply_id, supply_group, supply_name, quantity, unit_price, stock_quantity, created_at, updated_at, isdeleted " +
+                    "FROM medical_supply WHERE supply_id = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -212,9 +214,9 @@ public class DAOWarehouse {
         return false;
     }
     
-    // Delete supply
+    // Soft delete supply
     public boolean deleteSupply(int supplyId) {
-        String sql = "DELETE FROM medical_supply WHERE supply_id = ?";
+        String sql = "UPDATE medical_supply SET isdeleted = TRUE, updated_at = CURRENT_TIMESTAMP WHERE supply_id = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -235,7 +237,7 @@ public class DAOWarehouse {
     // Get all distinct supply groups
     public List<String> getAllSupplyGroups() {
         List<String> groups = new ArrayList<>();
-        String sql = "SELECT DISTINCT supply_group FROM medical_supply ORDER BY supply_group";
+        String sql = "SELECT DISTINCT supply_group FROM medical_supply WHERE isdeleted = FALSE ORDER BY supply_group";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -261,7 +263,7 @@ public class DAOWarehouse {
     // Get all medicines
     public List<Medicine> getAllMedicines() {
         List<Medicine> medicines = new ArrayList<>();
-        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at FROM examination_medicines ORDER BY medicine_name";
+        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at, isdeleted FROM examination_medicines WHERE isdeleted = FALSE ORDER BY medicine_name";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -277,6 +279,7 @@ public class DAOWarehouse {
                 medicine.setStockQuantity(rs.getInt("stock_quantity"));
                 medicine.setCreatedAt(rs.getTimestamp("created_at"));
                 medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
+                medicine.setIsdeleted(rs.getBoolean("isdeleted"));
                 medicines.add(medicine);
             }
         } catch (SQLException e) {
@@ -290,8 +293,10 @@ public class DAOWarehouse {
     // Search medicines by name
     public List<Medicine> searchMedicines(String keyword) {
         List<Medicine> medicines = new ArrayList<>();
-        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at " +
-                    "FROM examination_medicines WHERE medicine_name LIKE ? ORDER BY medicine_name";
+
+        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at, isdeleted " +
+                    "FROM examination_medicines WHERE medicine_name LIKE ? AND isdeleted = FALSE ORDER BY medicine_name";
+
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -310,6 +315,7 @@ public class DAOWarehouse {
                     medicine.setStockQuantity(rs.getInt("stock_quantity"));
                     medicine.setCreatedAt(rs.getTimestamp("created_at"));
                     medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    medicine.setIsdeleted(rs.getBoolean("isdeleted"));
                     medicines.add(medicine);
                 }
             }
@@ -323,8 +329,8 @@ public class DAOWarehouse {
     
     // Get medicine by ID
     public Medicine getMedicineById(int medicineId) {
-        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at " +
-                    "FROM examination_medicines WHERE exam_medicine_id = ?";
+        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at, isdeleted " +
+                    "FROM examination_medicines WHERE exam_medicine_id = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -342,6 +348,8 @@ public class DAOWarehouse {
                     medicine.setStockQuantity(rs.getInt("stock_quantity"));
                     medicine.setCreatedAt(rs.getTimestamp("created_at"));
                     medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    medicine.setIsdeleted(rs.getBoolean("isdeleted"));
+
                     return medicine;
                 }
             }
@@ -355,8 +363,8 @@ public class DAOWarehouse {
     
     // Check if medicine exists by name and unit
     public Medicine findExistingMedicine(String medicineName, String unitOfMeasure) {
-        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at " +
-                    "FROM examination_medicines WHERE medicine_name = ? AND unit_of_measure = ?";
+        String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at, isdeleted " +
+                    "FROM examination_medicines WHERE medicine_name = ? AND unit_of_measure = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -375,6 +383,8 @@ public class DAOWarehouse {
                     medicine.setStockQuantity(rs.getInt("stock_quantity"));
                     medicine.setCreatedAt(rs.getTimestamp("created_at"));
                     medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    medicine.setIsdeleted(rs.getBoolean("isdeleted"));
+
                     return medicine;
                 }
             }
@@ -411,8 +421,8 @@ public class DAOWarehouse {
     
     // Update medicine stock quantity
     public boolean updateMedicineStockQuantity(int medicineId, int additionalQuantity) {
-        String sql = "UPDATE examination_medicines SET stock_quantity = stock_quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE exam_medicine_id = ?";
-        
+        String sql = "UPDATE examination_medicines SET stock_quantity = stock_quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE exam_medicine_id = ? AND isdeleted = FALSE";
+
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
@@ -454,9 +464,9 @@ public class DAOWarehouse {
         return false;
     }
     
-    // Delete medicine
+    // Soft delete medicine
     public boolean deleteMedicine(int medicineId) {
-        String sql = "DELETE FROM examination_medicines WHERE exam_medicine_id = ?";
+        String sql = "UPDATE examination_medicines SET isdeleted = TRUE, updated_at = CURRENT_TIMESTAMP WHERE exam_medicine_id = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -477,7 +487,8 @@ public class DAOWarehouse {
     // Get all distinct medicine units
     public List<String> getAllMedicineUnits() {
         List<String> units = new ArrayList<>();
-        String sql = "SELECT DISTINCT unit_of_measure FROM examination_medicines ORDER BY unit_of_measure";
+
+        String sql = "SELECT DISTINCT unit_of_measure FROM examination_medicines WHERE isdeleted = FALSE ORDER BY unit_of_measure";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);

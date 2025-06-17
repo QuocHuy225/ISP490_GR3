@@ -16,9 +16,11 @@ public class Medicine {
     private int stockQuantity;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private boolean isdeleted;
     
     // Default constructor
     public Medicine() {
+        this.isdeleted = false;
     }
     
     // Constructor for adding new medicine
@@ -27,12 +29,13 @@ public class Medicine {
         this.unitOfMeasure = unitOfMeasure;
         this.unitPrice = unitPrice;
         this.stockQuantity = stockQuantity;
+        this.isdeleted = false;
     }
     
     // Full constructor
     public Medicine(int examMedicineId, String medicineName, Integer quantity, 
                    String unitOfMeasure, BigDecimal unitPrice, int stockQuantity, 
-                   Timestamp createdAt, Timestamp updatedAt) {
+                   Timestamp createdAt, Timestamp updatedAt, boolean isdeleted) {
         this.examMedicineId = examMedicineId;
         this.medicineName = medicineName;
         this.quantity = quantity;
@@ -41,6 +44,7 @@ public class Medicine {
         this.stockQuantity = stockQuantity;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.isdeleted = isdeleted;
     }
     
     // Getters and Setters
@@ -108,6 +112,13 @@ public class Medicine {
         this.updatedAt = updatedAt;
     }
     
+    public boolean isIsdeleted() {
+        return isdeleted;
+    }
+    
+    public void setIsdeleted(boolean isdeleted) {
+        this.isdeleted = isdeleted;
+    }
     @Override
     public String toString() {
         return "Medicine{" +
@@ -119,6 +130,7 @@ public class Medicine {
                 ", stockQuantity=" + stockQuantity +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
+                ", isdeleted=" + isdeleted +
                 '}';
     }
 } 
