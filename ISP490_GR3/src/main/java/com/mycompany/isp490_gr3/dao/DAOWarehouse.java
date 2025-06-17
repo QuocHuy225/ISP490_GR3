@@ -293,8 +293,10 @@ public class DAOWarehouse {
     // Search medicines by name
     public List<Medicine> searchMedicines(String keyword) {
         List<Medicine> medicines = new ArrayList<>();
+
         String sql = "SELECT exam_medicine_id, medicine_name, quantity, unit_of_measure, unit_price, stock_quantity, created_at, updated_at, isdeleted " +
                     "FROM examination_medicines WHERE medicine_name LIKE ? AND isdeleted = FALSE ORDER BY medicine_name";
+
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -347,6 +349,7 @@ public class DAOWarehouse {
                     medicine.setCreatedAt(rs.getTimestamp("created_at"));
                     medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
                     medicine.setIsdeleted(rs.getBoolean("isdeleted"));
+
                     return medicine;
                 }
             }
@@ -381,6 +384,7 @@ public class DAOWarehouse {
                     medicine.setCreatedAt(rs.getTimestamp("created_at"));
                     medicine.setUpdatedAt(rs.getTimestamp("updated_at"));
                     medicine.setIsdeleted(rs.getBoolean("isdeleted"));
+
                     return medicine;
                 }
             }
@@ -418,7 +422,7 @@ public class DAOWarehouse {
     // Update medicine stock quantity
     public boolean updateMedicineStockQuantity(int medicineId, int additionalQuantity) {
         String sql = "UPDATE examination_medicines SET stock_quantity = stock_quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE exam_medicine_id = ? AND isdeleted = FALSE";
-        
+
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
@@ -483,6 +487,7 @@ public class DAOWarehouse {
     // Get all distinct medicine units
     public List<String> getAllMedicineUnits() {
         List<String> units = new ArrayList<>();
+
         String sql = "SELECT DISTINCT unit_of_measure FROM examination_medicines WHERE isdeleted = FALSE ORDER BY unit_of_measure";
         
         try (Connection conn = DBContext.getConnection();
@@ -499,5 +504,4 @@ public class DAOWarehouse {
         
         return units;
     }
-
 } 
