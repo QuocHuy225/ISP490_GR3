@@ -4,42 +4,42 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
- * MedicalSupply model tương ứng với bảng medical_supply trong database
+ * Medicine model tương ứng với bảng examination_medicines trong database
  */
-public class MedicalSupply {
+public class Medicine {
     
-    private int supplyId;
-    private String supplyGroup;
-    private String supplyName;
+    private int examMedicineId;
+    private String medicineName;
     private Integer quantity; // Nullable field - used for other functions
+    private String unitOfMeasure;
     private BigDecimal unitPrice;
     private int stockQuantity;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private boolean isdeleted;
     
-    
-    public MedicalSupply() {
+    // Default constructor
+    public Medicine() {
         this.isdeleted = false;
     }
     
-    
-    public MedicalSupply(String supplyGroup, String supplyName, BigDecimal unitPrice, int stockQuantity) {
-        this.supplyGroup = supplyGroup;
-        this.supplyName = supplyName;
+    // Constructor for adding new medicine
+    public Medicine(String medicineName, String unitOfMeasure, BigDecimal unitPrice, int stockQuantity) {
+        this.medicineName = medicineName;
+        this.unitOfMeasure = unitOfMeasure;
         this.unitPrice = unitPrice;
         this.stockQuantity = stockQuantity;
         this.isdeleted = false;
     }
     
-   
-    public MedicalSupply(int supplyId, String supplyGroup, String supplyName, 
-                        Integer quantity, BigDecimal unitPrice, int stockQuantity, 
-                        Timestamp createdAt, Timestamp updatedAt, boolean isdeleted) {
-        this.supplyId = supplyId;
-        this.supplyGroup = supplyGroup;
-        this.supplyName = supplyName;
+    // Full constructor
+    public Medicine(int examMedicineId, String medicineName, Integer quantity, 
+                   String unitOfMeasure, BigDecimal unitPrice, int stockQuantity, 
+                   Timestamp createdAt, Timestamp updatedAt, boolean isdeleted) {
+        this.examMedicineId = examMedicineId;
+        this.medicineName = medicineName;
         this.quantity = quantity;
+        this.unitOfMeasure = unitOfMeasure;
         this.unitPrice = unitPrice;
         this.stockQuantity = stockQuantity;
         this.createdAt = createdAt;
@@ -47,29 +47,21 @@ public class MedicalSupply {
         this.isdeleted = isdeleted;
     }
     
-    
-    public int getSupplyId() {
-        return supplyId;
+    // Getters and Setters
+    public int getExamMedicineId() {
+        return examMedicineId;
     }
     
-    public void setSupplyId(int supplyId) {
-        this.supplyId = supplyId;
+    public void setExamMedicineId(int examMedicineId) {
+        this.examMedicineId = examMedicineId;
     }
     
-    public String getSupplyGroup() {
-        return supplyGroup;
+    public String getMedicineName() {
+        return medicineName;
     }
     
-    public void setSupplyGroup(String supplyGroup) {
-        this.supplyGroup = supplyGroup;
-    }
-    
-    public String getSupplyName() {
-        return supplyName;
-    }
-    
-    public void setSupplyName(String supplyName) {
-        this.supplyName = supplyName;
+    public void setMedicineName(String medicineName) {
+        this.medicineName = medicineName;
     }
     
     public Integer getQuantity() {
@@ -78,6 +70,14 @@ public class MedicalSupply {
     
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+    
+    public String getUnitOfMeasure() {
+        return unitOfMeasure;
+    }
+    
+    public void setUnitOfMeasure(String unitOfMeasure) {
+        this.unitOfMeasure = unitOfMeasure;
     }
     
     public BigDecimal getUnitPrice() {
@@ -122,11 +122,11 @@ public class MedicalSupply {
     
     @Override
     public String toString() {
-        return "MedicalSupply{" +
-                "supplyId=" + supplyId +
-                ", supplyGroup='" + supplyGroup + '\'' +
-                ", supplyName='" + supplyName + '\'' +
+        return "Medicine{" +
+                "examMedicineId=" + examMedicineId +
+                ", medicineName='" + medicineName + '\'' +
                 ", quantity=" + quantity +
+                ", unitOfMeasure='" + unitOfMeasure + '\'' +
                 ", unitPrice=" + unitPrice +
                 ", stockQuantity=" + stockQuantity +
                 ", createdAt=" + createdAt +

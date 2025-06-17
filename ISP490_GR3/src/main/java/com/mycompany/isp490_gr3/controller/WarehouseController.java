@@ -2,6 +2,7 @@ package com.mycompany.isp490_gr3.controller;
 
 import com.mycompany.isp490_gr3.dao.DAOWarehouse;
 import com.mycompany.isp490_gr3.model.MedicalSupply;
+import com.mycompany.isp490_gr3.model.Medicine;
 import com.mycompany.isp490_gr3.model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -43,7 +44,7 @@ public class WarehouseController extends HttpServlet {
         // Phân chia xử lý theo đường dẫn URL
         if (path.contains("/admin/medicines")) {
             // XỬ LÝ YÊU CẦU LIÊN QUAN ĐÊN KHO THUỐC
-
+            handleMedicineRequests(request, response);
         } else {
             // XỬ LÝ YÊU CẦU LIÊN QUAN ĐÊN VẬT TƯ Y TẾ
             handleSupplyRequests(request, response);
@@ -78,6 +79,34 @@ public class WarehouseController extends HttpServlet {
         }
     }
     
+    // =====================================================
+    // PHẦN XỬ LÝ YÊU CẦU GET CHO KHO THUỐC
+    // URL: /admin/medicines
+    // =====================================================
+    private void handleMedicineRequests(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String action = request.getParameter("action");
+        if (action == null) {
+            action = "list";
+        }
+        
+        switch (action) {
+            case "list":
+                handleListMedicines(request, response);
+                break;
+            case "search":
+                handleSearchMedicines(request, response);
+                break;
+            case "get":
+                handleGetMedicine(request, response);
+                break;
+            default:
+                handleListMedicines(request, response);
+                break;
+        }
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -97,7 +126,7 @@ public class WarehouseController extends HttpServlet {
         // Phân chia xử lý theo đường dẫn URL
         if (path.contains("/admin/medicines")) {
             // XỬ LÝ YÊU CẦU POST LIÊN QUAN ĐÊN KHO THUỐC
-
+            handleMedicinePostRequests(request, response);
         } else {
             // XỬ LÝ YÊU CẦU POST LIÊN QUAN ĐÊN VẬT TƯ Y TẾ
             handleSupplyPostRequests(request, response);
@@ -132,6 +161,38 @@ public class WarehouseController extends HttpServlet {
                 break;
             default:
                 response.sendRedirect(request.getContextPath() + "/admin/medical-supplies");
+                break;
+        }
+    }
+    
+    // =====================================================
+    // PHẦN XỬ LÝ YÊU CẦU POST CHO KHO THUỐC
+    // Các action: add, update, delete, addStock
+    // =====================================================
+    private void handleMedicinePostRequests(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String action = request.getParameter("action");
+        if (action == null) {
+            response.sendRedirect(request.getContextPath() + "/admin/medicines");
+            return;
+        }
+        
+        switch (action) {
+            case "add":
+                handleAddMedicine(request, response);
+                break;
+            case "update":
+                handleUpdateMedicine(request, response);
+                break;
+            case "delete":
+                handleDeleteMedicine(request, response);
+                break;
+            case "addStock":
+                handleAddMedicineStock(request, response);
+                break;
+            default:
+                response.sendRedirect(request.getContextPath() + "/admin/medicines");
                 break;
         }
     }
@@ -372,6 +433,210 @@ public class WarehouseController extends HttpServlet {
             
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=invalid_format");
+        }
+    }
+    
+    // =====================================================
+    // CÁC PHƯƠNG THỨC XỬ LÝ CHO KHO THUỐC
+    // =====================================================
+    
+    private void handleListMedicines(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        List<Medicine> medicines = warehouseDAO.getAllMedicines();
+        List<String> medicineUnits = warehouseDAO.getAllMedicineUnits();
+        
+        request.setAttribute("medicines", medicines);
+        request.setAttribute("medicineUnits", medicineUnits);
+        
+        request.getRequestDispatcher("/jsp/medicine.jsp").forward(request, response);
+    }
+    
+    private void handleSearchMedicines(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String keyword = request.getParameter("keyword");
+        List<Medicine> medicines;
+        
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            medicines = warehouseDAO.searchMedicines(keyword.trim());
+        } else {
+            medicines = warehouseDAO.getAllMedicines();
+        }
+        
+        List<String> medicineUnits = warehouseDAO.getAllMedicineUnits();
+        
+        request.setAttribute("medicines", medicines);
+        request.setAttribute("medicineUnits", medicineUnits);
+        request.setAttribute("searchKeyword", keyword);
+        
+        request.getRequestDispatcher("/jsp/medicine.jsp").forward(request, response);
+    }
+    
+    private void handleGetMedicine(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        try {
+            int medicineId = Integer.parseInt(request.getParameter("id"));
+            Medicine medicine = warehouseDAO.getMedicineById(medicineId);
+            
+            if (medicine != null) {
+                // Return JSON response
+                response.setContentType("application/json; charset=UTF-8");
+                response.getWriter().write("{" +
+                    "\"examMedicineId\":" + medicine.getExamMedicineId() + "," +
+                    "\"medicineName\":\"" + medicine.getMedicineName() + "\"," +
+                    "\"unitOfMeasure\":\"" + medicine.getUnitOfMeasure() + "\"," +
+                    "\"unitPrice\":" + medicine.getUnitPrice() + "," +
+                    "\"stockQuantity\":" + medicine.getStockQuantity() +
+                    "}");
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            }
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
+    }
+    
+    private void handleAddMedicine(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        try {
+            String medicineName = request.getParameter("medicineName");
+            String unitOfMeasure = request.getParameter("unitOfMeasure");
+            String unitPriceStr = request.getParameter("unitPrice");
+            String stockQuantityStr = request.getParameter("stockQuantity");
+            
+            // Validate input
+            if (medicineName == null || medicineName.trim().isEmpty() ||
+                unitOfMeasure == null || unitOfMeasure.trim().isEmpty() ||
+                unitPriceStr == null || unitPriceStr.trim().isEmpty() ||
+                stockQuantityStr == null || stockQuantityStr.trim().isEmpty()) {
+                
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=missing_fields");
+                return;
+            }
+            
+            BigDecimal unitPrice = new BigDecimal(unitPriceStr);
+            int stockQuantity = Integer.parseInt(stockQuantityStr);
+            
+            if (unitPrice.compareTo(BigDecimal.ZERO) <= 0 || stockQuantity <= 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_values");
+                return;
+            }
+            
+            // Check if medicine already exists
+            Medicine existingMedicine = warehouseDAO.findExistingMedicine(medicineName.trim(), unitOfMeasure.trim());
+            
+            if (existingMedicine != null) {
+                // Medicine already exists, show error message
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=medicine_exists");
+                return;
+            }
+            
+            // Add new medicine
+            Medicine newMedicine = new Medicine(medicineName.trim(), unitOfMeasure.trim(), unitPrice, stockQuantity);
+            boolean success = warehouseDAO.addMedicine(newMedicine);
+            
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?success=added");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=add_failed");
+            }
+            
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_format");
+        }
+    }
+    
+    private void handleUpdateMedicine(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        try {
+            int medicineId = Integer.parseInt(request.getParameter("medicineId"));
+            String medicineName = request.getParameter("medicineName");
+            String unitOfMeasure = request.getParameter("unitOfMeasure");
+            String unitPriceStr = request.getParameter("unitPrice");
+            String stockQuantityStr = request.getParameter("stockQuantity");
+            
+            // Validate input
+            if (medicineName == null || medicineName.trim().isEmpty() ||
+                unitOfMeasure == null || unitOfMeasure.trim().isEmpty() ||
+                unitPriceStr == null || unitPriceStr.trim().isEmpty() ||
+                stockQuantityStr == null || stockQuantityStr.trim().isEmpty()) {
+                
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=missing_fields");
+                return;
+            }
+            
+            BigDecimal unitPrice = new BigDecimal(unitPriceStr);
+            int stockQuantity = Integer.parseInt(stockQuantityStr);
+            
+            if (unitPrice.compareTo(BigDecimal.ZERO) <= 0 || stockQuantity < 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_values");
+                return;
+            }
+            
+            Medicine medicine = new Medicine();
+            medicine.setExamMedicineId(medicineId);
+            medicine.setMedicineName(medicineName.trim());
+            medicine.setUnitOfMeasure(unitOfMeasure.trim());
+            medicine.setUnitPrice(unitPrice);
+            medicine.setStockQuantity(stockQuantity);
+            
+            boolean success = warehouseDAO.updateMedicine(medicine);
+            
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?success=updated");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=update_failed");
+            }
+            
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_format");
+        }
+    }
+    
+    private void handleAddMedicineStock(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        try {
+            int medicineId = Integer.parseInt(request.getParameter("medicineId"));
+            int additionalQuantity = Integer.parseInt(request.getParameter("additionalQuantity"));
+            
+            if (additionalQuantity <= 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_quantity");
+                return;
+            }
+            
+            boolean success = warehouseDAO.updateMedicineStockQuantity(medicineId, additionalQuantity);
+            
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?success=stock_added");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=stock_add_failed");
+            }
+            
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_format");
+        }
+    }
+    
+    private void handleDeleteMedicine(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        try {
+            int medicineId = Integer.parseInt(request.getParameter("medicineId"));
+            boolean success = warehouseDAO.deleteMedicine(medicineId);
+            
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?success=deleted");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=delete_failed");
+            }
+            
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_format");
         }
     }
 } 

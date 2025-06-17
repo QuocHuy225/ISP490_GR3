@@ -178,23 +178,6 @@ public class AuthenticationController extends HttpServlet {
         newUser.setEmail(email.trim());
         newUser.setPassword(password);
         newUser.setPhone(phone != null ? phone.trim() : null);
-        newUser.setAddress(address != null ? address.trim() : null);
-        
-        // Set date of birth
-        if (dobStr != null && !dobStr.trim().isEmpty()) {
-            try {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                java.util.Date utilDate = sdf.parse(dobStr);
-                newUser.setDob(new Date(utilDate.getTime()));
-            } catch (ParseException e) {
-                System.err.println("Error parsing date: " + e.getMessage());
-            }
-        }
-        
-        // Set gender
-        if (genderStr != null && !genderStr.trim().isEmpty()) {
-            newUser.setGender(User.Gender.fromString(genderStr));
-        }
         
         // Set default role as Patient
         newUser.setRole(User.Role.PATIENT);
