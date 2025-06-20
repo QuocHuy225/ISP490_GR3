@@ -94,8 +94,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
                     </a>
                 </li>
                 <li>
@@ -285,6 +290,8 @@
                         Cập nhật số lượng tồn kho thành công!
                     <% } else if ("stock_added".equals(success)) { %>
                         Thêm số lượng vào kho thành công!
+                    <% } else if ("stock_reduced".equals(success)) { %>
+                        Giảm số lượng kho thành công!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -311,6 +318,8 @@
                         Số lượng phải lớn hơn 0!
                     <% } else if ("stock_add_failed".equals(error)) { %>
                         Thêm số lượng vào kho thất bại!
+                    <% } else if ("stock_reduce_failed".equals(error)) { %>
+                        Giảm số lượng kho thất bại! Có thể số lượng trong kho không đủ.
                     <% } else if ("medicine_exists".equals(error)) { %>
                         Thuốc này đã tồn tại! Vui lòng sử dụng chức năng "Thêm số lượng" để tăng số lượng tồn kho.
                     <% } %>
@@ -404,6 +413,11 @@
                                                                 onclick="addStock(<%= medicine.getExamMedicineId() %>)" 
                                                                 title="Thêm số lượng">
                                                             <i class="bi bi-plus"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-warning me-1" 
+                                                                onclick="reduceStock(<%= medicine.getExamMedicineId() %>)" 
+                                                                title="Giảm số lượng">
+                                                            <i class="bi bi-dash"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-sm btn-danger" 
                                                                 onclick="deleteMedicine(<%= medicine.getExamMedicineId() %>, '<%= medicine.getMedicineName() %>')" 
@@ -547,6 +561,16 @@
                             <input type="hidden" id="addStockMedicineId" name="medicineId">
                             
                             <div class="mb-3">
+                                <label class="form-label">Thuốc:</label>
+                                <p id="addStockMedicineName" class="fw-bold"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Số lượng hiện tại:</label>
+                                <p id="addStockCurrentQuantity" class="fw-bold text-info"></p>
+                            </div>
+                            
+                            <div class="mb-3">
                                 <label for="additionalQuantity" class="form-label">Số lượng thêm vào <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="additionalQuantity" name="additionalQuantity" min="1" required>
                                 <div class="form-text">Nhập số lượng muốn thêm vào kho</div>
@@ -556,6 +580,48 @@
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                             <button type="submit" class="btn btn-info">
                                 <i class="bi bi-check-circle me-2"></i>Thêm vào kho
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reduce Stock Modal -->
+        <div class="modal fade" id="reduceStockModal" tabindex="-1" aria-labelledby="reduceStockModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reduceStockModalLabel">
+                            <i class="bi bi-dash me-2"></i>Giảm số lượng kho
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/medicines">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="reduceStock">
+                            <input type="hidden" id="reduceStockMedicineId" name="medicineId">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Thuốc:</label>
+                                <p id="reduceStockMedicineName" class="fw-bold"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Số lượng hiện tại:</label>
+                                <p id="reduceStockCurrentQuantity" class="fw-bold text-info"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="reduceQuantity" class="form-label">Số lượng giảm <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="reduceQuantity" name="reduceQuantity" min="1" required>
+                                <div class="form-text">Nhập số lượng muốn giảm khỏi kho</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle me-2"></i>Giảm số lượng
                             </button>
                         </div>
                     </form>
@@ -673,8 +739,39 @@
 
             // Add stock function
             function addStock(medicineId) {
-                document.getElementById('addStockMedicineId').value = medicineId;
-                new bootstrap.Modal(document.getElementById('addStockModal')).show();
+                var contextPath = '<%= request.getContextPath() %>';
+                fetch(contextPath + '/admin/medicines?action=get&id=' + medicineId)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('addStockMedicineId').value = data.examMedicineId;
+                        document.getElementById('addStockMedicineName').textContent = data.medicineName;
+                        document.getElementById('addStockCurrentQuantity').textContent = data.stockQuantity + ' ' + data.unitOfMeasure;
+                        
+                        new bootstrap.Modal(document.getElementById('addStockModal')).show();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Không thể tải thông tin thuốc!');
+                    });
+            }
+            
+            // Reduce stock function
+            function reduceStock(medicineId) {
+                var contextPath = '<%= request.getContextPath() %>';
+                fetch(contextPath + '/admin/medicines?action=get&id=' + medicineId)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('reduceStockMedicineId').value = data.examMedicineId;
+                        document.getElementById('reduceStockMedicineName').textContent = data.medicineName;
+                        document.getElementById('reduceStockCurrentQuantity').textContent = data.stockQuantity + ' ' + data.unitOfMeasure;
+                        document.getElementById('reduceQuantity').setAttribute('max', data.stockQuantity);
+                        
+                        new bootstrap.Modal(document.getElementById('reduceStockModal')).show();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Không thể tải thông tin thuốc!');
+                    });
             }
 
             // Delete medicine function
