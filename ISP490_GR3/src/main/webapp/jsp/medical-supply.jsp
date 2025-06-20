@@ -94,8 +94,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
                     </a>
                 </li>
                 <li class="active">
@@ -285,6 +290,8 @@
                         Cập nhật số lượng tồn kho thành công!
                     <% } else if ("stock_added".equals(success)) { %>
                         Thêm số lượng vào kho thành công!
+                    <% } else if ("stock_reduced".equals(success)) { %>
+                        Giảm số lượng kho thành công!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -311,6 +318,8 @@
                         Số lượng phải lớn hơn 0!
                     <% } else if ("stock_add_failed".equals(error)) { %>
                         Thêm số lượng vào kho thất bại!
+                    <% } else if ("stock_reduce_failed".equals(error)) { %>
+                        Giảm số lượng kho thất bại! Có thể số lượng trong kho không đủ.
                     <% } else if ("supply_exists".equals(error)) { %>
                         Vật tư này đã tồn tại! Vui lòng sử dụng chức năng "Thêm số lượng" để tăng số lượng tồn kho.
                     <% } %>
@@ -356,6 +365,8 @@
                     </div>
                 </div>
 
+
+
                 <!-- Supplies Table -->
                 <div class="row">
                     <div class="col-12">
@@ -395,15 +406,19 @@
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <button type="button" class="btn btn-sm btn-primary me-1" 
-                                                                onclick="editSupply(<%= supply.getSupplyId() %>)" 
-                                                                title="Chỉnh sửa">
+                                                        <a href="${pageContext.request.contextPath}/admin/medical-supplies?edit=<%= supply.getSupplyId() %>" 
+                                                           class="btn btn-sm btn-primary me-1" title="Chỉnh sửa">
                                                             <i class="bi bi-pencil"></i>
-                                                        </button>
+                                                        </a>
                                                         <button type="button" class="btn btn-sm btn-info me-1" 
                                                                 onclick="addStock(<%= supply.getSupplyId() %>)" 
                                                                 title="Thêm số lượng">
                                                             <i class="bi bi-plus"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-warning me-1" 
+                                                                onclick="reduceStock(<%= supply.getSupplyId() %>)" 
+                                                                title="Giảm số lượng">
+                                                            <i class="bi bi-dash"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-sm btn-danger" 
                                                                 onclick="deleteSupply(<%= supply.getSupplyId() %>, '<%= supply.getSupplyName() %>')" 
@@ -435,49 +450,72 @@
             </div>
         </div>
 
-        <!-- Add Supply Modal -->
+        <%
+        // Get edit data for modal
+        MedicalSupply editSupply = (MedicalSupply) request.getAttribute("editSupply");
+        boolean isEdit = editSupply != null;
+        %>
+
+        <!-- Add/Edit Supply Modal -->
         <div class="modal fade" id="addSupplyModal" tabindex="-1" aria-labelledby="addSupplyModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="addSupplyModalLabel">
-                            <i class="bi bi-plus-circle me-2"></i>Thêm vật tư
+                            <i class="bi bi-<%= isEdit ? "pencil" : "plus-circle" %> me-2"></i><%= isEdit ? "Chỉnh sửa vật tư" : "Thêm vật tư" %>
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies">
                         <div class="modal-body">
-                            <input type="hidden" name="action" value="add">
+                            <input type="hidden" name="action" value="<%= isEdit ? "update" : "add" %>">
+                            <% if (isEdit) { %>
+                            <input type="hidden" name="supplyId" value="<%= editSupply.getSupplyId() %>">
+                            <% } %>
                             
                             <div class="mb-3">
                                 <label for="addSupplyGroup" class="form-label">Nhóm vật tư <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addSupplyGroup" name="supplyGroup" placeholder="Nhập tên nhóm vật tư" required>
+                                <input type="text" class="form-control" id="addSupplyGroup" name="supplyGroup" 
+                                       placeholder="Nhập tên nhóm vật tư" 
+                                       value="<%= isEdit ? editSupply.getSupplyGroup() : "" %>" required>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="addSupplyName" class="form-label">Tên vật tư <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addSupplyName" name="supplyName" placeholder="Nhập tên vật tư" required>
+                                <input type="text" class="form-control" id="addSupplyName" name="supplyName" 
+                                       placeholder="Nhập tên vật tư" 
+                                       value="<%= isEdit ? editSupply.getSupplyName() : "" %>" required>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="addUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" min="0" step="0.01" placeholder="Nhập đơn giá" required>
+                                <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" 
+                                       min="0" step="0.01" placeholder="Nhập đơn giá" 
+                                       value="<%= isEdit ? editSupply.getUnitPrice() : "" %>" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addStockQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" min="1" placeholder="Nhập số lượng" required>
+                                <label for="addStockQuantity" class="form-label">Số lượng <% if (!isEdit) { %><span class="text-danger">*</span><% } %></label>
+                                <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" 
+                                       min="<%= isEdit ? "0" : "1" %>" placeholder="Nhập số lượng" 
+                                       value="<%= isEdit ? editSupply.getStockQuantity() : "" %>" required>
                             </div>
                             
+                            <% if (!isEdit) { %>
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle me-2"></i>
                                 <strong>Lưu ý:</strong> Chức năng này chỉ để thêm vật tư mới. Để tăng số lượng vật tư đã có, vui lòng sử dụng nút "Thêm số lượng" ở bảng.
                             </div>
+                            <% } %>
                         </div>
                         <div class="modal-footer">
+                            <% if (isEdit) { %>
+                            <a href="${pageContext.request.contextPath}/admin/medical-supplies" class="btn btn-secondary">Hủy</a>
+                            <% } else { %>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle me-2"></i>Thêm vật tư
+                            <% } %>
+                            <button type="submit" class="btn btn-<%= isEdit ? "primary" : "success" %>">
+                                <i class="bi bi-check-circle me-2"></i><%= isEdit ? "Cập nhật" : "Thêm vật tư" %>
                             </button>
                         </div>
                     </form>
@@ -485,51 +523,7 @@
             </div>
         </div>
 
-        <!-- Edit Supply Modal -->
-        <div class="modal fade" id="editSupplyModal" tabindex="-1" aria-labelledby="editSupplyModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editSupplyModalLabel">
-                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa vật tư
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies">
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="update">
-                            <input type="hidden" id="editSupplyId" name="supplyId">
-                            
-                            <div class="mb-3">
-                                <label for="editSupplyGroup" class="form-label">Nhóm vật tư <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editSupplyGroup" name="supplyGroup" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="editSupplyName" class="form-label">Tên vật tư <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editSupplyName" name="supplyName" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="editUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="editUnitPrice" name="unitPrice" min="0" step="0.01" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="editStockQuantity" class="form-label">Số lượng tồn kho <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="editStockQuantity" name="stockQuantity" min="0" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Cập nhật
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Add Stock Modal -->
         <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
@@ -547,6 +541,16 @@
                             <input type="hidden" id="addStockSupplyId" name="supplyId">
                             
                             <div class="mb-3">
+                                <label class="form-label">Vật tư:</label>
+                                <p id="addStockSupplyName" class="fw-bold"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Số lượng hiện tại:</label>
+                                <p id="addStockCurrentQuantity" class="fw-bold text-info"></p>
+                            </div>
+                            
+                            <div class="mb-3">
                                 <label for="additionalQuantity" class="form-label">Số lượng thêm vào <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="additionalQuantity" name="additionalQuantity" min="1" required>
                                 <div class="form-text">Nhập số lượng muốn thêm vào kho</div>
@@ -556,6 +560,48 @@
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                             <button type="submit" class="btn btn-info">
                                 <i class="bi bi-check-circle me-2"></i>Thêm vào kho
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reduce Stock Modal -->
+        <div class="modal fade" id="reduceStockModal" tabindex="-1" aria-labelledby="reduceStockModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reduceStockModalLabel">
+                            <i class="bi bi-dash me-2"></i>Giảm số lượng kho
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="reduceStock">
+                            <input type="hidden" id="reduceStockSupplyId" name="supplyId">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Vật tư:</label>
+                                <p id="reduceStockSupplyName" class="fw-bold"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Số lượng hiện tại:</label>
+                                <p id="reduceStockCurrentQuantity" class="fw-bold text-info"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="reduceQuantity" class="form-label">Số lượng giảm <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="reduceQuantity" name="reduceQuantity" min="1" required>
+                                <div class="form-text">Nhập số lượng muốn giảm khỏi kho</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle me-2"></i>Giảm số lượng
                             </button>
                         </div>
                     </form>
@@ -593,6 +639,8 @@
                 </div>
             </div>
         </div>
+
+
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -652,30 +700,43 @@
 
             });
 
-            // Edit supply function
-            function editSupply(supplyId) {
+
+
+                        // Add stock function
+            function addStock(supplyId) {
                 var contextPath = '<%= request.getContextPath() %>';
                 fetch(contextPath + '/admin/medical-supplies?action=get&id=' + supplyId)
                     .then(response => response.json())
                     .then(data => {
-                        document.getElementById('editSupplyId').value = data.supplyId;
-                        document.getElementById('editSupplyGroup').value = data.supplyGroup;
-                        document.getElementById('editSupplyName').value = data.supplyName;
-                        document.getElementById('editUnitPrice').value = data.unitPrice;
-                        document.getElementById('editStockQuantity').value = data.stockQuantity;
+                        document.getElementById('addStockSupplyId').value = data.supplyId;
+                        document.getElementById('addStockSupplyName').textContent = data.supplyName;
+                        document.getElementById('addStockCurrentQuantity').textContent = data.stockQuantity + ' đơn vị';
                         
-                        new bootstrap.Modal(document.getElementById('editSupplyModal')).show();
+                        new bootstrap.Modal(document.getElementById('addStockModal')).show();
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         alert('Không thể tải thông tin vật tư!');
                     });
             }
-
-            // Add stock function
-            function addStock(supplyId) {
-                document.getElementById('addStockSupplyId').value = supplyId;
-                new bootstrap.Modal(document.getElementById('addStockModal')).show();
+            
+            // Reduce stock function
+            function reduceStock(supplyId) {
+                var contextPath = '<%= request.getContextPath() %>';
+                fetch(contextPath + '/admin/medical-supplies?action=get&id=' + supplyId)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('reduceStockSupplyId').value = data.supplyId;
+                        document.getElementById('reduceStockSupplyName').textContent = data.supplyName;
+                        document.getElementById('reduceStockCurrentQuantity').textContent = data.stockQuantity + ' đơn vị';
+                        document.getElementById('reduceQuantity').setAttribute('max', data.stockQuantity);
+                        
+                        new bootstrap.Modal(document.getElementById('reduceStockModal')).show();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Không thể tải thông tin vật tư!');
+                    });
             }
 
             // Delete supply function
@@ -685,5 +746,13 @@
                 new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
             }
         </script>
+
+        <% if (editSupply != null) { %>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new bootstrap.Modal(document.getElementById('addSupplyModal')).show();
+        });
+        </script>
+        <% } %>
     </body>
 </html> 
