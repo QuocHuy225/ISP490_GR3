@@ -190,6 +190,29 @@ public class DAOWarehouse {
         return false;
     }
     
+    // Reduce stock quantity (for existing supplies)
+    public boolean reduceStockQuantity(int supplyId, int reduceQuantity) {
+        String sql = "UPDATE medical_supply SET stock_quantity = stock_quantity - ?, updated_at = CURRENT_TIMESTAMP " +
+                    "WHERE supply_id = ? AND stock_quantity >= ? AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, reduceQuantity);
+            stmt.setInt(2, supplyId);
+            stmt.setInt(3, reduceQuantity);
+            
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error reducing stock quantity: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
     // Update supply information
     public boolean updateSupply(MedicalSupply supply) {
         String sql = "UPDATE medical_supply SET supply_group = ?, supply_name = ?, unit_price = ?, stock_quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE supply_id = ?";
@@ -430,6 +453,29 @@ public class DAOWarehouse {
             
         } catch (SQLException e) {
             System.err.println("Error updating medicine stock quantity: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    // Reduce medicine stock quantity
+    public boolean reduceMedicineStockQuantity(int medicineId, int reduceQuantity) {
+        String sql = "UPDATE examination_medicines SET stock_quantity = stock_quantity - ?, updated_at = CURRENT_TIMESTAMP " +
+                    "WHERE exam_medicine_id = ? AND stock_quantity >= ? AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, reduceQuantity);
+            stmt.setInt(2, medicineId);
+            stmt.setInt(3, reduceQuantity);
+            
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error reducing medicine stock quantity: " + e.getMessage());
             e.printStackTrace();
         }
         

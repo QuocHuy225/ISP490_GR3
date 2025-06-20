@@ -81,8 +81,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
                     </a>
                 </li>
                 <li>
@@ -189,7 +194,7 @@
                     <button type="button" id="sidebarCollapse" class="btn btn-primary">
                         <i class="bi bi-list"></i>
                     </button>
-
+                    
                     <div style="margin-left: 60px; margin-top: 10px">
                         <h3>
                             <span style="color: #007bff;">Ánh Dương</span>
@@ -449,8 +454,6 @@
                 </div>
             </div>
         </div>
-
-
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

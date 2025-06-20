@@ -491,8 +491,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
                     </a>
                 </li>
                 <li>
