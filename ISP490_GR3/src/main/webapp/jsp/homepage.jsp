@@ -153,7 +153,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/makeappointments">
                         <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
                     </a>
                 </li>
@@ -454,49 +454,6 @@
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Sidebar toggle
-                const sidebarCollapse = document.getElementById('sidebarCollapse');
-                const sidebar = document.getElementById('sidebar');
-                const content = document.getElementById('content');
-
-                sidebarCollapse.addEventListener('click', function () {
-                    sidebar.classList.toggle('collapsed');
-                    content.classList.toggle('expanded');
-                });
-
-                // Responsive sidebar
-                function checkWidth() {
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.add('collapsed');
-                        content.classList.add('expanded');
-                    } else {
-                        sidebar.classList.remove('collapsed');
-                        content.classList.remove('expanded');
-                    }
-                }
-
-                // Initial check
-                checkWidth();
-
-                // Listen for window resize
-                window.addEventListener('resize', checkWidth);
-
-                // Enhanced dropdown animations
-                const dropdownToggle = document.getElementById('userDropdown');
-                const dropdownMenu = dropdownToggle.nextElementSibling;
-
-                dropdownToggle.addEventListener('show.bs.dropdown', function () {
-                    dropdownMenu.style.opacity = '0';
-                    dropdownMenu.style.transform = 'translateY(-10px)';
-                    setTimeout(() => {
-                        dropdownMenu.style.transition = 'all 0.3s ease';
-                        dropdownMenu.style.opacity = '1';
-                        dropdownMenu.style.transform = 'translateY(0)';
-                    }, 10);
-                });
-            });
-        </script>
+       <script src="${pageContext.request.contextPath}/js/PatientHomepage.js"></script>
     </body>
 </html>

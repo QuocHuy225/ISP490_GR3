@@ -1,0 +1,686 @@
+/* make-appointment.css */
+
+:root {
+    /* --- Đồng bộ biến CSS với homepage.css --- */
+    --primary: #0360D9;
+    --primary-light: #e3f2fd;
+    --primary-dark: #0246a3;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F8F9FA;
+    --secondary-foreground: #000000;
+    --accent: #4A90E2;
+    --accent-foreground: #FFFFFF;
+    --background: #FFFFFF;
+    --foreground: #2B3674; /* Đây là màu chữ chính của body trong homepage */
+    --muted: #6B7280;
+    --card: #FFFFFF;
+    --card-foreground: #000000;
+    --border: #DEE2E6;
+    --input: #E9ECEF;
+    --ring: #2C7BE5;
+    --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; /* Font family chính */
+    --radius: 0.5rem;
+    --radius-lg: 1rem;
+    --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.12);
+
+    /* Giữ lại các biến cũ của make-appointment nếu có thể chúng vẫn được dùng ở các phần khác */
+    --primary-color: #0360D9; /* Vẫn giữ biến này vì nó được dùng nhiều trong make-appointment.css */
+    --white: #ffffff;
+    --text-dark: #2B3674; /* Giữ lại, tương đương với --foreground */
+    --text-light: #A3AED0;
+    --body-bg: #f8f9fa; /* Background của body */
+    --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, #00d4ff 100%);
+    --shadow-light: 0 5px 25px rgba(3, 96, 217, 0.1);
+    --shadow-medium: 0 10px 40px rgba(3, 96, 217, 0.15);
+    --top-navbar-height: 100px; /* Chiều cao cố định của navbar chính */
+    --header-nav-height: 80px; /* Chiều cao cố định của header navigation (Đặt khám Bác sĩ) */
+    --sidebar-width: 250px; /* Vẫn giữ nguyên, đã giống homepage */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* --- ĐÃ CHỈNH SỬA LẠI: Loại bỏ font-family ở đây để chỉ body kiểm soát font chính --- */
+    /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    /* --- ĐÃ ĐẢM BẢO: Đồng bộ font-family, font-size, line-height và color với homepage.css --- */
+    font-family: var(--font-family); /* Sử dụng biến font-family từ :root */
+    line-height: 1.6;
+    font-size: 16px; /* Cỡ chữ tổng thể của body */
+    color: var(--foreground); /* Màu chữ mặc định */
+    background-color: var(--body-bg); /* Background của body */
+    margin: 0;
+    padding: 0; /* Padding-top sẽ do layout chính quản lý */
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ----------------------------------------------------- */
+/* Sidebar Styles */
+/* ----------------------------------------------------- */
+#sidebar {
+    /* --- ĐÃ ĐẢM BẢO: Kích thước khung menu giống homepage --- */
+    min-width: 250px; /* Từ homepage.css */
+    max-width: 250px; /* Từ homepage.css */
+    min-height: 100vh; /* Từ homepage.css */
+    background: var(--primary-color);
+    color: var(--white);
+    transition: all 0.3s ease;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000; /* Từ homepage.css */
+    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    overflow-y: auto;
+}
+
+#sidebar .sidebar-header {
+    padding: 20px;
+    background: var(--primary-dark);
+    text-align: center;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    height: var(--top-navbar-height); /* Giữ nguyên chiều cao từ make-appointment */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#sidebar .sidebar-header h3 {
+    color: var(--white);
+    margin: 0;
+    font-weight: 700;
+    /* --- ĐÃ ĐẢM BẢO: Cỡ chữ giống homepage --- */
+    font-size: 1.5rem; /* Đã giống homepage */
+}
+
+#sidebar ul.components {
+    padding: 20px 0; /* Đã giống homepage */
+    list-style: none;
+}
+
+#sidebar ul li a {
+    padding: 15px 20px; /* Đã giống homepage */
+    /* --- ĐÃ ĐẢM BẢO: Cỡ chữ giống homepage --- */
+    font-size: 1.1em; /* Đã giống homepage (1.1em của 16px = 17.6px) */
+    display: flex;
+    align-items: center;
+    color: var(--white);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 4px 8px; /* Đã giống homepage */
+    /* --- ĐÃ ĐẢM BẢO: Khoảng cách giữa icon và chữ giống homepage --- */
+    gap: 10px; /* Đã giống homepage */
+}
+
+#sidebar ul li a:hover {
+    background: var(--primary-dark);
+    transform: translateX(5px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+#sidebar ul li a i {
+    margin-right: 0; /* Đặt lại margin-right về 0 vì đã dùng gap */
+    /* --- ĐÃ ĐẢM BẢO: Cỡ icon trong menu --- */
+    font-size: 1.2em; /* Tùy chỉnh để có thể lớn hơn chữ một chút nếu cần */
+}
+
+/* ============== Sidebar Active Link Styling ============== */
+#sidebar ul li.active > a {
+    background: var(--gradient-primary);
+    color: var(--white);
+    border-left: none;
+    font-weight: 600;
+    box-shadow: var(--shadow-light);
+    transform: translateX(0);
+    padding: 15px 20px;
+}
+
+#sidebar ul li.active > a:hover {
+    background: var(--gradient-primary);
+    color: var(--white);
+    box-shadow: var(--shadow-medium);
+    transform: translateX(0);
+}
+
+
+/* ----------------------------------------------------- */
+/* Sidebar Overlay (for mobile) */
+/* ----------------------------------------------------- */
+#sidebarOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040; /* Giữ z-index này cao hơn sidebar để phủ lên */
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+#sidebarOverlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* ----------------------------------------------------- */
+/* Main Wrapper */
+/* ----------------------------------------------------- */
+#main-wrapper {
+    flex-grow: 1;
+    margin-left: var(--sidebar-width);
+    transition: all 0.3s ease;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--body-bg);
+}
+
+/* Sidebar collapsed state (desktop) */
+#sidebar.collapsed {
+    /* --- ĐÃ ĐẢM BẢO: Cách ẩn sidebar desktop giống homepage --- */
+    margin-left: -250px; /* Từ homepage.css */
+    transform: none; /* Đảm bảo không có transform nếu dùng margin-left */
+    box-shadow: none;
+}
+
+#main-wrapper.expanded {
+    margin-left: 0;
+}
+
+
+/* ----------------------------------------------------- */
+/* Top Navbar */
+/* ----------------------------------------------------- */
+.top-navbar {
+    background: var(--white);
+    padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    width: 100%;
+    height: var(--top-navbar-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+}
+
+/* Style cho nút toggle sidebar (Icon 3 gạch) */
+#sidebarCollapse {
+    background-color: var(--primary-color); /* Giữ màu nền primary */
+    border: none;
+    color: white;
+    /* --- ĐÃ CHỈNH SỬA: Cỡ chữ và padding của icon 3 gạch --- */
+    font-size: 1.5rem; /* Tăng kích thước icon để nổi bật hơn */
+    padding: 10px 15px; /* Tăng padding để button lớn hơn */
+    border-radius: 5px;
+    cursor: pointer;
+    line-height: 1;
+    display: block;
+    /* --- Thêm hiệu ứng hover nếu chưa có --- */
+    transition: all 0.3s ease;
+}
+#sidebarCollapse:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px); /* Thêm hiệu ứng nhỏ khi hover */
+}
+
+/* Style cho tiêu đề "Ánh Dương Clinic" */
+.navbar-brand-custom {
+    margin-left: 60px;
+    white-space: nowrap;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 700;
+}
+.navbar-brand-custom .text-primary {
+    color: var(--primary-color) !important;
+}
+.navbar-brand-custom .text-dark {
+    color: #333 !important;
+}
+
+.navbar-search {
+    max-width: 600px;
+    width: 100%;
+    position: relative;
+    flex-grow: 1;
+    margin: 0 20px;
+}
+
+.navbar-search input {
+    padding: 0.8rem 1rem 0.8rem 3rem;
+    border-radius: 30px;
+    border: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.navbar-search input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(3, 96, 217, 0.25);
+}
+
+.navbar-search i {
+    position: absolute;
+    left: 1.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 1.2rem;
+}
+
+/* Enhanced Dropdown Styling (giữ nguyên) */
+.user-dropdown {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.dropdown-toggle {
+    background: linear-gradient(135deg, var(--primary-color), #00d4ff) !important;
+    border: none !important;
+    border-radius: 50px !important;
+    padding: 0.75rem 1.5rem !important;
+    color: white !important;
+    font-weight: 600 !important;
+    box-shadow: var(--shadow-light) !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+}
+
+.dropdown-toggle:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-medium) !important;
+    color: white !important;
+}
+
+.dropdown-toggle:focus {
+    box-shadow: var(--shadow-medium) !important;
+    color: white !important;
+}
+
+.dropdown-toggle::after {
+    border: none !important;
+    content: '\f282' !important;
+    font-family: 'bootstrap-icons' !important;
+    margin-left: 0.5rem !important;
+    vertical-align: middle !important;
+    transition: transform 0.3s ease !important;
+}
+
+.dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg) !important;
+}
+
+.dropdown-menu {
+    border: none !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+    padding: 1rem 0 !important;
+    margin-top: 0.5rem !important;
+    backdrop-filter: blur(20px) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    min-width: 280px !important;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    border: none !important;
+    background: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    color: var(--text-dark) !important;
+    text-decoration: none !important;
+    margin: 0.25rem 0 !important;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, var(--primary-light), rgba(0, 212, 255, 0.1)) !important;
+    color: var(--primary-dark) !important;
+    transform: translateX(5px) !important;
+}
+
+.dropdown-item i {
+    font-size: 1.1rem !important;
+    width: 20px !important;
+    text-align: center !important;
+}
+
+.dropdown-item.text-danger {
+    color: #dc3545 !important;
+}
+
+.dropdown-item.text-danger:hover {
+    background: linear-gradient(135deg, #fee, #fdd) !important;
+    color: #c82333 !important;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 1rem !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background: none !important;
+}
+
+.user-profile-icon {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+}
+
+.user-name {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+.user-role {
+    font-size: 0.8rem !important;
+    opacity: 0.8 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* ----------------------------------------------------- */
+/* Header Navigation (Đặt khám Bác sĩ) - Tách riêng và ở giữa */
+/* ----------------------------------------------------- */
+.header-navigation {
+    width: 100%;
+    background-color: var(--body-bg);
+    padding: 1.5rem 0;
+    box-shadow: none;
+    text-align: center;
+    z-index: 10;
+}
+
+.custom-nav-pills {
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto;
+    background-color: var(--white);
+    border-radius: 10px;
+    padding: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.custom-nav-pills .nav-item {
+    margin: 0 5px;
+}
+
+.custom-nav-pills .nav-link {
+    color: var(--text-dark);
+    font-weight: 500;
+    padding: 12px 25px;
+    border-radius: 8px;
+    background-color: transparent;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.custom-nav-pills .nav-link:hover:not(.active) {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.custom-nav-pills .nav-link.active {
+    color: var(--white);
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-light);
+    font-weight: 600;
+}
+
+/* Main Content Area */
+main.container-fluid {
+    flex-grow: 1;
+    padding-top: 0 !important;
+}
+
+.custom-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    background-color: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+/* View All Button */
+.view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 20px;
+    padding: 6px 15px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+}
+
+.view-all-btn:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Doctor List & Cards */
+.doctor-list-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #d1d1d1 transparent;
+}
+
+.doctor-list-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.doctor-list-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.doctor-list-wrapper::-webkit-scrollbar-thumb {
+    background-color: #d1d1d1;
+    border-radius: 10px;
+    border: 2px solid transparent;
+}
+
+.doctor-list-scroll {
+    padding-bottom: 15px;
+}
+
+.doctor-card {
+    width: 250px;
+    border: 1px solid #e0e0e0;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    cursor: pointer;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.doctor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.doctor-card img {
+    border-color: var(--body-bg) !important;
+    box-shadow: 0 0 0 2px var(--white), 0 0 0 3px var(--body-bg);
+}
+
+.doctor-card .card-title {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.doctor-card .card-text {
+    font-size: 0.95rem;
+    color: var(--text-light);
+}
+
+.book-now-btn {
+    width: 100%;
+    border-radius: 5px;
+    font-weight: 500;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    background-color: var(--white);
+}
+
+.book-now-btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.doctor-scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    z-index: 10;
+    border: none;
+    background-color: var(--white);
+    box-shadow: var(--shadow-light);
+    color: var(--primary-color);
+}
+
+.doctor-scroll-btn:hover {
+    background-color: var(--primary-color);
+    color: var(--white);
+    box-shadow: var(--shadow-medium);
+}
+
+.doctor-scroll-right {
+    right: -20px;
+}
+
+/* ================================================= */
+/* Responsive Styles (Corrected for Off-canvas Mobile Sidebar) */
+/* ================================================= */
+@media (max-width: 991.98px) {
+    body {
+        flex-direction: row;
+        position: relative;
+    }
+
+    #sidebar {
+        min-width: var(--sidebar-width);
+        max-width: var(--sidebar-width);
+        position: fixed;
+        left: 0;
+        margin-left: calc(-1 * var(--sidebar-width)); /* Dùng margin-left để ẩn ban đầu */
+        top: 0;
+        height: 100vh;
+        z-index: 1050; /* Giữ z-index này cao hơn navbar cho mobile */
+        box-shadow: 4px 0 10px rgba(0,0,0,0.2);
+        transition: margin-left 0.3s ease, box-shadow 0.3s ease; /* Chuyển transition sang margin-left */
+    }
+
+    #sidebar.active {
+        margin-left: 0;
+    }
+
+    #main-wrapper {
+        margin-left: 0;
+        width: 100%;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    .top-navbar {
+        padding-left: 1rem;
+        margin-left: 0;
+    }
+
+    .doctor-scroll-btn {
+        display: none;
+    }
+
+    .navbar-brand-custom {
+        margin-left: 10px;
+    }
+
+    .navbar-search {
+        margin: 0 10px;
+    }
+
+    .user-info {
+        display: none !important;
+    }
+}
+
+/* Cần thêm media query cho màn hình nhỏ hơn 767.98px nếu homepage.css có sự khác biệt rõ rệt hơn nữa */
+@media (max-width: 767.98px) {
+    /* Đảm bảo sidebar ẩn trên mobile theo homepage */
+    #sidebar {
+        margin-left: -250px;
+    }
+    #sidebar.active {
+        margin-left: 0;
+    }
+    #content { /* Nếu bạn có div id="content" bao ngoài main-wrapper */
+        width: 100%;
+    }
+    .top-navbar {
+        margin-left: 0;
+    }
+
+    /* Kích thước chữ trên mobile (nếu homepage có) */
+    .display-4 {
+        font-size: 2rem;
+    }
+    .display-5 {
+        font-size: 1.75rem;
+    }
+    .display-6 {
+        font-size: 1.5rem;
+    }
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}
