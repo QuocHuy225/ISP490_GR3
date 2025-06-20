@@ -1,3 +1,8 @@
+/* Landing Page CSS - Ánh Dương Clinic */
+
+/* ====================================
+   CSS VARIABLES & ROOT SETTINGS
+   ==================================== */
 :root {
     --primary: #0360D9;
     --primary-light: #e3f2fd;
@@ -22,7 +27,9 @@
     --shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.12);
 }
 
-/* Reset & Base Styles */
+/* ====================================
+   RESET & BASE STYLES
+   ==================================== */
 * { 
     margin: 0; 
     padding: 0; 
@@ -38,7 +45,9 @@ body {
     padding-top: 72px;
 }
 
-/* Typography */
+/* ====================================
+   TYPOGRAPHY
+   ==================================== */
 h1, h2, h3, h4, h5, h6 {
     color: var(--foreground);
     font-weight: 700;
@@ -69,7 +78,9 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--muted);
 }
 
-/* Navbar Styles */
+/* ====================================
+   NAVBAR STYLES
+   ==================================== */
 .navbar {
     padding-top: 0.75rem;
     padding-bottom: 0.75rem;
@@ -93,7 +104,9 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--primary) !important;
 }
 
-/* Button Styles */
+/* ====================================
+   BUTTON STYLES
+   ==================================== */
 .btn {
     padding: 0.675rem 1.5rem;
     font-weight: 500;
@@ -138,7 +151,9 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 50rem !important;
 }
 
-/* Hero Section */
+/* ====================================
+   HERO SECTION
+   ==================================== */
 .hero-section {
     position: relative;
     overflow: hidden;
@@ -156,7 +171,9 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: var(--shadow-lg);
 }
 
-/* Appointment Section */
+/* ====================================
+   APPOINTMENT SECTION
+   ==================================== */
 .appointment-card {
     background: var(--card);
     border-radius: var(--radius-lg);
@@ -185,7 +202,9 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--primary);
 }
 
-/* Services Section */
+/* ====================================
+   SERVICES SECTION
+   ==================================== */
 .service-card {
     background: var(--card);
     border-radius: var(--radius);
@@ -211,7 +230,9 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0 auto 1.5rem;
 }
 
-/* Reviews Section */
+/* ====================================
+   REVIEWS SECTION
+   ==================================== */
 .review-card {
     background: var(--card);
     border-radius: var(--radius);
@@ -232,7 +253,9 @@ h1, h2, h3, h4, h5, h6 {
     object-fit: cover;
 }
 
-/* Footer */
+/* ====================================
+   FOOTER
+   ==================================== */
 .footer {
     background: var(--primary);
     color: var(--primary-foreground);
@@ -281,17 +304,36 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(-3px);
 }
 
-/* Animations */
+/* ====================================
+   ANIMATIONS
+   ==================================== */
 @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg); 
+    }
+    50% { 
+        transform: translateY(-20px) rotate(180deg); 
+    }
 }
 
 .floating {
     animation: float 6s ease-in-out infinite;
 }
 
-/* Utilities */
+@keyframes modalSlideIn {
+    from {
+        transform: scale(0.7) translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ====================================
+   UTILITIES
+   ==================================== */
 .text-gradient {
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
     -webkit-background-clip: text;
@@ -299,19 +341,67 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .bg-gradient {
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
 }
 
 .hover-lift {
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hover-lift:hover {
     transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
 }
 
-/* Responsive */
+.z-index-2 {
+    z-index: 2;
+}
+
+/* ====================================
+   LANDING PAGE SPECIFIC STYLES
+   ==================================== */
+
+/* Login & Register Button Styles */
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4) !important;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+}
+
+.register-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(30, 64, 175, 0.4) !important;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%) !important;
+}
+
+.google-btn:hover {
+    background-color: #f8fafc;
+    border-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Form Styles */
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.15);
+    border-color: #2563eb;
+}
+
+.form-floating > label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* Modal Styles */
+.modal-content {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+/* ====================================
+   RESPONSIVE STYLES
+   ==================================== */
+
+/* Tablet and below */
 @media (max-width: 991.98px) {
     .navbar-collapse {
         background: var(--background);
@@ -331,6 +421,7 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* Mobile */
 @media (max-width: 767.98px) {
     body {
         padding-top: 64px;
