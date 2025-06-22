@@ -450,11 +450,11 @@
         <div class="modal fade" id="addSupplyModal" tabindex="-1" aria-labelledby="addSupplyModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header bg-<%= isEdit ? "primary" : "success" %> text-white">
+                    <div class="modal-header">
                         <h5 class="modal-title" id="addSupplyModalLabel">
                             <i class="bi bi-<%= isEdit ? "pencil-square" : "plus-circle" %> me-2"></i><%= isEdit ? "Chỉnh sửa thông tin vật tư" : "Thêm vật tư mới" %>
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies">
                         <div class="modal-body">

@@ -20,6 +20,20 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
         <!-- DataTables CSS -->
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+        <style>
+            /* Ensure delete modals have white header */
+            #deleteMedicineModal .modal-header,
+            #deletePrescriptionFormModal .modal-header {
+                background: white !important;
+                color: #dc3545 !important;
+                border-bottom: 1px solid #dee2e6;
+            }
+            #deleteMedicineModal .modal-content,
+            #deletePrescriptionFormModal .modal-content {
+                background-color: white !important;
+                background: white !important;
+            }
+        </style>
     </head>
     <body>
         <%
@@ -419,15 +433,14 @@
                                                                            class="btn btn-sm btn-primary me-1" title="Chỉnh sửa">
                                                                             <i class="bi bi-pencil"></i>
                                                                         </a>
-                                                                        <form method="POST" action="${pageContext.request.contextPath}/admin/prescriptions/medicines" 
-                                                                              style="display: inline-block;" 
-                                                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa thuốc?')">
-                                                                            <input type="hidden" name="action" value="delete">
-                                                                            <input type="hidden" name="medicineId" value="<%= medicine.getPreMedicineId() %>">
-                                                                            <button type="submit" class="btn btn-sm btn-danger" title="Xóa">
-                                                                                <i class="bi bi-trash"></i>
-                                                                            </button>
-                                                                        </form>
+                                                                        <button type="button" 
+                                                                                class="btn btn-sm btn-danger" 
+                                                                                data-medicine-id="<%= medicine.getPreMedicineId() %>"
+                                                                                data-medicine-name="<%= medicine.getMedicineName() %>"
+                                                                                onclick="deleteMedicine(this.getAttribute('data-medicine-id'), this.getAttribute('data-medicine-name'))" 
+                                                                                title="Xóa">
+                                                                            <i class="bi bi-trash"></i>
+                                                                        </button>
                                                                     </td>
                                                                 </tr>
                                                                 <% } %>
@@ -435,7 +448,11 @@
                                                                 <tr>
                                                                     <td colspan="5" class="text-center">
                                                                         <i class="bi bi-inbox me-2"></i>
-                                                                        Chưa có thuốc nào trong hệ thống
+                                                                        <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
+                                                                            Không tìm thấy thuốc nào với từ khóa "<%= medicineSearchKeyword %>"
+                                                                        <% } else { %>
+                                                                            Chưa có thuốc nào trong hệ thống
+                                                                        <% } %>
                                                                     </td>
                                                                 </tr>
                                                             <% } %>
@@ -542,15 +559,14 @@
                                                            class="btn btn-sm btn-primary" title="Chỉnh sửa">
                                                             <i class="bi bi-pencil"></i> Chỉnh sửa
                                                         </a>
-                                                        <form method="POST" action="${pageContext.request.contextPath}/admin/prescriptions/forms" 
-                                                              style="display: inline-block;" 
-                                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa đơn thuốc mẫu?')">
-                                                            <input type="hidden" name="action" value="delete">
-                                                            <input type="hidden" name="formId" value="<%= form.getPrescriptionFormId() %>">
-                                                            <button type="submit" class="btn btn-sm btn-danger" title="Xóa">
-                                                                <i class="bi bi-trash"></i> Xóa
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-danger" 
+                                                                data-form-id="<%= form.getPrescriptionFormId() %>"
+                                                                data-form-name="<%= form.getFormName() %>"
+                                                                onclick="deletePrescriptionForm(this.getAttribute('data-form-id'), this.getAttribute('data-form-name'))" 
+                                                                title="Xóa">
+                                                            <i class="bi bi-trash"></i> Xóa
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -560,8 +576,13 @@
                                         <div class="col-12">
                                             <div class="text-center py-5">
                                                 <i class="bi bi-inbox display-1 text-muted"></i>
-                                                <h5 class="text-muted mt-3">Chưa có đơn thuốc mẫu nào</h5>
-                                                <p class="text-muted">Thêm đơn thuốc mẫu đầu tiên của bạn</p>
+                                                <% if (formSearchKeyword != null && !formSearchKeyword.trim().isEmpty()) { %>
+                                                    <h5 class="text-muted mt-3">Không tìm thấy đơn thuốc mẫu nào</h5>
+                                                    <p class="text-muted">Không có đơn thuốc mẫu nào khớp với từ khóa "<%= formSearchKeyword %>"</p>
+                                                <% } else { %>
+                                                    <h5 class="text-muted mt-3">Chưa có đơn thuốc mẫu nào</h5>
+                                                    <p class="text-muted">Thêm đơn thuốc mẫu đầu tiên của bạn</p>
+                                                <% } %>
                                             </div>
                                         </div>
                                     <% } %>
@@ -801,6 +822,68 @@
             </div>
         </div>
 
+        <!-- Delete Medicine Confirmation Modal -->
+        <div class="modal fade" id="deleteMedicineModal" tabindex="-1" aria-labelledby="deleteMedicineModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger" id="deleteMedicineModalLabel">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa thuốc
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc chắn muốn xóa thuốc <strong id="deleteMedicineName"></strong> không?</p>
+                        <p class="text-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Hành động này không thể hoàn tác!
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <form method="POST" action="${pageContext.request.contextPath}/admin/prescriptions/medicines" style="display: inline;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" id="deleteMedicineId" name="medicineId">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Xóa
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Prescription Form Confirmation Modal -->
+        <div class="modal fade" id="deletePrescriptionFormModal" tabindex="-1" aria-labelledby="deletePrescriptionFormModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger" id="deletePrescriptionFormModalLabel">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa đơn thuốc mẫu
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc chắn muốn xóa đơn thuốc mẫu <strong id="deletePrescriptionFormName"></strong> không?</p>
+                        <p class="text-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Hành động này không thể hoàn tác!
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <form method="POST" action="${pageContext.request.contextPath}/admin/prescriptions/forms" style="display: inline;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" id="deletePrescriptionFormId" name="formId">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Xóa
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- JavaScript Libraries -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -836,16 +919,23 @@
             // Listen for window resize
             window.addEventListener('resize', checkWidth);
 
-            // Initialize DataTables
-            $('#medicinesTable').DataTable({
-                pageLength: 10,
-                responsive: true,
-                searching: false, // Disable DataTables search
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
-                }
-            });
+            // Don't initialize DataTables to avoid column count issues
+            // Just use regular table without DataTables features
         });
+
+        // Delete medicine function
+        function deleteMedicine(medicineId, medicineName) {
+            document.getElementById('deleteMedicineId').value = medicineId;
+            document.getElementById('deleteMedicineName').textContent = medicineName;
+            new bootstrap.Modal(document.getElementById('deleteMedicineModal')).show();
+        }
+
+        // Delete prescription form function
+        function deletePrescriptionForm(formId, formName) {
+            document.getElementById('deletePrescriptionFormId').value = formId;
+            document.getElementById('deletePrescriptionFormName').textContent = formName;
+            new bootstrap.Modal(document.getElementById('deletePrescriptionFormModal')).show();
+        }
         </script>
 
         <% if (editMedicine != null) { %>

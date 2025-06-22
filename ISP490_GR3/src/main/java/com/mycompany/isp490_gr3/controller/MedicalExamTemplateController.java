@@ -72,6 +72,9 @@ public class MedicalExamTemplateController extends HttpServlet {
                 case "/search":
                     searchTemplates(request, response);
                     break;
+                case "/delete":
+                    deleteTemplate(request, response);
+                    break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/admin/medical-exam-templates/list");
                     break;

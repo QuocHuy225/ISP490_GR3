@@ -1,9 +1,12 @@
 com\mycompany\isp490_gr3\dao\DAOPrescription.class
+com\mycompany\isp490_gr3\model\MedicalExamTemplate.class
 com\mycompany\isp490_gr3\model\User.class
 com\mycompany\isp490_gr3\controller\HomepageController.class
+com\mycompany\isp490_gr3\controller\MedicalExamTemplateController.class
 com\mycompany\isp490_gr3\JakartaRestConfiguration.class
 com\mycompany\isp490_gr3\dao\DBContext.class
 com\mycompany\isp490_gr3\dao\DAOUser.class
+com\mycompany\isp490_gr3\dao\DAOMedicalExamTemplate.class
 com\mycompany\isp490_gr3\service\GoogleOAuthService.class
 com\mycompany\isp490_gr3\controller\PrescriptionController.class
 com\mycompany\isp490_gr3\dao\PatientDAO.class
