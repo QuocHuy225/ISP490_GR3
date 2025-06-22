@@ -1,8 +1,8 @@
 /* Merged CSS for Homepage - Phòng khám Ánh Dương */
 
 /* ====================================
-   CSS VARIABLES & ROOT SETTINGS
-   ==================================== */
+    CSS VARIABLES & ROOT SETTINGS
+    ==================================== */
 :root {
     --primary: #0360D9;
     --primary-light: #e3f2fd;
@@ -25,29 +25,40 @@
     --radius-lg: 1rem;
     --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
     --shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.12);
+
+    /* --- Đảm bảo các biến này đã có trong file CSS gốc của bạn --- */
+    --primary-color: #0360D9; /* Có trong ảnh, dùng cho sidebar background */
+    --white: #ffffff;
+    --text-dark: #2B3674;
+    --text-light: #A3AED0;
+    --body-bg: #f8f9fa;
+    --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, #00d4ff 100%);
+    --shadow-light: 0 5px 25px rgba(3, 96, 217, 0.1);
+    --shadow-medium: 0 10px 40px rgba(3, 96, 217, 0.15);
+    /* Các biến khác bạn có thể đã thêm */
 }
 
 /* ====================================
-   RESET & BASE STYLES
-   ==================================== */
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
+    RESET & BASE STYLES
+    ==================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-body { 
+body {
     font-family: var(--font-family);
     line-height: 1.6;
     font-size: 16px;
     color: var(--foreground);
     background-color: var(--background);
-    padding-top: 72px;
+    padding-top: 72px; /* Dành cho fixed navbar */
 }
 
 /* ====================================
-   TYPOGRAPHY
-   ==================================== */
+    TYPOGRAPHY
+    ==================================== */
 h1, h2, h3, h4, h5, h6 {
     color: var(--foreground);
     font-weight: 700;
@@ -79,8 +90,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   NAVBAR STYLES
-   ==================================== */
+    NAVBAR STYLES
+    ==================================== */
 .navbar {
     padding-top: 0.75rem;
     padding-bottom: 0.75rem;
@@ -105,8 +116,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   BUTTON STYLES
-   ==================================== */
+    BUTTON STYLES
+    ==================================== */
 .btn {
     padding: 0.675rem 1.5rem;
     font-weight: 500;
@@ -152,8 +163,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   HERO SECTION
-   ==================================== */
+    HERO SECTION
+    ==================================== */
 .hero-section {
     position: relative;
     overflow: hidden;
@@ -172,8 +183,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   APPOINTMENT SECTION
-   ==================================== */
+    APPOINTMENT SECTION
+    ==================================== */
 .appointment-card {
     background: var(--card);
     border-radius: var(--radius-lg);
@@ -203,8 +214,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   SERVICES SECTION (General)
-   ==================================== */
+    SERVICES SECTION (General)
+    ==================================== */
 .service-icon {
     width: 64px;
     height: 64px;
@@ -217,8 +228,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   REVIEWS SECTION
-   ==================================== */
+    REVIEWS SECTION
+    ==================================== */
 .review-card {
     background: var(--card);
     border-radius: var(--radius);
@@ -240,8 +251,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   FOOTER
-   ==================================== */
+    FOOTER
+    ==================================== */
 .footer {
     background: var(--primary);
     color: var(--primary-foreground);
@@ -291,8 +302,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   GENERAL ANIMATIONS
-   ==================================== */
+    GENERAL ANIMATIONS
+    ==================================== */
 @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-20px); }
@@ -303,8 +314,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   UTILITIES
-   ==================================== */
+    UTILITIES
+    ==================================== */
 .text-gradient {
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
     -webkit-background-clip: text;
@@ -325,24 +336,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   HOMEPAGE SPECIFIC STYLES
-   ==================================== */
+    HOMEPAGE SPECIFIC STYLES
+    ==================================== */
 
-/* Additional CSS Variables for Homepage */
-:root {
-    --primary-color: #0360D9;
-    --primary-dark: #0246a3;
-    --primary-light: #e3f2fd;
-    --white: #ffffff;
-    --text-dark: #2B3674;
-    --text-light: #A3AED0;
-    --body-bg: #f8f9fa;
-    --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, #00d4ff 100%);
-    --shadow-light: 0 5px 25px rgba(3, 96, 217, 0.1);
-    --shadow-medium: 0 10px 40px rgba(3, 96, 217, 0.15);
-}
+/* Additional CSS Variables for Homepage - Merged to root */
+/* (Not repeated here to avoid redundancy) */
 
-/* Additional Base Styles */
+/* Additional Base Styles - Merged or adapted */
 * {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -350,13 +350,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 body {
-    background-color: var(--body-bg);
+    background-color: var(--body-bg); /* Using the specific body-bg variable */
     color: var(--text-dark);
 }
 
 /* ====================================
-   SIDEBAR STYLES
-   ==================================== */
+    SIDEBAR STYLES
+    (Đã sửa để thêm khoảng cách icon và chữ, và chỉnh màu active)
+    ==================================== */
 #sidebar {
     min-width: 250px;
     max-width: 250px;
@@ -402,6 +403,8 @@ body {
     transition: all 0.3s;
     border-radius: 8px;
     margin: 4px 8px;
+    /* --- ĐÃ THÊM DÒNG NÀY ĐỂ TẠO KHOẢNG CÁCH GIỮA ICON VÀ TEXT --- */
+    gap: 10px; /* Hoặc 0.625rem, tùy bạn muốn */
 }
 
 #sidebar ul li a:hover {
@@ -409,23 +412,36 @@ body {
     transform: translateX(5px);
 }
 
-#sidebar ul li a i {
-    margin-right: 10px;
-    font-size: 1.2em;
+/* ================================================================= */
+/* PHẦN ĐÃ CHỈNH SỬA: Sidebar Active Link Styling */
+/* ================================================================= */
+#sidebar ul li.active > a {
+    background: var(--gradient-primary); /* SỬ DỤNG MÀU GRADIENT */
+    color: var(--white); /* ĐẢM BẢO CHỮ MÀU TRẮNG */
+    border-left: none; /* Bỏ border trái, vì gradient sẽ phủ */
+    font-weight: 600; /* In đậm chữ cho mục active */
+    box-shadow: var(--shadow-light); /* Thêm bóng nhẹ cho mục active */
+    transform: translateX(0); /* Đảm bảo không có translate trên mục active */
+    /* Giữ padding nhất quán nếu không có sự khác biệt rõ rệt so với link bình thường */
+    padding: 15px 20px; /* Giữ padding nhất quán */
 }
 
-#sidebar ul li.active > a {
-    background: var(--primary-dark);
-    border-left: 4px solid var(--white);
+/* PHẦN ĐÃ CHỈNH SỬA: Hover cho mục active */
+#sidebar ul li.active > a:hover {
+    background: var(--gradient-primary); /* Giữ nguyên gradient khi hover */
+    color: var(--white); /* Giữ nguyên màu chữ trắng khi hover */
+    box-shadow: var(--shadow-medium); /* Làm bóng mạnh hơn một chút khi hover */
+    transform: translateX(0); /* Đảm bảo không dịch chuyển khi hover */
 }
+
 
 .admin-only {
     display: none;
 }
 
 /* ====================================
-   MAIN CONTENT & NAVBAR
-   ==================================== */
+    MAIN CONTENT & NAVBAR
+    ==================================== */
 #content {
     width: calc(100% - 250px);
     min-height: 100vh;
@@ -480,8 +496,8 @@ body {
 }
 
 /* ====================================
-   USER DROPDOWN STYLES
-   ==================================== */
+    USER DROPDOWN STYLES
+    ==================================== */
 .user-dropdown {
     position: relative;
 }
@@ -514,7 +530,7 @@ body {
 
 .dropdown-toggle::after {
     border: none !important;
-    content: '\f282' !important;
+    content: '\f282' !important; /* Icon mũi tên xuống của Bootstrap Icons */
     font-family: 'Bootstrap Icons' !important;
     margin-left: 0.5rem !important;
     transition: transform 0.3s ease !important;
@@ -613,8 +629,8 @@ body {
 }
 
 /* ====================================
-   DASHBOARD COMPONENTS
-   ==================================== */
+    DASHBOARD COMPONENTS
+    ==================================== */
 .stat-card {
     background: var(--white);
     border-radius: 15px;
@@ -683,8 +699,8 @@ body {
 }
 
 /* ====================================
-   ADDITIONAL ANIMATIONS
-   ==================================== */
+    ADDITIONAL ANIMATIONS
+    ==================================== */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -950,8 +966,8 @@ body {
 }
 
 /* ====================================
-   RESPONSIVE STYLES
-   ==================================== */
+    RESPONSIVE STYLES
+    ==================================== */
 
 /* Tablet and below */
 @media (max-width: 991.98px) {
@@ -1030,12 +1046,12 @@ body {
         border-radius: 15px;
         margin: 10px;
     }
-    
+
     .enhanced-card {
         margin-bottom: 20px;
     }
-    
+
     .service-card {
         margin-bottom: 20px;
     }
-} 
+}

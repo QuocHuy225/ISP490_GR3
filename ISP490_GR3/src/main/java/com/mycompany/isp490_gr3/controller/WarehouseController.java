@@ -138,7 +138,7 @@ public class WarehouseController extends HttpServlet {
     
     // =====================================================
     // PHẦN XỬ LÝ YÊU CẦU POST CHO VẬT TƯ Y TẾ
-    // Các action: add, update, delete, addStock
+    // Các action: add, update, delete
     // =====================================================
     private void handleSupplyPostRequests(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -159,12 +159,6 @@ public class WarehouseController extends HttpServlet {
             case "delete":
                 handleDeleteSupply(request, response);
                 break;
-            case "addStock":
-                handleAddStock(request, response);
-                break;
-            case "reduceStock":
-                handleReduceStock(request, response);
-                break;
             default:
                 response.sendRedirect(request.getContextPath() + "/admin/medical-supplies");
                 break;
@@ -173,7 +167,7 @@ public class WarehouseController extends HttpServlet {
     
     // =====================================================
     // PHẦN XỬ LÝ YÊU CẦU POST CHO KHO THUỐC
-    // Các action: add, update, delete, addStock
+    // Các action: add, update, delete
     // =====================================================
     private void handleMedicinePostRequests(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -193,12 +187,6 @@ public class WarehouseController extends HttpServlet {
                 break;
             case "delete":
                 handleDeleteMedicine(request, response);
-                break;
-            case "addStock":
-                handleAddMedicineStock(request, response);
-                break;
-            case "reduceStock":
-                handleReduceMedicineStock(request, response);
                 break;
             default:
                 response.sendRedirect(request.getContextPath() + "/admin/medicines");
@@ -432,56 +420,6 @@ public class WarehouseController extends HttpServlet {
         }
     }
     
-    private void handleAddStock(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        try {
-            int supplyId = Integer.parseInt(request.getParameter("supplyId"));
-            int additionalQuantity = Integer.parseInt(request.getParameter("additionalQuantity"));
-            
-            if (additionalQuantity <= 0) {
-                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=invalid_quantity");
-                return;
-            }
-            
-            boolean success = warehouseDAO.updateStockQuantity(supplyId, additionalQuantity);
-            
-            if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?success=stock_added");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=stock_add_failed");
-            }
-            
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=invalid_format");
-        }
-    }
-    
-    private void handleReduceStock(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        try {
-            int supplyId = Integer.parseInt(request.getParameter("supplyId"));
-            int reduceQuantity = Integer.parseInt(request.getParameter("reduceQuantity"));
-            
-            if (reduceQuantity <= 0) {
-                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=invalid_quantity");
-                return;
-            }
-            
-            boolean success = warehouseDAO.reduceStockQuantity(supplyId, reduceQuantity);
-            
-            if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?success=stock_reduced");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=stock_reduce_failed");
-            }
-            
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=invalid_format");
-        }
-    }
-    
     private void handleDeleteSupply(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
@@ -658,56 +596,6 @@ public class WarehouseController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/admin/medicines?success=updated");
             } else {
                 response.sendRedirect(request.getContextPath() + "/admin/medicines?error=update_failed");
-            }
-            
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_format");
-        }
-    }
-    
-    private void handleAddMedicineStock(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        try {
-            int medicineId = Integer.parseInt(request.getParameter("medicineId"));
-            int additionalQuantity = Integer.parseInt(request.getParameter("additionalQuantity"));
-            
-            if (additionalQuantity <= 0) {
-                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_quantity");
-                return;
-            }
-            
-            boolean success = warehouseDAO.updateMedicineStockQuantity(medicineId, additionalQuantity);
-            
-            if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/medicines?success=stock_added");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=stock_add_failed");
-            }
-            
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_format");
-        }
-    }
-    
-    private void handleReduceMedicineStock(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        try {
-            int medicineId = Integer.parseInt(request.getParameter("medicineId"));
-            int reduceQuantity = Integer.parseInt(request.getParameter("reduceQuantity"));
-            
-            if (reduceQuantity <= 0) {
-                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_quantity");
-                return;
-            }
-            
-            boolean success = warehouseDAO.reduceMedicineStockQuantity(medicineId, reduceQuantity);
-            
-            if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/medicines?success=stock_reduced");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=stock_reduce_failed");
             }
             
         } catch (NumberFormatException e) {

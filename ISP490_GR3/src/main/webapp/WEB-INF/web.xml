@@ -33,7 +33,14 @@
         <servlet-name>AppointmentController</servlet-name>
         <url-pattern>/appointments</url-pattern> <!-- Đây là URL bạn sẽ truy cập -->
     </servlet-mapping>
-      
+      <servlet>
+        <servlet-name>MakeAppointmentController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.MakeAppointmentController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MakeAppointmentController</servlet-name>
+        <url-pattern>/makeappointments</url-pattern> <!-- Đây là URL bạn sẽ truy cập -->
+    </servlet-mapping>
     <error-page>
         <error-code>404</error-code>
         <location>/jsp/error/404.jsp</location>
