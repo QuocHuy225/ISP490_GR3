@@ -5,6 +5,7 @@ com\mycompany\isp490_gr3\JakartaRestConfiguration.class
 com\mycompany\isp490_gr3\dao\DBContext.class
 com\mycompany\isp490_gr3\dao\DAOUser.class
 com\mycompany\isp490_gr3\service\GoogleOAuthService.class
+com\mycompany\isp490_gr3\controller\PrescriptionController.class
 com\mycompany\isp490_gr3\dao\PatientDAO.class
 com\mycompany\isp490_gr3\dao\AppointmentDAO.class
 com\mycompany\isp490_gr3\config\GoogleOAuthConfig.class
