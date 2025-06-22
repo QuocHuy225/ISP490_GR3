@@ -16,6 +16,7 @@ com\mycompany\isp490_gr3\model\PrescriptionFormMedicine.class
 com\mycompany\isp490_gr3\model\MedicalService.class
 com\mycompany\isp490_gr3\model\PrescriptionForm.class
 com\mycompany\isp490_gr3\model\Medicine.class
+com\mycompany\isp490_gr3\controller\MakeAppointmentController.class
 com\mycompany\isp490_gr3\model\PrescriptionMedicine.class
 com\mycompany\isp490_gr3\controller\PatientController.class
 com\mycompany\isp490_gr3\dao\DAOWarehouse.class
