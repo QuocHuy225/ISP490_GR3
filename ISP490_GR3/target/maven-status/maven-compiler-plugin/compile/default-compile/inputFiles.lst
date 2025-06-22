@@ -1,6 +1,10 @@
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\AppointmentDAO.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\PatientDAO.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\resources\JakartaEE10Resource.java
+<<<<<<< Updated upstream
+=======
+C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\MakeAppointmentController.java
+>>>>>>> Stashed changes
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\JakartaRestConfiguration.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\WarehouseController.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Patient.java
