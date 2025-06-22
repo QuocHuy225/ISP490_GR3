@@ -493,11 +493,11 @@
         <div class="modal fade" id="editMedicineModal" tabindex="-1" aria-labelledby="editMedicineModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
+                    <div class="modal-header">
                         <h5 class="modal-title" id="editMedicineModalLabel">
                             <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin thuốc
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form method="POST" action="${pageContext.request.contextPath}/admin/medicines">
                         <div class="modal-body">

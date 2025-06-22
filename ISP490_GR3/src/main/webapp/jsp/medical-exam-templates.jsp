@@ -49,10 +49,16 @@
                 border-color: #007bff;
                 box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
             }
-            .modal-header {
+            .form-modal .modal-header {
                 background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
                 color: white;
                 border-radius: 10px 10px 0 0;
+            }
+            /* Ensure delete modal has white header */
+            #deleteConfirmModal .modal-header {
+                background: white !important;
+                color: #dc3545 !important;
+                border-bottom: 1px solid #dee2e6;
             }
             .form-label {
                 font-weight: 500;
@@ -429,11 +435,14 @@
                                                            class="btn btn-sm btn-outline-warning btn-action" title="Chỉnh sửa">
                                                             <i class="bi bi-pencil"></i>
                                                         </a>
-                                                        <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/delete?id=<%= tmpl.getId() %>" 
-                                                           class="btn btn-sm btn-outline-danger btn-action" 
-                                                           onclick="return confirm('Bạn có chắc muốn xóa mẫu đơn: <%= tmpl.getName() %>?')" title="Xóa">
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-outline-danger btn-action" 
+                                                                data-template-id="<%= tmpl.getId() %>"
+                                                                data-template-name="<%= tmpl.getName() %>"
+                                                                onclick="deleteTemplate(this.getAttribute('data-template-id'), this.getAttribute('data-template-name'))" 
+                                                                title="Xóa">
                                                             <i class="bi bi-trash"></i>
-                                                        </a>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -579,6 +588,36 @@
             </div>
         </div>
 
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger" id="deleteConfirmModalLabel">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc chắn muốn xóa mẫu đơn <strong id="deleteTemplateName"></strong> không?</p>
+                        <p class="text-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Hành động này không thể hoàn tác!
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <form method="GET" action="${pageContext.request.contextPath}/admin/medical-exam-templates/delete" style="display: inline;">
+                            <input type="hidden" id="deleteTemplateId" name="id">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Xóa
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         
@@ -611,6 +650,13 @@
                 // Listen for window resize
                 window.addEventListener('resize', checkWidth);
             });
+
+            // Delete template function
+            function deleteTemplate(templateId, templateName) {
+                document.getElementById('deleteTemplateId').value = templateId;
+                document.getElementById('deleteTemplateName').textContent = templateName;
+                new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+            }
         </script>
     </body>
 </html> 
