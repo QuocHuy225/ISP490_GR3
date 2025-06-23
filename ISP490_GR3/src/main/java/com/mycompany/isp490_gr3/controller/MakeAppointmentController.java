@@ -1,26 +1,33 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.isp490_gr3.controller;
 
+import com.mycompany.isp490_gr3.dao.DAODoctor;
+import com.mycompany.isp490_gr3.model.Doctor;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
+// KHÔNG CÓ @WebServlet annotation ở đây
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
-/**
- *
- * @author Acer
- */
-@WebServlet(name = "MakeAppointmentController", urlPatterns = {"/makeappointments"})
+// Đảm bảo rằng servlet này được ánh xạ tới /makeappointments trong web.xml của bạn
 public class MakeAppointmentController extends HttpServlet {
-     private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
+    private DAODoctor DAOdoctor;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        DAOdoctor = new DAODoctor();
+    }
      
-     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Lấy 5 bác sĩ nổi bật để hiển thị trên trang make-appointment.jsp
+        List<Doctor> doctors = DAOdoctor.getFeaturedDoctors(5, 0);
+        request.setAttribute("doctors", doctors);
         
-         request.getRequestDispatcher("/jsp/make-appointment.jsp").forward(request, response);
+        // Chuyển tiếp đến JSP. Lưu ý đường dẫn này phải khớp với vị trí JSP của bạn.
+        // Nếu make-appointment.jsp nằm trực tiếp trong thư mục WEB-INF/jsp/, thì là "/jsp/make-appointment.jsp"
+        request.getRequestDispatcher("/jsp/make-appointment.jsp").forward(request, response);
     }
 }

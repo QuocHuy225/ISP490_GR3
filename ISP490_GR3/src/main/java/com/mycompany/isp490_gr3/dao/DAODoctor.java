@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.isp490_gr3.dao;
 
 import com.mycompany.isp490_gr3.model.Doctor;
@@ -25,33 +21,25 @@ public class DAODoctor {
         doctor.setAccountId(rs.getString("account_id"));
         doctor.setFullName(rs.getString("full_name"));
         doctor.setGender(rs.getInt("gender"));
-        doctor.setPhoneNumber(rs.getString("phone")); // From doctors table
+        doctor.setPhoneNumber(rs.getString("phone"));
         doctor.setDepartmentId(rs.getInt("department_id"));
         doctor.setIsDeleted(rs.getBoolean("is_deleted"));
         doctor.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
         doctor.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
-
-        // Fields from JOINs
-        doctor.setSpecializationName(rs.getString("specialization_name")); // From department.name
-        
-        // 'degree', 'clinic_address', 'image_url' fields have been removed as requested.
-        // These fields are no longer mapped from the ResultSet.
-
+        doctor.setSpecializationName(rs.getString("specialization_name"));
         return doctor;
     }
 
     // Fetches a list of doctors based on search query, limit, and offset for pagination
     public List<Doctor> getAllDoctors(String searchQuery, int limit, int offset) {
         List<Doctor> doctors = new ArrayList<>();
-        // Updated SQL to JOIN with 'department' and 'user' tables.
-        // Removed 'degree', 'clinic_address', 'image_url' from SELECT statement as requested.
         StringBuilder sql = new StringBuilder("SELECT " +
                      "d.id, d.account_id, d.full_name, d.gender, d.phone, d.department_id, d.is_deleted, d.created_at, d.updated_at, " +
-                     "dep.name AS specialization_name " + // From department table
+                     "dep.name AS specialization_name " +
                      "FROM doctors d " +
                      "LEFT JOIN department dep ON d.department_id = dep.id " +
-                     "LEFT JOIN user u ON d.account_id = u.id " + // Join with user table (still needed for potential future user-related filters)
-                     "WHERE d.is_deleted = FALSE"); // Exclude soft-deleted doctors
+                     "LEFT JOIN user u ON d.account_id = u.id " +
+                     "WHERE d.is_deleted = FALSE");
         
         List<Object> params = new ArrayList<>();
 
@@ -88,8 +76,8 @@ public class DAODoctor {
     public int getTotalDoctors(String searchQuery) {
         int total = 0;
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM doctors d " +
-                                              "LEFT JOIN department dep ON d.department_id = dep.id " + // Need join for filtering by specialization
-                                              "WHERE d.is_deleted = FALSE"); // Exclude soft-deleted doctors
+                                              "LEFT JOIN department dep ON d.department_id = dep.id " +
+                                              "WHERE d.is_deleted = FALSE");
         List<Object> params = new ArrayList<>();
 
         if (searchQuery != null && !searchQuery.trim().isEmpty()) {
@@ -114,5 +102,32 @@ public class DAODoctor {
             e.printStackTrace();
         }
         return total;
+    }
+
+    // Fetches a list of featured doctors (limit 5 for make-appointment.jsp)
+    public List<Doctor> getFeaturedDoctors(int limit, int offset) {
+        List<Doctor> doctors = new ArrayList<>();
+        String sql = "SELECT d.id, d.account_id, d.full_name, d.gender, d.phone, " +
+                     "d.department_id, d.is_deleted, d.created_at, d.updated_at, " +
+                     "dep.name AS specialization_name " +
+                     "FROM doctors d " +
+                     "JOIN department dep ON d.department_id = dep.id " +
+                     "WHERE d.is_deleted = FALSE " +
+                     "ORDER BY d.full_name " +
+                     "LIMIT ? OFFSET ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            stmt.setInt(2, offset);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                doctors.add(mapResultSetToDoctor(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return doctors;
     }
 }
