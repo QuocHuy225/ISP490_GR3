@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -12,7 +13,6 @@
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/make-appointment.css">
         <style>
-            /* CSS to prevent body scrolling when mobile sidebar is open */
             body.no-scroll {
                 overflow: hidden;
             }
@@ -20,31 +20,22 @@
     </head>
     <body>
         <%
-        // Get user role for access control
         Object userRole = session.getAttribute("userRole");
         User.Role currentRole = null;
-
         if (userRole != null) {
             if (userRole instanceof User.Role) {
                 currentRole = (User.Role) userRole;
             } else {
-                // Try to parse from string
                 try {
                     currentRole = User.Role.valueOf(userRole.toString().toUpperCase());
                 } catch (Exception e) {
-                    // Fallback to parsing from display value
-                    // Assuming User.Role.fromString handles cases like "Patient"
                     currentRole = User.Role.fromString(userRole.toString());
                 }
             }
         }
-
-        // Default to PATIENT if no role found
         if (currentRole == null) {
             currentRole = User.Role.PATIENT;
         }
-
-        // Get user information
         Object userObj = session.getAttribute("user");
         String userName = "User";
         String userRoleDisplay = "Patient";
@@ -53,9 +44,7 @@
             userName = user.getFullName() != null ? user.getFullName() : user.getEmail();
             userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
         }
-
         boolean isAdmin = (currentRole == User.Role.ADMIN);
-        // String requestUri = request.getRequestURI(); // Không còn dùng ở đây để set active
         String contextPath = request.getContextPath();
         %>
 
@@ -64,7 +53,6 @@
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
-                <%-- JSP NO LONGER sets 'active' class. JavaScript will manage it entirely. --%>
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -106,16 +94,13 @@
                     <button type="button" id="sidebarCollapse" class="btn btn-primary">
                         <i class="bi bi-list"></i>
                     </button>
-
                     <a class="navbar-brand-custom" href="#">
                         <span class="text-primary">Ánh Dương</span> <span class="text-dark">Clinic</span>
                     </a>
-
                     <div class="navbar-search mx-auto">
                         <i class="bi bi-search"></i>
                         <input type="text" class="form-control" placeholder="Tìm kiếm bệnh nhân, lịch hẹn, hồ sơ...">
                     </div>
-
                     <div class="dropdown user-dropdown">
                         <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <div class="user-profile-icon">
@@ -135,7 +120,7 @@
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                                <% } %>
+                            <% } %>
                             <li>
                                 <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
                                     <i class="bi bi-person-fill"></i>
@@ -172,11 +157,6 @@
                         <li class="nav-item">
                             <a class="nav-link active" aria-current="page" href="#">Đặt khám Bác sĩ</a>
                         </li>
-                        <%-- Thêm các mục khác nếu có, ví dụ:
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Đặt khám theo chuyên khoa</a>
-                        </li>
-                        --%>
                     </ul>
                 </div>
             </header>
@@ -193,71 +173,19 @@
                     <div class="position-relative">
                         <div class="doctor-list-wrapper">
                             <div class="d-flex doctor-list-scroll">
-                                <div class="card doctor-card me-4 flex-shrink-0">
-                                    <div class="card-body d-flex flex-column align-items-center text-center">
-                                        <img src="https://via.placeholder.com/100/ADD8E6/000000?text=Doc1" class="rounded-circle mb-3 border border-2" alt="BS Trần Quang Nam">
-                                        <h5 class="card-title mb-1 fs-6">PGS. TS. BS Trần Quang Nam</h5>
-                                        <p class="card-text text-muted mb-3 fs-6">Nội tiết</p>
-                                        <button class="btn btn-outline-primary mt-auto book-now-btn">
-                                            Đặt lịch ngay <i class="fas fa-chevron-right ms-1"></i>
-                                        </button>
+                                <c:forEach var="doctor" items="${doctors}">
+                                    <div class="card doctor-card me-4 flex-shrink-0">
+                                        <div class="card-body d-flex flex-column align-items-center text-center">
+                                            <img src="https://via.placeholder.com/100/ADD8E6/000000?text=Doc" 
+                                                 class="rounded-circle mb-3 border border-2" alt="${doctor.fullName}">
+                                            <h5 class="card-title mb-1 fs-6">${doctor.fullName}</h5>
+                                            <p class="card-text text-muted mb-3 fs-6">${doctor.specializationName}</p>
+                                            <button class="btn btn-outline-primary mt-auto book-now-btn" data-doctor-id="${doctor.id}">
+                                                Đặt lịch ngay <i class="fas fa-chevron-right ms-1"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div class="card doctor-card me-4 flex-shrink-0">
-                                    <div class="card-body d-flex flex-column align-items-center text-center">
-                                        <img src="https://via.placeholder.com/100/FFB6C1/000000?text=Doc2" class="rounded-circle mb-3 border border-2" alt="BS Lê Thị Minh Hồng">
-                                        <h5 class="card-title mb-1 fs-6">BS. CK2 Lê Thị Minh Hồng</h5>
-                                        <p class="card-text text-muted mb-3 fs-6">Nhi khoa</p>
-                                        <button class="btn btn-outline-primary mt-auto book-now-btn">
-                                            Đặt lịch ngay <i class="fas fa-chevron-right ms-1"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="card doctor-card me-4 flex-shrink-0">
-                                    <div class="card-body d-flex flex-column align-items-center text-center">
-                                        <img src="https://via.placeholder.com/100/90EE90/000000?text=Doc3" class="rounded-circle mb-3 border border-2" alt="BS Lâm Việt Trung">
-                                        <h5 class="card-title mb-1 fs-6">PGS. TS. BS Lâm Việt Trung</h5>
-                                        <p class="card-text text-muted mb-3 fs-6">Tiêu hóa</p>
-                                        <button class="btn btn-outline-primary mt-auto book-now-btn">
-                                            Đặt lịch ngay <i class="fas fa-chevron-right ms-1"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="card doctor-card me-4 flex-shrink-0">
-                                    <div class="card-body d-flex flex-column align-items-center text-center">
-                                        <img src="https://via.placeholder.com/100/DDA0DD/000000?text=Doc4" class="rounded-circle mb-3 border border-2" alt="BS Nguyễn Thị Thu Hà">
-                                        <h5 class="card-title mb-1 fs-6">BS. CK2 Nguyễn Thị Thu Hà</h5>
-                                        <p class="card-text text-muted mb-3 fs-6">Nhi khoa</p>
-                                        <button class="btn btn-outline-primary mt-auto book-now-btn">
-                                            Đặt lịch ngay <i class="fas fa-chevron-right ms-1"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="card doctor-card me-4 flex-shrink-0">
-                                    <div class="card-body d-flex flex-column align-items-center text-center">
-                                        <img src="https://via.placeholder.com/100/ADD8E6/000000?text=Doc5" class="rounded-circle mb-3 border border-2" alt="BS Nguyễn Văn A">
-                                        <h5 class="card-title mb-1 fs-6">BS. Nguyễn Văn A</h5>
-                                        <p class="card-text text-muted mb-3 fs-6">Nội tổng quát</p>
-                                        <button class="btn btn-outline-primary mt-auto book-now-btn">
-                                            Đặt lịch ngay <i class="fas fa-chevron-right ms-1"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="card doctor-card me-4 flex-shrink-0">
-                                    <div class="card-body d-flex flex-column align-items-center text-center">
-                                        <img src="https://via.placeholder.com/100/FFB6C1/000000?text=Doc6" class="rounded-circle mb-3 border border-2" alt="BS Trần Thị B">
-                                        <h5 class="card-title mb-1 fs-6">BS. Trần Thị B</h5>
-                                        <p class="card-text text-muted mb-3 fs-6">Mắt</p>
-                                        <button class="btn btn-outline-primary mt-auto book-now-btn">
-                                            Đặt lịch ngay <i class="fas fa-chevron-right ms-1"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                                </c:forEach>
                             </div>
                         </div>
                         <button class="btn btn-light rounded-circle shadow-sm doctor-scroll-btn doctor-scroll-right">
@@ -269,7 +197,6 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-        <%-- Make contextPath available globally on the window object for make-appointment.js --%>
         <script>
             window.APP_CONTEXT_PATH = '<%= request.getContextPath() %>';
         </script>
