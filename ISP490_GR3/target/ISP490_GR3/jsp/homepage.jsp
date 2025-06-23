@@ -457,6 +457,36 @@
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-       <script src="${pageContext.request.contextPath}/js/PatientHomepage.js"></script>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Sidebar toggle
+                const sidebarCollapse = document.getElementById('sidebarCollapse');
+                const sidebar = document.getElementById('sidebar');
+                const content = document.getElementById('content');
+
+                sidebarCollapse.addEventListener('click', function () {
+                    sidebar.classList.toggle('collapsed');
+                    content.classList.toggle('expanded');
+                });
+
+                // Responsive sidebar
+                function checkWidth() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.add('collapsed');
+                        content.classList.add('expanded');
+                    } else {
+                        sidebar.classList.remove('collapsed');
+                        content.classList.remove('expanded');
+                    }
+                }
+
+                // Initial check
+                checkWidth();
+
+                // Listen for window resize
+                window.addEventListener('resize', checkWidth);
+            });
+        </script>
     </body>
 </html>
