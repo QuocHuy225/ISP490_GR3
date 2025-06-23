@@ -31,11 +31,11 @@ import java.util.logging.Logger;
  * - Soft delete (xóa mềm) và hard delete
  * =====================================================
  */
-public class AppointmentDAO {
-    private static final Logger LOGGER = Logger.getLogger(AppointmentDAO.class.getName());
+public class DAOAppointment {
+    private static final Logger LOGGER = Logger.getLogger(DAOAppointment.class.getName());
     private Connection connection;
 
-    public AppointmentDAO(Connection connection) {
+    public DAOAppointment(Connection connection) {
         this.connection = connection;
     }
 

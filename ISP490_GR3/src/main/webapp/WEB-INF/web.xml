@@ -41,6 +41,15 @@
         <servlet-name>MakeAppointmentController</servlet-name>
         <url-pattern>/makeappointments</url-pattern> <!-- Đây là URL bạn sẽ truy cập -->
     </servlet-mapping>
+      <servlet>
+        <servlet-name>DoctorController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.DoctorController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DoctorController</servlet-name>
+        <url-pattern>/doctors</url-pattern> <!-- Đây là URL bạn sẽ truy cập -->
+    </servlet-mapping>
+    
     <error-page>
         <error-code>404</error-code>
         <location>/jsp/error/404.jsp</location>
