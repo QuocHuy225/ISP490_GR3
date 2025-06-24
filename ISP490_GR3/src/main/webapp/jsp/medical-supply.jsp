@@ -382,7 +382,7 @@
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="suppliesTable" class="table table-striped table-hover">
-                                        <thead class="table-dark">
+                                        <thead class="table-primary">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Nhóm vật tư</th>
@@ -408,8 +408,8 @@
                                                     <td>
                                                         <a href="${pageContext.request.contextPath}/admin/medical-supplies?edit=<%= supply.getSupplyId() %>" 
                                                            class="btn btn-sm btn-primary me-2" title="Chỉnh sửa thông tin vật tư">
-                                                            <i class="bi bi-pencil-square me-1"></i>Chỉnh sửa
-                                                        </a>
+                                                             <i class="bi bi-pencil-square"></i>
+                                                         </a>
                                                         <button type="button" class="btn btn-sm btn-outline-danger" 
                                                                 onclick="deleteSupply(<%= supply.getSupplyId() %>, '<%= supply.getSupplyName() %>')" 
                                                                 title="Xóa vật tư">

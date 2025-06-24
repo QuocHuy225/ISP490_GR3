@@ -380,7 +380,7 @@
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="medicinesTable" class="table table-striped table-hover">
-                                        <thead class="table-dark">
+                                        <thead class="table-primary">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Tên thuốc</th>
@@ -407,7 +407,7 @@
                                                         <button type="button" class="btn btn-sm btn-primary me-2" 
                                                                 onclick="editMedicine(<%= medicine.getExamMedicineId() %>)" 
                                                                 title="Chỉnh sửa thông tin thuốc">
-                                                            <i class="bi bi-pencil-square me-1"></i>Chỉnh sửa
+                                                            <i class="bi bi-pencil-square"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-sm btn-outline-danger" 
                                                                 onclick="deleteMedicine(<%= medicine.getExamMedicineId() %>, '<%= medicine.getMedicineName() %>')" 

@@ -1,3 +1,4 @@
+C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\AppointmentDAO.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\PatientDAO.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\resources\JakartaEE10Resource.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\MakeAppointmentController.java
@@ -12,10 +13,8 @@ C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\MedicalService.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\PrescriptionFormMedicine.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\config\GoogleOAuthConfig.java
-C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOAppointment.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\MedicalExamTemplate.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\ServiceController.java
-C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAODoctor.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\UserProfileController.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOUser.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOService.java
@@ -23,7 +22,6 @@ C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\PrescriptionForm.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DBContext.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\MedicalSupply.java
-C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\DoctorController.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\PrescriptionMedicine.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\AuthorizationController.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\MedicalExamTemplateController.java
@@ -33,5 +31,4 @@ C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Appointment.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOPrescription.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\HomepageController.java
-C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Doctor.java
 C:\Users\User\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\service\GoogleOAuthService.java

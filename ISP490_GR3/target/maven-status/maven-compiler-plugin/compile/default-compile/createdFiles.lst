@@ -4,7 +4,6 @@ com\mycompany\isp490_gr3\model\User.class
 com\mycompany\isp490_gr3\controller\HomepageController.class
 com\mycompany\isp490_gr3\controller\MedicalExamTemplateController.class
 com\mycompany\isp490_gr3\JakartaRestConfiguration.class
-com\mycompany\isp490_gr3\controller\DoctorController.class
 com\mycompany\isp490_gr3\dao\DBContext.class
 com\mycompany\isp490_gr3\dao\DAOUser.class
 com\mycompany\isp490_gr3\dao\DAOMedicalExamTemplate.class
@@ -25,14 +24,11 @@ com\mycompany\isp490_gr3\controller\PatientController.class
 com\mycompany\isp490_gr3\dao\DAOWarehouse.class
 com\mycompany\isp490_gr3\controller\AuthenticationController.class
 com\mycompany\isp490_gr3\model\GoogleUserInfo.class
-com\mycompany\isp490_gr3\model\Doctor.class
 com\mycompany\isp490_gr3\model\User$Role.class
 com\mycompany\isp490_gr3\resources\JakartaEE10Resource.class
-com\mycompany\isp490_gr3\dao\DAODoctor.class
 com\mycompany\isp490_gr3\model\Appointment.class
 com\mycompany\isp490_gr3\controller\AuthorizationController.class
 com\mycompany\isp490_gr3\model\MedicalSupply.class
 com\mycompany\isp490_gr3\controller\WarehouseController.class
-com\mycompany\isp490_gr3\dao\DAOAppointment.class
 com\mycompany\isp490_gr3\model\Patient.class
 com\mycompany\isp490_gr3\dao\DAOService.class

@@ -854,7 +854,7 @@
                     %>
                     <div class="table-responsive">
                         <table class="table users-table">
-                            <thead>
+                            <thead class="table-primary">
                                 <tr>
                                     <th>Người dùng</th>
                                     <th>Quyền hiện tại</th>
@@ -953,9 +953,8 @@
                                         <!-- Delete button -->
                                         <form method="post" action="${pageContext.request.contextPath}/admin/authorization/delete" style="display: inline; margin-left: 5px;">
                                             <input type="hidden" name="userId" value="<%= user.getId() %>">
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmation('<%= user.getFullName() != null ? user.getFullName() : user.getEmail() %>', '<%= user.getId() %>')">
-                                                <i class="bi bi-trash"></i>
-                                                Xóa
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation('<%= user.getFullName() != null ? user.getFullName() : user.getEmail() %>', '<%= user.getId() %>')" title="Xóa người dùng">
+                                                <i class="bi bi-trash3"></i>
                                             </button>
                                         </form>
                                         <% } %>
