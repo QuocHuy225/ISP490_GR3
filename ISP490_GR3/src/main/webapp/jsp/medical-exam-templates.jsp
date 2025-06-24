@@ -348,18 +348,11 @@
                 <!-- Page Header -->
                 <div class="row mb-4">
                     <div class="col-12">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h2 class="text-primary fw-bold mb-1">
-                                    <i class="bi bi-file-text me-2"></i>Quản lý mẫu đơn khám bệnh
-                                </h2>
-                                <p class="text-muted mb-0">Quản lý các mẫu đơn khám bệnh trong hệ thống</p>
-                            </div>
-                            <% if ("list".equals(action)) { %>
-                            <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/add" class="btn btn-primary btn-custom">
-                                <i class="bi bi-plus-circle me-2"></i>Thêm mẫu đơn mới
-                            </a>
-                            <% } %>
+                        <div>
+                            <h2 class="text-primary fw-bold mb-1">
+                                <i class="bi bi-file-text me-2"></i>Quản lý mẫu đơn khám bệnh
+                            </h2>
+                            <p class="text-muted mb-0">Quản lý các mẫu đơn khám bệnh trong hệ thống</p>
                         </div>
                     </div>
                 </div>
@@ -381,28 +374,55 @@
 
                 <% if ("list".equals(action)) { %>
                 <!-- Template List View -->
+                <!-- Search and Add Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <form method="GET" action="${pageContext.request.contextPath}/admin/medical-exam-templates/search" class="d-flex">
+                                            <div class="input-group">
+                                                <span class="input-group-text">
+                                                    <i class="bi bi-search"></i>
+                                                </span>
+                                                <input type="text" class="form-control" name="keyword" 
+                                                       placeholder="Tìm kiếm theo tên mẫu đơn khám bệnh..." 
+                                                       value="<%= searchKeyword != null ? searchKeyword : "" %>">
+                                                <button class="btn btn-primary" type="submit">
+                                                    Tìm kiếm
+                                                </button>
+                                                <% if (searchKeyword != null && !searchKeyword.trim().isEmpty()) { %>
+                                                <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/list" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </a>
+                                                <% } %>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/add" class="btn btn-success w-100">
+                                            <i class="bi bi-plus-circle me-2"></i>Thêm mẫu đơn khám bệnh
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Templates List -->
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="card shadow-sm border-0">
                             <div class="card-header bg-light">
-                                <div class="row align-items-center">
-                                    <div class="col-md-6">
-                                        <h5 class="mb-0 text-primary">
-                                            <i class="bi bi-list-ul me-2"></i>Danh sách mẫu đơn
-                                            <span class="badge bg-primary ms-2"><%= totalTemplates %></span>
-                                        </h5>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <form method="GET" action="${pageContext.request.contextPath}/admin/medical-exam-templates/search" class="d-flex">
-                                            <input type="text" name="keyword" class="form-control search-box me-2" 
-                                                   placeholder="Tìm kiếm theo tên mẫu đơn..." 
-                                                   value="<%= searchKeyword != null ? searchKeyword : "" %>">
-                                            <button type="submit" class="btn btn-outline-primary">
-                                                <i class="bi bi-search"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
+                                <h5 class="mb-0 text-primary">
+                                    <i class="bi bi-list-ul me-2"></i>Danh sách mẫu đơn
+                                    <span class="badge bg-primary ms-2"><%= totalTemplates %></span>
+                                    <% if (searchKeyword != null && !searchKeyword.trim().isEmpty()) { %>
+                                    <span class="badge bg-info ms-2">Kết quả tìm kiếm: "<%= searchKeyword %>"</span>
+                                    <% } %>
+                                </h5>
                             </div>
                             <div class="card-body">
                                 <% if (templates != null && !templates.isEmpty()) { %>
@@ -426,23 +446,19 @@
                                                         <i class="bi bi-calendar me-1"></i>
                                                         <%= tmpl.getCreatedAt() != null ? new SimpleDateFormat("dd/MM/yyyy").format(tmpl.getCreatedAt()) : "" %>
                                                     </small>
-                                                    <div class="btn-group" role="group">
-                                                        <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/view?id=<%= tmpl.getId() %>" 
-                                                           class="btn btn-sm btn-outline-info btn-action" title="Xem chi tiết">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
+                                                    <div class="d-flex gap-2">
                                                         <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/edit?id=<%= tmpl.getId() %>" 
-                                                           class="btn btn-sm btn-outline-warning btn-action" title="Chỉnh sửa">
-                                                            <i class="bi bi-pencil"></i>
+                                                           class="btn btn-sm btn-primary me-2" title="Chỉnh sửa mẫu đơn">
+                                                            <i class="bi bi-pencil-square"></i>
                                                         </a>
-                                                        <button type="button" 
-                                                                class="btn btn-sm btn-outline-danger btn-action" 
-                                                                data-template-id="<%= tmpl.getId() %>"
-                                                                data-template-name="<%= tmpl.getName() %>"
-                                                                onclick="deleteTemplate(this.getAttribute('data-template-id'), this.getAttribute('data-template-name'))" 
-                                                                title="Xóa">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
+                                                                                                <button type="button" 
+                                                class="btn btn-sm btn-outline-danger" 
+                                                data-template-id="<%= tmpl.getId() %>"
+                                                data-template-name="<%= tmpl.getName() %>"
+                                                onclick="deleteTemplate(this.getAttribute('data-template-id'), this.getAttribute('data-template-name'))" 
+                                                title="Xóa mẫu đơn">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -456,71 +472,10 @@
                                     <h5 class="text-muted mt-3">Không có mẫu đơn nào</h5>
                                     <p class="text-muted">Hãy thêm mẫu đơn đầu tiên của bạn</p>
                                     <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/add" class="btn btn-primary btn-custom">
-                                        <i class="bi bi-plus-circle me-2"></i>Thêm mẫu đơn mới
+                                        <i class="bi bi-plus-circle me-2"></i>Thêm mẫu đơn khám bệnh
                                     </a>
                                 </div>
                                 <% } %>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <% } else if ("view".equals(action) && template != null) { %>
-                <!-- Template Detail View -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-header bg-primary text-white">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0">
-                                        <i class="bi bi-file-text me-2"></i>Chi tiết mẫu đơn: <%= template.getName() %>
-                                    </h5>
-                                    <div>
-                                        <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/edit?id=<%= template.getId() %>" 
-                                           class="btn btn-light btn-sm me-2">
-                                            <i class="bi bi-pencil me-1"></i>Chỉnh sửa
-                                        </a>
-                                        <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/list" 
-                                           class="btn btn-outline-light btn-sm">
-                                            <i class="bi bi-arrow-left me-1"></i>Quay lại
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body p-4">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <strong class="text-primary">Tên mẫu đơn:</strong>
-                                        <p class="mt-2"><%= template.getName() %></p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <strong class="text-primary">Ngày tạo:</strong>
-                                        <p class="mt-2">
-                                            <%= template.getCreatedAt() != null ? new SimpleDateFormat("dd/MM/yyyy HH:mm").format(template.getCreatedAt()) : "" %>
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <strong class="text-primary">Khám lâm sàng:</strong>
-                                    <div class="content-display mt-2">
-                                        <%= template.getPhysicalExam() != null ? template.getPhysicalExam().replace("\n", "<br/>") : "" %>
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <strong class="text-primary">Thông tin lâm sàng:</strong>
-                                    <div class="content-display mt-2">
-                                        <%= template.getClinicalInfo() != null ? template.getClinicalInfo().replace("\n", "<br/>") : "" %>
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <strong class="text-primary">Chẩn đoán cuối cùng:</strong>
-                                    <div class="content-display mt-2">
-                                        <%= template.getFinalDiagnosis() != null ? template.getFinalDiagnosis().replace("\n", "<br/>") : "" %>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>

@@ -394,8 +394,6 @@
                                     </div>
                                 </div>
 
-
-
                                 <!-- Medicines Table -->
                                 <div class="row">
                                     <div class="col-12">
@@ -411,7 +409,7 @@
                                             <div class="card-body">
                                                 <div class="table-responsive">
                                                     <table id="medicinesTable" class="table table-striped table-hover">
-                                                        <thead class="table-dark">
+                                                        <thead class="table-primary">
                                                             <tr>
                                                                 <th>ID</th>
                                                                 <th>Tên thuốc</th>
@@ -430,16 +428,16 @@
                                                                     <td><%= medicine.getAdministrationRoute() %></td>
                                                                     <td>
                                                                         <a href="${pageContext.request.contextPath}/admin/prescriptions?editMedicine=<%= medicine.getPreMedicineId() %>" 
-                                                                           class="btn btn-sm btn-primary me-1" title="Chỉnh sửa">
-                                                                            <i class="bi bi-pencil"></i>
+                                                                           class="btn btn-sm btn-primary me-2" title="Chỉnh sửa thông tin thuốc">
+                                                                            <i class="bi bi-pencil-square"></i>
                                                                         </a>
                                                                         <button type="button" 
-                                                                                class="btn btn-sm btn-danger" 
+                                                                                class="btn btn-sm btn-outline-danger" 
                                                                                 data-medicine-id="<%= medicine.getPreMedicineId() %>"
                                                                                 data-medicine-name="<%= medicine.getMedicineName() %>"
                                                                                 onclick="deleteMedicine(this.getAttribute('data-medicine-id'), this.getAttribute('data-medicine-name'))" 
-                                                                                title="Xóa">
-                                                                            <i class="bi bi-trash"></i>
+                                                                                title="Xóa thuốc">
+                                                                            <i class="bi bi-trash3"></i>
                                                                         </button>
                                                                     </td>
                                                                 </tr>
@@ -518,8 +516,6 @@
                                     <% } %>
                                 </div>
 
-
-
                                 <!-- Prescription Forms Grid -->
                                 <div class="row" id="prescriptionFormsList">
                                     <% if (prescriptionForms != null && !prescriptionForms.isEmpty()) {
@@ -556,16 +552,16 @@
                                                 <div class="card-footer bg-light">
                                                     <div class="d-flex justify-content-between">
                                                         <a href="${pageContext.request.contextPath}/admin/prescriptions?editForm=<%= form.getPrescriptionFormId() %>&tab=forms" 
-                                                           class="btn btn-sm btn-primary" title="Chỉnh sửa">
-                                                            <i class="bi bi-pencil"></i> Chỉnh sửa
+                                                           class="btn btn-sm btn-primary me-2" title="Chỉnh sửa đơn thuốc">
+                                                            <i class="bi bi-pencil-square"></i>
                                                         </a>
                                                         <button type="button" 
-                                                                class="btn btn-sm btn-danger" 
+                                                                class="btn btn-sm btn-outline-danger" 
                                                                 data-form-id="<%= form.getPrescriptionFormId() %>"
                                                                 data-form-name="<%= form.getFormName() %>"
                                                                 onclick="deletePrescriptionForm(this.getAttribute('data-form-id'), this.getAttribute('data-form-name'))" 
-                                                                title="Xóa">
-                                                            <i class="bi bi-trash"></i> Xóa
+                                                                title="Xóa đơn thuốc">
+                                                            <i class="bi bi-trash3"></i>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -638,8 +634,6 @@
                 </div>
             </div>
         </div>
-
-
 
         <!-- Add Prescription Form Modal -->
         <div class="modal fade" id="addFormModal" tabindex="-1" aria-labelledby="addFormModalLabel" aria-hidden="true">
@@ -919,8 +913,29 @@
             // Listen for window resize
             window.addEventListener('resize', checkWidth);
 
-            // Don't initialize DataTables to avoid column count issues
-            // Just use regular table without DataTables features
+            // Initialize DataTable for medicines table (only if it exists and is visible)
+            if ($('#medicinesTable').length && $('#medicinesTable').is(':visible')) {
+                $('#medicinesTable').DataTable({
+                    "searching": false, // Disable built-in search since we have custom search
+                    "language": {
+                        "lengthMenu": "Hiển thị _MENU_ mục",
+                        "zeroRecords": "", // Don't show message when no data
+                        "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                        "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
+                        "infoFiltered": "(lọc từ _MAX_ tổng số mục)",
+                        "paginate": {
+                            "first": "Đầu",
+                            "last": "Cuối",
+                            "next": "Tiếp",
+                            "previous": "Trước"
+                        }
+                    },
+                    "order": [[ 0, "asc" ]], // Default sort by ID ascending
+                    "columnDefs": [
+                        { "orderable": false, "targets": 4 } // Disable sorting for action column
+                    ]
+                });
+            }
         });
 
         // Delete medicine function

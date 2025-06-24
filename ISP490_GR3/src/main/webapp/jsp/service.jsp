@@ -368,7 +368,7 @@
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="servicesTable" class="table table-striped table-hover">
-                                        <thead class="table-dark">
+                                        <thead class="table-primary">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Nhóm dịch vụ</th>
@@ -386,15 +386,15 @@
                                                     <td><%= service.getServiceName() %></td>
                                                     <td><%= df.format(service.getPrice()) %></td>
                                                     <td>
-                                                        <button type="button" class="btn btn-sm btn-primary me-1" 
+                                                        <button type="button" class="btn btn-sm btn-primary me-2" 
                                                                 onclick="editService(<%= service.getServicesId() %>)" 
-                                                                title="Chỉnh sửa">
-                                                            <i class="bi bi-pencil"></i>
+                                                                title="Chỉnh sửa dịch vụ">
+                                                            <i class="bi bi-pencil-square"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
                                                                 onclick="deleteService(<%= service.getServicesId() %>, '<%= service.getServiceName() %>')" 
-                                                                title="Xóa">
-                                                            <i class="bi bi-trash"></i>
+                                                                title="Xóa dịch vụ">
+                                                            <i class="bi bi-trash3"></i>
                                                         </button>
                                                     </td>
                                                 </tr>

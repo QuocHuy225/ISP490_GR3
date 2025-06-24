@@ -25,7 +25,6 @@ import jakarta.servlet.http.HttpSession;
  * - Hiển thị danh sách mẫu đơn khám bệnh
  * - Tìm kiếm mẫu đơn theo tên
  * - Thêm mẫu đơn mới
- * - Xem chi tiết mẫu đơn 
  * - Chỉnh sửa mẫu đơn
  * - Xóa mẫu đơn (soft delete)
  * - Chỉ Admin và Doctor có quyền truy cập
@@ -62,9 +61,6 @@ public class MedicalExamTemplateController extends HttpServlet {
                     break;
                 case "/add":
                     showAddForm(request, response);
-                    break;
-                case "/view":
-                    showTemplateDetail(request, response);
                     break;
                 case "/edit":
                     showEditForm(request, response);
@@ -169,37 +165,6 @@ public class MedicalExamTemplateController extends HttpServlet {
         request.setAttribute("action", "add");
         request.setAttribute("pageTitle", "Thêm mẫu đơn khám bệnh mới");
         request.getRequestDispatcher("/jsp/medical-exam-templates.jsp").forward(request, response);
-    }
-    
-    /**
-     * Hiển thị chi tiết mẫu đơn
-     */
-    private void showTemplateDetail(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        String idParam = request.getParameter("id");
-        if (idParam == null || idParam.trim().isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/admin/medical-exam-templates/list");
-            return;
-        }
-        
-        try {
-            int id = Integer.parseInt(idParam);
-            MedicalExamTemplate template = daoTemplate.getTemplateById(id);
-            
-            if (template != null) {
-                request.setAttribute("template", template);
-                request.setAttribute("action", "view");
-                request.setAttribute("pageTitle", "Chi tiết mẫu đơn khám bệnh");
-                request.getRequestDispatcher("/jsp/medical-exam-templates.jsp").forward(request, response);
-            } else {
-                request.setAttribute("errorMessage", "Không tìm thấy mẫu đơn khám bệnh");
-                showTemplateList(request, response);
-            }
-            
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/medical-exam-templates/list");
-        }
     }
     
     /**
