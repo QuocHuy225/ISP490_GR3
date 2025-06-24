@@ -49,6 +49,7 @@
         <servlet-name>DoctorController</servlet-name>
         <url-pattern>/doctors</url-pattern>
         <url-pattern>/viewdoctor</url-pattern>
+        <url-pattern>/book-appointment</url-pattern>
     </servlet-mapping>
     
     <error-page>

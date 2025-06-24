@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = event.target.closest('.doctor-card');
             // const doctorName = card.querySelector('.card-title').textContent; // Có thể không cần nếu không dùng
             const doctorId = btn.dataset.doctorId || 'unknown';
-            window.location.href = `${contextPath}/book-appointment?doctorId=${doctorId}`;
+            window.location.href = `${contextPath}/book-appointment?id=${doctorId}`;
         });
     });
 });
