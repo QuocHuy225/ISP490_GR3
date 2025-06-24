@@ -1,0 +1,611 @@
+/* doctor-detail.css - Bổ sung và chỉnh sửa các quy tắc sau */
+
+/* Đảm bảo nút có vị trí tương đối để pseudo-element có thể định vị theo nó */
+.time-slot-btn {
+    position: relative;
+    /* Các thuộc tính CSS hiện có của nút của bạn */
+    display: inline-flex; /* Đảm bảo nội dung không tràn ra ngoài */
+    align-items: center;
+    justify-content: center;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    color: #495057;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    min-width: 100px; /* Đảm bảo đủ chỗ cho nội dung dài hơn */
+    text-align: center;
+}
+
+.time-slot-btn.selected {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+}
+
+.time-slot-btn.disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    border-color: #e9ecef;
+    cursor: not-allowed;
+    opacity: 0.7;
+    box-shadow: none;
+}
+
+/* Pseudo-element để hiển thị thông tin số lượng bệnh nhân khi hover */
+.time-slot-btn:not(.disabled)::after {
+    content: attr(data-patients-info); /* Lấy nội dung từ thuộc tính data-patients-info */
+    position: absolute;
+    bottom: calc(100% + 5px); /* Đặt ở trên nút một chút */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 8px;
+    border-radius: 4px;
+    white-space: nowrap; /* Ngăn không cho văn bản xuống dòng */
+    font-size: 0.85rem;
+    opacity: 0; /* Mặc định ẩn */
+    visibility: hidden; /* Mặc định ẩn */
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* Hiệu ứng chuyển động */
+    z-index: 10; /* Đảm bảo nó nằm trên các phần tử khác */
+    pointer-events: none; /* Không chặn sự kiện chuột */
+}
+
+/* Hiển thị pseudo-element khi di chuột qua nút (chỉ cho nút không bị disable) */
+/* Đã sửa lỗi: Thêm ":hover" vào selector để chỉ hiển thị khi di chuột qua */
+.time-slot-btn:not(.disabled):hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* General body and wrapper styles */
+body {
+    /* Đây là các thuộc tính từ make-appointment.css */
+    font-family: var(--font-family); /* Sử dụng biến font-family từ :root */
+    line-height: 1.6;
+    font-size: 16px; /* Cỡ chữ tổng thể của body */
+    color: var(--foreground); /* Màu chữ mặc định */
+    background-color: var(--body-bg); /* Background của body */
+    margin: 0;
+    padding: 0; /* Padding-top sẽ do layout chính quản lý */
+    display: flex; /* Needed for flex layout with sidebar */
+    min-height: 100vh;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+body.no-scroll { overflow: hidden; }
+
+/* ----------------------------------------------------- */
+/* Bắt đầu: CÁC QUY TẮC CSS CHO SIDEBAR (Đã đồng bộ với make-appointment.css) */
+/* ----------------------------------------------------- */
+/* Đã cập nhật khối :root để khớp với make-appointment.css */
+:root {
+    /* --- Đồng bộ biến CSS với homepage.css --- */
+    --primary: #0360D9;
+    --primary-light: #e3f2fd;
+    --primary-dark: #0246a3;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F8F9FA;
+    --secondary-foreground: #000000;
+    --accent: #4A90E2;
+    --accent-foreground: #FFFFFF;
+    --background: #FFFFFF;
+    --foreground: #2B3674; /* Đây là màu chữ chính của body trong homepage */
+    --muted: #6B7280;
+    --card: #FFFFFF;
+    --card-foreground: #000000;
+    --border: #DEE2E6;
+    --input: #E9ECEF;
+    --ring: #2C7BE5;
+    --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; /* Font family chính */
+    --radius: 0.5rem;
+    --radius-lg: 1rem;
+    --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.12);
+
+    /* Giữ lại các biến cũ của make-appointment nếu có thể chúng vẫn được dùng ở các phần khác */
+    --primary-color: #0360D9; /* Vẫn giữ biến này vì nó được dùng nhiều trong make-appointment.css */
+    --white: #ffffff;
+    --text-dark: #2B3674; /* Giữ lại, tương đương với --foreground */
+    --text-light: #A3AED0;
+    --body-bg: #f8f9fa; /* Background của body */
+    --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, #00d4ff 100%);
+    --shadow-light: 0 5px 25px rgba(3, 96, 217, 0.1);
+    --shadow-medium: 0 10px 40px rgba(3, 96, 217, 0.15);
+    --top-navbar-height: 100px; /* Chiều cao cố định của navbar chính */
+    --header-nav-height: 80px; /* Chiều cao cố định của header navigation (Đặt khám Bác sĩ) */
+    --sidebar-width: 250px; /* Vẫn giữ nguyên, đã giống homepage */
+}
+
+#sidebar {
+    min-width: var(--sidebar-width);
+    max-width: var(--sidebar-width);
+    background: var(--primary-color);
+    color: var(--white);
+    transition: all 0.3s ease; /* Đảm bảo có 'ease' cho transition mượt mà */
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    /* Mặc định ẩn trên desktop, sẽ được JS điều khiển */
+    /* Mặc định ẩn trên mobile, sẽ được JS điều khiển bằng transform hoặc margin-left */
+    transform: translateX(0); /* Default for desktop, adjust for collapsed */
+}
+
+#sidebar.active {
+    transform: translateX(0); /* Khi có lớp 'active', hiển thị sidebar */
+}
+
+#sidebar .sidebar-header {
+    padding: 20px;
+    background: var(--primary-dark); /* Màu nền header tối hơn */
+    text-align: center;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    height: var(--top-navbar-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#sidebar .sidebar-header h3 {
+    color: var(--white);
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+#sidebar ul.components {
+    padding: 20px 0;
+    list-style: none;
+}
+
+#sidebar ul li a {
+    padding: 15px 20px;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    color: var(--white); /* Màu chữ nhạt */
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 4px 8px;
+    gap: 10px;
+}
+
+#sidebar ul li a:hover {
+    background: var(--primary-dark);
+    transform: translateX(5px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+#sidebar ul li a i {
+    margin-right: 0; /* Already using gap */
+    font-size: 1.2em;
+}
+
+/* Sidebar Active Link Styling */
+#sidebar ul li.active > a {
+    background: var(--gradient-primary);
+    color: var(--white);
+    border-left: none; /* No border-left if using gradient */
+    font-weight: 600;
+    box-shadow: var(--shadow-light);
+    transform: translateX(0); /* Ensure no extra transform */
+    padding: 15px 20px; /* Ensure consistent padding */
+}
+
+#sidebar ul li.active > a:hover {
+    background: var(--gradient-primary);
+    color: var(--white);
+    box-shadow: var(--shadow-medium);
+    transform: translateX(0);
+}
+
+/* Sidebar Overlay (for mobile) */
+#sidebarOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+#sidebarOverlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Main Wrapper - Responsive behavior based on sidebar state */
+#main-wrapper {
+    flex-grow: 1;
+    margin-left: var(--sidebar-width); /* Default desktop state: sidebar is open */
+    transition: all 0.3s ease;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--body-bg);
+}
+
+/* Desktop: Sidebar collapsed state */
+#sidebar.collapsed {
+    margin-left: calc(-1 * var(--sidebar-width)); /* Moves off-screen left */
+    transform: none; /* Reset transform if any */
+    box-shadow: none;
+}
+
+#main-wrapper.expanded {
+    margin-left: 0; /* When sidebar is collapsed, main-wrapper takes full width */
+}
+
+/* Top Navbar */
+.top-navbar {
+    background: var(--white);
+    padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    width: 100%;
+    height: var(--top-navbar-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+}
+
+/* Style for sidebar toggle button (3 bars icon) */
+#sidebarCollapse {
+    background-color: var(--primary-color);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    line-height: 1;
+    display: block;
+    transition: all 0.3s ease;
+}
+#sidebarCollapse:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* Navbar branding */
+.navbar-brand-custom {
+    margin-left: 60px;
+    white-space: nowrap;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 700;
+}
+.navbar-brand-custom .text-primary { color: var(--primary-color) !important; }
+.navbar-brand-custom .text-dark { color: #333 !important; }
+
+/* Navbar search */
+.navbar-search {
+    max-width: 600px;
+    width: 100%;
+    position: relative;
+    flex-grow: 1;
+    margin: 0 20px;
+}
+.navbar-search input {
+    padding: 0.8rem 1rem 0.8rem 3rem;
+    border-radius: 30px;
+    border: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+.navbar-search input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(3, 96, 217, 0.25);
+}
+.navbar-search i {
+    position: absolute;
+    left: 1.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 1.2rem;
+}
+
+/* User Dropdown Styling */
+.user-dropdown { position: relative; flex-shrink: 0; }
+.dropdown-toggle {
+    background: linear-gradient(135deg, var(--primary-color), #00d4ff) !important;
+    border: none !important; border-radius: 50px !important; padding: 0.75rem 1.5rem !important;
+    color: white !important; font-weight: 600 !important; box-shadow: var(--shadow-light) !important;
+    transition: all 0.3s ease !important; text-decoration: none !important; display: flex !important;
+    align-items: center !important; gap: 0.75rem !important;
+}
+.dropdown-toggle:hover { transform: translateY(-2px) !important; box-shadow: var(--shadow-medium) !important; color: white !important; }
+.dropdown-toggle:focus { box-shadow: var(--shadow-medium) !important; color: white !important; }
+.dropdown-toggle::after { border: none !important; content: '\f282' !important; font-family: 'bootstrap-icons' !important; margin-left: 0.5rem !important; vertical-align: middle !important; transition: transform 0.3s ease !important; }
+.dropdown-toggle[aria-expanded="true"]::after { transform: rotate(180deg) !important; }
+.dropdown-menu {
+    border: none !important; border-radius: 20px !important; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+    padding: 1rem 0 !important; margin-top: 0.5rem !important; backdrop-filter: blur(20px) !important;
+    background: rgba(255, 255, 255, 0.95) !important; min-width: 280px !important;
+}
+.dropdown-item {
+    padding: 0.75rem 1.5rem !important; font-weight: 500 !important; transition: all 0.3s ease !important;
+    border: none !important; background: none !important; display: flex !important; align-items: center !important;
+    gap: 0.75rem !important; color: var(--text-dark) !important; text-decoration: none !important; margin: 0.25rem 0 !important;
+}
+.dropdown-item:hover { background: linear-gradient(135deg, var(--primary-light), rgba(0, 212, 255, 0.1)) !important; color: var(--primary-dark) !important; transform: translateX(5px) !important; }
+.dropdown-item i { font-size: 1.1rem !important; width: 20px !important; text-align: center !important; }
+.dropdown-item.text-danger { color: #dc3545 !important; }
+.dropdown-item.text-danger:hover { background: linear-gradient(135deg, #fee, #fdd) !important; color: #c82333 !important; }
+.dropdown-divider { margin: 0.5rem 1rem !important; border-top: 1px solid rgba(0, 0, 0, 0.1) !important; background: none !important; }
+.user-profile-icon {
+    width: 45px !important; height: 45px !important; border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.2) !important; display: flex !important;
+    align-items: center !important; justify-content: center !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important; backdrop-filter: blur(10px) !important;
+}
+.user-info { display: flex !important; flex-direction: column !important; align-items: flex-start !important; }
+.user-name { font-size: 1rem !important; font-weight: 600 !important; margin: 0 !important; line-height: 1.2 !important; }
+.user-role { font-size: 0.8rem !important; opacity: 0.8 !important; margin: 0 !important; line-height: 1.2 !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; }
+
+/* ----------------------------------------------------- */
+/* RESPONSIVE STYLES (Đồng bộ với make-appointment.css) */
+/* ----------------------------------------------------- */
+@media (max-width: 991.98px) {
+    body {
+        flex-direction: row; /* Ensure layout is correct */
+        position: relative;
+    }
+
+    #sidebar {
+        /* Mobile: Sidebar is initially off-screen to the left */
+        margin-left: calc(-1 * var(--sidebar-width));
+        transform: none; /* Ensure no conflicting transforms */
+        box-shadow: 4px 0 10px rgba(0,0,0,0.2); /* Add shadow for mobile slide-in effect */
+        z-index: 1050; /* Higher z-index than navbar for mobile */
+        transition: margin-left 0.3s ease, box-shadow 0.3s ease; /* Transition margin-left */
+    }
+
+    #sidebar.active {
+        margin-left: 0; /* When active, slides into view */
+    }
+
+    #main-wrapper {
+        /* On mobile, main-wrapper does not shift with sidebar, overlay covers it */
+        margin-left: 0;
+        width: 100%;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    .top-navbar {
+        padding-left: 1rem; /* Adjust padding if necessary */
+        margin-left: 0; /* No margin shift for navbar */
+    }
+
+    /* Hide scroll buttons on mobile for schedule nav */
+    .doctor-scroll-btn {
+        display: none;
+    }
+
+    .navbar-brand-custom { margin-left: 10px; }
+    .navbar-search { margin: 0 10px; }
+    .user-info { display: none !important; } /* Hide user info text on small screens */
+}
+
+/* Additional adjustments for very small screens (if needed) */
+@media (max-width: 767.98px) {
+    /* Further specific mobile adjustments can go here if different from 991.98px breakpoint */
+}
+
+/* ----------------------------------------------------- */
+/* Doctor Detail Specific Styles */
+/* ----------------------------------------------------- */
+.doctor-detail-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+.doctor-detail-header img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #007bff; padding: 2px; }
+.doctor-info h1 { font-size: 1.8rem; margin-bottom: 5px; color: #333; }
+.doctor-info p { margin-bottom: 3px; color: #555; }
+.doctor-info .badge { font-size: 0.9em; padding: 5px 10px; }
+
+/* Schedule navigation container */
+.schedule-nav-wrapper {
+    position: relative; /* Cần thiết cho các nút cuộn với position: absolute */
+    overflow: hidden; /* Đảm bảo các nút cuộn nằm trong giới hạn của wrapper */
+    padding: 0 20px; /* Thêm padding hai bên để nút không bị đè lên nội dung */
+}
+
+/* Schedule navigation (the scrollable date list) */
+.schedule-nav { 
+    display: flex; 
+    flex-wrap: nowrap; /* Prevent wrapping, crucial for horizontal scroll */
+    overflow-x: auto; 
+    white-space: nowrap; 
+    padding-bottom: 10px; 
+    -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    position: relative;
+    z-index: 1;
+    margin: 0;
+}
+.schedule-nav::-webkit-scrollbar { display: none; } /* Hide scrollbar for Chrome/Safari */
+
+/* Schedule item (each date box) styles */
+.schedule-item { 
+    flex: 0 0 auto; 
+    width: 120px; 
+    padding: 10px 15px; 
+    border: 1px solid #dee2e6; 
+    border-radius: 8px; 
+    margin-right: 10px; 
+    text-align: center; 
+    cursor: pointer; 
+    transition: all 0.2s ease-in-out; 
+    background-color: #f8f9fa; 
+    position: relative; /* Needed for ::after pseudo-element */
+}
+.schedule-item:hover { 
+    background-color: #e2f0ff; 
+    border-color: #007bff; 
+}
+.schedule-item.selected { 
+    background-color: #e2f0ff; /* Light blue background for selected item */
+    color: #333; /* Keep text dark for contrast */
+    border-color: #007bff; /* Blue border */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+    padding-bottom: 14px; /* Make space for the underline */
+}
+/* Underline for the selected schedule item */
+.schedule-item.selected::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px; /* Thickness of the underline */
+    background-color: #007bff; /* Blue color for the underline */
+    border-bottom-left-radius: 8px; 
+    border-bottom-right-radius: 8px;
+}
+
+.schedule-item .day-of-week { 
+    font-weight: bold; 
+    font-size: 1.1em; 
+    color: #333; /* Default text color */
+}
+.schedule-item .date { 
+    font-size: 0.9em; 
+    color: #6c757d; 
+    margin-top: 2px;
+    display: block;
+}
+.schedule-item.selected .day-of-week,
+.schedule-item.selected .date { 
+    color: #333; /* Keep text dark for selected items as well */
+}
+
+/* Slot count text color */
+.schedule-item .slot-count {
+    font-size: 0.85em;
+    color: #28a745; /* Green color for slot count */
+    margin-top: 5px;
+    display: block;
+}
+
+
+/* Time slots container (main wrapper for all time sections) */
+.time-slots { 
+    margin-top: 15px;
+}
+
+/* NEW STYLES FOR TIME SECTIONS (Morning/Afternoon) */
+.time-section {
+    margin-bottom: 20px;
+}
+
+.time-section h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #007bff;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.time-section h5 i {
+    font-size: 1.2rem;
+    color: #ffc107;
+}
+.time-section h5 .bi-moon-fill {
+    color: #6c757d;
+}
+
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+}
+
+/* Time slot button styles */
+.time-slot-btn { 
+    background-color: #e9ecef; 
+    border: 1px solid #ced4da; 
+    color: #495057; 
+    padding: 8px 10px;
+    border-radius: 5px; 
+    cursor: pointer; 
+    transition: all 0.2s ease-in-out; 
+    text-decoration: none; 
+    text-align: center;
+    font-size: 0.95em;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.time-slot-btn:hover { background-color: #cfe2ff; border-color: #0d6efd; color: #0d6efd; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.time-slot-btn.selected { background-color: #007bff; color: white; border-color: #007bff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+/* Section header and card styles */
+.section-header { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.25rem; color: #333; }
+.detail-card { border: none; box-shadow: 0 0 15px rgba(0,0,0,0.05); border-radius: 10px; padding: 25px; margin-bottom: 25px; }
+
+/* Gallery item styles (if any) */
+.gallery-item { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-right: 10px; cursor: pointer; border: 1px solid #ddd; transition: transform 0.2s; }
+.gallery-item:hover { transform: scale(1.05); }
+
+/* STYLES FOR SCROLL BUTTONS */
+.doctor-scroll-btn {
+    position: absolute; 
+    width: 30px; 
+    height: 30px; 
+    font-size: 1rem; 
+    top: 50%; 
+    transform: translateY(-50%);
+    border-radius: 50%; 
+    background-color: rgba(0, 123, 255, 0.7); 
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease;
+    z-index: 10; 
+    /* display: none; will be controlled by JS */
+}
+
+.doctor-scroll-btn:hover {
+    background-color: rgba(0, 123, 255, 1);
+}
+
+.doctor-scroll-btn.doctor-scroll-left {
+    left: -15px; /* Điều chỉnh để nút lùi ra ngoài một chút */
+    display: none; /* Mặc định ẩn, JS sẽ điều khiển */
+}
+
+.doctor-scroll-btn.doctor-scroll-right {
+    right: -15px; /* Điều chỉnh để nút lùi ra ngoài một chút */
+    display: none; /* Mặc định ẩn, JS sẽ điều khiển */
+}
