@@ -54,7 +54,7 @@
         <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot</url-pattern>
         <!-- Đây là URL bạn sẽ truy cập -->
-
+    </servlet-mapping>
     <servlet>
         <servlet-name>MakeAppointmentController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.MakeAppointmentController</servlet-class>
