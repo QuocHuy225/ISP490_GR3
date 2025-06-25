@@ -2,7 +2,7 @@ package com.mycompany.isp490_gr3.controller;
 
 import com.mycompany.isp490_gr3.dao.DAOAppointment;
 import com.mycompany.isp490_gr3.dao.DBContext;
-import com.mycompany.isp490_gr3.model.User; // Import this if not already present
+import com.mycompany.isp490_gr3.model.User;
 import com.mycompany.isp490_gr3.model.Appointment;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -23,9 +23,44 @@ public class AppointmentController extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(AppointmentController.class.getName());
 
+    /**
+     * Kiểm tra quyền truy cập cho Receptionist.
+     * @param request HttpServletRequest để lấy session
+     * @param response HttpServletResponse để chuyển hướng hoặc trả lỗi
+     * @return true nếu là Receptionist, false nếu không
+     * @throws IOException nếu có lỗi chuyển hướng
+     */
+    private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+
+        User currentUser = (User) session.getAttribute("user");
+        
+        if (currentUser.getRole() != User.Role.RECEPTIONIST) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này.");
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        // Set character encoding
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        // Kiểm tra phân quyền
+        if (!checkReceptionistAccess(request, response)) {
+            return;
+        }
 
         // Lấy các tham số lọc từ request
         String appointmentCode = request.getParameter("appointmentCode");
@@ -106,9 +141,6 @@ public class AppointmentController extends HttpServlet {
                     startIndex = 0;
                     endIndex = 0;
                 }
-            } else {
-                // Tải trang lần đầu mà không có tìm kiếm hay phân trang cụ thể.
-                // 'appointments' vẫn trống, totalRecords = 0, totalPages = 0.
             }
 
             request.setAttribute("currentPageAppointments", appointments);
@@ -152,21 +184,20 @@ public class AppointmentController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        // Set character encoding
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-        String action = request.getParameter("action");
 
-        HttpSession session = request.getSession();
-        String currentUserUserId = "user_admin_001"; // Thay thế bằng logic lấy user ID thật từ session của bạn
-        /*
-        User currentUser = (User) session.getAttribute("loggedInUser");
-        if (currentUser == null) {
-            response.sendRedirect(request.getContextPath() + "/login"); // Chuyển hướng về trang login nếu chưa đăng nhập
+        // Kiểm tra phân quyền
+        if (!checkReceptionistAccess(request, response)) {
             return;
         }
-        String currentUserUserId = currentUser.getId(); // Giả định User.getId() trả về String
-         */
 
+        HttpSession session = request.getSession();
+        User currentUser = (User) session.getAttribute("user");
+        String currentUserUserId = currentUser.getId();
+
+        String action = request.getParameter("action");
         Connection conn = null;
         try {
             conn = DBContext.getConnection();
@@ -243,7 +274,7 @@ public class AppointmentController extends HttpServlet {
                 String slotIdStr = request.getParameter("slotId");
                 String status = request.getParameter("status");
 
-                // Kiểm tra xem các ID bắt buộc có được cung cấp hay không
+                // Kiểm tra đầu vào
                 if (idStr == null || idStr.isEmpty() || patientIdStr == null || patientIdStr.trim().isEmpty() || doctorIdStr == null || doctorIdStr.trim().isEmpty() || slotIdStr == null || slotIdStr.trim().isEmpty()) {
                     session.setAttribute("message", "Thông tin lịch hẹn cập nhật không đầy đủ.");
                     session.setAttribute("messageType", "danger");
@@ -252,8 +283,6 @@ public class AppointmentController extends HttpServlet {
                 }
 
                 int id = Integer.parseInt(idStr);
-
-                // Lấy appointmentCode hiện tại từ database
                 Appointment existingApp = dao.getAppointmentById(id);
                 if (existingApp == null) {
                     session.setAttribute("message", "Không tìm thấy lịch hẹn để cập nhật (ID: " + id + ").");
@@ -261,13 +290,12 @@ public class AppointmentController extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/appointments");
                     return;
                 }
-                String currentAppointmentCode = existingApp.getAppointmentCode(); // Lấy mã lịch hẹn hiện tại
 
                 int patientId = Integer.parseInt(patientIdStr);
                 Integer doctorId = Integer.parseInt(doctorIdStr);
                 Integer slotId = Integer.parseInt(slotIdStr);
 
-                // Kiểm tra sự tồn tại của các khóa ngoại
+                // Kiểm tra khóa ngoại
                 if (!dao.doesPatientExist(patientId)) {
                     session.setAttribute("message", "Mã bệnh nhân không tồn tại. Vui lòng kiểm tra lại.");
                     session.setAttribute("messageType", "danger");
@@ -293,13 +321,13 @@ public class AppointmentController extends HttpServlet {
 
                 Appointment updatedApp = new Appointment();
                 updatedApp.setId(id);
-                updatedApp.setAppointmentCode(currentAppointmentCode); // Sử dụng mã lịch hẹn từ DB, không phải từ form
+                updatedApp.setAppointmentCode(existingApp.getAppointmentCode());
                 updatedApp.setPatientId(patientId);
                 updatedApp.setDoctorId(doctorId);
                 updatedApp.setSlotId(slotId);
                 updatedApp.setStatus(status);
-                updatedApp.setUpdatedBy(currentUserUserId); // Set người cập nhật
-                updatedApp.setIsDeleted(existingApp.isIsDeleted()); // Giữ nguyên trạng thái is_deleted
+                updatedApp.setUpdatedBy(currentUserUserId);
+                updatedApp.setIsDeleted(existingApp.isIsDeleted());
 
                 boolean success = dao.updateAppointment(updatedApp);
 

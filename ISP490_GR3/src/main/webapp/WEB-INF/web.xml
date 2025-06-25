@@ -31,8 +31,30 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>AppointmentController</servlet-name>
-        <url-pattern>/appointments</url-pattern> <!-- Đây là URL bạn sẽ truy cập -->
+        <url-pattern>/appointments</url-pattern>
+        <!-- Đây là URL bạn sẽ truy cập -->
     </servlet-mapping>
+
+    
+    <servlet>
+        <servlet-name>CheckinController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.CheckinController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CheckinController</servlet-name>
+        <url-pattern>/checkin</url-pattern>
+        <!-- Đây là URL bạn sẽ truy cập -->
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>SlotController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.SlotController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>SlotController</servlet-name>
+        <url-pattern>/slot</url-pattern>
+        <!-- Đây là URL bạn sẽ truy cập -->
+
     <servlet>
         <servlet-name>MakeAppointmentController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.MakeAppointmentController</servlet-class>
@@ -50,6 +72,7 @@
         <url-pattern>/doctors</url-pattern>
         <url-pattern>/viewdoctor</url-pattern>
         <url-pattern>/book-appointment</url-pattern>
+
     </servlet-mapping>
     
     <error-page>
