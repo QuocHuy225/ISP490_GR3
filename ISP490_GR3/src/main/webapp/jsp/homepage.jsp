@@ -135,16 +135,31 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
+                    <a href="${pageContext.request.contextPath}/appointments">
+                        <i class="bi bi-calendar-check"></i> Quản lý đặt lịch
+                    </a>
+                </li>
+                 <li>
+                    <a href="${pageContext.request.contextPath}/checkin">
+                        <i class="bi bi-calendar-check"></i> Quản lý check-in
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
+                    <a href="${pageContext.request.contextPath}/#">
+                        <i class="bi bi-calendar-check"></i> Quản lý hàng đợi
                     </a>
                 </li>
-               
+                <li>
+                    <a href="${pageContext.request.contextPath}/#">
+                        <i class="bi bi-speedometer2"></i> Quản lý bệnh nhân
+                    </a>
+                </li> 
+               <li>
+                    <a href="${pageContext.request.contextPath}/#">
+                        <i class="bi bi-speedometer2"></i> Quản lý lịch bác sĩ
+                    </a>
+                </li> 
+
                 <% } else { %>
                 <!-- Menu cho Bệnh nhân (PATIENT) -->
                 <li>

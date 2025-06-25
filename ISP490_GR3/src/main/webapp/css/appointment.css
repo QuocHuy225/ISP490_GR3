@@ -636,3 +636,13 @@ input[type="checkbox"] {
 .form-control, .form-select {
     width: 100%;
 }
+
+/*bổ sung*/
+.nav-tabs .nav-link {
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.nav-tabs .nav-link.active {
+  font-weight: 700;
+  border-bottom: 3px solid var(--primary-color);
+}
