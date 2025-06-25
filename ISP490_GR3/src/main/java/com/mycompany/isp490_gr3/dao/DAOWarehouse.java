@@ -169,26 +169,7 @@ public class DAOWarehouse {
         return false;
     }
     
-    // Update stock quantity (for existing supplies)
-    public boolean updateStockQuantity(int supplyId, int additionalQuantity) {
-        String sql = "UPDATE medical_supply SET stock_quantity = stock_quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE supply_id = ?";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, additionalQuantity);
-            stmt.setInt(2, supplyId);
-            
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-            
-        } catch (SQLException e) {
-            System.err.println("Error updating stock quantity: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
-        return false;
-    }
+
     
     // Update supply information
     public boolean updateSupply(MedicalSupply supply) {
@@ -415,26 +396,7 @@ public class DAOWarehouse {
         return false;
     }
     
-    // Update medicine stock quantity
-    public boolean updateMedicineStockQuantity(int medicineId, int additionalQuantity) {
-        String sql = "UPDATE examination_medicines SET stock_quantity = stock_quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE exam_medicine_id = ? AND isdeleted = FALSE";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, additionalQuantity);
-            stmt.setInt(2, medicineId);
-            
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-            
-        } catch (SQLException e) {
-            System.err.println("Error updating medicine stock quantity: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
-        return false;
-    }
+
     
     // Update medicine information
     public boolean updateMedicine(Medicine medicine) {

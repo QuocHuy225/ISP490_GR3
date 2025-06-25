@@ -1,6 +1,6 @@
 package com.mycompany.isp490_gr3.controller;
 
-import com.mycompany.isp490_gr3.dao.AppointmentDAO;
+import com.mycompany.isp490_gr3.dao.DAOAppointment;
 import com.mycompany.isp490_gr3.dao.DBContext;
 import com.mycompany.isp490_gr3.model.User;
 import com.mycompany.isp490_gr3.model.Appointment;
@@ -103,7 +103,7 @@ public class AppointmentController extends HttpServlet {
         int recordsPerPage = 10;
 
         Connection conn = null;
-        AppointmentDAO dao = null;
+        DAOAppointment dao = null;
         List<Appointment> appointments = new ArrayList<>();
         int totalRecords = 0;
         int totalPages = 0;
@@ -119,7 +119,7 @@ public class AppointmentController extends HttpServlet {
             }
 
             conn = DBContext.getConnection();
-            dao = new AppointmentDAO(conn);
+            dao = new DAOAppointment(conn);
 
             if (isSearchTriggered) {
                 totalRecords = dao.getTotalFilteredAppointmentCount(appointmentCode, patientId, doctorId, status, showDeleted);
@@ -201,7 +201,7 @@ public class AppointmentController extends HttpServlet {
         Connection conn = null;
         try {
             conn = DBContext.getConnection();
-            AppointmentDAO dao = new AppointmentDAO(conn);
+            DAOAppointment dao = new DAOAppointment(conn);
 
             if ("addAppointment".equals(action)) {
                 String appointmentCode = request.getParameter("appointmentCode");

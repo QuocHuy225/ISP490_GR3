@@ -4,6 +4,7 @@ import com.mycompany.isp490_gr3.dao.DAOWarehouse;
 import com.mycompany.isp490_gr3.model.MedicalSupply;
 import com.mycompany.isp490_gr3.model.Medicine;
 import com.mycompany.isp490_gr3.model.User;
+import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -59,6 +61,7 @@ public class WarehouseController extends HttpServlet {
             throws ServletException, IOException {
         
         String action = request.getParameter("action");
+        
         if (action == null) {
             action = "list";
         }
@@ -135,7 +138,7 @@ public class WarehouseController extends HttpServlet {
     
     // =====================================================
     // PHẦN XỬ LÝ YÊU CẦU POST CHO VẬT TƯ Y TẾ
-    // Các action: add, update, delete, addStock
+    // Các action: add, update, delete
     // =====================================================
     private void handleSupplyPostRequests(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -156,9 +159,6 @@ public class WarehouseController extends HttpServlet {
             case "delete":
                 handleDeleteSupply(request, response);
                 break;
-            case "addStock":
-                handleAddStock(request, response);
-                break;
             default:
                 response.sendRedirect(request.getContextPath() + "/admin/medical-supplies");
                 break;
@@ -167,7 +167,7 @@ public class WarehouseController extends HttpServlet {
     
     // =====================================================
     // PHẦN XỬ LÝ YÊU CẦU POST CHO KHO THUỐC
-    // Các action: add, update, delete, addStock
+    // Các action: add, update, delete
     // =====================================================
     private void handleMedicinePostRequests(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -187,9 +187,6 @@ public class WarehouseController extends HttpServlet {
                 break;
             case "delete":
                 handleDeleteMedicine(request, response);
-                break;
-            case "addStock":
-                handleAddMedicineStock(request, response);
                 break;
             default:
                 response.sendRedirect(request.getContextPath() + "/admin/medicines");
@@ -239,17 +236,44 @@ public class WarehouseController extends HttpServlet {
     private void handleListSupplies(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // Check if this is an edit request
+        String editId = request.getParameter("edit");
+        MedicalSupply editSupply = null;
+        
+        if (editId != null && !editId.trim().isEmpty()) {
+            try {
+                int supplyId = Integer.parseInt(editId);
+                editSupply = warehouseDAO.getSupplyById(supplyId);
+            } catch (NumberFormatException e) {
+                // Invalid ID, ignore edit request
+            }
+        }
+        
         List<MedicalSupply> supplies = warehouseDAO.getAllSupplies();
         List<String> supplyGroups = warehouseDAO.getAllSupplyGroups();
         
         request.setAttribute("supplies", supplies);
         request.setAttribute("supplyGroups", supplyGroups);
+        request.setAttribute("editSupply", editSupply);
         
         request.getRequestDispatcher("/jsp/medical-supply.jsp").forward(request, response);
     }
     
     private void handleSearchSupplies(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        // Check if this is an edit request
+        String editId = request.getParameter("edit");
+        MedicalSupply editSupply = null;
+        
+        if (editId != null && !editId.trim().isEmpty()) {
+            try {
+                int supplyId = Integer.parseInt(editId);
+                editSupply = warehouseDAO.getSupplyById(supplyId);
+            } catch (NumberFormatException e) {
+                // Invalid ID, ignore edit request
+            }
+        }
         
         String keyword = request.getParameter("keyword");
         List<MedicalSupply> supplies;
@@ -265,6 +289,7 @@ public class WarehouseController extends HttpServlet {
         request.setAttribute("supplies", supplies);
         request.setAttribute("supplyGroups", supplyGroups);
         request.setAttribute("searchKeyword", keyword);
+        request.setAttribute("editSupply", editSupply);
         
         request.getRequestDispatcher("/jsp/medical-supply.jsp").forward(request, response);
     }
@@ -272,20 +297,22 @@ public class WarehouseController extends HttpServlet {
     private void handleGetSupply(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        String idStr = request.getParameter("id");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        
         try {
-            int supplyId = Integer.parseInt(request.getParameter("id"));
+            int supplyId = Integer.parseInt(idStr);
             MedicalSupply supply = warehouseDAO.getSupplyById(supplyId);
             
             if (supply != null) {
-                // Return JSON response
                 response.setContentType("application/json; charset=UTF-8");
-                response.getWriter().write("{" +
-                    "\"supplyId\":" + supply.getSupplyId() + "," +
-                    "\"supplyGroup\":\"" + supply.getSupplyGroup() + "\"," +
-                    "\"supplyName\":\"" + supply.getSupplyName() + "\"," +
-                    "\"unitPrice\":" + supply.getUnitPrice() + "," +
-                    "\"stockQuantity\":" + supply.getStockQuantity() +
-                    "}");
+                PrintWriter out = response.getWriter();
+                Gson gson = new Gson();
+                out.print(gson.toJson(supply));
+                out.flush();
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -393,31 +420,6 @@ public class WarehouseController extends HttpServlet {
         }
     }
     
-    private void handleAddStock(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        try {
-            int supplyId = Integer.parseInt(request.getParameter("supplyId"));
-            int additionalQuantity = Integer.parseInt(request.getParameter("additionalQuantity"));
-            
-            if (additionalQuantity <= 0) {
-                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=invalid_quantity");
-                return;
-            }
-            
-            boolean success = warehouseDAO.updateStockQuantity(supplyId, additionalQuantity);
-            
-            if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?success=stock_added");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=stock_add_failed");
-            }
-            
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=invalid_format");
-        }
-    }
-    
     private void handleDeleteSupply(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
@@ -435,6 +437,8 @@ public class WarehouseController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=invalid_format");
         }
     }
+    
+
     
     // =====================================================
     // CÁC PHƯƠNG THỨC XỬ LÝ CHO KHO THUỐC
@@ -476,20 +480,22 @@ public class WarehouseController extends HttpServlet {
     private void handleGetMedicine(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        String idStr = request.getParameter("id");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        
         try {
-            int medicineId = Integer.parseInt(request.getParameter("id"));
+            int medicineId = Integer.parseInt(idStr);
             Medicine medicine = warehouseDAO.getMedicineById(medicineId);
             
             if (medicine != null) {
-                // Return JSON response
                 response.setContentType("application/json; charset=UTF-8");
-                response.getWriter().write("{" +
-                    "\"examMedicineId\":" + medicine.getExamMedicineId() + "," +
-                    "\"medicineName\":\"" + medicine.getMedicineName() + "\"," +
-                    "\"unitOfMeasure\":\"" + medicine.getUnitOfMeasure() + "\"," +
-                    "\"unitPrice\":" + medicine.getUnitPrice() + "," +
-                    "\"stockQuantity\":" + medicine.getStockQuantity() +
-                    "}");
+                PrintWriter out = response.getWriter();
+                Gson gson = new Gson();
+                out.print(gson.toJson(medicine));
+                out.flush();
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -590,31 +596,6 @@ public class WarehouseController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/admin/medicines?success=updated");
             } else {
                 response.sendRedirect(request.getContextPath() + "/admin/medicines?error=update_failed");
-            }
-            
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_format");
-        }
-    }
-    
-    private void handleAddMedicineStock(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        try {
-            int medicineId = Integer.parseInt(request.getParameter("medicineId"));
-            int additionalQuantity = Integer.parseInt(request.getParameter("additionalQuantity"));
-            
-            if (additionalQuantity <= 0) {
-                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_quantity");
-                return;
-            }
-            
-            boolean success = warehouseDAO.updateMedicineStockQuantity(medicineId, additionalQuantity);
-            
-            if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/medicines?success=stock_added");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=stock_add_failed");
             }
             
         } catch (NumberFormatException e) {

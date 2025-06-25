@@ -94,8 +94,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
                     </a>
                 </li>
                 <li>
@@ -285,6 +290,8 @@
                         Cập nhật số lượng tồn kho thành công!
                     <% } else if ("stock_added".equals(success)) { %>
                         Thêm số lượng vào kho thành công!
+                    <% } else if ("stock_reduced".equals(success)) { %>
+                        Giảm số lượng kho thành công!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -311,6 +318,8 @@
                         Số lượng phải lớn hơn 0!
                     <% } else if ("stock_add_failed".equals(error)) { %>
                         Thêm số lượng vào kho thất bại!
+                    <% } else if ("stock_reduce_failed".equals(error)) { %>
+                        Giảm số lượng kho thất bại! Có thể số lượng trong kho không đủ.
                     <% } else if ("medicine_exists".equals(error)) { %>
                         Thuốc này đã tồn tại! Vui lòng sử dụng chức năng "Thêm số lượng" để tăng số lượng tồn kho.
                     <% } %>
@@ -371,7 +380,7 @@
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="medicinesTable" class="table table-striped table-hover">
-                                        <thead class="table-dark">
+                                        <thead class="table-primary">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Tên thuốc</th>
@@ -395,20 +404,15 @@
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <button type="button" class="btn btn-sm btn-primary me-1" 
+                                                        <button type="button" class="btn btn-sm btn-primary me-2" 
                                                                 onclick="editMedicine(<%= medicine.getExamMedicineId() %>)" 
-                                                                title="Chỉnh sửa">
-                                                            <i class="bi bi-pencil"></i>
+                                                                title="Chỉnh sửa thông tin thuốc">
+                                                            <i class="bi bi-pencil-square"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-info me-1" 
-                                                                onclick="addStock(<%= medicine.getExamMedicineId() %>)" 
-                                                                title="Thêm số lượng">
-                                                            <i class="bi bi-plus"></i>
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
                                                                 onclick="deleteMedicine(<%= medicine.getExamMedicineId() %>, '<%= medicine.getMedicineName() %>')" 
-                                                                title="Xóa">
-                                                            <i class="bi bi-trash"></i>
+                                                                title="Xóa thuốc">
+                                                            <i class="bi bi-trash3"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -471,7 +475,7 @@
                             
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle me-2"></i>
-                                <strong>Lưu ý:</strong> Chức năng này chỉ để thêm thuốc mới. Để tăng số lượng thuốc đã có, vui lòng sử dụng nút "Thêm số lượng" ở bảng.
+                                <strong>Lưu ý:</strong> Chức năng này để thêm thuốc mới vào hệ thống. Bạn có thể cập nhật số lượng tồn kho thông qua chức năng "Chỉnh sửa".
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -487,11 +491,11 @@
 
         <!-- Edit Medicine Modal -->
         <div class="modal fade" id="editMedicineModal" tabindex="-1" aria-labelledby="editMedicineModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editMedicineModalLabel">
-                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa thuốc
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin thuốc
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -500,30 +504,70 @@
                             <input type="hidden" name="action" value="update">
                             <input type="hidden" id="editMedicineId" name="medicineId">
                             
-                            <div class="mb-3">
-                                <label for="editMedicineName" class="form-label">Tên thuốc <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editMedicineName" name="medicineName" required>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="editMedicineName" class="form-label fw-bold">
+                                            <i class="bi bi-capsule-pill me-1"></i>Tên thuốc <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control form-control-lg" id="editMedicineName" name="medicineName" 
+                                               placeholder="Nhập tên thuốc" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="editUnitOfMeasure" class="form-label fw-bold">
+                                            <i class="bi bi-rulers me-1"></i>Đơn vị tính <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="editUnitOfMeasure" name="unitOfMeasure" 
+                                               placeholder="Viên/Lọ/Hộp..." required>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label for="editUnitOfMeasure" class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editUnitOfMeasure" name="unitOfMeasure" required>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editUnitPrice" class="form-label fw-bold">
+                                            <i class="bi bi-currency-dollar me-1"></i>Đơn giá (VNĐ) <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="editUnitPrice" name="unitPrice" 
+                                                   min="0" step="0.01" placeholder="0" required>
+                                            <span class="input-group-text">VNĐ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editStockQuantity" class="form-label fw-bold">
+                                            <i class="bi bi-box-seam me-1"></i>Số lượng tồn kho <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number" class="form-control" id="editStockQuantity" name="stockQuantity" 
+                                               min="0" placeholder="0" required>
+                                        <div class="form-text">
+                                            <i class="bi bi-info-circle me-1"></i>Cập nhật số lượng hiện có trong kho
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label for="editUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="editUnitPrice" name="unitPrice" min="0" step="0.01" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="editStockQuantity" class="form-label">Số lượng tồn kho <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="editStockQuantity" name="stockQuantity" min="0" required>
+                            <div class="alert alert-info border-0">
+                                <div class="d-flex">
+                                    <i class="bi bi-lightbulb-fill me-2 mt-1"></i>
+                                    <div>
+                                        <strong>Mẹo:</strong> Thay đổi số lượng tồn kho để cập nhật số liệu chính xác. 
+                                        Hệ thống sẽ tự động cập nhật trạng thái cảnh báo dựa trên số lượng này.
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Cập nhật
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>Hủy bỏ
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>Cập nhật thông tin
                             </button>
                         </div>
                     </form>
@@ -531,37 +575,7 @@
             </div>
         </div>
 
-        <!-- Add Stock Modal -->
-        <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addStockModalLabel">
-                            <i class="bi bi-plus me-2"></i>Thêm số lượng vào kho
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form method="POST" action="${pageContext.request.contextPath}/admin/medicines">
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="addStock">
-                            <input type="hidden" id="addStockMedicineId" name="medicineId">
-                            
-                            <div class="mb-3">
-                                <label for="additionalQuantity" class="form-label">Số lượng thêm vào <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="additionalQuantity" name="additionalQuantity" min="1" required>
-                                <div class="form-text">Nhập số lượng muốn thêm vào kho</div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-info">
-                                <i class="bi bi-check-circle me-2"></i>Thêm vào kho
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Delete Confirmation Modal -->
         <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
@@ -671,11 +685,7 @@
                     });
             }
 
-            // Add stock function
-            function addStock(medicineId) {
-                document.getElementById('addStockMedicineId').value = medicineId;
-                new bootstrap.Modal(document.getElementById('addStockModal')).show();
-            }
+
 
             // Delete medicine function
             function deleteMedicine(medicineId, medicineName) {

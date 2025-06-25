@@ -94,8 +94,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
                     </a>
                 </li>
                 <li>
@@ -363,7 +368,7 @@
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="servicesTable" class="table table-striped table-hover">
-                                        <thead class="table-dark">
+                                        <thead class="table-primary">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Nhóm dịch vụ</th>
@@ -381,15 +386,15 @@
                                                     <td><%= service.getServiceName() %></td>
                                                     <td><%= df.format(service.getPrice()) %></td>
                                                     <td>
-                                                        <button type="button" class="btn btn-sm btn-primary me-1" 
+                                                        <button type="button" class="btn btn-sm btn-primary me-2" 
                                                                 onclick="editService(<%= service.getServicesId() %>)" 
-                                                                title="Chỉnh sửa">
-                                                            <i class="bi bi-pencil"></i>
+                                                                title="Chỉnh sửa dịch vụ">
+                                                            <i class="bi bi-pencil-square"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
                                                                 onclick="deleteService(<%= service.getServicesId() %>, '<%= service.getServiceName() %>')" 
-                                                                title="Xóa">
-                                                            <i class="bi bi-trash"></i>
+                                                                title="Xóa dịch vụ">
+                                                            <i class="bi bi-trash3"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -401,7 +406,10 @@
                                                    String group = (String) request.getAttribute("selectedGroup"); %>
                                                 <% if ((keyword == null || keyword.trim().isEmpty()) && (group == null || group.trim().isEmpty())) { %>
                                                     <tr>
-                                                        <td colspan="5" class="text-center">Không có dịch vụ nào</td>
+                                                        <td colspan="5" class="text-center">
+                                                            <i class="bi bi-inbox me-2"></i>
+                                                            Chưa có dịch vụ nào trong hệ thống
+                                                        </td>
                                                     </tr>
                                                 <% } %>
                                             <% } %>
@@ -442,6 +450,11 @@
                             <div class="mb-3">
                                 <label for="addPrice" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="addPrice" name="price" min="0" step="0.01" placeholder="Nhập giá dịch vụ" required>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Lưu ý:</strong> Chức năng này để thêm dịch vụ y tế mới vào hệ thống.
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -501,14 +514,17 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="deleteConfirmModalLabel">
+                        <h5 class="modal-title text-danger" id="deleteConfirmModalLabel">
                             <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Bạn có chắc chắn muốn xóa dịch vụ: <strong id="deleteServiceName"></strong>?</p>
-                        <p class="text-danger">Hành động này không thể hoàn tác!</p>
+                        <p>Bạn có chắc chắn muốn xóa dịch vụ <strong id="deleteServiceName"></strong> không?</p>
+                        <p class="text-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Hành động này không thể hoàn tác!
+                        </p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -524,41 +540,61 @@
             </div>
         </div>
 
+        <!-- Bootstrap Bundle with Popper -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-        <!-- Bootstrap JS -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <!-- DataTables JS -->
         <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-
+        
         <script>
-            $(document).ready(function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 // Sidebar toggle
-                $('#sidebarCollapse').on('click', function () {
-                    $('#sidebar').toggleClass('active');
-                    $('#content').toggleClass('active');
+                const sidebarCollapse = document.getElementById('sidebarCollapse');
+                const sidebar = document.getElementById('sidebar');
+                const content = document.getElementById('content');
+
+                sidebarCollapse.addEventListener('click', function () {
+                    sidebar.classList.toggle('collapsed');
+                    content.classList.toggle('expanded');
                 });
+
+                // Responsive sidebar
+                function checkWidth() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.add('collapsed');
+                        content.classList.add('expanded');
+                    } else {
+                        sidebar.classList.remove('collapsed');
+                        content.classList.remove('expanded');
+                    }
+                }
+
+                // Initial check
+                checkWidth();
+
+                // Listen for window resize
+                window.addEventListener('resize', checkWidth);
 
                 // Initialize DataTable
                 $('#servicesTable').DataTable({
-                    "searching": false,
+                    "searching": false, // Disable built-in search
                     "language": {
-                        "lengthMenu": "Hiển thị _MENU_ dịch vụ mỗi trang",
+                        "lengthMenu": "Hiển thị _MENU_ mục",
                         "zeroRecords": "", // Không hiển thị thông báo khi không có dữ liệu
-                        "info": "Hiển thị trang _PAGE_ của _PAGES_",
-                        "infoEmpty": "Không có dịch vụ",
-                        "infoFiltered": "(lọc từ _MAX_ tổng số dịch vụ)",
+                        "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                        "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
+                        "infoFiltered": "(lọc từ _MAX_ tổng số mục)",
                         "paginate": {
                             "first": "Đầu",
                             "last": "Cuối",
                             "next": "Tiếp",
                             "previous": "Trước"
                         }
-                    },
-                    "pageLength": 10,
-                    "responsive": true
+                    }
                 });
+
             });
 
             // Edit service function

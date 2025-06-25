@@ -239,7 +239,7 @@
 
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered table-appointments">
-                        <thead>
+                        <thead class="table-primary">
                             <tr>
                                 <th><input type="checkbox" id="checkAll"></th>
                                 <th>Mã lịch hẹn</th>

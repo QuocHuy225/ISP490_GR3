@@ -2,14 +2,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // Javascript cho sidebar toggle
     const sidebarToggle = document.getElementById('sidebarCollapse');
     const sidebar = document.getElementById('sidebar');
-    const content = document.getElementById('content');
+    // THAY ĐỔI TỪ 'content' SANG 'main-wrapper'
+    const mainWrapper = document.getElementById('main-wrapper');
     const topNavbar = document.querySelector('.top-navbar');
 
-    if (sidebarToggle && sidebar && content && topNavbar) {
+    // Đảm bảo rằng tất cả các phần tử cần thiết đều tồn tại
+    if (sidebarToggle && sidebar && mainWrapper && topNavbar) {
         sidebarToggle.addEventListener('click', function () {
+            console.log('Sidebar toggle button clicked!'); // Log để kiểm tra
             sidebar.classList.toggle('collapsed');
-            content.classList.toggle('expanded');
-            topNavbar.classList.toggle('navbar-collapsed');
+            mainWrapper.classList.toggle('expanded'); // THAY ĐỔI Ở ĐÂY
+            // topNavbar.classList.toggle('navbar-collapsed'); // TopNavbar đã nằm trong mainWrapper, có thể không cần toggle riêng nữa
+                                                             // nếu bạn muốn nó chỉ co giãn theo mainWrapper
         });
     }
 
@@ -18,24 +22,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function checkWidth() {
         if (window.innerWidth <= RESPONSIVE_BREAKPOINT) {
-            if (sidebar && content && topNavbar) {
+            // THAY ĐỔI TỪ 'content' SANG 'mainWrapper'
+            if (sidebar && mainWrapper && topNavbar) {
                 sidebar.classList.add('collapsed');
-                content.classList.add('expanded');
+                mainWrapper.classList.add('expanded'); // THAY ĐỔI Ở ĐÂY
             }
         } else {
-            if (sidebar && content && topNavbar) {
+            // THAY ĐỔI TỪ 'content' SANG 'mainWrapper'
+            if (sidebar && mainWrapper && topNavbar) {
                 sidebar.classList.remove('collapsed');
-                content.classList.remove('expanded');
-                topNavbar.classList.remove('navbar-collapsed');
+                mainWrapper.classList.remove('expanded'); // THAY ĐỔI Ở ĐÂY
+                // topNavbar.classList.remove('navbar-collapsed'); // Tương tự như trên
             }
         }
     }
 
     // Kiểm tra ban đầu và lắng nghe sự kiện resize cửa sổ
-    if (sidebar && content && topNavbar) {
+    // THAY ĐỔI TỪ 'content' SANG 'mainWrapper'
+    if (sidebar && mainWrapper && topNavbar) {
         checkWidth();
         window.addEventListener('resize', checkWidth);
     }
+
+    // --- Giữ nguyên các phần còn lại của JS (dropdown, toast, delete, update) ---
 
     // Enhanced dropdown animations (sử dụng sự kiện của Bootstrap cho animation tùy chỉnh)
     const dropdownMenuLink = document.getElementById('userDropdown');
@@ -73,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resetFilterButton.addEventListener('click', function (event) {
             event.preventDefault(); // Ngăn chặn hành vi mặc định của HTML.
             // Điều hướng đến URL cơ sở để reset tất cả các tham số
-            window.location.href = './appointments'; 
+            window.location.href = './appointments';
         });
     }
 
@@ -172,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault(); // Ngăn chặn form gửi đi ngay lập tức
 
             const selectedCheckboxes = document.querySelectorAll('input[name="selectedAppointments"]:checked');
-            
+
             // --- Thu thập các ID DUY NHẤT để đảm bảo không gửi trùng lặp ---
             const uniqueAppointmentIds = new Set();
             selectedCheckboxes.forEach(checkbox => {
@@ -306,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     // If you don't have modalInstance, you can manually hide it with jQuery or specific Bootstrap methods:
                     // const modal = bootstrap.Modal.getInstance(confirmSingleDeleteModalEl);
                     // if (modal) modal.hide();
-                    
+
                     singleDeleteForm.submit(); // Submit the form
                 };
             }
@@ -340,5 +349,19 @@ document.addEventListener('DOMContentLoaded', function () {
             noResultsMessageElement.style.display = 'block'; // Hiện thông báo "Vui lòng sử dụng tìm kiếm"
             noResultsMessageElement.innerHTML = 'Vui lòng sử dụng chức năng tìm kiếm để hiển thị danh sách lịch hẹn.';
         }
+    }
+
+    // Logic for doctor list scrolling (giữ nguyên hoặc cập nhật nếu có thay đổi trong HTML)
+    const doctorListWrapper = document.querySelector('.doctor-list-wrapper');
+    const doctorScrollRightBtn = document.querySelector('.doctor-scroll-right');
+
+    if (doctorListWrapper && doctorScrollRightBtn) {
+        doctorScrollRightBtn.addEventListener('click', () => {
+            doctorListWrapper.scrollBy({
+                left: 300,
+                behavior: 'smooth'
+            });
+        });
+        // Bạn có thể thêm nút cuộn trái nếu muốn
     }
 });
