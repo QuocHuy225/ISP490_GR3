@@ -61,6 +61,7 @@
     <servlet-mapping>
         <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot</url-pattern>
+        <url-pattern>/slot/add</url-pattern>
         <!-- Đây là URL bạn sẽ truy cập -->
     </servlet-mapping>
     <servlet>

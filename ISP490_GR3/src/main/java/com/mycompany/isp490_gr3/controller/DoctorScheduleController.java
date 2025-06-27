@@ -31,14 +31,6 @@ public class DoctorScheduleController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession();
-        Object userRole = session.getAttribute("userRole");
-        if (userRole == null || !"ADMIN".equalsIgnoreCase(userRole.toString())) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.getWriter().write("{\"error\": \"Access denied. Admin role required.\"}");
-            return;
-        }
-
         String doctorIdRaw = request.getParameter("doctorId");
         System.out.println("doctorId nhận được từ FE: " + doctorIdRaw);
         if (doctorIdRaw == null || doctorIdRaw.trim().isEmpty()) {
@@ -46,11 +38,11 @@ public class DoctorScheduleController extends HttpServlet {
             response.getWriter().write("{\"error\": \"Missing doctorId parameter.\"}");
             return;
         }
-
         try {
             int doctorId = Integer.parseInt(doctorIdRaw);
             List<String> dates = dao.getWorkingDatesByDoctorId(doctorId);
             String json = new com.google.gson.Gson().toJson(dates != null ? dates : new ArrayList<>());
+            System.out.println(json);
             response.getWriter().write(json);
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

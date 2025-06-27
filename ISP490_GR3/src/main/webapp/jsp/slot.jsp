@@ -10,8 +10,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/appointment.css">
-
     </head>
+
     <body >
         <%
             // Kiểm tra phân quyền (hiển thị menu cho Admin)
@@ -114,15 +114,20 @@
             </ul>
 
             <!-- Thông báo -->
-            <c:if test="${not empty sessionScope.message}">
-                <div class="alert alert-${sessionScope.messageType} alert-dismissible fade show mt-3" role="alert">
-                    ${sessionScope.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <% session.removeAttribute("message"); session.removeAttribute("messageType"); %>
-            </c:if>
-
-
+            <%
+      String message = (String) session.getAttribute("message");
+      String messageType = (String) session.getAttribute("messageType");
+      if (message != null && messageType != null) {
+            %>
+            <div class="alert alert-<%= messageType %> alert-dismissible fade show" role="alert">
+                <%= message %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <%
+                    session.removeAttribute("message");
+                    session.removeAttribute("messageType");
+                }
+            %>
 
             <!-- Form tìm kiếm -->
             <form id="searchForm" action="${pageContext.request.contextPath}/slot" method="post"
@@ -151,9 +156,10 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-2">
-                    <button type="reset" class="btn btn-light border" id="resetFilterButton">
+                    <button type="button" class="btn btn-light border" id="resetFilterButton">
                         <i class="bi bi-arrow-clockwise"></i> Đặt lại bộ lọc
                     </button>
+
 
                     <button type="submit" name="submitSearch" class="btn btn-primary">
                         <i class="bi bi-search"></i> Tìm kiếm
@@ -167,12 +173,13 @@
                 <div class="appointment-list-header">
                     <h5>Danh sách Slot (${totalRecords} kết quả)</h5>
                     <div class="d-flex gap-2">
-                        <form id="deleteMultipleForm" action="${pageContext.request.contextPath}/slot" method="post" style="display:inline;">
+                        <form id="deleteMultipleForm" action="${pageContext.request.contextPath}/slot" method="post" style="display: none;">
                             <input type="hidden" name="action" value="deleteMultiple">
-                            <button type="submit" class="btn btn-danger btn-delete-selected">
-                                <i class="bi bi-trash"></i> Xóa đã chọn
+                            <button type="submit" class="btn btn-danger btn-delete-selected" id="btnDeleteSelected">
+                                <i class="bi bi-trash"></i> Xóa (<span id="selectedCount">0</span> bản ghi)
                             </button>
                         </form>
+
                         <button type="button" class="btn btn-success btn-add-appointment" data-bs-toggle="modal" data-bs-target="#addSlotModal" >
                             <i class="bi bi-plus-circle"></i> Thêm Slot
                         </button>
@@ -196,7 +203,8 @@
                         <tbody>
                             <c:forEach var="slot" items="${currentPageSlots}" varStatus="loop">
                                 <tr>
-                                    <td><input type="checkbox" name="slotIds" value="${slot.id}" /></td>
+                                    <td><input type="checkbox" name="selectedSlots" value="${slot.id}" class="slot-checkbox" />
+                                    </td>
                                     <td>${startIndex + loop.index + 1}</td>
                                     <td><c:out value="${slot.slotDate}"/></td>
                                     <td><c:out value="${slot.checkinRange}"/></td>
@@ -261,7 +269,7 @@
                         </div>
                         <div class="modal-body">
                             <form id="addSlotForm" action="${pageContext.request.contextPath}/slot/add" method="post">
-                                <input type="hidden" name="action" value="addSlot">
+
                                 <div class="mb-3">
                                     <label for="modalDoctorId" class="form-label">Bác sĩ <span class="text-danger">*</span></label>
                                     <select class="form-select" id="modalDoctorId" name="doctorId" required>
@@ -334,8 +342,24 @@
 
 
             <script>
+                <%
+                    String scheme = request.getScheme();             // http or https
+                    String serverName = request.getServerName();     // localhost or domain
+                    int serverPort = request.getServerPort();        // 8080, 443, etc.
+                    String contextPath = request.getContextPath();   // /your-app
+
+                    String baseURL = scheme + "://" + serverName + ":" + serverPort + contextPath;
+                %>
+
                 document.addEventListener("DOMContentLoaded", function () {
-                    const BASE_URL = '${pageContext.request.contextPath}';
+                    const BASE_URL = '<%= baseURL %>';
+
+                    console.log("BASE_URL:", BASE_URL);
+                    console.log("Protocol:", window.location.protocol);
+                    console.log("Host:", window.location.host);
+                    console.log("Context Path:", BASE_URL);
+                    console.log("Full URL:", window.location.href);
+
                     const doctorSelect = document.getElementById("modalDoctorId");
                     const slotDateDropdown = document.getElementById("slotDateDropdown");
                     const addTypeSelect = document.getElementById("addType");
@@ -345,69 +369,156 @@
 
                     // Toggle giữa slot đơn và slot theo dải
                     function toggleSlotFields() {
-                        singleFields.style.display = addTypeSelect.value === "single" ? "block" : "none";
-                        rangeFields.style.display = addTypeSelect.value === "range" ? "block" : "none";
-                    }
+                        const isSingle = addTypeSelect.value === "single";
 
+                        singleFields.style.display = isSingle ? "block" : "none";
+                        rangeFields.style.display = isSingle ? "none" : "block";
+
+                        // Toggle required fields
+                        document.getElementById("addStartTime").required = isSingle;
+                        document.getElementById("addSlotDuration").required = isSingle;
+
+                        document.getElementById("addStartRangeTime").required = !isSingle;
+                        document.getElementById("addEndRangeTime").required = !isSingle;
+                        document.getElementById("addRangeSlotDuration").required = !isSingle;
+                    }
                     addTypeSelect.addEventListener("change", toggleSlotFields);
+                    toggleSlotFields(); // run at start
+
 
                     // Load ngày slot
                     function loadSlotDates(doctorId) {
+                        console.log("doctorId:", doctorId);
                         slotDateDropdown.innerHTML = '<option value="">Đang tải...</option>';
+
                         if (!doctorId) {
                             slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
                             console.log("Không có doctorId, bỏ qua fetch");
                             return;
                         }
 
-                        const url = `${BASE_URL}/doctor/schedule?doctorId=${doctorId}`;
-                                    console.log("Fetch URL:", url);
-                                    fetch(url)
-                                            .then(res => {
-                                                if (!res.ok) {
-                                                    if (res.status === 404) {
-                                                        throw new Error("404: Endpoint không tồn tại hoặc doctorId không hợp lệ");
-                                                    }
-                                                    throw new Error(`Fetch lỗi ${res.status}`);
-                                                }
-                                                return res.json();
-                                            })
-                                            .then(data => {
-                                                console.log("Dữ liệu nhận được:", data);
-                                                slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
-                                                if (data.error) {
-                                                    slotDateDropdown.innerHTML = `<option value="">${data.error}</option>`;
-                                                } else if (data.length === 0) {
-                                                    slotDateDropdown.innerHTML = '<option value="">Không có ngày làm việc</option>';
-                                                } else {
-                                                    data.forEach(date => {
-                                                        slotDateDropdown.innerHTML += `<option value="${date}">${date}</option>`;
-                                                    });
-                                                }
-                                            })
-                                            .catch(error => {
-                                                console.error("Lỗi khi tải ngày làm việc:", error);
-                                                slotDateDropdown.innerHTML = `<option value="">${error.message}</option>`;
-                                            });
-                                }
+                        const url = BASE_URL + "/doctor/schedule?doctorId=" + doctorId;
 
-                                doctorSelect.addEventListener("change", function () {
-                                    console.log("Doctor ID từ dropdown:", this.value);
-                                    console.log("Dropdown options:", Array.from(this.options).map(opt => ({value: opt.value, text: opt.text})));
-                                    loadSlotDates(this.value);
-                                });
+                        //const url = `${BASE_URL}/doctor/schedule?doctorId=${doctorId}`;
 
-                                addSlotModal.addEventListener("shown.bs.modal", function () {
-                                    addTypeSelect.value = "single";
-                                    toggleSlotFields();
-                                    slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
-                                    const selectedDoctorId = doctorSelect.value;
-                                    console.log("Doctor ID khi mở modal:", selectedDoctorId);
-                                    if (selectedDoctorId) {
-                                        doctorSelect.dispatchEvent(new Event("change"));
+                        console.log("Fetch URL:", url);
+
+                        fetch(url)
+                                .then(res => {
+                                    console.log("res", res);
+                                    if (!res.ok) {
+                                        if (res.status === 404) {
+                                            throw new Error("404: Endpoint không tồn tại hoặc doctorId không hợp lệ");
+                                        }
+                                        throw new Error(`Fetch lỗi ${res.status}`);
                                     }
+                                    return res.json();
+                                })
+                                .then(data => {
+                                    console.log("Dữ liệu nhận được:", data);
+                                    slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
+                                    if (data.error) {
+                                        slotDateDropdown.innerHTML = `<option value="">${data.error}</option>`;
+                                    } else if (!Array.isArray(data) || data.length === 0) {
+                                        slotDateDropdown.innerHTML = '<option value="">Không có ngày làm việc</option>';
+                                    } else {
+                                        slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
+                                        data.forEach((item, index) => {
+                                            console.log(`Item ${index}:`, item, typeof item);
+                                            const date = item?.trim(); // chống lỗi value có khoảng trắng
+
+                                            if (date) {
+                                                const option = document.createElement("option");
+                                                option.value = date;
+                                                option.textContent = date;
+                                                slotDateDropdown.appendChild(option);
+                                            } else {
+                                                console.warn(" Bỏ qua item rỗng:", item);
+                                            }
+                                        });
+
+
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error("Lỗi khi tải ngày làm việc:", error);
+                                    slotDateDropdown.innerHTML = `<option value="">${error.message}</option>`;
                                 });
-                            });
+                    }
+
+                    // Khi chọn bác sĩ
+                    doctorSelect.addEventListener("change", function () {
+                        console.log("Doctor ID từ dropdown:", this.value);
+                        loadSlotDates(this.value);
+                    });
+
+                    // Khi mở modal
+                    addSlotModal.addEventListener("shown.bs.modal", function () {
+                        addTypeSelect.value = "single";
+                        toggleSlotFields();
+                        slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
+                        const selectedDoctorId = doctorSelect.value;
+                        console.log("Doctor ID khi mở modal:", selectedDoctorId);
+                        if (selectedDoctorId) {
+                            loadSlotDates(selectedDoctorId);
+                        }
+                    });
+                });
+
+                document.getElementById("resetFilterButton").addEventListener("click", function () {
+                    const form = document.getElementById("searchForm");
+                    form.reset(); // reset giá trị form về mặc định
+
+                    // Xóa các giá trị nếu chúng được giữ qua attribute `value`
+                    document.getElementById("doctorId").value = "";
+                    document.getElementById("slotDate").value = "";
+
+                    // Gửi form mà không có tham số lọc
+                    const actionURL = form.getAttribute("action");
+                    const formData = new FormData();
+                    formData.append("action", "search");
+
+                    fetch(actionURL, {
+                        method: "POST",
+                        body: formData
+                    }).then(() => {
+                        // Sau khi submit xong, reload lại trang
+                        window.location.href = actionURL;
+                    });
+                });
+
+
+                function updateDeleteMultipleVisibility() {
+                    const checkboxes = document.querySelectorAll('.slot-checkbox');
+                    const selected = Array.from(checkboxes).filter(cb => cb.checked);
+                    const count = selected.length;
+
+                    const deleteForm = document.getElementById("deleteMultipleForm");
+                    const countSpan = document.getElementById("selectedCount");
+
+                    if (count > 0) {
+                        deleteForm.style.display = "inline-block"; // Hiện nút
+                        countSpan.textContent = count;
+                    } else {
+                        deleteForm.style.display = "none"; // Ẩn nút
+                        countSpan.textContent = 0;
+                    }
+                }
+
+// Gán sự kiện thay đổi cho từng checkbox
+                document.querySelectorAll('.slot-checkbox').forEach(cb => {
+                    cb.addEventListener("change", updateDeleteMultipleVisibility);
+                });
+
+// Gán sự kiện cho checkbox "Chọn tất cả"
+                document.getElementById("checkAll").addEventListener("change", function () {
+                    const checked = this.checked;
+                    document.querySelectorAll('.slot-checkbox').forEach(cb => {
+                        cb.checked = checked;
+                    });
+                    updateDeleteMultipleVisibility();
+                });
+
             </script>
 
 
@@ -500,57 +611,57 @@
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
             <script>
-                            // JavaScript để điền dữ liệu vào modal cập nhật
-                            document.querySelectorAll('.btn-edit').forEach(button => {
-                                button.addEventListener('click', function () {
-                                    document.getElementById('updateSlotId').value = this.dataset.id;
-                                    document.getElementById('updateSlotCode').value = this.dataset.code;
-                                    document.getElementById('updateSlotDate').value = this.dataset.date;
-                                    document.getElementById('updateSlotTime').value = this.dataset.time;
-                                    document.getElementById('updateDoctorId').value = this.dataset.doctorId;
-                                    document.getElementById('updateStatus').value = this.dataset.status;
-                                });
-                            });
+                // JavaScript để điền dữ liệu vào modal cập nhật
+                document.querySelectorAll('.btn-edit').forEach(button => {
+                    button.addEventListener('click', function () {
+                        document.getElementById('updateSlotId').value = this.dataset.id;
+                        document.getElementById('updateSlotCode').value = this.dataset.code;
+                        document.getElementById('updateSlotDate').value = this.dataset.date;
+                        document.getElementById('updateSlotTime').value = this.dataset.time;
+                        document.getElementById('updateDoctorId').value = this.dataset.doctorId;
+                        document.getElementById('updateStatus').value = this.dataset.status;
+                    });
+                });
 
-                            // JavaScript để điền ID vào modal xóa từng slot
-                            document.querySelectorAll('.btn-delete-single').forEach(button => {
-                                button.addEventListener('click', function () {
-                                    document.getElementById('singleDeleteSlotIdSpan').textContent = this.dataset.id;
-                                    // Có thể thêm logic để gửi request xóa
-                                    document.getElementById('confirmSingleDeleteButton').onclick = function () {
-                                        // Tạm thời log ID, cần tích hợp với POST request
-                                        console.log('Xóa slot ID: ' + this.dataset.id);
-                                    };
-                                });
-                            });
+                // JavaScript để điền ID vào modal xóa từng slot
+                document.querySelectorAll('.btn-delete-single').forEach(button => {
+                    button.addEventListener('click', function () {
+                        document.getElementById('singleDeleteSlotIdSpan').textContent = this.dataset.id;
+                        // Có thể thêm logic để gửi request xóa
+                        document.getElementById('confirmSingleDeleteButton').onclick = function () {
+                            // Tạm thời log ID, cần tích hợp với POST request
+                            console.log('Xóa slot ID: ' + this.dataset.id);
+                        };
+                    });
+                });
 
-                            // JavaScript cho checkbox "Chọn tất cả"
-                            document.getElementById('checkAll').addEventListener('change', function () {
-                                document.querySelectorAll('input[name="selectedSlots"]').forEach(checkbox => {
-                                    checkbox.checked = this.checked;
-                                });
-                                updateDeleteCount();
-                            });
+                // JavaScript cho checkbox "Chọn tất cả"
+                document.getElementById('checkAll').addEventListener('change', function () {
+                    document.querySelectorAll('input[name="selectedSlots"]').forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                    updateDeleteCount();
+                });
 
-                            // Cập nhật số lượng slot được chọn
-                            function updateDeleteCount() {
-                                const checkedCount = document.querySelectorAll('input[name="selectedSlots"]:checked').length;
-                                document.getElementById('deleteCount').textContent = checkedCount;
-                            }
+                // Cập nhật số lượng slot được chọn
+                function updateDeleteCount() {
+                    const checkedCount = document.querySelectorAll('input[name="selectedSlots"]:checked').length;
+                    document.getElementById('deleteCount').textContent = checkedCount;
+                }
 
-                            // Gắn sự kiện cho các checkbox
-                            document.querySelectorAll('input[name="selectedSlots"]').forEach(checkbox => {
-                                checkbox.addEventListener('change', updateDeleteCount);
-                            });
+                // Gắn sự kiện cho các checkbox
+                document.querySelectorAll('input[name="selectedSlots"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', updateDeleteCount);
+                });
 
-                            // JavaScript cho modal xóa nhiều
-                            document.getElementById('confirmDeleteButton').addEventListener('click', function () {
-                                document.getElementById('deleteMultipleForm').submit();
-                            });
+                // JavaScript cho modal xóa nhiều
+                document.getElementById('confirmDeleteButton').addEventListener('click', function () {
+                    document.getElementById('deleteMultipleForm').submit();
+                });
 
-                            // Các biến từ Controller
-                            window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
-                            window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
+                // Các biến từ Controller
+                window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
+                window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
             </script>
             <script src="${pageContext.request.contextPath}/js/slot.js"></script>
 
