@@ -1,4 +1,4 @@
-package com.mycompany.isp490_gr3.dao;
+    package com.mycompany.isp490_gr3.dao;
 
 import com.mycompany.isp490_gr3.model.Doctor;
 import com.mycompany.isp490_gr3.model.Schedule;
