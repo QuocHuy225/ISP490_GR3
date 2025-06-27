@@ -1,63 +1,76 @@
 package com.mycompany.isp490_gr3.model;
 
-// Loại bỏ các import không cần thiết nếu không dùng List nữa
-// import java.util.List;
-// import java.util.ArrayList;
-
 public class Doctor {
     private int id;
     private String accountId;
     private String fullName;
     private int gender;
     private String phone;
-    private int departmentId;
-    private String specializationName; // Tên chuyên khoa sẽ lấy từ bảng department
-
-    // Bỏ tất cả các trường sau:
-    // private int yearsOfExperience;
-    // private String position;
-    // private String workingPlace;
-    // private String introduction;
-    // private List<String> achievements;
-    // private List<Experience> experiences;
+    private boolean isDeleted;
 
     public Doctor() {
-        // Không cần khởi tạo achievements và experiences nữa
-        // this.achievements = new ArrayList<>();
-        // this.experiences = new ArrayList<>();
     }
 
-    // Constructor đơn giản hơn nếu cần
-    public Doctor(int id, String fullName, int gender, String phone, int departmentId, String specializationName) {
+    public Doctor(int id, String accountId, String fullName, int gender, String phone, boolean isDeleted) {
         this.id = id;
+        this.accountId = accountId;
         this.fullName = fullName;
         this.gender = gender;
         this.phone = phone;
-        this.departmentId = departmentId;
-        this.specializationName = specializationName;
+        this.isDeleted = isDeleted;
     }
 
-    // Getters and Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getId() {
+        return id;
+    }
 
-    public String getAccountId() { return accountId; }
-    public void setAccountId(String accountId) { this.accountId = accountId; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public String getAccountId() {
+        return accountId;
+    }
 
-    public int getGender() { return gender; }
-    public void setGender(int gender) { this.gender = gender; }
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public String getFullName() {
+        return fullName;
+    }
 
-    public int getDepartmentId() { return departmentId; }
-    public void setDepartmentId(int departmentId) { this.departmentId = departmentId; }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-    public String getSpecializationName() { return specializationName; }
-    public void setSpecializationName(String specializationName) { this.specializationName = specializationName; }
+    public int getGender() {
+        return gender;
+    }
 
-   
+    public void setGender(int gender) {
+        this.gender = gender;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    @Override
+    public String toString() {
+        return "Doctor{" + "id=" + id + ", accountId=" + accountId + ", fullName=" + fullName + 
+               ", gender=" + gender + ", phone=" + phone + ", isDeleted=" + isDeleted + '}';
+    }
 }
