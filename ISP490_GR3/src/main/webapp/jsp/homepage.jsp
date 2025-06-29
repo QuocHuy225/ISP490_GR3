@@ -160,7 +160,7 @@
                     </a>
                 </li> 
                <li>
-                    <a href="${pageContext.request.contextPath}/#">
+                    <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
                         <i class="bi bi-speedometer2"></i> Quản lý lịch bác sĩ
                     </a>
                 </li> 
