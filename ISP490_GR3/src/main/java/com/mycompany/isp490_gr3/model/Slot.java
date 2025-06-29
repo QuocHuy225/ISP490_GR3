@@ -10,7 +10,7 @@ public class Slot {
     private LocalDate slotDate;
     private LocalTime startTime;
     private LocalTime endTime;
-    private String duration;             // Có thể đổi thành Duration nếu cần xử lý logic
+    private String duration;             
     private int maxPatients;
     private int bookedPatients;          // Đã đặt (JOIN từ bảng appointment)
     private boolean isAvailable;

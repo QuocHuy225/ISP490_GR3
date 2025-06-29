@@ -61,7 +61,8 @@
     <servlet-mapping>
         <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot</url-pattern>
-        <!-- Đây là URL bạn sẽ truy cập -->
+        <url-pattern>/slot/add</url-pattern>
+        <url-pattern>/slot/delete</url-pattern>
     </servlet-mapping>
     <servlet>
         <servlet-name>MakeAppointmentController</servlet-name>

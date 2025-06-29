@@ -68,6 +68,7 @@ public class DoctorScheduleController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
+
         if (!checkAdminOrReceptionistRole(request, response, out)) {
             return;
         }
@@ -82,9 +83,9 @@ public class DoctorScheduleController extends HttpServlet {
             LOGGER.warning("Missing doctorId parameter in GET request for " + servletPath);
             return;
         }
-
         try {
             int doctorId = Integer.parseInt(doctorIdRaw);
+
 
             if (servletPath.endsWith("/detailed")) {
                 LOGGER.log(Level.INFO, "Fetching detailed schedule for doctorId: {0} from DB.", doctorId);
@@ -139,6 +140,12 @@ public class DoctorScheduleController extends HttpServlet {
                 out.write("{\"error\": \"Endpoint không tìm thấy.\"}");
                 LOGGER.warning("Endpoint không tìm thấy cho yêu cầu GET: " + request.getRequestURI());
             }
+
+
+            List<String> dates = dao.getWorkingDatesByDoctorId(doctorId);
+            String json = new com.google.gson.Gson().toJson(dates != null ? dates : new ArrayList<>());
+            System.out.println(json);
+            response.getWriter().write(json);
 
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
