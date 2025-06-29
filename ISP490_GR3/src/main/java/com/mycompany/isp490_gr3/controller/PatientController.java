@@ -1,54 +1,119 @@
 package com.mycompany.isp490_gr3.controller;
 
-import com.mycompany.isp490_gr3.dao.PatientDAO;
+import com.mycompany.isp490_gr3.dao.DAOPatient;
 import com.mycompany.isp490_gr3.model.Patient;
-import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Date;
-import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import com.google.gson.Gson;
 
 /**
  * Servlet xử lý các yêu cầu liên quan đến bệnh nhân.
  */
-@WebServlet(name = "PatientController", urlPatterns = {"/patients", "/patients/add", "/patients/update"})
+@WebServlet(name = "PatientController", urlPatterns = {"/patients", "/patients/*"})
 public class PatientController extends HttpServlet {
 
-    private void processPatientList(HttpServletRequest request, HttpServletResponse response)
+    private DAOPatient patientDAO = new DAOPatient();
+    private Gson gson = new Gson();
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
 
-        String code = request.getParameter("code") != null ? request.getParameter("code").trim() : "";
-        String name = request.getParameter("name") != null ? request.getParameter("name").trim() : "";
-        String phone = request.getParameter("phone") != null ? request.getParameter("phone").trim() : "";
+        String action = request.getParameter("action");
+        if ("get".equals(action)) {
+            getPatientById(request, response);
+        } else {
+            listPatients(request, response);
+        }
+    }
 
-        PatientDAO dao = new PatientDAO();
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
+
+        String action = request.getParameter("action");
+        switch (action != null ? action : "") {
+            case "add":
+                addPatient(request, response);
+                break;
+            case "update":
+                updatePatient(request, response);
+                break;
+            case "delete":
+                deletePatient(request, response);
+                break;
+            default:
+                listPatients(request, response);
+                break;
+        }
+    }
+
+    private void listPatients(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String code = request.getParameter("code");
+        String name = request.getParameter("name");
+        String phone = request.getParameter("phone");
+        String cccd = request.getParameter("cccd");
+
         List<Patient> patients;
-        boolean isSearch = !code.isEmpty() || !name.isEmpty() || !phone.isEmpty();
+        boolean isSearch = (code != null && !code.trim().isEmpty()) ||
+                          (name != null && !name.trim().isEmpty()) ||
+                          (phone != null && !phone.trim().isEmpty()) ||
+                          (cccd != null && !cccd.trim().isEmpty());
 
         if (isSearch) {
-            patients = dao.searchPatients(code, name, phone);
+            patients = patientDAO.searchPatients(code, name, phone, cccd);
         } else {
-            patients = dao.getAllPatients();
+            patients = patientDAO.getAllPatients();
         }
 
         request.setAttribute("patients", patients);
-        request.setAttribute("searchCode", code);
-        request.setAttribute("searchName", name);
-        request.setAttribute("searchPhone", phone);
-        request.getRequestDispatcher("/jsp/patient-list.jsp").forward(request, response);
+        request.setAttribute("searchCode", code != null ? code : "");
+        request.setAttribute("searchName", name != null ? name : "");
+        request.setAttribute("searchPhone", phone != null ? phone : "");
+        request.setAttribute("searchCccd", cccd != null ? cccd : "");
+        
+        request.getRequestDispatcher("/jsp/patient-management.jsp").forward(request, response);
+    }
+
+    private void getPatientById(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            Patient patient = patientDAO.getPatientById(id);
+            
+            if (patient != null) {
+                // Format date for JSON response
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                patient.setDob(Date.valueOf(sdf.format(patient.getDob())));
+                
+                PrintWriter out = response.getWriter();
+                out.print(gson.toJson(patient));
+                out.flush();
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            }
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
     }
 
     private void addPatient(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
-
         try {
             // Lấy tham số từ form
             String fullName = request.getParameter("fullName");
@@ -59,93 +124,192 @@ public class PatientController extends HttpServlet {
             String address = request.getParameter("address");
 
             // Kiểm tra các trường bắt buộc
-            if (fullName == null || fullName.trim().isEmpty()
-                    || genderStr == null || genderStr.trim().isEmpty()
-                    || dobStr == null || dobStr.trim().isEmpty()
-                    || phone == null || phone.trim().isEmpty()
-                    || cccd == null || cccd.trim().isEmpty()
-                    || address == null || address.trim().isEmpty()) {
-                throw new IllegalArgumentException("Vui lòng điền đầy đủ tất cả các trường.");
+            if (fullName == null || fullName.trim().isEmpty() ||
+                genderStr == null || genderStr.trim().isEmpty() ||
+                dobStr == null || dobStr.trim().isEmpty() ||
+                phone == null || phone.trim().isEmpty() ||
+                cccd == null || cccd.trim().isEmpty() ||
+                address == null || address.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/patients?error=missing_fields");
+                return;
             }
 
-            // Parse gender và dob
+            // Parse và validate dữ liệu
             int gender;
             try {
                 gender = Integer.parseInt(genderStr);
+                if (gender < 0 || gender > 2) {
+                    throw new NumberFormatException("Invalid gender value");
+                }
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Giới tính không hợp lệ.");
+                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_gender");
+                return;
             }
 
             Date dob;
             try {
                 dob = Date.valueOf(dobStr);
+                if (dob.after(new java.util.Date())) {
+                    response.sendRedirect(request.getContextPath() + "/patients?error=invalid_dob");
+                    return;
+                }
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Ngày sinh không hợp lệ (định dạng: yyyy-MM-dd).");
+                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_date_format");
+                return;
             }
 
-            // Kiểm tra ngày sinh không phải tương lai
-            if (dob.after(new java.util.Date())) {
-                throw new IllegalArgumentException("Ngày sinh không được là tương lai.");
-            }
-
-            // Kiểm tra định dạng phone và cccd
+            // Validate phone và cccd
             if (!phone.matches("\\d{10,11}")) {
-                throw new IllegalArgumentException("Số điện thoại phải là 10-11 chữ số.");
+                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_phone");
+                return;
             }
             if (!cccd.matches("\\d{12}")) {
-                throw new IllegalArgumentException("CCCD phải là 12 chữ số.");
+                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_cccd");
+                return;
             }
 
             // Tạo đối tượng Patient
             Patient patient = new Patient();
-            patient.setFullName(fullName);
+            patient.setFullName(fullName.trim());
             patient.setGender(gender);
             patient.setDob(dob);
-            patient.setPhone(phone);
-            patient.setCccd(cccd);
-            patient.setAddress(address);
-            patient.setCreatedBy(null); // Chưa phân quyền
-            patient.setUpdatedBy(null); // Chưa phân quyền
-            patient.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-            patient.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-            patient.setDeleted(false);
+            patient.setPhone(phone.trim());
+            patient.setCccd(cccd.trim());
+            patient.setAddress(address.trim());
 
             // Lưu vào DB
-            PatientDAO dao = new PatientDAO();
-            dao.addPatient(patient);
+            boolean success = patientDAO.addPatient(patient);
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/patients?success=added");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/patients?error=add_failed");
+            }
 
-            // Thông báo thành công
-            request.getSession().setAttribute("success", "Thêm bệnh nhân thành công");
-            response.sendRedirect(request.getContextPath() + "/patients");
-
-        } catch (IllegalArgumentException e) {
-            request.setAttribute("error", "Dữ liệu không hợp lệ: " + e.getMessage());
-            processPatientList(request, response);
-        } catch (SQLException e) {
-            request.setAttribute("error", "Lỗi khi thêm bệnh nhân: " + e.getMessage());
-            processPatientList(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/patients?error=system_error");
         }
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    private void updatePatient(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processPatientList(request, response);
+        try {
+            // Lấy tham số từ form
+            String idStr = request.getParameter("patientId");
+            String fullName = request.getParameter("fullName");
+            String genderStr = request.getParameter("gender");
+            String dobStr = request.getParameter("dob");
+            String phone = request.getParameter("phone");
+            String cccd = request.getParameter("cccd");
+            String address = request.getParameter("address");
+
+            // Kiểm tra các trường bắt buộc
+            if (idStr == null || idStr.trim().isEmpty() ||
+                fullName == null || fullName.trim().isEmpty() ||
+                genderStr == null || genderStr.trim().isEmpty() ||
+                dobStr == null || dobStr.trim().isEmpty() ||
+                phone == null || phone.trim().isEmpty() ||
+                cccd == null || cccd.trim().isEmpty() ||
+                address == null || address.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/patients?error=missing_fields");
+                return;
+            }
+
+            // Parse và validate dữ liệu
+            int id;
+            try {
+                id = Integer.parseInt(idStr);
+            } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_id");
+                return;
+            }
+
+            int gender;
+            try {
+                gender = Integer.parseInt(genderStr);
+                if (gender < 0 || gender > 2) {
+                    throw new NumberFormatException("Invalid gender value");
+                }
+            } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_gender");
+                return;
+            }
+
+            Date dob;
+            try {
+                dob = Date.valueOf(dobStr);
+                if (dob.after(new java.util.Date())) {
+                    response.sendRedirect(request.getContextPath() + "/patients?error=invalid_dob");
+                    return;
+                }
+            } catch (IllegalArgumentException e) {
+                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_date_format");
+                return;
+            }
+
+            // Validate phone và cccd
+            if (!phone.matches("\\d{10,11}")) {
+                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_phone");
+                return;
+            }
+            if (!cccd.matches("\\d{12}")) {
+                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_cccd");
+                return;
+            }
+
+            // Tạo đối tượng Patient
+            Patient patient = new Patient();
+            patient.setId(id);
+            patient.setFullName(fullName.trim());
+            patient.setGender(gender);
+            patient.setDob(dob);
+            patient.setPhone(phone.trim());
+            patient.setCccd(cccd.trim());
+            patient.setAddress(address.trim());
+
+            // Cập nhật trong DB
+            boolean success = patientDAO.updatePatient(patient);
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/patients?success=updated");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/patients?error=update_failed");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/patients?error=system_error");
+        }
     }
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    private void deletePatient(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String path = request.getServletPath();
-        if (path.equals("/patients/add")) {
-            addPatient(request, response);
-        } else {
-            processPatientList(request, response);
+        try {
+            String idStr = request.getParameter("patientId");
+            
+            if (idStr == null || idStr.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/patients?error=missing_id");
+                return;
+            }
+
+            int id = Integer.parseInt(idStr);
+            boolean success = patientDAO.deletePatient(id);
+            
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/patients?success=deleted");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/patients?error=delete_failed");
+            }
+
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/patients?error=invalid_id");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/patients?error=system_error");
         }
     }
 
     @Override
     public String getServletInfo() {
-        return "Patient Controller";
+        return "Patient Management Controller";
     }
 }
