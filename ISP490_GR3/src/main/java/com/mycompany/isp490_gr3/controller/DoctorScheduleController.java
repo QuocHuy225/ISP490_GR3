@@ -142,7 +142,7 @@ public class DoctorScheduleController extends HttpServlet {
             }
 
 
-            List<String> dates = dao.getWorkingDatesByDoctorId(doctorId);
+            List<String> dates = daoDoctorSchedule.getWorkingDatesByDoctorId(doctorId);
             String json = new com.google.gson.Gson().toJson(dates != null ? dates : new ArrayList<>());
             System.out.println(json);
             response.getWriter().write(json);
