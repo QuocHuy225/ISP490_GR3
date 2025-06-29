@@ -1,7 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="com.mycompany.isp490_gr3.model.PrescriptionMedicine" %>
-<%@ page import="com.mycompany.isp490_gr3.model.PrescriptionForm" %>
 <%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -9,7 +8,7 @@
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quản lý đơn thuốc - Ánh Dương Clinic</title>
+        <title>Quản lý thuốc - Ánh Dương Clinic</title>
         <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <!-- Bootstrap CSS -->
@@ -22,14 +21,12 @@
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
         <style>
             /* Ensure delete modals have white header */
-            #deleteMedicineModal .modal-header,
-            #deletePrescriptionFormModal .modal-header {
+            #deleteMedicineModal .modal-header {
                 background: white !important;
                 color: #dc3545 !important;
                 border-bottom: 1px solid #dee2e6;
             }
-            #deleteMedicineModal .modal-content,
-            #deletePrescriptionFormModal .modal-content {
+            #deleteMedicineModal .modal-content {
                 background-color: white !important;
                 background: white !important;
             }
@@ -72,10 +69,7 @@
         
         // Get data from request
         List<PrescriptionMedicine> medicines = (List<PrescriptionMedicine>) request.getAttribute("medicines");
-        List<PrescriptionForm> prescriptionForms = (List<PrescriptionForm>) request.getAttribute("prescriptionForms");
         String medicineSearchKeyword = (String) request.getAttribute("medicineSearchKeyword");
-        String formSearchKeyword = (String) request.getAttribute("formSearchKeyword");
-        String activeTab = (String) request.getAttribute("activeTab"); // "medicines" or "forms"
         %>
 
         <!-- Sidebar -->
@@ -108,7 +102,7 @@
                 </li>
                 <li class="active">
                     <a href="${pageContext.request.contextPath}/admin/prescriptions">
-                        <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                        <i class="bi bi-capsule"></i> Quản lý thuốc
                     </a>
                 </li>
                 <li>
@@ -280,7 +274,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <h2 class="text-primary">
-                            <i class="bi bi-capsule me-2"></i>Quản lý đơn thuốc
+                            <i class="bi bi-capsule me-2"></i>Quản lý thuốc
                         </h2>
                     </div>
                 </div>
@@ -299,12 +293,6 @@
                         Cập nhật thông tin thuốc thành công!
                     <% } else if ("medicine_deleted".equals(success)) { %>
                         Xóa thuốc thành công!
-                    <% } else if ("form_added".equals(success)) { %>
-                        Thêm đơn thuốc mẫu thành công!
-                    <% } else if ("form_updated".equals(success)) { %>
-                        Cập nhật đơn thuốc mẫu thành công!
-                    <% } else if ("form_deleted".equals(success)) { %>
-                        Xóa đơn thuốc mẫu thành công!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -317,8 +305,6 @@
                         Vui lòng điền đầy đủ thông tin!
                     <% } else if ("medicine_exists".equals(error)) { %>
                         Tên thuốc này đã tồn tại trong hệ thống!
-                    <% } else if ("form_exists".equals(error)) { %>
-                        Tên đơn thuốc mẫu này đã tồn tại trong hệ thống!
                     <% } else if ("add_failed".equals(error)) { %>
                         Thêm thất bại!
                     <% } else if ("update_failed".equals(error)) { %>
@@ -334,254 +320,111 @@
                 </div>
                 <% } %>
 
-                <!-- Tab Navigation -->
-                <ul class="nav nav-tabs" id="prescriptionTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link <%= (activeTab == null || "medicines".equals(activeTab)) ? "active" : "" %>" 
-                                id="medicines-tab" data-bs-toggle="tab" data-bs-target="#medicines" type="button" role="tab">
-                            <i class="bi bi-pill me-2"></i>Quản lý thuốc
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link <%= "forms".equals(activeTab) ? "active" : "" %>" 
-                                id="prescription-forms-tab" data-bs-toggle="tab" data-bs-target="#prescription-forms" type="button" role="tab">
-                            <i class="bi bi-clipboard-pulse me-2"></i>Đơn thuốc mẫu
-                        </button>
-                    </li>
-                </ul>
-
-                <!-- Tab Content -->
-                <div class="tab-content" id="prescriptionTabsContent">
-                    <!-- Medicines Tab -->
-                    <div class="tab-pane fade <%= (activeTab == null || "medicines".equals(activeTab)) ? "show active" : "" %>" id="medicines" role="tabpanel">
-                        <div class="card">
-                            <div class="card-body">
-                                <!-- Search and Add Medicine Section -->
-                                <div class="row mb-4">
-                                    <div class="col-12">
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <div class="row align-items-center">
-                                                    <div class="col-md-8">
-                                                        <form method="GET" action="${pageContext.request.contextPath}/admin/prescriptions" class="d-flex">
-                                                            <input type="hidden" name="action" value="searchMedicine">
-                                                            <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <i class="bi bi-search"></i>
-                                                                </span>
-                                                                <input type="text" class="form-control" name="keyword" 
-                                                                       placeholder="Tìm kiếm thuốc theo tên..." 
-                                                                       value="<%= medicineSearchKeyword != null ? medicineSearchKeyword : "" %>">
-                                                                <button class="btn btn-primary" type="submit">
-                                                                    Tìm kiếm
-                                                                </button>
-                                                                <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
-                                                                <a href="${pageContext.request.contextPath}/admin/prescriptions" class="btn btn-outline-secondary">
-                                                                    <i class="bi bi-x-circle"></i>
-                                                                </a>
-                                                                <% } %>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
-                                                            <i class="bi bi-plus-circle me-2"></i>Thêm thuốc
+                <!-- Medicines Management Section -->
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Search and Add Medicine Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <form method="GET" action="${pageContext.request.contextPath}/admin/prescriptions" class="d-flex">
+                                                    <input type="hidden" name="action" value="searchMedicine">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">
+                                                            <i class="bi bi-search"></i>
+                                                        </span>
+                                                        <input type="text" class="form-control" name="keyword" 
+                                                               placeholder="Tìm kiếm thuốc theo tên..." 
+                                                               value="<%= medicineSearchKeyword != null ? medicineSearchKeyword : "" %>">
+                                                        <button class="btn btn-primary" type="submit">
+                                                            Tìm kiếm
                                                         </button>
+                                                        <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
+                                                        <a href="${pageContext.request.contextPath}/admin/prescriptions" class="btn btn-outline-secondary">
+                                                            <i class="bi bi-x-circle"></i>
+                                                        </a>
+                                                        <% } %>
                                                     </div>
-                                                </div>
+                                                </form>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Medicines Table -->
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h5 class="card-title mb-0">
-                                                    <i class="bi bi-table me-2"></i>Danh sách thuốc
-                                                    <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
-                                                    <span class="badge bg-primary ms-2">Kết quả tìm kiếm: "<%= medicineSearchKeyword %>"</span>
-                                                    <% } %>
-                                                </h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="table-responsive">
-                                                    <table id="medicinesTable" class="table table-striped table-hover">
-                                                        <thead class="table-primary">
-                                                            <tr>
-                                                                <th>ID</th>
-                                                                <th>Tên thuốc</th>
-                                                                <th>Đơn vị tính</th>
-                                                                <th>Đường dùng</th>
-                                                                <th>Thao tác</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <% if (medicines != null && !medicines.isEmpty()) {
-                                                                for (PrescriptionMedicine medicine : medicines) { %>
-                                                                <tr>
-                                                                    <td><%= medicine.getPreMedicineId() %></td>
-                                                                    <td><%= medicine.getMedicineName() %></td>
-                                                                    <td><%= medicine.getUnitOfMeasure() %></td>
-                                                                    <td><%= medicine.getAdministrationRoute() %></td>
-                                                                    <td>
-                                                                        <a href="${pageContext.request.contextPath}/admin/prescriptions?editMedicine=<%= medicine.getPreMedicineId() %>" 
-                                                                           class="btn btn-sm btn-primary me-2" title="Chỉnh sửa thông tin thuốc">
-                                                                            <i class="bi bi-pencil-square"></i>
-                                                                        </a>
-                                                                        <button type="button" 
-                                                                                class="btn btn-sm btn-outline-danger" 
-                                                                                data-medicine-id="<%= medicine.getPreMedicineId() %>"
-                                                                                data-medicine-name="<%= medicine.getMedicineName() %>"
-                                                                                onclick="deleteMedicine(this.getAttribute('data-medicine-id'), this.getAttribute('data-medicine-name'))" 
-                                                                                title="Xóa thuốc">
-                                                                            <i class="bi bi-trash3"></i>
-                                                                        </button>
-                                                                    </td>
-                                                                </tr>
-                                                                <% } %>
-                                                            <% } else { %>
-                                                                <tr>
-                                                                    <td colspan="5" class="text-center">
-                                                                        <i class="bi bi-inbox me-2"></i>
-                                                                        <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
-                                                                            Không tìm thấy thuốc nào với từ khóa "<%= medicineSearchKeyword %>"
-                                                                        <% } else { %>
-                                                                            Chưa có thuốc nào trong hệ thống
-                                                                        <% } %>
-                                                                    </td>
-                                                                </tr>
-                                                            <% } %>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
+                                            <div class="col-md-4">
+                                                <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
+                                                    <i class="bi bi-plus-circle me-2"></i>Thêm thuốc
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Prescription Forms Tab -->
-                    <div class="tab-pane fade <%= "forms".equals(activeTab) ? "show active" : "" %>" id="prescription-forms" role="tabpanel">
-                        <div class="card">
-                            <div class="card-body">
-                                <!-- Search and Add Form Section -->
-                                <div class="row mb-4">
-                                    <div class="col-12">
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <div class="row align-items-center">
-                                                    <div class="col-md-8">
-                                                        <form method="GET" action="${pageContext.request.contextPath}/admin/prescriptions" class="d-flex">
-                                                            <input type="hidden" name="action" value="searchForm">
-                                                            <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <i class="bi bi-search"></i>
-                                                                </span>
-                                                                <input type="text" class="form-control" name="keyword" 
-                                                                       placeholder="Tìm kiếm đơn thuốc mẫu theo tên..." 
-                                                                       value="<%= formSearchKeyword != null ? formSearchKeyword : "" %>">
-                                                                <button class="btn btn-primary" type="submit">
-                                                                    Tìm kiếm
-                                                                </button>
-                                                                <% if (formSearchKeyword != null && !formSearchKeyword.trim().isEmpty()) { %>
-                                                                <a href="${pageContext.request.contextPath}/admin/prescriptions" class="btn btn-outline-secondary">
-                                                                    <i class="bi bi-x-circle"></i>
+                        <!-- Medicines Table -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">
+                                            <i class="bi bi-table me-2"></i>Danh sách thuốc
+                                            <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
+                                            <span class="badge bg-primary ms-2">Kết quả tìm kiếm: "<%= medicineSearchKeyword %>"</span>
+                                            <% } %>
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table id="medicinesTable" class="table table-striped table-hover">
+                                                <thead class="table-primary">
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Tên thuốc</th>
+                                                        <th>Đơn vị tính</th>
+                                                        <th>Đường dùng</th>
+                                                        <th>Thao tác</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% if (medicines != null && !medicines.isEmpty()) {
+                                                        for (PrescriptionMedicine medicine : medicines) { %>
+                                                        <tr>
+                                                            <td><%= medicine.getPreMedicineId() %></td>
+                                                            <td><%= medicine.getMedicineName() %></td>
+                                                            <td><%= medicine.getUnitOfMeasure() %></td>
+                                                            <td><%= medicine.getAdministrationRoute() %></td>
+                                                            <td>
+                                                                <a href="${pageContext.request.contextPath}/admin/prescriptions?editMedicine=<%= medicine.getPreMedicineId() %>" 
+                                                                   class="btn btn-sm btn-primary me-2" title="Chỉnh sửa thông tin thuốc">
+                                                                    <i class="bi bi-pencil-square"></i>
                                                                 </a>
-                                                                <% } %>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addFormModal">
-                                                            <i class="bi bi-plus-circle me-2"></i>Thêm đơn thuốc mẫu
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <% if (formSearchKeyword != null && !formSearchKeyword.trim().isEmpty()) { %>
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        Kết quả tìm kiếm cho: "<strong><%= formSearchKeyword %></strong>"
-                                    </div>
-                                    <% } %>
-                                </div>
-
-                                <!-- Prescription Forms Grid -->
-                                <div class="row" id="prescriptionFormsList">
-                                    <% if (prescriptionForms != null && !prescriptionForms.isEmpty()) {
-                                        for (PrescriptionForm form : prescriptionForms) { %>
-                                        <div class="col-lg-4 col-md-6 mb-4">
-                                            <div class="card h-100 shadow-sm">
-                                                <div class="card-header bg-primary text-white">
-                                                    <h6 class="card-title mb-0">
-                                                        <i class="bi bi-clipboard-pulse me-2"></i>
-                                                        <%= form.getFormName() %>
-                                                    </h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <% if (form.getNotes() != null && !form.getNotes().trim().isEmpty()) { %>
-                                                    <p class="card-text text-muted mb-3">
-                                                        <small><%= form.getNotes() %></small>
-                                                    </p>
-                                                    <% } %>
-                                                    
-                                                    <h6 class="text-secondary mb-2">Thuốc trong đơn:</h6>
-                                                    <div class="medicine-list" style="max-height: 200px; overflow-y: auto;">
-                                                        <% if (form.getMedicines() != null && !form.getMedicines().isEmpty()) { %>
-                                                            <% for (PrescriptionMedicine medicine : form.getMedicines()) { %>
-                                                            <div class="d-flex align-items-center mb-2">
-                                                                <i class="bi bi-pill text-success me-2"></i>
-                                                                <span class="small"><%= medicine.getMedicineName() %></span>
-                                                            </div>
-                                                            <% } %>
-                                                        <% } else { %>
-                                                            <p class="text-muted small">Chưa có thuốc nào</p>
+                                                                <button type="button" 
+                                                                        class="btn btn-sm btn-outline-danger" 
+                                                                        data-medicine-id="<%= medicine.getPreMedicineId() %>"
+                                                                        data-medicine-name="<%= medicine.getMedicineName() %>"
+                                                                        onclick="deleteMedicine(this.getAttribute('data-medicine-id'), this.getAttribute('data-medicine-name'))" 
+                                                                        title="Xóa thuốc">
+                                                                    <i class="bi bi-trash3"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
                                                         <% } %>
-                                                    </div>
-                                                </div>
-                                                <div class="card-footer bg-light">
-                                                    <div class="d-flex justify-content-between">
-                                                        <a href="${pageContext.request.contextPath}/admin/prescriptions?editForm=<%= form.getPrescriptionFormId() %>&tab=forms" 
-                                                           class="btn btn-sm btn-primary me-2" title="Chỉnh sửa đơn thuốc">
-                                                            <i class="bi bi-pencil-square"></i>
-                                                        </a>
-                                                        <button type="button" 
-                                                                class="btn btn-sm btn-outline-danger" 
-                                                                data-form-id="<%= form.getPrescriptionFormId() %>"
-                                                                data-form-name="<%= form.getFormName() %>"
-                                                                onclick="deletePrescriptionForm(this.getAttribute('data-form-id'), this.getAttribute('data-form-name'))" 
-                                                                title="Xóa đơn thuốc">
-                                                            <i class="bi bi-trash3"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                                    <% } else { %>
+                                                        <tr>
+                                                            <td colspan="5" class="text-center">
+                                                                <i class="bi bi-inbox me-2"></i>
+                                                                <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
+                                                                    Không tìm thấy thuốc nào với từ khóa "<%= medicineSearchKeyword %>"
+                                                                <% } else { %>
+                                                                    Chưa có thuốc nào trong hệ thống
+                                                                <% } %>
+                                                            </td>
+                                                        </tr>
+                                                    <% } %>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                        <% } %>
-                                    <% } else { %>
-                                        <div class="col-12">
-                                            <div class="text-center py-5">
-                                                <i class="bi bi-inbox display-1 text-muted"></i>
-                                                <% if (formSearchKeyword != null && !formSearchKeyword.trim().isEmpty()) { %>
-                                                    <h5 class="text-muted mt-3">Không tìm thấy đơn thuốc mẫu nào</h5>
-                                                    <p class="text-muted">Không có đơn thuốc mẫu nào khớp với từ khóa "<%= formSearchKeyword %>"</p>
-                                                <% } else { %>
-                                                    <h5 class="text-muted mt-3">Chưa có đơn thuốc mẫu nào</h5>
-                                                    <p class="text-muted">Thêm đơn thuốc mẫu đầu tiên của bạn</p>
-                                                <% } %>
-                                            </div>
-                                        </div>
-                                    <% } %>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -635,65 +478,9 @@
             </div>
         </div>
 
-        <!-- Add Prescription Form Modal -->
-        <div class="modal fade" id="addFormModal" tabindex="-1" aria-labelledby="addFormModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addFormModalLabel">
-                            <i class="bi bi-plus-circle me-2"></i>Thêm đơn thuốc mẫu
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form method="POST" action="${pageContext.request.contextPath}/admin/prescriptions/forms">
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="add">
-                            
-                            <div class="mb-3">
-                                <label for="addFormName" class="form-label">Tên đơn thuốc mẫu <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addFormName" name="formName" placeholder="Nhập tên bệnh hoặc triệu chứng" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="addFormNotes" class="form-label">Ghi chú</label>
-                                <textarea class="form-control" id="addFormNotes" name="notes" rows="3" placeholder="Nhập ghi chú về đơn thuốc mẫu"></textarea>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Chọn thuốc cho đơn mẫu</label>
-                                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
-                                    <% if (medicines != null && !medicines.isEmpty()) { %>
-                                        <% for (PrescriptionMedicine medicine : medicines) { %>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="medicineIds" value="<%= medicine.getPreMedicineId() %>" id="addMedicine<%= medicine.getPreMedicineId() %>">
-                                            <label class="form-check-label" for="addMedicine<%= medicine.getPreMedicineId() %>">
-                                                <strong><%= medicine.getMedicineName() %></strong>
-                                                <small class="text-muted">(<%= medicine.getUnitOfMeasure() %> - <%= medicine.getAdministrationRoute() %>)</small>
-                                            </label>
-                                        </div>
-                                        <% } %>
-                                    <% } else { %>
-                                        <p class="text-muted">Không có thuốc nào trong hệ thống. Vui lòng thêm thuốc trước.</p>
-                                    <% } %>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle me-2"></i>Thêm đơn mẫu
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <%
         // Get edit data for modals
         PrescriptionMedicine editMedicine = (PrescriptionMedicine) request.getAttribute("editMedicine");
-        PrescriptionForm editForm = (PrescriptionForm) request.getAttribute("editForm");
-        List<PrescriptionMedicine> allMedicines = (List<PrescriptionMedicine>) request.getAttribute("allMedicines");
         %>
 
         <!-- Edit Medicine Modal -->
@@ -747,75 +534,6 @@
             </div>
         </div>
 
-        <!-- Edit Prescription Form Modal -->
-        <div class="modal fade" id="editFormModal" tabindex="-1" aria-labelledby="editFormModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editFormModalLabel">
-                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa đơn thuốc mẫu
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <% if (editForm != null) { %>
-                    <form method="POST" action="${pageContext.request.contextPath}/admin/prescriptions/forms">
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="update">
-                            <input type="hidden" name="formId" value="<%= editForm.getPrescriptionFormId() %>">
-                            
-                            <div class="mb-3">
-                                <label for="editFormName" class="form-label">Tên đơn thuốc mẫu <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editFormName" name="formName" 
-                                       value="<%= editForm.getFormName() %>" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="editFormNotes" class="form-label">Ghi chú</label>
-                                <textarea class="form-control" id="editFormNotes" name="notes" rows="3"><%= editForm.getNotes() != null ? editForm.getNotes() : "" %></textarea>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Chọn thuốc cho đơn mẫu</label>
-                                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
-                                    <% if (allMedicines != null && !allMedicines.isEmpty()) { 
-                                        // Create set of selected medicine IDs for easier checking
-                                        java.util.Set<Integer> selectedMedicineIds = new java.util.HashSet<>();
-                                        if (editForm.getMedicines() != null) {
-                                            for (PrescriptionMedicine medicine : editForm.getMedicines()) {
-                                                selectedMedicineIds.add(medicine.getPreMedicineId());
-                                            }
-                                        }
-                                        
-                                        for (PrescriptionMedicine medicine : allMedicines) { %>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="medicineIds" 
-                                                   value="<%= medicine.getPreMedicineId() %>" 
-                                                   id="editMedicine<%= medicine.getPreMedicineId() %>"
-                                                   <%= selectedMedicineIds.contains(medicine.getPreMedicineId()) ? "checked" : "" %>>
-                                            <label class="form-check-label" for="editMedicine<%= medicine.getPreMedicineId() %>">
-                                                <strong><%= medicine.getMedicineName() %></strong>
-                                                <small class="text-muted">(<%= medicine.getUnitOfMeasure() %> - <%= medicine.getAdministrationRoute() %>)</small>
-                                            </label>
-                                        </div>
-                                        <% } %>
-                                    <% } else { %>
-                                        <p class="text-muted">Không có thuốc nào trong hệ thống.</p>
-                                    <% } %>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <a href="${pageContext.request.contextPath}/admin/prescriptions?tab=forms" class="btn btn-secondary">Hủy</a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Cập nhật
-                            </button>
-                        </div>
-                    </form>
-                    <% } %>
-                </div>
-            </div>
-        </div>
-
         <!-- Delete Medicine Confirmation Modal -->
         <div class="modal fade" id="deleteMedicineModal" tabindex="-1" aria-labelledby="deleteMedicineModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -838,37 +556,6 @@
                         <form method="POST" action="${pageContext.request.contextPath}/admin/prescriptions/medicines" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" id="deleteMedicineId" name="medicineId">
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash me-2"></i>Xóa
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Delete Prescription Form Confirmation Modal -->
-        <div class="modal fade" id="deletePrescriptionFormModal" tabindex="-1" aria-labelledby="deletePrescriptionFormModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title text-danger" id="deletePrescriptionFormModalLabel">
-                            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa đơn thuốc mẫu
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Bạn có chắc chắn muốn xóa đơn thuốc mẫu <strong id="deletePrescriptionFormName"></strong> không?</p>
-                        <p class="text-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            Hành động này không thể hoàn tác!
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <form method="POST" action="${pageContext.request.contextPath}/admin/prescriptions/forms" style="display: inline;">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" id="deletePrescriptionFormId" name="formId">
                             <button type="submit" class="btn btn-danger">
                                 <i class="bi bi-trash me-2"></i>Xóa
                             </button>
@@ -944,27 +631,12 @@
             document.getElementById('deleteMedicineName').textContent = medicineName;
             new bootstrap.Modal(document.getElementById('deleteMedicineModal')).show();
         }
-
-        // Delete prescription form function
-        function deletePrescriptionForm(formId, formName) {
-            document.getElementById('deletePrescriptionFormId').value = formId;
-            document.getElementById('deletePrescriptionFormName').textContent = formName;
-            new bootstrap.Modal(document.getElementById('deletePrescriptionFormModal')).show();
-        }
         </script>
 
         <% if (editMedicine != null) { %>
         <script>
         $(document).ready(function() {
             $('#editMedicineModal').modal('show');
-        });
-        </script>
-        <% } %>
-
-        <% if (editForm != null) { %>
-        <script>
-        $(document).ready(function() {
-            $('#editFormModal').modal('show');
         });
         </script>
         <% } %>
