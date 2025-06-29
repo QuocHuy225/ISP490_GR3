@@ -82,7 +82,16 @@
         <url-pattern>/book-appointment</url-pattern>
 
     </servlet-mapping>
-    
+        <servlet>
+        <servlet-name>ReceptionistScheduleController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistScheduleController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReceptionistScheduleController</servlet-name>
+        <url-pattern>/receptionist/manage-doctor-schedule</url-pattern>
+        
+
+    </servlet-mapping>
     <error-page>
         <error-code>404</error-code>
         <location>/jsp/error/404.jsp</location>
