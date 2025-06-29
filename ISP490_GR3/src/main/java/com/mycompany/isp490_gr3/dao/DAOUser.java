@@ -13,7 +13,22 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * DAO class for User operations including login, register, and other user-related functions
+ * =====================================================
+ * DAOUser - QUẢN LÝ NGƯỜI DÙNG HỆ THỐNG
+ * 
+ * Chức năng: Xử lý tất cả các thao tác liên quan đến người dùng
+ * Bảng database: user
+ * Model tương ứng: User
+ * URL liên quan: /auth/*, /admin/authorization, /user/profile
+ * 
+ * Các chức năng chính:
+ * - Đăng nhập/đăng ký (bao gồm Google OAuth)
+ * - Quản lý thông tin cá nhân
+ * - Phân quyền người dùng (Admin, Doctor, Receptionist, Patient)
+ * - Đổi mật khẩu, liên kết tài khoản Google
+ * - Xóa/khôi phục người dùng (soft delete)
+ * - Tìm kiếm và lọc người dùng
+ * =====================================================
  */
 public class DAOUser {
     
@@ -58,7 +73,7 @@ public class DAOUser {
             return false;
         }
         
-        String sql = "INSERT INTO user (id, FullName, Email, Password, Phone, Dob, Gender, Address, Role, Created_At) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO user (id, FullName, Email, Password, Phone, Role, Created_At) VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -71,11 +86,8 @@ public class DAOUser {
             ps.setString(3, user.getEmail());
             ps.setString(4, hashPassword(user.getPassword()));
             ps.setString(5, user.getPhone());
-            ps.setDate(6, user.getDob());
-            ps.setString(7, user.getGender() != null ? user.getGender().getValue() : null);
-            ps.setString(8, user.getAddress());
-            ps.setString(9, user.getRole().getValue());
-            ps.setTimestamp(10, new Timestamp(System.currentTimeMillis()));
+            ps.setString(6, user.getRole().getValue());
+            ps.setTimestamp(7, new Timestamp(System.currentTimeMillis()));
             
             int result = ps.executeUpdate();
             return result > 0;
@@ -172,18 +184,15 @@ public class DAOUser {
      * @return true if update successful, false otherwise
      */
     public boolean updateUser(User user) {
-        String sql = "UPDATE user SET FullName = ?, Phone = ?, Dob = ?, Gender = ?, Address = ?, Updated_At = ? WHERE id = ? AND IsDeleted = FALSE";
+        String sql = "UPDATE user SET FullName = ?, Phone = ?, Updated_At = ? WHERE id = ? AND IsDeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, user.getFullName());
             ps.setString(2, user.getPhone());
-            ps.setDate(3, user.getDob());
-            ps.setString(4, user.getGender() != null ? user.getGender().getValue() : null);
-            ps.setString(5, user.getAddress());
-            ps.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
-            ps.setString(7, user.getId());
+            ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+            ps.setString(4, user.getId());
             
             int result = ps.executeUpdate();
             return result > 0;
@@ -366,12 +375,6 @@ public class DAOUser {
         user.setEmail(rs.getString("Email"));
         user.setPassword(rs.getString("Password"));
         user.setPhone(rs.getString("Phone"));
-        user.setDob(rs.getDate("Dob"));
-        String genderStr = rs.getString("Gender");
-        if (genderStr != null && !genderStr.trim().isEmpty()) {
-            user.setGender(User.Gender.fromString(genderStr));
-        }
-        user.setAddress(rs.getString("Address"));
         user.setRole(User.Role.fromString(rs.getString("Role")));
         user.setGoogleId(rs.getString("GoogleId"));
         user.setCreatedAt(rs.getTimestamp("Created_At"));

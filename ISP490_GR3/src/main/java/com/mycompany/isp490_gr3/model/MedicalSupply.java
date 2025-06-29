@@ -16,9 +16,11 @@ public class MedicalSupply {
     private int stockQuantity;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private boolean isdeleted;
     
     
     public MedicalSupply() {
+        this.isdeleted = false;
     }
     
     
@@ -27,12 +29,13 @@ public class MedicalSupply {
         this.supplyName = supplyName;
         this.unitPrice = unitPrice;
         this.stockQuantity = stockQuantity;
+        this.isdeleted = false;
     }
     
    
     public MedicalSupply(int supplyId, String supplyGroup, String supplyName, 
                         Integer quantity, BigDecimal unitPrice, int stockQuantity, 
-                        Timestamp createdAt, Timestamp updatedAt) {
+                        Timestamp createdAt, Timestamp updatedAt, boolean isdeleted) {
         this.supplyId = supplyId;
         this.supplyGroup = supplyGroup;
         this.supplyName = supplyName;
@@ -41,6 +44,7 @@ public class MedicalSupply {
         this.stockQuantity = stockQuantity;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.isdeleted = isdeleted;
     }
     
     
@@ -108,6 +112,14 @@ public class MedicalSupply {
         this.updatedAt = updatedAt;
     }
     
+    public boolean isIsdeleted() {
+        return isdeleted;
+    }
+    
+    public void setIsdeleted(boolean isdeleted) {
+        this.isdeleted = isdeleted;
+    }
+    
     @Override
     public String toString() {
         return "MedicalSupply{" +
@@ -119,6 +131,7 @@ public class MedicalSupply {
                 ", stockQuantity=" + stockQuantity +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
+                ", isdeleted=" + isdeleted +
                 '}';
     }
 } 

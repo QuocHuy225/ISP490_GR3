@@ -76,13 +76,18 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/medicines">
                         <i class="bi bi-hospital"></i> Quản lý kho thuốc
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
                     </a>
                 </li>
                 <li>
@@ -135,16 +140,31 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
+                    <a href="${pageContext.request.contextPath}/appointments">
+                        <i class="bi bi-calendar-check"></i> Quản lý đặt lịch
+                    </a>
+                </li>
+                 <li>
+                    <a href="${pageContext.request.contextPath}/checkin">
+                        <i class="bi bi-calendar-check"></i> Quản lý check-in
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
+                    <a href="${pageContext.request.contextPath}/#">
+                        <i class="bi bi-calendar-check"></i> Quản lý hàng đợi
                     </a>
                 </li>
-               
+                <li>
+                    <a href="${pageContext.request.contextPath}/#">
+                        <i class="bi bi-speedometer2"></i> Quản lý bệnh nhân
+                    </a>
+                </li> 
+               <li>
+                    <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
+                        <i class="bi bi-speedometer2"></i> Quản lý lịch bác sĩ
+                    </a>
+                </li> 
+
                 <% } else { %>
                 <!-- Menu cho Bệnh nhân (PATIENT) -->
                 <li>
@@ -153,7 +173,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/makeappointments">
                         <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
                     </a>
                 </li>
@@ -189,7 +209,7 @@
                     <button type="button" id="sidebarCollapse" class="btn btn-primary">
                         <i class="bi bi-list"></i>
                     </button>
-
+                    
                     <div style="margin-left: 60px; margin-top: 10px">
                         <h3>
                             <span style="color: #007bff;">Ánh Dương</span>
@@ -199,7 +219,7 @@
 
                     <div class="navbar-search mx-auto">
                         <i class="bi bi-search"></i>
-                        <input type="text" class="form-control" placeholder="Tìm kiếm bệnh nhân, lịch hẹn, hồ sơ...">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm">
                     </div>
 
                     <div class="dropdown user-dropdown">
@@ -450,10 +470,9 @@
             </div>
         </div>
 
-
-
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 // Sidebar toggle
@@ -482,20 +501,6 @@
 
                 // Listen for window resize
                 window.addEventListener('resize', checkWidth);
-
-                // Enhanced dropdown animations
-                const dropdownToggle = document.getElementById('userDropdown');
-                const dropdownMenu = dropdownToggle.nextElementSibling;
-
-                dropdownToggle.addEventListener('show.bs.dropdown', function () {
-                    dropdownMenu.style.opacity = '0';
-                    dropdownMenu.style.transform = 'translateY(-10px)';
-                    setTimeout(() => {
-                        dropdownMenu.style.transition = 'all 0.3s ease';
-                        dropdownMenu.style.opacity = '1';
-                        dropdownMenu.style.transform = 'translateY(0)';
-                    }, 10);
-                });
             });
         </script>
     </body>

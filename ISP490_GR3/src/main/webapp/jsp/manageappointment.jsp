@@ -7,7 +7,7 @@
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
-        <title>Quản lý Lịch hẹn</title>
+        <title>Lịch hẹn</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -37,6 +37,8 @@
                 userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
             }
         %>
+        
+        <!-- Sidebar -->
         <nav id="sidebar">
             <div class="sidebar-header">
                 <h3>MENU</h3>
@@ -47,9 +49,29 @@
                         <i class="bi bi-speedometer2"></i> Trang chủ
                     </a>
                 </li>
-                <li class="active">
+                <li>
                     <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
+                        <i class="bi bi-calendar-check"></i> Quản lý đặt lịch
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/checkin">
+                        <i class="bi bi-calendar-check"></i> Quản lý check-in
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/#">
+                        <i class="bi bi-calendar-check"></i> Quản lý hàng đợi
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/#">
+                        <i class="bi bi-speedometer2"></i> Quản lý bệnh nhân
+                    </a>
+                </li> 
+                <li>
+                    <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
+                        <i class="bi bi-speedometer2"></i> Quản lý lịch bác sĩ
                     </a>
                 </li>
             </ul>
@@ -123,9 +145,24 @@
                 </div>
             </nav>
 
-            <ul class="nav nav-tabs justify-content-center">
-                <li class="nav-item">
-                    <a class="nav-link active" href="#">Quản lý Lịch hẹn</a>
+            <!-- Breadcrumb được căn giữa theo chiều dọc -->
+            <div class="content-wrapper">
+                <div class="breadcrumb-container">
+                    <nav aria-label="breadcrumb" style="margin-top:17px;">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/homepage">Trang chủ</a></li>
+                            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/appointments">Quản lý đặt lịch</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Lịch hẹn</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>                          
+            <ul class="nav nav-tabs w-100">
+                <li class="nav-item flex-fill text-center">
+                    <a class="nav-link active" href="${pageContext.request.contextPath}/appointments">Lịch hẹn</a>
+                </li>
+                <li class="nav-item flex-fill text-center">
+                    <a class="nav-link" href="${pageContext.request.contextPath}/slot">Slot check-in</a>
                 </li>
             </ul>
 
@@ -144,43 +181,35 @@
             <form id="searchForm" action="appointments" method="get" class="mb-4 mt-3 p-3 border rounded shadow-sm bg-light">
                 <div class="row mb-3">
                     <div class="col-md-4">
-                        <label for="appointmentCode" class="form-label">Mã lịch hẹn</label>
+                        <label for="appointmentCode" class="form-label">Tên bệnh nhân</label>
                         <input type="text" class="form-control" id="appointmentCode" name="appointmentCode" placeholder="Nhập mã lịch hẹn"
                                value="${appointmentCode}">
                     </div>
                     <div class="col-md-4">
-                        <label for="patientId" class="form-label">Mã bệnh nhân</label>
+                        <label for="patientId" class="form-label">Số điện thoại</label>
                         <input type="text" class="form-control" id="patientId" name="patientId" placeholder="Nhập mã bệnh nhân"
                                value="${patientId}">
                     </div>
                     <div class="col-md-4">
-                        <label for="doctorId" class="form-label">Mã bác sĩ</label>
+                        <label for="doctorId" class="form-label">Ngày khám</label>
                         <input type="text" class="form-control" id="doctorId" name="doctorId" placeholder="Nhập mã bác sĩ"
                                value="${doctorId}">
                     </div>
-                </div>
-
-                <div class="row mb-3">
                     <div class="col-md-4">
-                        <label for="status" class="form-label">Trạng thái</label>
-                        <select class="form-select" id="status" name="status">
-                            <option value="all" ${empty status || status eq 'all' ? 'selected' : ''}>--Tất cả--</option>
-                            <option value="pending" ${'pending' eq status ? 'selected' : ''}>Đang chờ</option>
-                            <option value="confirmed" ${'confirmed' eq status ? 'selected' : ''}>Đã xác nhận</option>
-                            <option value="done" ${'done' eq status ? 'selected' : ''}>Hoàn thành</option>
-                            <option value="cancelled" ${'cancelled' eq status ? 'selected' : ''}>Đã hủy</option>
-                        </select>
+                        <label for="doctorId" class="form-label">Trạng thái</label>
+                        <input type="text" class="form-control" id="doctorId" name="doctorId" placeholder="Nhập mã bác sĩ"
+                               value="${doctorId}">
                     </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="showDeleted" name="showDeleted" value="true"
-                                   ${showDeleted ? 'checked' : ''}>
-                            <label class="form-check-label" for="showDeleted">
-                                Hiển thị lịch hẹn đã xóa
-                            </label>
-                        </div>
+                    <div class="col-md-4">
+                        <label for="doctorId" class="form-label">Bác sĩ</label>
+                        <input type="text" class="form-control" id="doctorId" name="doctorId" placeholder="Nhập mã bác sĩ"
+                               value="${doctorId}">
                     </div>
-                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <label for="doctorId" class="form-label">Dịch vụ</label>
+                        <input type="text" class="form-control" id="doctorId" name="doctorId" placeholder="Nhập mã bác sĩ"
+                               value="${doctorId}">
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2">
@@ -210,7 +239,7 @@
 
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered table-appointments">
-                        <thead>
+                        <thead class="table-primary">
                             <tr>
                                 <th><input type="checkbox" id="checkAll"></th>
                                 <th>Mã lịch hẹn</th>

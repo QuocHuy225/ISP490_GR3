@@ -9,14 +9,17 @@ import java.sql.Timestamp;
 public class MedicalService {
     
     private int servicesId;
+    private Integer departmentId; // Nullable field, using Integer instead of int
     private String serviceGroup;
     private String serviceName;
     private BigDecimal price;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private boolean isdeleted;
     
     // Default constructor
     public MedicalService() {
+        this.isdeleted = false;
     }
     
     // Constructor for adding new service
@@ -24,17 +27,32 @@ public class MedicalService {
         this.serviceGroup = serviceGroup;
         this.serviceName = serviceName;
         this.price = price;
+        this.isdeleted = false;
+        this.departmentId = null; // Default to null since it's optional
     }
     
     // Full constructor
+    public MedicalService(int servicesId, Integer departmentId, String serviceGroup, String serviceName, 
+                         BigDecimal price, Timestamp createdAt, Timestamp updatedAt, boolean isdeleted) {
+        this.servicesId = servicesId;
+        this.departmentId = departmentId;
+        this.serviceGroup = serviceGroup;
+        this.serviceName = serviceName;
+        this.price = price;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.isdeleted = isdeleted;
+    }
+
     public MedicalService(int servicesId, String serviceGroup, String serviceName, 
-                         BigDecimal price, Timestamp createdAt, Timestamp updatedAt) {
+                         BigDecimal price, Timestamp createdAt, Timestamp updatedAt, boolean isdeleted) {
         this.servicesId = servicesId;
         this.serviceGroup = serviceGroup;
         this.serviceName = serviceName;
         this.price = price;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.isdeleted = isdeleted;
     }
     
     // Getters and Setters
@@ -44,6 +62,14 @@ public class MedicalService {
     
     public void setServicesId(int servicesId) {
         this.servicesId = servicesId;
+    }
+    
+    public Integer getDepartmentId() {
+        return departmentId;
+    }
+    
+    public void setDepartmentId(Integer departmentId) {
+        this.departmentId = departmentId;
     }
     
     public String getServiceGroup() {
@@ -86,6 +112,14 @@ public class MedicalService {
         this.updatedAt = updatedAt;
     }
     
+    public boolean isIsdeleted() {
+        return isdeleted;
+    }
+    
+    public void setIsdeleted(boolean isdeleted) {
+        this.isdeleted = isdeleted;
+    }
+    
     @Override
     public String toString() {
         return "MedicalService{" +
@@ -95,6 +129,8 @@ public class MedicalService {
                 ", price=" + price +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
+                ", isdeleted=" + isdeleted +
                 '}';
     }
+
 } 

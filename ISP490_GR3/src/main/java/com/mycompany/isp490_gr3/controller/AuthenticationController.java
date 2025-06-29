@@ -19,6 +19,24 @@ import jakarta.servlet.http.HttpSession;
  * Controller for handling authentication requests (login and register)
  */
 @WebServlet(name = "AuthenticationController", urlPatterns = {"/auth/*"})
+/**
+ * =====================================================
+ * AuthenticationController - CONTROLLER XÁC THỰC NGƯỜI DÙNG
+ * 
+ * Chức năng: Xử lý các request liên quan đến đăng nhập/đăng ký
+ * URL patterns: /auth/*, /login, /register, /logout
+ * DAO sử dụng: DAOUser
+ * JSP tương ứng: login.jsp, register.jsp, landing.jsp
+ * 
+ * Các chức năng chính:
+ * - Đăng nhập (email/password và Google OAuth)
+ * - Đăng ký tài khoản mới
+ * - Đăng xuất và quản lý session
+ * - Xác thực và phân quyền
+ * - Chuyển hướng sau đăng nhập theo role
+ * - Liên kết tài khoản Google
+ * =====================================================
+ */
 public class AuthenticationController extends HttpServlet {
     
     private DAOUser daoUser;
@@ -160,23 +178,6 @@ public class AuthenticationController extends HttpServlet {
         newUser.setEmail(email.trim());
         newUser.setPassword(password);
         newUser.setPhone(phone != null ? phone.trim() : null);
-        newUser.setAddress(address != null ? address.trim() : null);
-        
-        // Set date of birth
-        if (dobStr != null && !dobStr.trim().isEmpty()) {
-            try {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                java.util.Date utilDate = sdf.parse(dobStr);
-                newUser.setDob(new Date(utilDate.getTime()));
-            } catch (ParseException e) {
-                System.err.println("Error parsing date: " + e.getMessage());
-            }
-        }
-        
-        // Set gender
-        if (genderStr != null && !genderStr.trim().isEmpty()) {
-            newUser.setGender(User.Gender.fromString(genderStr));
-        }
         
         // Set default role as Patient
         newUser.setRole(User.Role.PATIENT);

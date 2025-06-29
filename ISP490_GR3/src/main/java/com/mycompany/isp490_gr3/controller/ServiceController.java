@@ -15,6 +15,27 @@ import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.List;
 
+
+/**
+ * =====================================================
+ * ServiceController - CONTROLLER QUẢN LÝ DỊCH VỤ Y TẾ
+ * 
+ * Chức năng: Xử lý các request liên quan đến dịch vụ y tế
+ * URL pattern: /admin/services, /admin/services/*
+ * DAO sử dụng: DAOService
+ * JSP tương ứng: service.jsp
+ * 
+ * Các chức năng chính:
+ * - Hiển thị danh sách dịch vụ y tế
+ * - Tìm kiếm dịch vụ theo tên/nhóm
+ * - Lọc dịch vụ theo nhóm
+ * - Thêm/sửa/xóa dịch vụ y tế
+ * - Quản lý giá dịch vụ
+ * - Chỉ Admin mới được truy cập
+ * =====================================================
+ */
+
+
 @WebServlet(name = "ServiceController", urlPatterns = {"/admin/services", "/admin/services/*"})
 public class ServiceController extends HttpServlet {
 

@@ -7,36 +7,7 @@ import java.sql.Timestamp;
  * User model tương ứng với bảng user trong database
  */
 public class User {
-    
-    // Enum cho Gender
-    public enum Gender {
-        NAM("Nam"),
-        NU("Nữ"), 
-        KHAC("Khác");
-        
-        private final String value;
-        
-        Gender(String value) {
-            this.value = value;
-        }
-        
-        public String getValue() {
-            return value;
-        }
-        
-        public static Gender fromString(String value) {
-            if (value == null || value.trim().isEmpty()) {
-                return null;
-            }
-            for (Gender gender : Gender.values()) {
-                if (gender.getValue().equals(value)) {
-                    return gender;
-                }
-            }
-            return null; // Return null instead of default NAM
-        }
-    }
-    
+  
     // Enum cho Role
     public enum Role {
         PATIENT("Patient"),
@@ -69,9 +40,6 @@ public class User {
     private String email;
     private String password;
     private String phone;
-    private Date dob;
-    private Gender gender;
-    private String address;
     private Role role;
     private String googleId; // Google OAuth ID
     private Timestamp createdAt;
@@ -96,15 +64,12 @@ public class User {
     
     // Full constructor
     public User(String id, String fullName, String email, String password, 
-                String phone, Date dob, Gender gender, String address, Role role) {
+                String phone, Role role) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.password = password;
         this.phone = phone;
-        this.dob = dob;
-        this.gender = gender;
-        this.address = address;
         this.role = role != null ? role : Role.PATIENT;
         this.isDeleted = false;
     }
@@ -148,30 +113,6 @@ public class User {
     
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-    
-    public Date getDob() {
-        return dob;
-    }
-    
-    public void setDob(Date dob) {
-        this.dob = dob;
-    }
-    
-    public Gender getGender() {
-        return gender;
-    }
-    
-    public void setGender(Gender gender) {
-        this.gender = gender;
-    }
-    
-    public String getAddress() {
-        return address;
-    }
-    
-    public void setAddress(String address) {
-        this.address = address;
     }
     
     public Role getRole() {
@@ -230,7 +171,6 @@ public class User {
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
                 ", role=" + role +
-                ", gender=" + gender +
                 '}';
     }
 } 

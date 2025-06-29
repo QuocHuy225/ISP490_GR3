@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="5.0" xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd">
+    <filter>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <filter-class>org.apache.catalina.filters.SetCharacterEncodingFilter</filter-class>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+        <init-param>
+            <param-name>forceEncoding</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <session-config>
+        <session-timeout>
+            30
+        </session-timeout>
+    </session-config>
+    <welcome-file-list>
+        <welcome-file>jsp/landing.jsp</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+    <servlet>
+        <servlet-name>AppointmentController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.AppointmentController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AppointmentController</servlet-name>
+        <url-pattern>/appointments</url-pattern>
+        <!-- Đây là URL bạn sẽ truy cập -->
+    </servlet-mapping>
+
+  <servlet>
+        <servlet-name>DoctorScheduleController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.DoctorScheduleController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DoctorScheduleController</servlet-name>
+        <url-pattern>/doctor/schedule</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>CheckinController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.CheckinController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CheckinController</servlet-name>
+        <url-pattern>/checkin</url-pattern>
+        <!-- Đây là URL bạn sẽ truy cập -->
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>SlotController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.SlotController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>SlotController</servlet-name>
+        <url-pattern>/slot</url-pattern>
+        <url-pattern>/slot/add</url-pattern>
+        <url-pattern>/slot/delete</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>MakeAppointmentController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.MakeAppointmentController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MakeAppointmentController</servlet-name>
+        <url-pattern>/makeappointments</url-pattern> <!-- Đây là URL bạn sẽ truy cập -->
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>DoctorController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.DoctorController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DoctorController</servlet-name>
+        <url-pattern>/doctors</url-pattern>
+        <url-pattern>/viewdoctor</url-pattern>
+        <url-pattern>/book-appointment</url-pattern>
+
+    </servlet-mapping>
+        <servlet>
+        <servlet-name>ReceptionistScheduleController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistScheduleController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReceptionistScheduleController</servlet-name>
+        <url-pattern>/receptionist/manage-doctor-schedule</url-pattern>
+        
+
+    </servlet-mapping>
+    <error-page>
+        <error-code>404</error-code>
+        <location>/jsp/error/404.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/jsp/error/500.jsp</location>
+    </error-page>
+</web-app>

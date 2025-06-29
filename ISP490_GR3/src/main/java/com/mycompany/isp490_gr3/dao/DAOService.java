@@ -6,12 +6,30 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * =====================================================
+ * DAOService - QUẢN LÝ DỊCH VỤ Y TẾ
+ * 
+ * Chức năng: Xử lý tất cả các thao tác liên quan đến dịch vụ y tế
+ * Bảng database: medical_services
+ * Model tương ứng: MedicalService
+ * URL liên quan: /admin/services
+ * 
+ * Các chức năng chính:
+ * - Lấy danh sách dịch vụ y tế
+ * - Tìm kiếm dịch vụ theo nhóm/tên
+ * - Thêm/sửa/xóa dịch vụ
+ * - Quản lý nhóm dịch vụ
+ * =====================================================
+ */
+
 public class DAOService {
     
     // Get all medical services
     public List<MedicalService> getAllServices() {
         List<MedicalService> services = new ArrayList<>();
-        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at FROM medical_services ORDER BY service_group, service_name";
+        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at, isdeleted FROM medical_services WHERE isdeleted = FALSE ORDER BY service_group, service_name";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -25,6 +43,7 @@ public class DAOService {
                 service.setPrice(rs.getBigDecimal("price"));
                 service.setCreatedAt(rs.getTimestamp("created_at"));
                 service.setUpdatedAt(rs.getTimestamp("updated_at"));
+                service.setIsdeleted(rs.getBoolean("isdeleted"));
                 services.add(service);
             }
         } catch (SQLException e) {
@@ -38,8 +57,8 @@ public class DAOService {
     // Search services by group or name
     public List<MedicalService> searchServices(String keyword) {
         List<MedicalService> services = new ArrayList<>();
-        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at " +
-                    "FROM medical_services WHERE service_group LIKE ? OR service_name LIKE ? ORDER BY service_group, service_name";
+        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at, isdeleted " +
+                    "FROM medical_services WHERE (service_group LIKE ? OR service_name LIKE ?) AND isdeleted = FALSE ORDER BY service_group, service_name";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -57,6 +76,7 @@ public class DAOService {
                     service.setPrice(rs.getBigDecimal("price"));
                     service.setCreatedAt(rs.getTimestamp("created_at"));
                     service.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    service.setIsdeleted(rs.getBoolean("isdeleted"));
                     services.add(service);
                 }
             }
@@ -70,8 +90,8 @@ public class DAOService {
     
     // Get service by ID
     public MedicalService getServiceById(int servicesId) {
-        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at " +
-                    "FROM medical_services WHERE services_id = ?";
+        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at, isdeleted " +
+                    "FROM medical_services WHERE services_id = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -87,6 +107,7 @@ public class DAOService {
                     service.setPrice(rs.getBigDecimal("price"));
                     service.setCreatedAt(rs.getTimestamp("created_at"));
                     service.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    service.setIsdeleted(rs.getBoolean("isdeleted"));
                     return service;
                 }
             }
@@ -100,8 +121,8 @@ public class DAOService {
     
     // Check if service exists by group and name
     public MedicalService findExistingService(String serviceGroup, String serviceName) {
-        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at " +
-                    "FROM medical_services WHERE service_group = ? AND service_name = ?";
+        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at, isdeleted " +
+                    "FROM medical_services WHERE service_group = ? AND service_name = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -118,6 +139,7 @@ public class DAOService {
                     service.setPrice(rs.getBigDecimal("price"));
                     service.setCreatedAt(rs.getTimestamp("created_at"));
                     service.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    service.setIsdeleted(rs.getBoolean("isdeleted"));
                     return service;
                 }
             }
@@ -153,7 +175,7 @@ public class DAOService {
     
     // Update service information
     public boolean updateService(MedicalService service) {
-        String sql = "UPDATE medical_services SET service_group = ?, service_name = ?, price = ?, updated_at = CURRENT_TIMESTAMP WHERE services_id = ?";
+        String sql = "UPDATE medical_services SET service_group = ?, service_name = ?, price = ?, updated_at = CURRENT_TIMESTAMP WHERE services_id = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -174,9 +196,9 @@ public class DAOService {
         return false;
     }
     
-    // Delete service
+    // Soft delete service
     public boolean deleteService(int servicesId) {
-        String sql = "DELETE FROM medical_services WHERE services_id = ?";
+        String sql = "UPDATE medical_services SET isdeleted = TRUE, updated_at = CURRENT_TIMESTAMP WHERE services_id = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -197,7 +219,7 @@ public class DAOService {
     // Get all distinct service groups
     public List<String> getAllServiceGroups() {
         List<String> groups = new ArrayList<>();
-        String sql = "SELECT DISTINCT service_group FROM medical_services ORDER BY service_group";
+        String sql = "SELECT DISTINCT service_group FROM medical_services WHERE isdeleted = FALSE ORDER BY service_group";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -217,8 +239,8 @@ public class DAOService {
     // Filter services by group
     public List<MedicalService> filterServicesByGroup(String serviceGroup) {
         List<MedicalService> services = new ArrayList<>();
-        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at " +
-                    "FROM medical_services WHERE service_group = ? ORDER BY service_name";
+        String sql = "SELECT services_id, service_group, service_name, price, created_at, updated_at, isdeleted " +
+                    "FROM medical_services WHERE service_group = ? AND isdeleted = FALSE ORDER BY service_name";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -234,6 +256,7 @@ public class DAOService {
                     service.setPrice(rs.getBigDecimal("price"));
                     service.setCreatedAt(rs.getTimestamp("created_at"));
                     service.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    service.setIsdeleted(rs.getBoolean("isdeleted"));
                     services.add(service);
                 }
             }
@@ -244,4 +267,5 @@ public class DAOService {
         
         return services;
     }
+
 } 
