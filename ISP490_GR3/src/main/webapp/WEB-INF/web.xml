@@ -32,10 +32,11 @@
     <servlet-mapping>
         <servlet-name>AppointmentController</servlet-name>
         <url-pattern>/appointments</url-pattern>
-        <!-- Đây là URL bạn sẽ truy cập -->
+        <url-pattern>/appointments/delete</url-pattern>
+      
     </servlet-mapping>
 
-  <servlet>
+    <servlet>
         <servlet-name>DoctorScheduleController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.DoctorScheduleController</servlet-class>
     </servlet>
@@ -56,16 +57,24 @@
         <!-- Đây là URL bạn sẽ truy cập -->
     </servlet-mapping>
     
-    <servlet>
-        <servlet-name>SlotController</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.SlotController</servlet-class>
-    </servlet>
     <servlet-mapping>
         <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot/add</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot/delete</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>SlotController</servlet-name>
+        <url-pattern>/slot/filterSlotDate</url-pattern>
+    </servlet-mapping>
+    
+    
     <servlet>
         <servlet-name>MakeAppointmentController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.MakeAppointmentController</servlet-class>
@@ -85,7 +94,7 @@
         <url-pattern>/book-appointment</url-pattern>
 
     </servlet-mapping>
-        <servlet>
+    <servlet>
         <servlet-name>ReceptionistScheduleController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistScheduleController</servlet-class>
     </servlet>

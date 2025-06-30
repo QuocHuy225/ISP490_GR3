@@ -1,422 +1,253 @@
 package com.mycompany.isp490_gr3.controller;
 
+import com.mycompany.isp490_gr3.dao.DAODoctor;
 import com.mycompany.isp490_gr3.dao.DAOAppointment;
-import com.mycompany.isp490_gr3.dao.DBContext;
+import com.mycompany.isp490_gr3.dao.DAOService;
+import com.mycompany.isp490_gr3.dto.AppointmentViewDTO;
+import com.mycompany.isp490_gr3.model.Doctor;
+import com.mycompany.isp490_gr3.model.MedicalService;
 import com.mycompany.isp490_gr3.model.User;
-import com.mycompany.isp490_gr3.model.Appointment;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.*;
 import java.io.IOException;
-import java.sql.Connection;
+import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@WebServlet(name = "AppointmentController", urlPatterns = {"/appointments", "/appointments/add", "/appointments/delete"})
+@WebServlet(name = "AppointmentController", urlPatterns = {"/appointments", "/appointments/delete"})
 public class AppointmentController extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(AppointmentController.class.getName());
 
-    /**
-     * Kiểm tra quyền truy cập cho Receptionist.
-     * @param request HttpServletRequest để lấy session
-     * @param response HttpServletResponse để chuyển hướng hoặc trả lỗi
-     * @return true nếu là Receptionist, false nếu không
-     * @throws IOException nếu có lỗi chuyển hướng
-     */
     private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(false);
-        
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
             return false;
         }
-
         User currentUser = (User) session.getAttribute("user");
-        
         if (currentUser.getRole() != User.Role.RECEPTIONIST) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này.");
             return false;
         }
-
         return true;
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // quyền + setup offset, limit
+        // gọi dao.getAppointmentViewDTOs(offset, limit)
+        // gọi dao.countAllAppointments()
+        // set attributes + forward manageappointment.jsp
 
-        // Set character encoding
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        // Kiểm tra phân quyền
         if (!checkReceptionistAccess(request, response)) {
             return;
         }
 
-        // Lấy các tham số lọc từ request
-        String appointmentCode = request.getParameter("appointmentCode");
-        String patientIdStr = request.getParameter("patientId");
-        String doctorIdStr = request.getParameter("doctorId");
-        String status = request.getParameter("status");
-        String showDeletedStr = request.getParameter("showDeleted");
-
-        // Chuyển đổi và xử lý tham số lọc
-        Integer patientId = null;
-        if (patientIdStr != null && !patientIdStr.trim().isEmpty()) {
-            try {
-                patientId = Integer.parseInt(patientIdStr.trim());
-            } catch (NumberFormatException e) {
-                LOGGER.log(Level.WARNING, "Invalid patientId parameter: " + patientIdStr, e);
-            }
-        }
-
-        Integer doctorId = null;
-        if (doctorIdStr != null && !doctorIdStr.trim().isEmpty()) {
-            try {
-                doctorId = Integer.parseInt(doctorIdStr.trim());
-            } catch (NumberFormatException e) {
-                LOGGER.log(Level.WARNING, "Invalid doctorId parameter: " + doctorIdStr, e);
-            }
-        }
-
-        status = (status != null && !status.trim().isEmpty() && !status.equals("all")) ? status.trim() : null;
-
-        Boolean showDeleted = false;
-        if (showDeletedStr != null && showDeletedStr.equalsIgnoreCase("true")) {
-            showDeleted = true;
-        }
-
-        boolean isSearchTriggered = request.getParameter("submitSearch") != null
-                || request.getParameter("page") != null
-                || request.getParameter("recordsPerPage") != null;
-
         int currentPage = 1;
         int recordsPerPage = 10;
-
-        Connection conn = null;
-        DAOAppointment dao = null;
-        List<Appointment> appointments = new ArrayList<>();
-        int totalRecords = 0;
-        int totalPages = 0;
-        int startIndex = 0;
-        int endIndex = 0;
-
-        try {
-            if (request.getParameter("page") != null && !request.getParameter("page").isEmpty()) {
+        if (request.getParameter("page") != null) {
+            try {
                 currentPage = Integer.parseInt(request.getParameter("page"));
-            }
-            if (request.getParameter("recordsPerPage") != null && !request.getParameter("recordsPerPage").isEmpty()) {
-                recordsPerPage = Integer.parseInt(request.getParameter("recordsPerPage"));
-            }
-
-            conn = DBContext.getConnection();
-            dao = new DAOAppointment(conn);
-
-            if (isSearchTriggered) {
-                totalRecords = dao.getTotalFilteredAppointmentCount(appointmentCode, patientId, doctorId, status, showDeleted);
-                startIndex = (currentPage - 1) * recordsPerPage;
-
-                totalPages = (int) Math.ceil(totalRecords * 1.0 / recordsPerPage);
-
-                if (totalPages == 0 && totalRecords == 0) {
-                    currentPage = 1;
-                } else if (currentPage > totalPages) {
-                    currentPage = totalPages;
-                    startIndex = (currentPage - 1) * recordsPerPage;
-                }
-
-                appointments = dao.getFilteredAppointmentsByPage(appointmentCode, patientId, doctorId, status, showDeleted, startIndex, recordsPerPage);
-
-                endIndex = Math.min(startIndex + recordsPerPage, totalRecords);
-                if (totalRecords == 0) {
-                    startIndex = 0;
-                    endIndex = 0;
-                }
-            }
-
-            request.setAttribute("currentPageAppointments", appointments);
-            request.setAttribute("currentPage", currentPage);
-            request.setAttribute("recordsPerPage", recordsPerPage);
-            request.setAttribute("totalRecords", totalRecords);
-            request.setAttribute("totalPages", totalPages);
-            request.setAttribute("startIndex", startIndex);
-            request.setAttribute("endIndex", endIndex);
-
-            // Gửi lại các tham số lọc để giữ trạng thái trên form
-            request.setAttribute("appointmentCode", appointmentCode != null ? appointmentCode : "");
-            request.setAttribute("patientId", patientIdStr != null ? patientIdStr : "");
-            request.setAttribute("doctorId", doctorIdStr != null ? doctorIdStr : "");
-            request.setAttribute("status", status != null ? status : "");
-            request.setAttribute("showDeleted", showDeleted);
-
-            request.setAttribute("searchPerformed", isSearchTriggered);
-            request.setAttribute("hasResults", !appointments.isEmpty());
-
-            request.getRequestDispatcher("/jsp/manageappointment.jsp").forward(request, response);
-
-        } catch (NumberFormatException e) {
-            LOGGER.log(Level.SEVERE, "Invalid pagination or filter parameters: " + e.getMessage(), e);
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tham số không hợp lệ.");
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Database access error: " + e.getMessage(), e);
-            throw new ServletException("Lỗi khi xử lý lịch hẹn: " + e.getMessage(), e);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    LOGGER.log(Level.SEVERE, "Error closing database connection: " + e.getMessage(), e);
-                }
+            } catch (NumberFormatException e) {
+                currentPage = 1;
             }
         }
+        int offset = (currentPage - 1) * recordsPerPage;
+
+        DAOAppointment dao = new DAOAppointment();
+        List<AppointmentViewDTO> appointments = dao.getAppointmentViewDTOs(offset, recordsPerPage);
+        int totalRecords = dao.countAppointmentViewDTOs();  // đếm tổng số record
+        int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
+
+        DAODoctor daoDoctor = new DAODoctor();
+        List<Doctor> doctors = daoDoctor.getAllDoctors();
+
+        DAOService daoService = new DAOService();
+        List<MedicalService> services = daoService.getAllServices();
+
+        request.setAttribute("doctorList", doctors);
+        request.setAttribute("serviceList", services);
+        request.setAttribute("statusList", List.of("pending", "confirmed", "done", "cancelled"));
+
+        request.setAttribute("currentPageAppointments", appointments);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("recordsPerPage", recordsPerPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalRecords", totalRecords);
+        request.setAttribute("startIndex", offset);
+        request.setAttribute("endIndex", Math.min(offset + recordsPerPage, totalRecords));
+
+        // Đặt cờ để JSP không hiển thị "Kết quả tìm kiếm"
+        request.setAttribute("searchPerformed", false);
+        request.setAttribute("hasResults", !appointments.isEmpty());
+        request.getRequestDispatcher("/jsp/manageappointment.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Set character encoding
-        request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
-
-        // Kiểm tra phân quyền
         if (!checkReceptionistAccess(request, response)) {
             return;
         }
 
+        String path = request.getServletPath();
+
+        switch (path) {
+            case "/appointments":
+                handleSearch(request, response);
+                break;
+            case "/appointments/delete":
+                handleDelete(request, response);
+                break;
+            default:
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    private void handleSearch(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException, IOException, ServletException {
+
+        if (!checkReceptionistAccess(request, response)) {
+            return;
+        }
+
+        String appointmentCode = request.getParameter("appointmentCode");
+        String slotDate = request.getParameter("slotDate");
+        String patientCode = request.getParameter("patientCode");
+        String doctorIdStr = request.getParameter("doctorId");
+        String servicesIdStr = request.getParameter("servicesId");
+        String status = request.getParameter("status");
+
+        System.out.println("appointmentCode = " + appointmentCode);
+        System.out.println("slotDate = " + slotDate);
+        System.out.println("patientCode = " + patientCode);
+        System.out.println("doctorId = " + doctorIdStr);
+        System.out.println("servicesId = " + servicesIdStr);
+        System.out.println("status = " + status);
+
+        Integer doctorId = null;
+        if (doctorIdStr != null && !doctorIdStr.isBlank()) {
+            try {
+                doctorId = Integer.parseInt(doctorIdStr.trim());
+            } catch (NumberFormatException e) {
+                LOGGER.warning("Invalid doctorId: " + doctorIdStr);
+            }
+        }
+
+        Integer servicesId = null;
+        if (servicesIdStr != null && !servicesIdStr.isBlank()) {
+            try {
+                servicesId = Integer.parseInt(servicesIdStr.trim());
+            } catch (NumberFormatException e) {
+                LOGGER.warning("Invalid servicesId: " + servicesIdStr);
+            }
+        }
+
+        int currentPage = 1;
+        int recordsPerPage = 10;
+        int offset = (currentPage - 1) * recordsPerPage;
+
+        DAOAppointment dao = new DAOAppointment();
+        List<AppointmentViewDTO> appointments = dao.searchAppointmentViewDTOs(appointmentCode, slotDate, patientCode, doctorId, servicesId, status, offset, recordsPerPage);
+        System.out.println("Tìm thấy: " + appointments.size() + " kết quả");
+
+        int totalRecords = dao.countSearchAppointmentViewDTOs(appointmentCode, slotDate, patientCode, doctorId, servicesId, status);
+
+        int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
+
+        // doctor + service list
+        DAODoctor daoDoctor = new DAODoctor();
+        DAOService daoService = new DAOService();
+        List<Doctor> doctors = daoDoctor.getAllDoctors();
+        List<MedicalService> services = daoService.getAllServices();
+
+        // truyền thuộc tính về JSP
+        request.setAttribute("doctorList", doctors);
+        request.setAttribute("serviceList", services);
+        request.setAttribute("statusList", List.of("pending", "confirmed", "done", "cancelled"));
+
+        request.setAttribute("currentPageAppointments", appointments);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("recordsPerPage", recordsPerPage);
+        request.setAttribute("totalRecords", totalRecords);
+
+        request.setAttribute("appointmentCode", appointmentCode);
+        request.setAttribute("slotDate", slotDate);
+        request.setAttribute("patientCode", patientCode);
+        request.setAttribute("doctorId", doctorIdStr);
+        request.setAttribute("servicesId", servicesIdStr);
+        request.setAttribute("status", status);
+        request.setAttribute("searchPerformed", true);
+        request.setAttribute("hasResults", !appointments.isEmpty());
+        request.setAttribute("startIndex", offset);
+        request.setAttribute("endIndex", Math.min(offset + recordsPerPage, totalRecords));
+
+        request.getRequestDispatcher("/jsp/manageappointment.jsp").forward(request, response);
+    }
+
+    private void handleDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession();
-        User currentUser = (User) session.getAttribute("user");
-        String currentUserUserId = currentUser.getId();
+        DAOAppointment dao = new DAOAppointment();
 
-        String action = request.getParameter("action");
-        Connection conn = null;
+        String singleIdStr = request.getParameter("appointmentId"); // Xóa 1
+        String[] multiIds = request.getParameterValues("appointmentIds"); // Xóa nhiều
+
         try {
-            conn = DBContext.getConnection();
-            DAOAppointment dao = new DAOAppointment(conn);
+            if (singleIdStr != null && !singleIdStr.isBlank()) {
+                int appointmentId = Integer.parseInt(singleIdStr);
+                boolean deleted = dao.deleteAppointmentById(appointmentId);
 
-            if ("addAppointment".equals(action)) {
-                String appointmentCode = request.getParameter("appointmentCode");
-                String patientIdStr = request.getParameter("patientId");
-                String doctorIdStr = request.getParameter("doctorId");
-                String slotIdStr = request.getParameter("slotId");
-                String status = request.getParameter("status");
-
-                // Kiểm tra và xác thực đầu vào
-                if (patientIdStr == null || patientIdStr.trim().isEmpty() || doctorIdStr == null || doctorIdStr.trim().isEmpty() || slotIdStr == null || slotIdStr.trim().isEmpty()) {
-                    session.setAttribute("message", "Vui lòng điền đầy đủ Mã bệnh nhân, Mã bác sĩ và Mã Slot.");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-
-                int patientId = Integer.parseInt(patientIdStr);
-                Integer doctorId = Integer.parseInt(doctorIdStr);
-                Integer slotId = Integer.parseInt(slotIdStr);
-
-                // Kiểm tra sự tồn tại của các khóa ngoại
-                if (!dao.doesPatientExist(patientId)) {
-                    session.setAttribute("message", "Mã bệnh nhân không tồn tại. Vui lòng kiểm tra lại.");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-                if (!dao.doesDoctorExist(doctorId)) {
-                    session.setAttribute("message", "Mã bác sĩ không tồn tại. Vui lòng kiểm tra lại.");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-                if (!dao.doesSlotExist(slotId)) {
-                    session.setAttribute("message", "Mã Slot không tồn tại. Vui lòng kiểm tra lại.");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-
-                if (status == null || status.isEmpty()) {
-                    status = "pending";
-                }
-
-                Appointment newApp = new Appointment();
-                newApp.setAppointmentCode(appointmentCode);
-                newApp.setPatientId(patientId);
-                newApp.setDoctorId(doctorId);
-                newApp.setSlotId(slotId);
-                newApp.setStatus(status);
-                newApp.setCreatedBy(currentUserUserId);
-                newApp.setUpdatedBy(currentUserUserId);
-                newApp.setIsDeleted(false);
-
-                boolean success = dao.addAppointment(newApp);
-
-                if (success) {
-                    session.setAttribute("message", "Thêm lịch hẹn mới thành công!");
+                if (deleted) {
+                    session.setAttribute("message", "Xóa lịch hẹn thành công.");
                     session.setAttribute("messageType", "success");
                 } else {
-                    session.setAttribute("message", "Thêm lịch hẹn thất bại. Vui lòng kiểm tra lại thông tin.");
-                    session.setAttribute("messageType", "danger");
-                }
-                response.sendRedirect(request.getContextPath() + "/appointments");
-
-            } else if ("updateAppointment".equals(action)) {
-                String idStr = request.getParameter("id");
-                String patientIdStr = request.getParameter("patientId");
-                String doctorIdStr = request.getParameter("doctorId");
-                String slotIdStr = request.getParameter("slotId");
-                String status = request.getParameter("status");
-
-                // Kiểm tra đầu vào
-                if (idStr == null || idStr.isEmpty() || patientIdStr == null || patientIdStr.trim().isEmpty() || doctorIdStr == null || doctorIdStr.trim().isEmpty() || slotIdStr == null || slotIdStr.trim().isEmpty()) {
-                    session.setAttribute("message", "Thông tin lịch hẹn cập nhật không đầy đủ.");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-
-                int id = Integer.parseInt(idStr);
-                Appointment existingApp = dao.getAppointmentById(id);
-                if (existingApp == null) {
-                    session.setAttribute("message", "Không tìm thấy lịch hẹn để cập nhật (ID: " + id + ").");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-
-                int patientId = Integer.parseInt(patientIdStr);
-                Integer doctorId = Integer.parseInt(doctorIdStr);
-                Integer slotId = Integer.parseInt(slotIdStr);
-
-                // Kiểm tra khóa ngoại
-                if (!dao.doesPatientExist(patientId)) {
-                    session.setAttribute("message", "Mã bệnh nhân không tồn tại. Vui lòng kiểm tra lại.");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-                if (!dao.doesDoctorExist(doctorId)) {
-                    session.setAttribute("message", "Mã bác sĩ không tồn tại. Vui lòng kiểm tra lại.");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-                if (!dao.doesSlotExist(slotId)) {
-                    session.setAttribute("message", "Mã Slot không tồn tại. Vui lòng kiểm tra lại.");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-
-                if (status == null || status.isEmpty()) {
-                    status = "pending";
-                }
-
-                Appointment updatedApp = new Appointment();
-                updatedApp.setId(id);
-                updatedApp.setAppointmentCode(existingApp.getAppointmentCode());
-                updatedApp.setPatientId(patientId);
-                updatedApp.setDoctorId(doctorId);
-                updatedApp.setSlotId(slotId);
-                updatedApp.setStatus(status);
-                updatedApp.setUpdatedBy(currentUserUserId);
-                updatedApp.setIsDeleted(existingApp.isIsDeleted());
-
-                boolean success = dao.updateAppointment(updatedApp);
-
-                if (success) {
-                    session.setAttribute("message", "Cập nhật lịch hẹn thành công!");
-                    session.setAttribute("messageType", "success");
-                } else {
-                    session.setAttribute("message", "Cập nhật lịch hẹn thất bại. Vui lòng kiểm tra lại thông tin.");
-                    session.setAttribute("messageType", "danger");
-                }
-                response.sendRedirect(request.getContextPath() + "/appointments");
-
-            } else if ("deleteMultiple".equals(action)) {
-                String[] appointmentIdsArray = request.getParameterValues("selectedAppointments");
-
-                if (appointmentIdsArray == null || appointmentIdsArray.length == 0) {
-                    session.setAttribute("message", "Vui lòng chọn ít nhất một lịch hẹn để xóa.");
+                    session.setAttribute("message", "Chỉ có thể xóa lịch hẹn ở trạng thái pending hoặc confirmed và chưa quá thời gian khám.");
                     session.setAttribute("messageType", "warning");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
                 }
 
-                List<Integer> appointmentIdsToDelete = new ArrayList<>();
-                for (String idStr : appointmentIdsArray) {
+            } else if (multiIds != null && multiIds.length > 0) {
+                List<Integer> ids = new ArrayList<>();
+                for (String idStr : multiIds) {
                     try {
-                        appointmentIdsToDelete.add(Integer.parseInt(idStr));
+                        ids.add(Integer.parseInt(idStr));
                     } catch (NumberFormatException e) {
-                        LOGGER.log(Level.WARNING, "Invalid appointment ID in deletion list: " + idStr, e);
-                        session.setAttribute("message", "Có ID lịch hẹn không hợp lệ trong danh sách xóa.");
-                        session.setAttribute("messageType", "danger");
-                        response.sendRedirect(request.getContextPath() + "/appointments");
-                        return;
+                        LOGGER.warning("ID không hợp lệ: " + idStr);
                     }
                 }
 
-                boolean success = dao.softDeleteMultipleAppointments(appointmentIdsToDelete, currentUserUserId);
-
-                if (success) {
-                    session.setAttribute("message", "Xóa mềm lịch hẹn đã chọn thành công (" + appointmentIdsToDelete.size() + " bản ghi).");
+                int deletedCount = dao.deleteAppointmentsByIds(ids);
+                if (deletedCount > 0) {
+                    session.setAttribute("message", "Đã xóa " + deletedCount + " lịch hẹn thành công.");
                     session.setAttribute("messageType", "success");
                 } else {
-                    session.setAttribute("message", "Không tìm thấy lịch hẹn nào để xóa hoặc có lỗi xảy ra.");
-                    session.setAttribute("messageType", "danger");
+                    session.setAttribute("message", "Không có lịch hẹn nào đủ điều kiện để xóa.");
+                    session.setAttribute("messageType", "warning");
                 }
-                response.sendRedirect(request.getContextPath() + "/appointments");
-
-            } else if ("deleteSingle".equals(action)) {
-                String idStr = request.getParameter("appointmentId");
-                if (idStr == null || idStr.isEmpty()) {
-                    session.setAttribute("message", "ID lịch hẹn để xóa không được cung cấp.");
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/appointments");
-                    return;
-                }
-
-                int appointmentId = Integer.parseInt(idStr);
-                boolean success = dao.softDeleteAppointment(appointmentId, currentUserUserId);
-
-                if (success) {
-                    session.setAttribute("message", "Xóa mềm lịch hẹn thành công (ID: " + appointmentId + ").");
-                    session.setAttribute("messageType", "success");
-                } else {
-                    session.setAttribute("message", "Không tìm thấy lịch hẹn để xóa hoặc có lỗi xảy ra.");
-                    session.setAttribute("messageType", "danger");
-                }
-                response.sendRedirect(request.getContextPath() + "/appointments");
 
             } else {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Action không hợp lệ.");
+                session.setAttribute("message", "Không có lịch hẹn nào được chọn để xóa.");
+                session.setAttribute("messageType", "warning");
             }
 
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi CSDL trong POST: " + e.getMessage(), e);
-            session.setAttribute("message", "Lỗi CSDL: " + e.getMessage());
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi xử lý xóa lịch hẹn: " + e.getMessage(), e);
+            session.setAttribute("message", "Đã xảy ra lỗi khi xóa lịch hẹn.");
             session.setAttribute("messageType", "danger");
-            response.sendRedirect(request.getContextPath() + "/appointments");
-        } catch (NumberFormatException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi định dạng số khi xử lý dữ liệu form: " + e.getMessage(), e);
-            session.setAttribute("message", "Lỗi định dạng số trong dữ liệu. Vui lòng kiểm tra lại.");
-            session.setAttribute("messageType", "danger");
-            response.sendRedirect(request.getContextPath() + "/appointments");
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    LOGGER.log(Level.SEVERE, "Lỗi đóng kết nối CSDL: " + e.getMessage(), e);
-                }
-            }
         }
+
+        response.sendRedirect(request.getContextPath() + "/appointments");
     }
+
 }
+

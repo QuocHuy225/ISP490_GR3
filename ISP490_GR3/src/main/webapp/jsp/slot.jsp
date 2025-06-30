@@ -150,7 +150,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="slotDate" class="form-label">Ngày slot</label>
+                        <label for="slotDate" class="form-label">Ngày hẹn</label>
                         <input type="date" class="form-control" id="slotDate" name="slotDate" value="${slotDate}" />
                     </div>
                 </div>
@@ -194,7 +194,7 @@
                             <tr>
                                 <th><input type="checkbox" id="checkAll"></th>
                                 <th>STT</th>
-                                <th>Ngày slot</th>
+                                <th>Ngày hẹn</th>
                                 <th>Slot</th>
                                 <th>Bác sĩ</th>
                                 <th>Số bệnh nhân tối đa</th>
@@ -286,7 +286,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="slotDateDropdown" class="form-label">Ngày slot <span class="text-danger">*</span></label>
+                                <label for="slotDateDropdown" class="form-label">Ngày slot<span class="text-danger">*</span></label>
                                 <select class="form-select" id="slotDateDropdown" name="slotDate" required>
                                     <option value="">--Chọn--</option>
                                 </select>
@@ -352,7 +352,7 @@
             %>
 
             document.addEventListener("DOMContentLoaded", function () {
-                const BASE_URL = '<%= baseURL %>';
+                const BASE_URL = '<%= request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() %>';
 
                 console.log("BASE_URL:", BASE_URL);
                 console.log("Protocol:", window.location.protocol);
@@ -370,21 +370,16 @@
                 // Toggle giữa slot đơn và slot theo dải
                 function toggleSlotFields() {
                     const isSingle = addTypeSelect.value === "single";
-
                     singleFields.style.display = isSingle ? "block" : "none";
                     rangeFields.style.display = isSingle ? "none" : "block";
-
-                    // Toggle required fields
                     document.getElementById("addStartTime").required = isSingle;
                     document.getElementById("addSlotDuration").required = isSingle;
-
                     document.getElementById("addStartRangeTime").required = !isSingle;
                     document.getElementById("addEndRangeTime").required = !isSingle;
                     document.getElementById("addRangeSlotDuration").required = !isSingle;
                 }
                 addTypeSelect.addEventListener("change", toggleSlotFields);
-                toggleSlotFields(); // run at start
-
+                toggleSlotFields();
 
                 // Load ngày slot
                 function loadSlotDates(doctorId) {
@@ -397,9 +392,7 @@
                         return;
                     }
 
-                    const url = BASE_URL + "/doctor/schedule?doctorId=" + doctorId;
-
-                    //const url = `${BASE_URL}/doctor/schedule?doctorId=${doctorId}`;
+                    const url = BASE_URL + "/slot/filterSlotDate?doctorId=" + doctorId;
 
                     console.log("Fetch URL:", url);
 
@@ -410,7 +403,7 @@
                                     if (res.status === 404) {
                                         throw new Error("404: Endpoint không tồn tại hoặc doctorId không hợp lệ");
                                     }
-                                    throw new Error(`Fetch lỗi ${res.status}`);
+                                    throw new Error(`Lỗi ${res.status}: Không thể tải dữ liệu`);
                                 }
                                 return res.json();
                             })
@@ -422,27 +415,24 @@
                                 } else if (!Array.isArray(data) || data.length === 0) {
                                     slotDateDropdown.innerHTML = '<option value="">Không có ngày làm việc</option>';
                                 } else {
-                                    slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
                                     data.forEach((item, index) => {
                                         console.log(`Item ${index}:`, item, typeof item);
-                                        const date = item?.trim(); // chống lỗi value có khoảng trắng
-
+                                        const date = item?.trim();
                                         if (date) {
                                             const option = document.createElement("option");
                                             option.value = date;
                                             option.textContent = date;
                                             slotDateDropdown.appendChild(option);
                                         } else {
-                                            console.warn(" Bỏ qua item rỗng:", item);
+                                            console.warn("Bỏ qua item rỗng:", item);
                                         }
                                     });
-
-
                                 }
                             })
                             .catch(error => {
                                 console.error("Lỗi khi tải ngày làm việc:", error);
-                                slotDateDropdown.innerHTML = `<option value="">${error.message}</option>`;
+                                slotDateDropdown.innerHTML = `<option value="">Lỗi: ${error.message}</option>`;
+                                alert("Không thể tải ngày làm việc. Vui lòng thử lại sau.");
                             });
                 }
 

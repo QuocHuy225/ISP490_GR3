@@ -267,5 +267,23 @@ public class DAOService {
         
         return services;
     }
+    
+    public static void main(String[] args) {
+    DAOService dao = new DAOService();
+    List<MedicalService> services = dao.getAllServices();
+
+    System.out.println("Danh sách dịch vụ y tế:");
+    for (MedicalService service : services) {
+        System.out.printf("ID: %d | Nhóm: %s | Tên: %s | Giá: %s | Tạo lúc: %s | Cập nhật: %s | Đã xóa: %s%n",
+                service.getServicesId(),
+                service.getServiceGroup(),
+                service.getServiceName(),
+                service.getPrice(),
+                service.getCreatedAt(),
+                service.getUpdatedAt(),
+                service.isIsdeleted());
+    }
+}
+
 
 } 

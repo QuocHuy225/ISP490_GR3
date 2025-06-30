@@ -1,6 +1,8 @@
 package com.mycompany.isp490_gr3.controller;
 
+import com.google.gson.Gson;
 import com.mycompany.isp490_gr3.dao.DAODoctor;
+import com.mycompany.isp490_gr3.dao.DAODoctorSchedule;
 import com.mycompany.isp490_gr3.dao.DAOSlot;
 import com.mycompany.isp490_gr3.dto.SlotViewDTO;
 import com.mycompany.isp490_gr3.model.Doctor;
@@ -9,20 +11,20 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@WebServlet(name = "SlotController", urlPatterns = {"/slot", "/slot/add", "/slot/delete"})
+@WebServlet(name = "SlotController", urlPatterns = {"/slot", "/slot/add", "/slot/delete", "/slot/filterSlotDate"})
 public class SlotController extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(SlotController.class.getName());
 
-    //Kiểm tra quyền
+    // Kiểm tra quyền RECEPTIONIST
     private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(false);
@@ -46,12 +48,20 @@ public class SlotController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        //Check quyền
+        String path = request.getServletPath();
+
+        if ("/slot/filterSlotDate".equals(path)) {
+            // Xử lý endpoint /slot/filterSlotDate
+            handleFilterSlotDate(request, response);
+            return;
+        }
+
+        // Xử lý /slot
         if (!checkReceptionistAccess(request, response)) {
             return;
         }
 
-        //Lọc (doctorid, slotdate truyền null)
+        // Lọc (doctorId, slotDate truyền null)
         String doctorIdStr = request.getParameter("doctorId");
         String slotDateStr = request.getParameter("slotDate");
 
@@ -77,7 +87,7 @@ public class SlotController extends HttpServlet {
             slotDate = LocalDate.now();
         }
 
-        //Phân trang
+        // Phân trang
         int currentPage = 1;
         int recordsPerPage = 10;
         String pageParam = request.getParameter("page");
@@ -95,12 +105,10 @@ public class SlotController extends HttpServlet {
         List<SlotViewDTO> currentPageSlots;
         int totalRecords;
         if (doctorId == null && (slotDateStr == null || slotDateStr.trim().isEmpty())) {
-            // Không có filter -> lấy hôm nay
             currentPageSlots = daoSlot.getTodaySlotViewDTOs(offset, recordsPerPage);
             totalRecords = daoSlot.countTodaySlotViewDTOs();
-            slotDate = LocalDate.now(); // dùng để set lại vào form
+            slotDate = LocalDate.now();
         } else {
-            // Có filter -> tìm kiếm
             currentPageSlots = daoSlot.searchSlotViewDTOs(doctorId, slotDate, offset, recordsPerPage);
             totalRecords = daoSlot.countFilteredSlotViewDTOs(doctorId, slotDate);
         }
@@ -110,7 +118,6 @@ public class SlotController extends HttpServlet {
         DAODoctor daoDoctor = new DAODoctor();
         List<Doctor> doctors = daoDoctor.getAllDoctors();
 
-        // Truyền dữ liệu cho JSP
         request.setAttribute("doctors", doctors);
         request.setAttribute("currentPageSlots", currentPageSlots);
         request.setAttribute("doctorId", doctorIdStr != null ? doctorIdStr : "");
@@ -127,6 +134,39 @@ public class SlotController extends HttpServlet {
         request.getRequestDispatcher("/jsp/slot.jsp").forward(request, response);
     }
 
+    // Xử lý endpoint /slot/filterSlotDate
+    private void handleFilterSlotDate(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+
+        String doctorIdRaw = request.getParameter("doctorId");
+        
+        System.out.println("doctorId nhận được từ FE: " + doctorIdRaw);
+        if (doctorIdRaw == null || doctorIdRaw.trim().isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"error\": \"Missing doctorId parameter.\"}");
+            return;
+        }
+
+        try {
+            int doctorId = Integer.parseInt(doctorIdRaw);
+            DAODoctorSchedule dao = new DAODoctorSchedule();
+            List<String> dates = dao.getWorkingDatesByDoctorId(doctorId);
+            String json = new Gson().toJson(dates != null ? dates : new ArrayList<>());
+            System.out.println("JSON response: " + json);
+            response.getWriter().write(json);
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"error\": \"Invalid doctorId format.\"}");
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy ngày làm việc: " + e.getMessage(), e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"error\": \"Lỗi server khi lấy ngày làm việc.\"}");
+        }
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -141,24 +181,22 @@ public class SlotController extends HttpServlet {
         String path = request.getServletPath();
 
         switch (path) {
-            case "/slot": //Tìm kiếm
+            case "/slot":
                 handleSearch(request, response);
                 break;
-            case "/slot/add": //Thêm mới
+            case "/slot/add":
                 handleAddSlot(request, response);
                 break;
-            case "/slot/delete": //Xóa
+            case "/slot/delete":
                 handleDelete(request, response);
                 break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
-
     }
 
     private void handleSearch(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         String doctorIdStr = request.getParameter("doctorId");
         String slotDateStr = request.getParameter("slotDate");
 
@@ -380,5 +418,4 @@ public class SlotController extends HttpServlet {
         session.setAttribute("messageType", messageType);
         response.sendRedirect(redirectUrl);
     }
-
 }
