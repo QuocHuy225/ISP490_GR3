@@ -1,148 +1,611 @@
-/* manage-doctor-schedule.css */
+/* ====================================
+   CSS VARIABLES & ROOT SETTINGS
+   ==================================== */
+:root {
+    --primary: #0360D9;
+    --primary-light: #e3f2fd;
+    --primary-dark: #0246a3;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F8F9FA;
+    --secondary-foreground: #000000;
+    --accent: #4A90E2;
+    --accent-foreground: #FFFFFF;
+    --background: #FFFFFF;
+    --foreground: #2B3674;
+    --muted: #6B7280;
+    --card: #FFFFFF;
+    --card-foreground: #000000;
+    --border: #DEE2E6;
+    --input: #E9ECEF;
+    --ring: #2C7BE5;
+    --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    --radius: 0.5rem;
+    --radius-lg: 1rem;
+    --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.12);
+
+    /* Specific variables from your provided CSS */
+    --primary-color: #0360D9;
+    --white: #ffffff;
+    --text-dark: #2B3674;
+    --text-light: #A3AED0;
+    --body-bg: #f8f9fa;
+    --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, #00d4ff 100%);
+    --shadow-light: 0 5px 25px rgba(3, 96, 217, 0.1);
+    --shadow-medium: 0 10px 40px rgba(3, 96, 217, 0.15);
+}
+
+/* ====================================
+   RESET & BASE STYLES
+   ==================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-family); /* Apply global font */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f8f9fa;
-    color: #343a40;
+    line-height: 1.6;
+    font-size: 16px;
+    color: var(--foreground);
+    background-color: var(--body-bg); /* Use specific body-bg variable */
+    margin: 0;
+    display: flex; /* Use flexbox for sidebar and content layout */
+    min-height: 100vh; /* Ensure body takes full viewport height */
 }
-.container {
-    max-width: 800px;
-    margin-top: 50px;
-    margin-bottom: 50px;
+
+/* ====================================
+   TYPOGRAPHY
+   ==================================== */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--foreground);
+    font-weight: 700;
+    line-height: 1.2;
 }
-.card {
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+/* ====================================
+   SIDEBAR STYLES
+   ==================================== */
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 100vh; /* Ensure it takes full height */
+    background: var(--primary-color); /* Use primary-color for sidebar background */
+    color: var(--white);
+    transition: all 0.3s;
+    position: fixed; /* Fixed position for sidebar */
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.1); /* Shadow for sidebar */
+    overflow-y: auto; /* Enable scrolling for long content */
 }
-.card-header {
-    background-color: #007bff;
-    color: white;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-align: center;
+
+#sidebar.active { /* Renamed from .collapsed to .active for consistency with JS toggle */
+    margin-left: -250px; /* Hide sidebar */
+}
+
+#sidebar .sidebar-header {
     padding: 20px;
+    background: var(--primary-dark); /* Darker shade for header */
+    text-align: center;
 }
-.form-control:focus, .form-select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+
+#sidebar .sidebar-header h3 {
+    color: var(--white); /* White color for MENU text */
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.5rem;
 }
-.btn-primary {
+
+#sidebar ul.components {
+    padding: 20px 0;
+}
+
+#sidebar ul li a {
+    padding: 15px 20px;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    color: var(--white);
+    text-decoration: none;
+    transition: all 0.3s;
+    border-radius: 8px;
+    margin: 4px 8px;
+    gap: 10px; /* Space between icon and text */
+}
+
+#sidebar ul li a:hover {
+    background: var(--primary-dark);
+    transform: translateX(5px);
+}
+
+#sidebar ul li.active > a {
+    background: var(--gradient-primary); /* Use gradient for active link */
+    color: var(--white);
+    border-left: none; /* No left border with gradient */
+    font-weight: 600;
+    box-shadow: var(--shadow-light);
+    transform: translateX(0);
+    padding: 15px 20px; /* Consistent padding */
+}
+
+#sidebar ul li.active > a:hover {
+    background: var(--gradient-primary); /* Keep gradient on hover for active */
+    color: var(--white);
+    box-shadow: var(--shadow-medium);
+    transform: translateX(0);
+}
+
+/* ====================================
+   MAIN CONTENT & NAVBAR
+   ==================================== */
+#content {
+    width: calc(100% - 250px); /* Adjust width for sidebar */
+    min-height: 100vh;
+    transition: all 0.3s;
+    position: relative; /* Changed to relative for flow */
+    margin-left: 250px; /* Push content by sidebar width */
+    background-color: var(--body-bg); /* Light background for content */
+    padding: 20px; /* Add padding to content area */
+}
+
+#content.active { /* When sidebar is collapsed */
+    width: 100%;
+    margin-left: 0;
+}
+
+.top-navbar {
+    background: var(--white); /* Changed: White background for navbar to match image */
+    padding: 15px 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; /* Make navbar sticky */
+    top: 0;
+    z-index: 1020;
+    width: 100%; /* Ensure it takes full width of content area */
+}
+
+.top-navbar .btn-primary { /* Toggle button */
+    background-color: var(--primary-color); /* Primary color background for toggle button */
+    border-color: var(--primary-color); /* Primary color border */
+    color: white; /* White icon for toggle button */
+    border-radius: var(--radius); /* Rounded corners */
+    padding: 8px 12px;
+    font-size: 1.5rem; /* Larger icon for toggle */
+}
+
+.top-navbar .btn-primary:hover {
+    background-color: var(--primary-dark); /* Darker primary on hover */
+    border-color: var(--primary-dark);
+}
+
+.top-navbar h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--foreground); /* Clinic name text color to foreground (dark) */
+}
+
+.top-navbar h3 span {
+    color: var(--primary); /* Keep primary color for "Ánh Dương" */
+}
+.top-navbar h3 span:first-child {
+    color: var(--primary); /* Ensure "Ánh Dương" is primary color */
+}
+
+
+.navbar-search {
+    position: relative;
+    flex-grow: 1;
+    max-width: 400px;
+    margin: 0 20px;
+}
+
+.navbar-search .bi-search {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light); /* Grey color for search icon */
+    font-size: 1.2rem;
+}
+
+.navbar-search .form-control {
+    padding-left: 35px;
+    border-radius: 30px; /* More rounded search bar */
+    border: 2px solid #e0e0e0;
+    box-shadow: none;
+    background-color: #f8f9fa; /* Light grey background for search input */
+    font-size: 1.1rem;
+    padding: 0.8rem 1rem 0.8rem 3rem; /* Adjusted padding */
+}
+
+.navbar-search .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(3, 96, 217, 0.25);
+}
+
+/* ====================================
+   USER DROPDOWN STYLES
+   ==================================== */
+.user-dropdown {
+    position: relative;
+}
+
+.dropdown-toggle {
+    background: var(--primary-color) !important; /* Primary color background for dropdown toggle */
+    border: none !important;
+    border-radius: 50px !important; /* Pill shape */
+    padding: 0.75rem 1.5rem !important;
+    color: white !important;
+    font-weight: 600 !important;
+    box-shadow: var(--shadow-light) !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+}
+
+.dropdown-toggle:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-medium) !important;
+    background: var(--primary-dark) !important; /* Darker primary on hover */
+}
+
+.dropdown-toggle:focus {
+    box-shadow: var(--shadow-medium) !important;
+    color: white !important;
+}
+
+.dropdown-toggle::after {
+    border: none !important;
+    content: '\f282' !important; /* Bootstrap Icons chevron-down */
+    font-family: 'Bootstrap Icons' !important;
+    margin-left: 0.5rem !important;
+    transition: transform 0.3s ease !important;
+}
+
+.dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg) !important;
+}
+
+.dropdown-menu {
+    border: none !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+    padding: 1rem 0 !important;
+    margin-top: 0.5rem !important;
+    backdrop-filter: blur(20px) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    min-width: 280px !important;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    border: none !important;
+    background: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    color: var(--text-dark) !important;
+    text-decoration: none !important;
+    margin: 0.25rem 0 !important;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, var(--primary-light), rgba(0, 212, 255, 0.1)) !important;
+    color: var(--primary-dark) !important;
+    transform: translateX(5px) !important;
+    padding-left: 2rem !important;
+}
+
+.dropdown-item i {
+    font-size: 1.1rem !important;
+    width: 20px !important;
+    text-align: center !important;
+}
+
+.dropdown-item.text-danger {
+    color: #dc3545 !important;
+}
+
+.dropdown-item.text-danger:hover {
+    background: linear-gradient(135deg, #fee, #fdd) !important;
+    color: #c82333 !important;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 1rem !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background: none !important;
+}
+
+/* User Profile Styling */
+.user-profile-icon {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 50% !important;
+    background: var(--white) !important; /* White background for avatar circle */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important; /* Keep subtle border */
+    backdrop-filter: blur(10px) !important;
+    color: var(--primary-color); /* Primary color for icon inside avatar */
+    font-size: 1.5rem; /* Icon size */
+}
+
+.user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+}
+
+.user-name {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    color: var(--white); /* White text */
+}
+
+.user-role {
+    font-size: 0.8rem !important;
+    opacity: 0.8 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: var(--white); /* White text */
+}
+
+/* Calendar Container Specific Styles (retained and adjusted for new layout) */
+.calendar-container {
+    max-width: 100%;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    margin-top: 20px;
+}
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+.calendar-header h2 {
+    color: #007bff;
+    margin: 0;
+    font-weight: bold;
+}
+.calendar-header .btn {
     background-color: #007bff;
     border-color: #007bff;
-    border-radius: 8px;
-    padding: 10px 20px;
+    color: white;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
 }
-.btn-primary:hover {
+.calendar-header .btn:hover {
     background-color: #0056b3;
     border-color: #0056b3;
 }
-.list-group-item {
-    border-radius: 8px;
-    margin-bottom: 5px;
-    background-color: #e9f7ef;
-    color: #28a745;
-    font-weight: 500;
-}
-.selected-date-badge {
-    background-color: #007bff;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-    margin-right: 5px;
-    display: inline-flex;
-    align-items: center;
-}
-.selected-date-badge button {
+.calendar-header .nav-buttons button {
     background: none;
     border: none;
-    color: white;
-    margin-left: 5px;
-    font-size: 1rem;
+    color: #333;
+    font-size: 1.5rem;
     cursor: pointer;
-    line-height: 1; 
+    padding: 5px 10px;
+    border-radius: 5px;
 }
-.loading-spinner {
-    display: inline-block;
-    width: 1.5rem;
-    height: 1.5rem;
-    vertical-align: text-bottom;
-    border: 0.25em solid currentColor;
-    border-right-color: transparent;
-    border-radius: 50%;
-    -webkit-animation: spinner-border .75s linear infinite;
-    animation: spinner-border .75s linear infinite;
+.calendar-header .nav-buttons button:hover {
+    background-color: #e9ecef;
 }
-@keyframes spinner-border {
-    to {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
+.calendar-header .nav-buttons button:active {
+    background-color: #dee2e6;
+}
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #6c757d;
+}
+.calendar-day-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+.calendar-day {
+    background-color: #f0f2f5;
+    border-radius: 8px;
+    min-height: 100px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.calendar-day:hover {
+    background-color: #e2e6ea;
+}
+.calendar-day.current-month {
+    background-color: #f0f2f5;
+}
+.calendar-day.other-month {
+    background-color: #f8f9fa;
+    color: #bbb;
+    cursor: default;
+}
+.calendar-day.other-month:hover {
+    background-color: #f8f9fa;
+}
+.calendar-day.today {
+    border: 2px solid #007bff;
+    background-color: #e9f0f7;
+}
+.calendar-day-number {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+.calendar-day.other-month .calendar-day-number {
+    color: #bbb;
+}
+.calendar-events {
+    width: 100%;
+    margin-top: 5px;
+    overflow-y: auto;
+    max-height: 60px;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f0f2f5;
+}
+.calendar-events::-webkit-scrollbar {
+    width: 8px;
+}
+.calendar-events::-webkit-scrollbar-track {
+    background: #f0f2f5;
+    border-radius: 10px;
+}
+.calendar-events::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 10px;
+    border: 2px solid #f0f2f5;
+}
+.event {
+    background-color: #007bff;
+    color: white;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+.event.meeting { background-color: #28a745; }
+.event.conference { background-color: #ffc107; color: #333; }
+.event.call { background-color: #dc3545; }
+.event.react { background-color: #61DAFB; color: #333; }
+.event.angular { background-color: #DD0031; }
+.event.vue { background-color: #42b883; }
+
+/* Modal specific styles */
+.modal-content {
+    background-color: #fff;
+    color: #333;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    color: #007bff;
+}
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+}
+.modal-header .btn-close {
+    filter: none;
+}
+.form-control, .form-select {
+    background-color: #f0f2f5;
+    color: #333;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+}
+.form-control:focus, .form-select:focus {
+    background-color: #f0f2f5;
+    color: #333;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+.form-label {
+    color: #333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    #content {
+        width: 100%;
+        margin-left: 0;
+    }
+    #sidebar {
+        margin-left: -250px;
+        position: fixed;
+        height: 100vh;
+        z-index: 1000;
+    }
+    #sidebar.active {
+        margin-left: 0;
+    }
+    .top-navbar .navbar-search {
+        display: none; /* Hide search bar on small screens */
+    }
+    .top-navbar h3 {
+        font-size: 1.2rem;
+        margin-left: 10px !important;
+    }
+    .user-dropdown .user-info {
+        display: none !important; /* Hide user info text on small screens */
+    }
+    .dropdown-toggle {
+        padding: 0.5rem 1rem !important;
+    }
+    .dropdown-menu {
+        min-width: 250px !important;
     }
 }
 
-/* Custom styles for time slot chips and apply similar overlay */
-.slot-chip {
-    display: inline-flex;
-    align-items: center;
-    background-color: #e0e0e0; /* Light gray background for chips */
-    color: #343a40;
-    border-radius: 16px;
-    padding: 6px 12px;
-    margin: 4px; /* Adjust margin as needed */
-    font-size: 0.9rem;
-    white-space: nowrap;
-    cursor: default;
-    border: 1px solid #ccc; /* Subtle border */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Soft shadow */
-}
-.slot-chip .btn-close {
-    font-size: 0.7rem;
-    margin-left: 8px;
-    opacity: 0.7;
-    padding: 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #666; /* Color for the X button */
-}
-.slot-chip .btn-close:hover {
-    opacity: 1;
-    color: #333;
-}
-.apply-similar-overlay {
-    position: absolute; /* Quan trọng để overlay nổi lên */
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* Nâng bóng đổ */
-    z-index: 1050; /* Đảm bảo nổi trên modal background */
-    min-width: 250px;
-    max-width: 300px;
-    display: none; /* Mặc định ẩn */
-    flex-direction: column;
-}
-
-/* Điều chỉnh vị trí nút button-group */
-.ms-auto.btn-group {
-    margin-left: auto !important; /* Đảm bảo căn phải */
-    margin-right: 0 !important;
-}
-
-/* Căn chỉnh lại icon và text trong nút nếu cần */
-.btn .bi {
-    vertical-align: -0.125em; /* Điều chỉnh căn chỉnh dọc của icon */
-}
-
-/* Kiểu cho checkbox trong overlay */
-#applySimilarCheckboxes .form-check {
-    margin-bottom: 8px;
-}
-#applySimilarCheckboxes .form-check-input {
-    margin-top: 0.3em;
-}
-#applySimilarCheckboxes .form-check-label {
-    font-weight: normal;
-    color: #555;
+@media (max-width: 767.98px) {
+    .calendar-container {
+        padding: 15px;
+    }
+    .calendar-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .calendar-header .nav-buttons {
+        margin-top: 10px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    .calendar-header .btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+    .calendar-day {
+        min-height: 80px;
+        padding: 5px;
+    }
+    .calendar-day-number {
+        font-size: 1em;
+    }
+    .event {
+        font-size: 0.75em;
+        padding: 2px 4px;
+    }
 }

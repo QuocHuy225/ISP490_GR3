@@ -42,11 +42,21 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>DoctorScheduleController</servlet-name>
-        <url-pattern>/doctor/schedule</url-pattern>
-        <url-pattern>/doctor/schedule/detailed</url-pattern>
+        <url-pattern>/api/doctor-schedules</url-pattern>
+        <url-pattern>/api/doctor-schedules/*</url-pattern>
+        <url-pattern>/api/doctors</url-pattern>
         
     </servlet-mapping>
     
+    <servlet>
+        <servlet-name>ReceptionistScheduleController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistScheduleController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReceptionistScheduleController</servlet-name>
+        <url-pattern>/receptionist/manage-doctor-schedule</url-pattern>
+        <!-- Đây là URL bạn sẽ truy cập -->
+    </servlet-mapping>
     <servlet>
         <servlet-name>CheckinController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.CheckinController</servlet-class>

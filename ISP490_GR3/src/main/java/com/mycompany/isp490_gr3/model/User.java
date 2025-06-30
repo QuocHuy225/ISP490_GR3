@@ -41,11 +41,15 @@ public class User {
     private String password;
     private String phone;
     private Role role;
-    private String googleId; // Google OAuth ID
     private Timestamp createdAt;
     private String updatedBy;
     private Timestamp updatedAt;
     private boolean isDeleted;
+    
+    // Email verification fields
+    private String verificationToken;
+    private boolean isEmailVerified;
+    private Timestamp verificationExpiryTime;
     
     // Default constructor
     public User() {
@@ -123,14 +127,6 @@ public class User {
         this.role = role;
     }
     
-    public String getGoogleId() {
-        return googleId;
-    }
-    
-    public void setGoogleId(String googleId) {
-        this.googleId = googleId;
-    }
-    
     public Timestamp getCreatedAt() {
         return createdAt;
     }
@@ -163,6 +159,30 @@ public class User {
         isDeleted = deleted;
     }
     
+    public String getVerificationToken() {
+        return verificationToken;
+    }
+    
+    public void setVerificationToken(String verificationToken) {
+        this.verificationToken = verificationToken;
+    }
+    
+    public boolean isEmailVerified() {
+        return isEmailVerified;
+    }
+    
+    public void setEmailVerified(boolean emailVerified) {
+        isEmailVerified = emailVerified;
+    }
+    
+    public Timestamp getVerificationExpiryTime() {
+        return verificationExpiryTime;
+    }
+    
+    public void setVerificationExpiryTime(Timestamp verificationExpiryTime) {
+        this.verificationExpiryTime = verificationExpiryTime;
+    }
+    
     @Override
     public String toString() {
         return "User{" +
@@ -171,6 +191,7 @@ public class User {
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
                 ", role=" + role +
+                ", isEmailVerified=" + isEmailVerified +
                 '}';
     }
 } 

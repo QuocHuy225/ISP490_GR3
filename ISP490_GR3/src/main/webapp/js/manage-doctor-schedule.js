@@ -1,712 +1,328 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // contextPath sẽ được định nghĩa trong JSP trước khi tải file JS này.
-    const editScheduleModal = new bootstrap.Modal(document.getElementById('editScheduleModal'));
-    const modalDoctorName = document.getElementById('modalDoctorName');
-    const modalDoctorId = document.getElementById('modalDoctorId'); // input ẩn cho doctorId
-    const modalDoctorAccountId = document.getElementById('modalDoctorAccountId'); // input ẩn cho doctorAccountId
-    const modalScheduleForm = document.getElementById('modalScheduleForm');
-    const saveScheduleBtn = document.getElementById('saveScheduleBtn');
-    const modalLoadingSpinner = document.getElementById('modalLoadingSpinner');
-    const modalMessageContainer = document.getElementById('modalMessageContainer');
+// JavaScript for Calendar Logic
+const calendarGrid = document.getElementById('calendarGrid');
+const currentMonthYearDisplay = document.getElementById('currentMonthYear');
+const prevMonthBtn = document.getElementById('prevMonth');
+const nextMonthBtn = document.getElementById('nextMonth');
+const todayButton = document.getElementById('todayButton');
+const addEventButton = document.getElementById('addEventButton');
 
-    const periodFuture = document.getElementById('periodFuture');
-    const periodRange = document.getElementById('periodRange');
-    const dateRangePickerContainer = document.getElementById('dateRangePickerContainer');
-    const dateRangePicker = document.getElementById('dateRangePicker');
+// Modal elements
+const scheduleModal = new bootstrap.Modal(document.getElementById('scheduleModal'));
+const scheduleModalLabel = document.getElementById('scheduleModalLabel');
+const scheduleIdInput = document.getElementById('scheduleId');
+const modalWorkDateInput = document.getElementById('modalWorkDate');
+const modalDoctorIdSelect = document.getElementById('modalDoctorId');
+const modalIsActiveCheckbox = document.getElementById('modalIsActive');
+const modalEventNameInput = document.getElementById('modalEventName'); // New input for event name
+const saveScheduleBtn = document.getElementById('saveScheduleBtn');
+const deleteScheduleBtn = document.getElementById('deleteScheduleBtn');
 
-    const appointmentDurationSelect = document.getElementById('appointmentDuration');
+let currentDate = new Date(); // Current date to track month/year
+let currentEditingScheduleId = null; // To track which schedule is being edited/deleted
 
-    const weeklyScheduleContainer = document.getElementById('weeklySchedule');
-    const applySimilarOverlay = document.getElementById('applySimilarOverlay');
-    const applySimilarCheckboxes = document.getElementById('applySimilarCheckboxes');
-    const cancelApplySimilarBtn = document.getElementById('cancelApplySimilarBtn');
-    const confirmApplySimilarBtn = document.getElementById('confirmApplySimilarBtn');
+// IMPORTANT: Define contextPath globally in your JSP file like:
+// <script>const contextPath = "<%= request.getContextPath() %>";</script>
+// right before including this script.js file.
+// For local testing without a full JSP environment, you might hardcode it:
+// const contextPath = "/ISP490_GR3"; // Example: "/YourAppName" or "" if deployed at root
 
-    let flatpickrInstance;
-    let weeklyScheduleConfig = {}; // Đối tượng để lưu trữ cấu hình lịch làm việc hàng tuần
+// Function to format date to YYYY-MM-DD
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
-    // Khởi tạo Flatpickr
-    flatpickrInstance = flatpickr(dateRangePicker, {
-        mode: "range",
-        dateFormat: "Y-m-d",
-        minDate: "today"
-    });
-
-    // Chuyển đổi hiển thị của bộ chọn ngày dựa trên lựa chọn radio
-    periodFuture.addEventListener('change', () => {
-        if (periodFuture.checked) {
-            dateRangePickerContainer.style.display = 'none';
-            flatpickrInstance.clear();
+// Function to populate doctor select dropdown from backend
+async function populateDoctorSelect() {
+    modalDoctorIdSelect.innerHTML = '<option value="">-- Chọn bác sĩ --</option>';
+    try {
+        // Use the globally defined contextPath
+        const response = await fetch(`${contextPath}/api/doctors`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch doctors');
         }
-    });
-    periodRange.addEventListener('change', () => {
-        if (periodRange.checked) {
-            dateRangePickerContainer.style.display = 'block';
-        }
-    });
-
-    // Các ngày trong tuần để lập lịch (khóa phải khớp với backend)
-    const daysOfWeekDisplay = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-    const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-
-    /**
-     * Tạo HTML cho một chip khung giờ.
-     * @param {string} start - Thời gian bắt đầu (HH:mm).
-     * @param {string} end - Thời gian kết thúc (HH:mm).
-     * @param {string} dayKey - Khóa ngày (ví dụ: 'monday').
-     * @param {number} slotIndex - Chỉ số của slot trong mảng của ngày.
-     */
-    function createSlotChipHTML(start, end, dayKey, slotIndex) {
-        return `
-            <div class="slot-chip" data-day-key="${dayKey}" data-slot-index="${slotIndex}" data-start="${start}" data-end="${end}">
-                ${start} - ${end}
-                <button type="button" class="btn-close remove-slot-btn" aria-label="Remove slot"></button>
-            </div>
-        `;
-    }
-
-    /**
-     * Render (hoặc render lại) các khung giờ cho một ngày cụ thể dựa trên weeklyScheduleConfig.
-     * @param {string} dayKey - Khóa ngày cần render.
-     */
-    function renderDaySlots(dayKey) {
-        const container = document.getElementById(`day-${dayKey}-slots`);
-        if (!container) {
-            console.warn(`Container for day ${dayKey} not found.`); // Thêm log cảnh báo
-            return;
-        }
-
-        container.innerHTML = ''; // Xóa tất cả các chip hiện có
-
-        const slots = weeklyScheduleConfig[dayKey] || [];
-        if (slots.length === 0) {
-            container.innerHTML = `<p class="text-muted text-sm" id="no-slots-${dayKey}">Chưa có khung giờ nào.</p>`;
-        } else {
-            // Sort slots by start time before rendering
-            slots.sort((a, b) => {
-                const timeA = a.start.split(':').map(Number);
-                const timeB = b.start.split(':').map(Number);
-                if (timeA[0] !== timeB[0]) return timeA[0] - timeB[0];
-                return timeA[1] - timeB[1];
-            });
-            slots.forEach((slot, index) => {
-                container.innerHTML += createSlotChipHTML(slot.start, slot.end, dayKey, index);
-            });
-        }
-        // Sau khi render lại, cần đính kèm lại sự kiện cho các nút remove-slot-btn
-        attachRemoveSlotListeners();
-
-        // Cập nhật trạng thái hiển thị của nút sao chép
-        // CHỈ cập nhật khi renderSlots được gọi do thêm/xóa slot,
-        // Còn khi toggle thay đổi sẽ có hàm riêng điều khiển.
-        // updateDuplicateButtonVisibility(dayKey); // BỎ DÒNG NÀY ĐỂ TRÁNH GHI ĐÈ LOGIC CỦA HANDLE-DAY-TOGGLE-CHANGE
-    }
-
-    /**
-     * Cập nhật trạng thái hiển thị của nút "Thêm" và "Sao chép" cho một ngày cụ thể.
-     * Nút "Thêm" và "Sao chép" hiển thị khi toggle của ngày đó được bật.
-     * Nút "Sao chép" vẫn sẽ kiểm tra nếu có slot trước khi cho phép sao chép, nhưng nó sẽ hiện.
-     * @param {string} dayKey - Khóa ngày cần cập nhật.
-     * @param {boolean} isChecked - Trạng thái của toggle (true nếu bật).
-     */
-    function updateAddDuplicateButtonVisibility(dayKey, isChecked) {
-        const toggle = document.getElementById(`toggle-${dayKey}`);
-        const daySectionDiv = toggle ? toggle.closest('.day-section') : null;
-        const addSlotBtn = daySectionDiv ? daySectionDiv.querySelector('.add-slot-btn') : null;
-        const duplicateSlotBtn = daySectionDiv ? daySectionDiv.querySelector('.duplicate-slot-btn') : null;
-
-        if (addSlotBtn) {
-            addSlotBtn.style.display = isChecked ? 'inline-block' : 'none';
-        }
-        if (duplicateSlotBtn) {
-            // Nút sao chép sẽ hiện ngay khi toggle bật, bất kể có slot hay không.
-            // Logic kiểm tra có slot sẽ nằm trong handleDuplicateSlotClick
-            duplicateSlotBtn.style.display = isChecked ? 'inline-block' : 'none';
-        }
-    }
-
-
-    /**
-     * Tạo HTML chính cho một ngày trong lịch làm việc hàng tuần (toggle, nút thêm/sao chép).
-     * Hàm này trả về một phần tử DOM, không phải chuỗi HTML.
-     * @param {number} dayIndex - Chỉ số ngày trong tuần (0-6).
-     * @returns {HTMLElement} Phần tử div đại diện cho một ngày.
-     */
-    function createDaySectionElement(dayIndex) {
-        const dayKey = dayKeys[dayIndex];
-        const isChecked = weeklyScheduleConfig[dayKey] && weeklyScheduleConfig[dayKey].length > 0;
-
-        // Các nút "Thêm" và "Sao chép" ban đầu sẽ ẩn,
-        // sau đó được điều khiển bởi handleDayToggleChange khi populateWeeklySchedules hoàn tất.
-        const initialButtonDisplay = 'none';
-        const containerDisplayStyle = isChecked ? 'block' : 'none';
-
-
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'day-section'; // Thêm class để dễ quản lý
-
-        dayDiv.innerHTML = `
-            <div class="d-flex align-items-center mb-3 border-bottom pb-2">
-                <div class="form-check form-switch me-3">
-                    <input class="form-check-input day-toggle" type="checkbox" id="toggle-${dayKey}" data-day-key="${dayKey}" ${isChecked ? 'checked' : ''}>
-                    <label class="form-check-label fw-bold" for="toggle-${dayKey}">
-                        ${daysOfWeekDisplay[dayIndex]}
-                    </label>
-                </div>
-                <div class="ms-auto btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-success add-slot-btn me-2" data-day-key="${dayKey}" style="display: ${initialButtonDisplay};">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                        </svg>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-info duplicate-slot-btn" data-day-key="${dayKey}" style="display: ${initialButtonDisplay};">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zM6 2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H6z"/>
-                            <path fill-rule="evenodd" d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div id="day-${dayKey}-slots" class="mb-3 ms-4" style="display: ${containerDisplayStyle};">
-            </div>
-        `;
-        return dayDiv;
-    }
-
-    /**
-     * Khởi tạo hoặc cập nhật toàn bộ giao diện lịch làm việc hàng tuần.
-     * @param {Object} config - Cấu hình lịch làm việc (tùy chọn, dùng để tải dữ liệu ban đầu).
-     */
-    function populateWeeklySchedules(config = {}) {
-        weeklyScheduleConfig = config;
-        weeklyScheduleContainer.innerHTML = ''; // Xóa sạch nội dung cũ
-
-        const orderedDayIndices = [1, 2, 3, 4, 5, 6, 0];
-        const fragment = document.createDocumentFragment(); // Sử dụng DocumentFragment để tối ưu hiệu suất DOM
-
-        orderedDayIndices.forEach(index => {
-            fragment.appendChild(createDaySectionElement(index));
+        const doctors = await response.json();
+        doctors.forEach(doctor => {
+            const option = document.createElement('option');
+            option.value = doctor.id;
+            option.textContent = doctor.fullName; // Use fullName from Doctor model
+            modalDoctorIdSelect.appendChild(option);
         });
-        weeklyScheduleContainer.appendChild(fragment); // Thêm tất cả các ngày vào DOM một lần
+    } catch (error) {
+        console.error('Error fetching doctors:', error);
+        // Consider a more user-friendly error display, e.g., a custom modal
+        alert('Không thể tải danh sách bác sĩ. Vui lòng thử lại sau.');
+    }
+}
 
-        // Sau khi tất cả HTML đã được thêm vào DOM, render các slot
-        orderedDayIndices.forEach(index => {
-            const dayKey = dayKeys[index];
-            renderDaySlots(dayKey);
-            // Sau khi render slots, kiểm tra trạng thái của toggle và cập nhật nút
-            const toggle = document.getElementById(`toggle-${dayKey}`);
-            if (toggle) {
-                updateAddDuplicateButtonVisibility(dayKey, toggle.checked);
+// Function to render the calendar
+async function renderCalendar() {
+    calendarGrid.innerHTML = ''; // Clear previous days
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth(); // 0-indexed
+
+    // Set current month and year display
+    currentMonthYearDisplay.textContent = `Tháng ${month + 1} ${year}`;
+
+    // Fetch actual events from backend
+    let actualEvents = [];
+    try {
+        // Use the globally defined contextPath
+        const response = await fetch(`${contextPath}/api/doctor-schedules?year=${year}&month=${month + 1}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch schedules');
+        }
+        actualEvents = await response.json();
+    } catch (error) {
+        console.error('Error fetching schedules:', error);
+        // Consider a more user-friendly error display
+        alert('Không thể tải lịch làm việc. Vui lòng thử lại sau.');
+    }
+
+    // Get first day of the month
+    const firstDayOfMonth = new Date(year, month, 1);
+    // Get last day of the month
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+
+    // Get the day of the week for the first day (0=Sunday, 6=Saturday)
+    const startDayIndex = firstDayOfMonth.getDay();
+
+    // Calculate number of days in the month
+    const daysInMonth = lastDayOfMonth.getDate();
+
+    // Get number of days in the previous month to fill leading empty cells
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    // Fill leading empty cells with days from the previous month
+    for (let i = 0; i < startDayIndex; i++) {
+        const dayElement = document.createElement('div');
+        dayElement.classList.add('calendar-day', 'other-month');
+        dayElement.innerHTML = `<div class="calendar-day-number">${daysInPrevMonth - startDayIndex + 1 + i}</div>`;
+        calendarGrid.appendChild(dayElement);
+    }
+
+    // Fill days of the current month
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayElement = document.createElement('div');
+        dayElement.classList.add('calendar-day', 'current-month');
+        dayElement.innerHTML = `<div class="calendar-day-number">${day}</div>`;
+
+        const currentDay = new Date(year, month, day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize today's date
+
+        if (currentDay.getTime() === today.getTime()) {
+            dayElement.classList.add('today');
+        }
+
+        // Add click listener to each day (for adding new schedule)
+        dayElement.addEventListener('click', () => {
+            if (!dayElement.classList.contains('other-month')) {
+                currentEditingScheduleId = null; // Set to null for new schedule
+                scheduleModalLabel.textContent = 'Thêm Lịch Làm Việc';
+                modalWorkDateInput.value = formatDate(currentDay);
+                modalDoctorIdSelect.value = ''; // Clear selected doctor
+                modalIsActiveCheckbox.checked = true; // Default to active
+                modalEventNameInput.value = ''; // Clear event name
+                saveScheduleBtn.textContent = 'Lưu Lịch';
+                deleteScheduleBtn.style.display = 'none'; // Hide delete button for new schedule
+                scheduleModal.show();
             }
         });
 
-        // Đính kèm tất cả listeners sau khi DOM được cập nhật và sẵn sàng
-        attachAllListeners();
-    }
-
-    /**
-     * Đính kèm tất cả các trình nghe sự kiện động.
-     */
-    function attachAllListeners() {
-        // Loại bỏ listener cũ để tránh trùng lặp
-        document.querySelectorAll('.day-toggle').forEach(toggle => {
-            toggle.removeEventListener('change', handleDayToggleChange);
-            toggle.addEventListener('change', handleDayToggleChange);
-        });
-        document.querySelectorAll('.add-slot-btn').forEach(btn => {
-            btn.removeEventListener('click', handleAddSlotClick);
-            btn.addEventListener('click', handleAddSlotClick); // e.currentTarget sẽ là nút này
-        });
-        document.querySelectorAll('.duplicate-slot-btn').forEach(btn => {
-            btn.removeEventListener('click', handleDuplicateSlotClick);
-            btn.addEventListener('click', handleDuplicateSlotClick);
+        // Add events to the day
+        const dayEvents = actualEvents.filter(event => {
+            const eventDate = new Date(event.workDate); // Use workDate from backend
+            return eventDate.getFullYear() === year &&
+                   eventDate.getMonth() === month &&
+                   eventDate.getDate() === day;
         });
 
-        // Sử dụng event delegation cho nút remove-slot-btn vì chúng được tạo động
-        attachRemoveSlotListeners();
+        if (dayEvents.length > 0) {
+            const eventsContainer = document.createElement('div');
+            eventsContainer.classList.add('calendar-events');
+            dayEvents.forEach(event => {
+                const eventDiv = document.createElement('div');
+                // Use event.name from backend, and a default type or map from backend data
+                eventDiv.classList.add('event', event.type || 'meeting'); // Default to 'meeting' if type is not provided
+                eventDiv.textContent = event.name || `Lịch BS ${event.doctorName}`; // Use name from backend or construct
+                eventDiv.dataset.scheduleId = event.id; // Store ID for editing/deleting
 
-        // Các sự kiện cho overlay "Áp dụng tương tự" đã được khôi phục
-        if (cancelApplySimilarBtn) {
-            cancelApplySimilarBtn.removeEventListener('click', hideApplySimilarOverlay);
-            cancelApplySimilarBtn.addEventListener('click', hideApplySimilarOverlay);
-        }
-        if (confirmApplySimilarBtn) {
-            confirmApplySimilarBtn.removeEventListener('click', applySimilarSchedule);
-            confirmApplySimilarBtn.addEventListener('click', applySimilarSchedule);
-        }
-    }
+                // Add click listener to each event (for editing/deleting existing schedule)
+                eventDiv.addEventListener('click', async (e) => { // Make async to fetch single schedule
+                    e.stopPropagation(); // Prevent day click event from firing
 
-    // Tách riêng hàm đính kèm sự kiện remove slot
-    function attachRemoveSlotListeners() {
-        // Loại bỏ trình nghe cũ để tránh trùng lặp nếu render lại
-        weeklyScheduleContainer.removeEventListener('click', handleRemoveSlotClick);
-        weeklyScheduleContainer.addEventListener('click', handleRemoveSlotClick);
-    }
-
-    function handleDayToggleChange(e) {
-        const dayKey = e.target.dataset.dayKey;
-        const container = document.getElementById(`day-${dayKey}-slots`);
-        // const parentDiv = e.target.closest('.d-flex'); // Không cần truy vấn lại parentDiv ở đây
-        // const addSlotBtn = parentDiv ? parentDiv.querySelector('.add-slot-btn') : null;
-        // const duplicateSlotBtn = parentDiv ? parentDiv.querySelector('.duplicate-slot-btn') : null;
-
-        updateAddDuplicateButtonVisibility(dayKey, e.target.checked); // Gọi hàm mới để cập nhật hiển thị nút
-
-        if (e.target.checked) {
-            if (container) container.style.display = 'block';
-            // Khi bật toggle, nếu chưa có slot nào, hiển thị thông báo "Chưa có khung giờ nào."
-            if (!(weeklyScheduleConfig[dayKey] && weeklyScheduleConfig[dayKey].length > 0)) {
-                if (container) container.innerHTML = `<p class="text-muted text-sm" id="no-slots-${dayKey}">Chưa có khung giờ nào.</p>`;
-            } else {
-                renderDaySlots(dayKey); // Render lại các slot nếu có
-            }
-        } else {
-            if (container) container.style.display = 'none';
-            weeklyScheduleConfig[dayKey] = []; // Xóa tất cả slot khi tắt toggle
-            renderDaySlots(dayKey); // Render lại để hiển thị "Chưa có khung giờ nào."
-        }
-    }
-
-    function handleAddSlotClick(e) {
-        const dayKey = e.currentTarget.dataset.dayKey;
-        const duration = parseInt(appointmentDurationSelect.value);
-        if (isNaN(duration) || duration <= 0) {
-            displayModalMessage('danger', 'Vui lòng chọn thời gian cuộc hẹn mặc định hợp lệ.');
-            return;
-        }
-
-        let newSlots = [];
-
-        // Đảm bảo LocalTime và DateTimeFormatter được định nghĩa hoặc polyfill
-        if (typeof LocalTime === 'undefined' || typeof DateTimeFormatter === 'undefined') {
-            displayModalMessage('danger', 'Lỗi nội bộ: Không tìm thấy định nghĩa LocalTime hoặc DateTimeFormatter.');
-            console.error('LocalTime or DateTimeFormatter is not defined.');
-            return;
-        }
-
-        let currentTime = LocalTime.of(8, 0);
-        const endTimeOfDay = LocalTime.of(17, 0);
-
-        while (currentTime.plusMinutes(duration).isBefore(endTimeOfDay) || currentTime.plusMinutes(duration).equals(endTimeOfDay)) {
-            newSlots.push({
-                start: currentTime.format(DateTimeFormatter.ofPattern("HH:mm")),
-                end: currentTime.plusMinutes(duration).format(DateTimeFormatter.ofPattern("HH:mm"))
-            });
-            currentTime = currentTime.plusMinutes(duration);
-        }
-
-        weeklyScheduleConfig[dayKey] = newSlots;
-
-        const toggle = document.getElementById(`toggle-${dayKey}`);
-        if (toggle) {
-            if (!toggle.checked) {
-                toggle.checked = true;
-                // Khi bật toggle từ đây, cập nhật lại trạng thái nút
-                updateAddDuplicateButtonVisibility(dayKey, true);
-            }
-            renderDaySlots(dayKey); // Render các slot sau khi đảm bảo toggle đã bật và container hiển thị
-            updateAddDuplicateButtonVisibility(dayKey, toggle.checked); // Cập nhật lại hiển thị nút sau khi render slot
-        } else {
-            console.error(`Error: Toggle for day ${dayKey} not found in DOM.`);
-            displayModalMessage('danger', `Lỗi: Không tìm thấy điều khiển cho ngày ${daysOfWeekDisplay[dayKeys.indexOf(dayKey)]}. Vui lòng thử lại.`);
-        }
-    }
-
-    function handleRemoveSlotClick(e) {
-        // Sử dụng closest để xác định xem click có phải trên nút xóa hoặc con của nó không
-        if (e.target.classList.contains('remove-slot-btn') || e.target.closest('.remove-slot-btn')) {
-            const chip = e.target.closest('.slot-chip');
-            if (chip) {
-                const dayKey = chip.dataset.dayKey;
-                const slotIndex = parseInt(chip.dataset.slotIndex);
-
-                if (weeklyScheduleConfig[dayKey] && weeklyScheduleConfig[dayKey].length > slotIndex) {
-                    weeklyScheduleConfig[dayKey].splice(slotIndex, 1);
-                    renderDaySlots(dayKey); // Render lại để cập nhật index và HTML
-                    const toggle = document.getElementById(`toggle-${dayKey}`);
-                    if (toggle) {
-                        updateAddDuplicateButtonVisibility(dayKey, toggle.checked); // Cập nhật lại hiển thị nút
-                        // Nếu sau khi xóa hết slot mà toggle vẫn bật, giữ nút add/duplicate hiện
-                        if (weeklyScheduleConfig[dayKey].length === 0) {
-                            // Không làm gì đặc biệt ở đây, vì updateAddDuplicateButtonVisibility đã xử lý.
-                            // Container sẽ hiển thị "Chưa có khung giờ nào." do renderDaySlots.
+                    // Fetch full schedule details for editing
+                    try {
+                        // Use the globally defined contextPath
+                        const response = await fetch(`${contextPath}/api/doctor-schedules/${event.id}`);
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch schedule details');
                         }
+                        const scheduleDetails = await response.json();
+
+                        currentEditingScheduleId = scheduleDetails.id;
+                        scheduleModalLabel.textContent = 'Sửa/Xóa Lịch Làm Việc';
+                        modalWorkDateInput.value = formatDate(new Date(scheduleDetails.workDate));
+                        modalDoctorIdSelect.value = scheduleDetails.doctorId;
+                        modalIsActiveCheckbox.checked = scheduleDetails.active; // Use 'active' from backend
+                        modalEventNameInput.value = scheduleDetails.name;
+                        saveScheduleBtn.textContent = 'Cập nhật Lịch';
+                        deleteScheduleBtn.style.display = 'inline-block'; // Show delete button
+                        scheduleModal.show();
+                    } catch (error) {
+                        console.error('Error fetching schedule details:', error);
+                        alert('Không thể tải chi tiết lịch. Vui lòng thử lại.');
                     }
-                }
-            }
+                });
+                eventsContainer.appendChild(eventDiv);
+            });
+            dayElement.appendChild(eventsContainer);
         }
+
+        calendarGrid.appendChild(dayElement);
     }
 
-    let sourceDayForDuplication = null;
-
-    // Các hàm cho overlay "Áp dụng tương tự" (đã được hoàn thiện)
-    function handleDuplicateSlotClick(e) {
-        sourceDayForDuplication = e.currentTarget.dataset.dayKey; // Sử dụng currentTarget
-
-        const sourceDayDisplay = daysOfWeekDisplay[dayKeys.indexOf(sourceDayForDuplication)];
-
-        // Kiểm tra xem ngày nguồn có khung giờ nào không TRƯỚC KHI hiển thị popup
-        if (!weeklyScheduleConfig[sourceDayForDuplication] || weeklyScheduleConfig[sourceDayForDuplication].length === 0) {
-            displayModalMessage('info', `Không có khung giờ nào để sao chép từ ${sourceDayDisplay}. Vui lòng thêm khung giờ trước.`);
-            sourceDayForDuplication = null; // Đặt lại
-            return;
-        }
-
-        // Đặt vị trí overlay gần nút đã click
-        const button = e.currentTarget; // Nút đã click
-        const buttonRect = button.getBoundingClientRect();
-        const modalContent = document.querySelector('.modal-content'); // Lấy modal content để tính offset
-        const modalContentRect = modalContent.getBoundingClientRect();
-
-        // Tính toán vị trí tương đối với modal content
-        const topOffset = buttonRect.bottom - modalContentRect.top + 5; // 5px dưới nút
-        const leftOffset = buttonRect.left - modalContentRect.left;
-
-        applySimilarOverlay.style.position = 'absolute'; // Đảm bảo vị trí tuyệt đối
-        applySimilarOverlay.style.top = `${topOffset}px`;
-        applySimilarOverlay.style.left = `${leftOffset}px`;
-        applySimilarOverlay.style.right = 'auto'; // Đảm bảo không bị ảnh hưởng bởi right cũ
-
-        // Tạm thời hiện overlay để lấy kích thước chính xác
-        applySimilarOverlay.classList.remove('d-none');
-        const overlayWidth = applySimilarOverlay.offsetWidth;
-        const modalContentWidth = modalContentRect.width;
-
-        // Điều chỉnh vị trí nếu popup vượt ra ngoài biên phải của modal
-        if (leftOffset + overlayWidth > modalContentWidth - 20) { // 20px padding từ cạnh phải modal
-            applySimilarOverlay.style.left = `${modalContentWidth - overlayWidth - 20}px`;
-        }
-
-
-        // Đổ dữ liệu checkboxes vào overlay
-        applySimilarCheckboxes.innerHTML = '';
-
-        // Thêm checkbox "Chọn tất cả"
-        const selectAllDiv = document.createElement('div');
-        selectAllDiv.className = 'form-check mb-2';
-        selectAllDiv.innerHTML = `
-            <input class="form-check-input" type="checkbox" id="apply-to-all">
-            <label class="form-check-label fw-bold" for="apply-to-all">Chọn tất cả</label>
-        `;
-        applySimilarCheckboxes.appendChild(selectAllDiv);
-
-        const selectAllCheckbox = document.getElementById('apply-to-all');
-
-        dayKeys.forEach(dayKey => {
-            if (dayKey !== sourceDayForDuplication) { // Không hiển thị ngày nguồn
-                const dayIndex = dayKeys.indexOf(dayKey);
-                const checkboxDiv = document.createElement('div');
-                checkboxDiv.className = 'form-check';
-                checkboxDiv.innerHTML = `
-                    <input class="form-check-input apply-to-day-checkbox" type="checkbox" id="apply-to-${dayKey}" value="${dayKey}">
-                    <label class="form-check-label" for="apply-to-${dayKey}">${daysOfWeekDisplay[dayIndex]}</label>
-                `;
-                applySimilarCheckboxes.appendChild(checkboxDiv);
-            }
-        });
-
-        // Thêm trình nghe cho "Chọn tất cả"
-        if (selectAllCheckbox) { // Kiểm tra để đảm bảo nó tồn tại
-            selectAllCheckbox.removeEventListener('change', handleSelectAllChange); // Loại bỏ listener cũ
-            selectAllCheckbox.addEventListener('change', handleSelectAllChange);
-        }
-
-        // overlay đã được hiện ở trên để tính toán kích thước, giờ thì chỉ cần để nó hiển thị
-        // applySimilarOverlay.classList.remove('d-none');
-    }
-
-    function handleSelectAllChange(event) {
-        document.querySelectorAll('.apply-to-day-checkbox').forEach(checkbox => {
-            checkbox.checked = event.target.checked;
-        });
-    }
-
-    function applySimilarSchedule() {
-        const selectedTargetDayKeys = Array.from(applySimilarCheckboxes.querySelectorAll('.apply-to-day-checkbox:checked'))
-            .map(cb => cb.value);
-
-        if (selectedTargetDayKeys.length === 0) {
-            displayModalMessage('warning', 'Vui lòng chọn ít nhất một ngày để áp dụng.');
-            return;
-        }
-
-        if (!sourceDayForDuplication) {
-            displayModalMessage('danger', 'Lỗi: Không tìm thấy ngày nguồn để sao chép.');
-            hideApplySimilarOverlay();
-            return;
-        }
-
-        // Sao chép sâu mảng slot nguồn để tránh tham chiếu đến cùng một đối tượng
-        // Đảm bảo rằng sourceSlots không bao giờ là undefined hoặc null
-        // Kiểm tra lại tính nguyên bản của mảng khi sao chép
-        const sourceSlots = weeklyScheduleConfig[sourceDayForDuplication] ?
-            JSON.parse(JSON.stringify(weeklyScheduleConfig[sourceDayForDuplication])) : [];
-
-        // Nếu ngày nguồn không có slot nào thì không sao chép gì cả
-        if (sourceSlots.length === 0) {
-             displayModalMessage('info', `Ngày nguồn (${daysOfWeekDisplay[dayKeys.indexOf(sourceDayForDuplication)]}) không có khung giờ nào để sao chép.`);
-             hideApplySimilarOverlay();
-             return;
-        }
-
-
-        selectedTargetDayKeys.forEach(targetDayKey => {
-            weeklyScheduleConfig[targetDayKey] = sourceSlots; // Gán bản sao
-
-            // Đảm bảo toggle của ngày đích được bật và render lại giao diện
-            const targetToggle = document.getElementById(`toggle-${targetDayKey}`);
-            if (targetToggle) { // Đảm bảo toggle tồn tại
-                if (!targetToggle.checked) {
-                    targetToggle.checked = true;
-                    // Khi bật toggle từ việc sao chép, cần hiển thị container và nút
-                    updateAddDuplicateButtonVisibility(targetDayKey, true);
-                }
-                renderDaySlots(targetDayKey); // Render lại các slot đã sao chép
-                // updateAddDuplicateButtonVisibility(targetDayKey, targetToggle.checked); // Đã gọi ở trên
-            }
-        });
-
-        displayModalMessage('success', `Đã sao chép lịch thành công từ ${daysOfWeekDisplay[dayKeys.indexOf(sourceDayForDuplication)]} sang các ngày đã chọn.`);
-        hideApplySimilarOverlay();
-    }
-
-    function hideApplySimilarOverlay() {
-        applySimilarOverlay.classList.add('d-none');
-        sourceDayForDuplication = null; // Đặt lại biến nguồn
-    }
-
-    // Trình nghe sự kiện cho các nút "Chỉnh sửa lịch" trong danh sách bác sĩ
-    document.querySelectorAll('.edit-schedule-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-            const currentEditingDoctorId = button.dataset.doctorId;
-            const currentEditingDoctorAccountId = button.dataset.doctorAccountId;
-            const doctorName = button.dataset.doctorName;
-
-            modalDoctorName.textContent = doctorName;
-            modalDoctorId.value = currentEditingDoctorId;
-            modalDoctorAccountId.value = currentEditingDoctorAccountId;
-
-            modalScheduleForm.reset();
-            periodFuture.checked = true;
-            dateRangePickerContainer.style.display = 'none';
-            flatpickrInstance.clear();
-
-            weeklyScheduleConfig = {}; // Reset config khi mở modal mới
-
-            // Đảm bảo populateWeeklySchedules hoàn thành việc tạo DOM trước khi fetch dữ liệu
-            populateWeeklySchedules(weeklyScheduleConfig); // Khởi tạo giao diện với config rỗng
-
-            modalMessageContainer.innerHTML = ''; // Xóa bất kỳ thông báo lỗi nào
-            hideApplySimilarOverlay(); // Đảm bảo overlay ẩn
-
-            // Bây giờ mới fetch dữ liệu, sau khi DOM đã được tạo
-            await fetchAndPopulateDoctorSchedule(currentEditingDoctorId);
-
-            editScheduleModal.show();
-        });
-    });
-
-    // Hàm để lấy và điền dữ liệu lịch trình bác sĩ hiện có
-    async function fetchAndPopulateDoctorSchedule(doctorId) {
-        modalLoadingSpinner.classList.remove('d-none');
-        saveScheduleBtn.disabled = true;
-
-        try {
-            const response = await fetch(`${contextPath}/doctor/schedule/detailed?doctorAccountId=${modalDoctorAccountId.value}`);
-
-            let responseData;
-            let isJson = false;
-
-            try {
-                responseData = await response.json();
-                isJson = true;
-            } catch (jsonError) {
-                try {
-                    responseData = await response.text();
-                } catch (textError) {
-                    console.error("Failed to read response body as text after json parse failure:", textError);
-                    responseData = "Unknown error (failed to read response body).";
-                }
-                isJson = false;
-            }
-
-            if (!response.ok) {
-                let errorMessage = "Đã xảy ra lỗi không xác định.";
-                if (isJson && responseData && responseData.error) {
-                    errorMessage = responseData.error;
-                } else if (!isJson) {
-                    errorMessage = `Lỗi HTTP! Trạng thái: ${response.status}. Phản hồi: ${responseData}`;
-                } else {
-                    errorMessage = `Lỗi HTTP! Trạng thái: ${response.status}.`;
-                }
-                throw new Error(errorMessage);
-            }
-
-            const detailedScheduleConfigData = responseData.detailedScheduleConfig || {};
-
-            // Cập nhật các trường form
-            appointmentDurationSelect.value = detailedScheduleConfigData.appointment_duration || "30";
-
-            if (detailedScheduleConfigData.schedule_period === 'range') {
-                periodRange.checked = true;
-                dateRangePickerContainer.style.display = 'block';
-                if (detailedScheduleConfigData.date_range_start && detailedScheduleConfigData.date_range_end) {
-                    flatpickrInstance.setDate([detailedScheduleConfigData.date_range_start, detailedScheduleConfigData.date_range_end], true);
-                }
-            } else {
-                periodFuture.checked = true;
-                dateRangePickerContainer.style.display = 'none';
-                flatpickrInstance.clear();
-            }
-
-            // Điền lịch trình hàng tuần
-            // Đảm bảo rằng weekly_schedule luôn là một đối tượng, không phải null
-            populateWeeklySchedules(detailedScheduleConfigData.weekly_schedule || {});
-
-        } catch (error) {
-            console.error("Lỗi khi tải lịch làm việc chi tiết:", error);
-            displayModalMessage('danger', `Không thể tải lịch làm việc chi tiết: ${error.message}. Vui lòng thử lại.`);
-            populateWeeklySchedules({}); // Khôi phục về trạng thái rỗng nếu có lỗi
-        } finally {
-            modalLoadingSpinner.classList.add('d-none');
-            saveScheduleBtn.disabled = false;
+    // Fill trailing empty cells with days from the next month
+    const totalCells = startDayIndex + daysInMonth;
+    const remainingCells = 42 - totalCells; // Ensure 6 rows (6 * 7 = 42 cells)
+    if (totalCells % 7 !== 0) { // If not a full last week
+        for (let i = 1; i <= (7 - (totalCells % 7)); i++) {
+            const dayElement = document.createElement('div');
+            dayElement.classList.add('calendar-day', 'other-month');
+            dayElement.innerHTML = `<div class="calendar-day-number">${i}</div>`;
+            calendarGrid.appendChild(dayElement);
         }
     }
+    // Add more rows if needed to ensure 6 rows always for consistent layout
+    const currentRows = Math.ceil(calendarGrid.children.length / 7);
+    if (currentRows < 6) {
+        const daysToAdd = (6 - currentRows) * 7;
+        for (let i = 1; i <= daysToAdd; i++) {
+            const dayElement = document.createElement('div');
+            dayElement.classList.add('calendar-day', 'other-month');
+            dayElement.innerHTML = `<div class="calendar-day-number">${i}</div>`;
+            calendarGrid.appendChild(dayElement);
+        }
+    }
+}
 
-    // Hàm hỗ trợ hiển thị thông báo trong modal
-    function displayModalMessage(type, message) {
-        modalMessageContainer.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show rounded-md" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
+// Event Listeners
+prevMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+});
+
+nextMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+});
+
+todayButton.addEventListener('click', () => {
+    currentDate = new Date(); // Reset to today's date
+    renderCalendar();
+});
+
+addEventButton.addEventListener('click', () => {
+    // Clear form and show modal for new schedule
+    currentEditingScheduleId = null;
+    scheduleModalLabel.textContent = 'Thêm Lịch Làm Việc';
+    modalWorkDateInput.value = '';
+    modalDoctorIdSelect.value = '';
+    modalIsActiveCheckbox.checked = true;
+    modalEventNameInput.value = '';
+    saveScheduleBtn.textContent = 'Lưu Lịch';
+    deleteScheduleBtn.style.display = 'none';
+    scheduleModal.show();
+});
+
+saveScheduleBtn.addEventListener('click', async () => { // Make async
+    const doctorId = modalDoctorIdSelect.value;
+    const workDate = modalWorkDateInput.value;
+    const isActive = modalIsActiveCheckbox.checked;
+    const eventName = modalEventNameInput.value || `Lịch BS ${doctorId} (${workDate})`; // Default name if empty
+
+    if (!doctorId || !workDate) {
+        alert('Vui lòng chọn bác sĩ và ngày làm việc.'); // Using alert for simplicity, consider custom modal
+        return;
     }
 
-    // Xử lý gửi biểu mẫu bên trong modal
-    modalScheduleForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        modalMessageContainer.innerHTML = '';
+    const scheduleData = {
+        doctorId: parseInt(doctorId), // Ensure doctorId is an integer
+        workDate: workDate, // YYYY-MM-DD string
+        isActive: isActive,
+        eventName: eventName
+    };
 
-        saveScheduleBtn.disabled = true;
-        modalLoadingSpinner.classList.remove('d-none');
-
-        const formData = new FormData(modalScheduleForm);
-        const dataToSend = {
-            doctor_account_id: formData.get('doctor_account_id'),
-            appointment_duration: formData.get('appointment_duration'),
-            schedule_period: formData.get('schedulePeriod')
-        };
-
-        if (dataToSend.schedule_period === 'range') {
-            const dateRange = flatpickrInstance.selectedDates;
-            if (dateRange.length === 2) {
-                dataToSend.date_range_start = dateRange[0].toISOString().split('T')[0];
-                dataToSend.date_range_end = dateRange[1].toISOString().split('T')[0];
-            } else {
-                displayModalMessage('danger', 'Vui lòng chọn đầy đủ khoảng ngày.');
-                saveScheduleBtn.disabled = false;
-                modalLoadingSpinner.classList.add('d-none');
-                return;
-            }
-        }
-
-        dataToSend.weekly_schedule = {};
-        dayKeys.forEach((dayKey, dayIndex) => {
-            const toggle = document.getElementById(`toggle-${dayKey}`);
-            // Chỉ gửi dữ liệu cho các ngày được bật toggle VÀ có slot
-            if (toggle && toggle.checked) {
-                const container = document.getElementById(`day-${dayKey}-slots`);
-                const slots = [];
-                // Sử dụng querySelectorAll trực tiếp trên container để lấy các chip
-                if (container) {
-                    container.querySelectorAll('.slot-chip').forEach(slotDiv => {
-                        const start = slotDiv.dataset.start;
-                        const end = slotDiv.dataset.end;
-                        if (start && end) {
-                            slots.push({
-                                start: start,
-                                end: end
-                            });
-                        }
-                    });
-                }
-                dataToSend.weekly_schedule[dayKey] = slots;
-            } else {
-                dataToSend.weekly_schedule[dayKey] = [];
-            }
-        });
-
-        try {
-            const response = await fetch(`${contextPath}/doctor/schedule`, {
+    try {
+        let response;
+        if (currentEditingScheduleId) {
+            // Update existing schedule
+            // Use the globally defined contextPath
+            response = await fetch(`${contextPath}/api/doctor-schedules/${currentEditingScheduleId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(scheduleData)
+            });
+        } else {
+            // Add new schedule
+            // Use the globally defined contextPath
+            response = await fetch(`${contextPath}/api/doctor-schedules`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(dataToSend)
+                body: JSON.stringify(scheduleData)
             });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || `Lỗi HTTP! Trạng thái: ${response.status}`);
-            }
-
-            displayModalMessage('success', 'Lịch làm việc đã được lưu thành công!');
-        } catch (error) {
-            console.error("Lỗi khi lưu lịch:", error);
-            displayModalMessage('danger', `Lỗi khi lưu lịch: ${error.message}`);
-        } finally {
-            saveScheduleBtn.disabled = false;
-            modalLoadingSpinner.classList.add('d-none');
-        }
-    });
-
-    // Polyfill cho LocalTime và DateTimeFormatter đơn giản
-    class LocalTime {
-        constructor(hours, minutes) {
-            this.hours = hours;
-            this.minutes = minutes;
         }
 
-        plusMinutes(minutesToAdd) {
-            let totalMinutes = this.hours * 60 + this.minutes + minutesToAdd;
-            let newHours = Math.floor(totalMinutes / 60);
-            let newMinutes = totalMinutes % 60;
-            if (newHours >= 24) newHours -= 24;
-            return new LocalTime(newHours, newMinutes);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Có lỗi xảy ra khi lưu lịch.');
         }
 
-        isBefore(otherTime) {
-            if (this.hours < otherTime.hours) return true;
-            if (this.hours > otherTime.hours) return false;
-            return this.minutes < otherTime.minutes;
-        }
-
-        equals(otherTime) {
-            return this.hours === otherTime.hours && this.minutes === otherTime.minutes;
-        }
-
-        format(formatter) {
-            const h = String(this.hours).padStart(2, '0');
-            const m = String(this.minutes).padStart(2, '0');
-            if (formatter.pattern === "HH:mm") {
-                return `${h}:${m}`;
-            }
-            return `${h}:${m}`;
-        }
-
-        static of(hours, minutes) {
-            return new LocalTime(hours, minutes);
-        }
+        alert('Lịch làm việc đã được lưu thành công!'); // Replace with custom modal
+        scheduleModal.hide();
+        renderCalendar(); // Re-render calendar to show new/updated event
+    } catch (error) {
+        console.error('Error saving schedule:', error);
+        alert(`Lỗi: ${error.message}`); // Replace with custom modal
     }
+});
 
-    class DateTimeFormatter {
-        constructor(pattern) {
-            this.pattern = pattern;
-        }
-        static ofPattern(pattern) {
-            return new DateTimeFormatter(pattern);
+deleteScheduleBtn.addEventListener('click', async () => { // Make async
+    if (currentEditingScheduleId) {
+        // Replace confirm with a custom confirmation modal
+        if (confirm('Bạn có chắc chắn muốn xóa lịch làm việc này không?')) {
+            try {
+                // Use the globally defined contextPath
+                const response = await fetch(`${contextPath}/api/doctor-schedules/${currentEditingScheduleId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Có lỗi xảy ra khi xóa lịch.');
+                }
+
+                alert('Lịch làm việc đã được xóa thành công!'); // Replace with custom modal
+                scheduleModal.hide();
+                renderCalendar(); // Re-render calendar
+            } catch (error) {
+                console.error('Error deleting schedule:', error);
+                alert(`Lỗi: ${error.message}`); // Replace with custom modal
+            }
         }
     }
 });
+
+// Initial render
+window.onload = function() {
+    populateDoctorSelect(); // Populate doctors when page loads
+    renderCalendar();
+};

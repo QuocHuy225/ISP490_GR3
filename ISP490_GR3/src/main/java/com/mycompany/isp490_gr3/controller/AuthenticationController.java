@@ -1,9 +1,8 @@
 package com.mycompany.isp490_gr3.controller;
 
 import com.mycompany.isp490_gr3.dao.DAOUser;
-import com.mycompany.isp490_gr3.model.GoogleUserInfo;
 import com.mycompany.isp490_gr3.model.User;
-import com.mycompany.isp490_gr3.service.GoogleOAuthService;
+import com.mycompany.isp490_gr3.service.EmailService;
 import java.io.IOException;
 import java.sql.Date;
 import java.text.ParseException;
@@ -29,24 +28,23 @@ import jakarta.servlet.http.HttpSession;
  * JSP tương ứng: login.jsp, register.jsp, landing.jsp
  * 
  * Các chức năng chính:
- * - Đăng nhập (email/password và Google OAuth)
+ * - Đăng nhập (email/password)
  * - Đăng ký tài khoản mới
  * - Đăng xuất và quản lý session
  * - Xác thực và phân quyền
  * - Chuyển hướng sau đăng nhập theo role
- * - Liên kết tài khoản Google
  * =====================================================
  */
 public class AuthenticationController extends HttpServlet {
     
     private DAOUser daoUser;
-    private GoogleOAuthService googleOAuthService;
+    private EmailService emailService;
     
     @Override
     public void init() throws ServletException {
         super.init();
         daoUser = new DAOUser();
-        googleOAuthService = new GoogleOAuthService();
+        emailService = new EmailService();
     }
     
     @Override
@@ -63,12 +61,6 @@ public class AuthenticationController extends HttpServlet {
         switch (pathInfo) {
             case "/logout":
                 handleLogout(request, response);
-                break;
-            case "/google":
-                handleGoogleLogin(request, response);
-                break;
-            case "/google/callback":
-                handleGoogleCallback(request, response);
                 break;
             default:
                 response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
@@ -93,6 +85,12 @@ public class AuthenticationController extends HttpServlet {
                 break;
             case "/register":
                 handleRegister(request, response);
+                break;
+            case "/verify-email":
+                handleEmailVerification(request, response);
+                break;
+            case "/resend-verification":
+                handleResendVerification(request, response);
                 break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -164,6 +162,14 @@ public class AuthenticationController extends HttpServlet {
             return;
         }
         
+        // Validate Gmail requirement
+        if (!email.trim().toLowerCase().endsWith("@gmail.com")) {
+            request.setAttribute("registerError", "Vui lòng sử dụng email Gmail để đăng ký");
+            setRegistrationFormData(request, fullName, email, phone, dobStr, genderStr, address);
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
         // Check if email already exists
         if (daoUser.isEmailExists(email.trim())) {
             request.setAttribute("registerError", "Email đã được sử dụng");
@@ -171,6 +177,9 @@ public class AuthenticationController extends HttpServlet {
             request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
             return;
         }
+        
+        // Generate verification code
+        String verificationCode = emailService.generateVerificationCode();
         
         // Create new user
         User newUser = new User();
@@ -182,14 +191,24 @@ public class AuthenticationController extends HttpServlet {
         // Set default role as Patient
         newUser.setRole(User.Role.PATIENT);
         
-        // Attempt registration
-        boolean registrationSuccess = daoUser.register(newUser);
+        // Attempt registration with verification
+        boolean registrationSuccess = daoUser.registerWithVerification(newUser, verificationCode);
         
         if (registrationSuccess) {
-            // Registration successful - show success message and open login modal
-            request.setAttribute("registerSuccess", "Đăng ký thành công! Vui lòng đăng nhập.");
-            request.setAttribute("showLoginModal", "true");
-            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            // Send verification email
+            boolean emailSent = emailService.sendVerificationEmail(email.trim(), verificationCode, fullName.trim());
+            
+            if (emailSent) {
+                // Registration and email successful - show email verification popup
+                request.setAttribute("verificationEmail", email.trim());
+                request.setAttribute("needEmailVerification", "true");
+                request.setAttribute("registerSuccess", "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.");
+                request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            } else {
+                // Registration successful but email failed
+                request.setAttribute("registerError", "Đăng ký thành công nhưng không thể gửi email xác thực. Vui lòng thử lại.");
+                request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            }
         } else {
             // Registration failed
             request.setAttribute("registerError", "Đăng ký thất bại. Vui lòng thử lại.");
@@ -204,13 +223,98 @@ public class AuthenticationController extends HttpServlet {
     private void handleLogout(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // Get current session
         HttpSession session = request.getSession(false);
+        
         if (session != null) {
+            // Invalidate session
             session.invalidate();
         }
         
-        // Add success message and redirect
-        request.setAttribute("logoutSuccess", "Đăng xuất thành công! Cảm ơn bạn đã sử dụng dịch vụ.");
+        // Set logout success message and redirect to landing page
+        request.setAttribute("logoutSuccess", "Đăng xuất thành công!");
+        request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+    }
+    
+    /**
+     * Handle email verification request
+     */
+    private void handleEmailVerification(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String email = request.getParameter("email");
+        String verificationCode = request.getParameter("verificationCode");
+        
+        // Validate input
+        if (email == null || email.trim().isEmpty() || 
+            verificationCode == null || verificationCode.trim().isEmpty()) {
+            
+            request.setAttribute("verificationError", "Email và mã xác thực không được để trống");
+            request.setAttribute("verificationEmail", email);
+            request.setAttribute("needEmailVerification", "true");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        // Attempt email verification
+        boolean verificationSuccess = daoUser.verifyEmail(email.trim(), verificationCode.trim());
+        
+        if (verificationSuccess) {
+            // Verification successful - show login modal
+            request.setAttribute("registerSuccess", "Xác thực email thành công! Bạn có thể đăng nhập ngay bây giờ.");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+        } else {
+            // Verification failed - show email verification modal with error
+            request.setAttribute("verificationError", "Mã xác thực không đúng hoặc đã hết hạn");
+            request.setAttribute("verificationEmail", email);
+            request.setAttribute("needEmailVerification", "true");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+        }
+    }
+    
+    /**
+     * Handle resend verification code request
+     */
+    private void handleResendVerification(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String email = request.getParameter("email");
+        
+        // Validate input
+        if (email == null || email.trim().isEmpty()) {
+            request.setAttribute("verificationError", "Email không được để trống");
+            request.setAttribute("needEmailVerification", "true");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        // Generate new verification code
+        String newVerificationCode = emailService.generateVerificationCode();
+        
+        // Update verification code in database
+        boolean updateSuccess = daoUser.resendVerificationCode(email.trim(), newVerificationCode);
+        
+        if (updateSuccess) {
+            // Get user info for email
+            User user = daoUser.getUserByEmail(email.trim());
+            if (user != null) {
+                // Send new verification email
+                boolean emailSent = emailService.sendVerificationEmail(email.trim(), newVerificationCode, user.getFullName());
+                
+                if (emailSent) {
+                    request.setAttribute("verificationSuccess", "Mã xác thực mới đã được gửi đến email của bạn");
+                } else {
+                    request.setAttribute("verificationError", "Không thể gửi email xác thực. Vui lòng thử lại.");
+                }
+            } else {
+                request.setAttribute("verificationError", "Không tìm thấy tài khoản với email này");
+            }
+        } else {
+            request.setAttribute("verificationError", "Không thể tạo mã xác thực mới. Vui lòng thử lại.");
+        }
+        
+        request.setAttribute("verificationEmail", email);
+        request.setAttribute("needEmailVerification", "true");
         request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
     }
     
@@ -261,131 +365,5 @@ public class AuthenticationController extends HttpServlet {
         request.setAttribute("regDob", dob);
         request.setAttribute("regGender", gender);
         request.setAttribute("regAddress", address);
-    }
-    
-    /**
-     * Handle Google OAuth login initiation
-     */
-    private void handleGoogleLogin(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        if (!googleOAuthService.isConfigured()) {
-            request.setAttribute("loginError", "Google OAuth chưa được cấu hình. Vui lòng liên hệ quản trị viên.");
-            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
-            return;
-        }
-        
-        String authorizationUrl = googleOAuthService.getAuthorizationUrl();
-        if (authorizationUrl != null) {
-            response.sendRedirect(authorizationUrl);
-        } else {
-            request.setAttribute("loginError", "Không thể tạo liên kết đăng nhập Google. Vui lòng thử lại.");
-            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
-        }
-    }
-    
-    /**
-     * Handle Google OAuth callback
-     */
-    private void handleGoogleCallback(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        String authorizationCode = request.getParameter("code");
-        String error = request.getParameter("error");
-        
-        // Check for OAuth errors
-        if (error != null) {
-            String errorMessage = "access_denied".equals(error) ? 
-                "Bạn đã từ chối quyền truy cập Google. Vui lòng thử lại." :
-                "Lỗi xác thực Google: " + error;
-            request.setAttribute("loginError", errorMessage);
-            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
-            return;
-        }
-        
-        if (authorizationCode == null || authorizationCode.trim().isEmpty()) {
-            request.setAttribute("loginError", "Không nhận được mã xác thực từ Google. Vui lòng thử lại.");
-            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
-            return;
-        }
-        
-        try {
-            // Get user info from Google
-            GoogleUserInfo googleUserInfo = googleOAuthService.getUserInfoFromCode(authorizationCode);
-            
-            if (googleUserInfo == null || googleUserInfo.getEmail() == null) {
-                request.setAttribute("loginError", "Không thể lấy thông tin người dùng từ Google. Vui lòng thử lại.");
-                request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
-                return;
-            }
-            
-            // Check if user exists by Google ID
-            User existingUser = daoUser.getUserByGoogleId(googleUserInfo.getId());
-            
-            if (existingUser != null) {
-                // User exists with Google ID - login directly
-                loginUser(request, response, existingUser);
-                return;
-            }
-            
-            // Check if user exists by email
-            existingUser = daoUser.getUserByEmail(googleUserInfo.getEmail());
-            
-            if (existingUser != null) {
-                // User exists but no Google ID - link accounts
-                if (daoUser.linkGoogleAccount(googleUserInfo.getEmail(), googleUserInfo.getId())) {
-                    existingUser.setGoogleId(googleUserInfo.getId());
-                    loginUser(request, response, existingUser);
-                } else {
-                    request.setAttribute("loginError", "Không thể liên kết tài khoản Google. Vui lòng thử lại.");
-                    request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
-                }
-                return;
-            }
-            
-            // New user - register with Google
-            User newUser = createUserFromGoogleInfo(googleUserInfo);
-            
-            if (daoUser.registerWithGoogle(newUser)) {
-                // Registration successful - login the user
-                loginUser(request, response, newUser);
-            } else {
-                request.setAttribute("registerError", "Không thể tạo tài khoản. Vui lòng thử lại.");
-                request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
-            }
-            
-        } catch (IOException e) {
-            System.err.println("Error processing Google OAuth callback: " + e.getMessage());
-            e.printStackTrace();
-            request.setAttribute("loginError", "Lỗi xử lý thông tin Google. Vui lòng thử lại.");
-            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
-        }
-    }
-    
-    /**
-     * Create User object from Google user info
-     */
-    private User createUserFromGoogleInfo(GoogleUserInfo googleUserInfo) {
-        User user = new User();
-        user.setFullName(googleUserInfo.getName() != null ? googleUserInfo.getName() : "Google User");
-        user.setEmail(googleUserInfo.getEmail());
-        user.setGoogleId(googleUserInfo.getId());
-        user.setRole(User.Role.PATIENT); // Default role
-        return user;
-    }
-    
-    /**
-     * Login user and set session
-     */
-    private void loginUser(HttpServletRequest request, HttpServletResponse response, User user) 
-            throws IOException {
-        HttpSession session = request.getSession();
-        session.setAttribute("user", user);
-        session.setAttribute("userId", user.getId());
-        session.setAttribute("userRole", user.getRole());
-        session.setAttribute("userFullName", user.getFullName());
-        
-        // Redirect to homepage after successful login
-        response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp");
     }
 } 
