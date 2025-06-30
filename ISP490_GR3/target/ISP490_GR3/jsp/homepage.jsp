@@ -113,23 +113,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="bi bi-file-medical"></i> Hồ sơ bệnh án
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-people"></i> Danh sách bệnh nhân
+                    <a href="${pageContext.request.contextPath}/patients">
+                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
                 <li>
                     <a href="#">
                         <i class="bi bi-clipboard-pulse"></i> Toa thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-journal-medical"></i> Chỉ định dịch vụ
                     </a>
                 </li>
                 <% } else if (currentRole == User.Role.RECEPTIONIST) { %>

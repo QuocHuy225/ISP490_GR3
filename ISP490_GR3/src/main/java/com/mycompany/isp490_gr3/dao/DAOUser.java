@@ -22,10 +22,10 @@ import java.util.ArrayList;
  * URL liên quan: /auth/*, /admin/authorization, /user/profile
  * 
  * Các chức năng chính:
- * - Đăng nhập/đăng ký (bao gồm Google OAuth)
+ * - Đăng nhập/đăng ký
  * - Quản lý thông tin cá nhân
  * - Phân quyền người dùng (Admin, Doctor, Receptionist, Patient)
- * - Đổi mật khẩu, liên kết tài khoản Google
+ * - Đổi mật khẩu
  * - Xóa/khôi phục người dùng (soft delete)
  * - Tìm kiếm và lọc người dùng
  * =====================================================
@@ -40,7 +40,7 @@ public class DAOUser {
      */
     public User login(String email, String password) {
         String hashedPassword = hashPassword(password);
-        String sql = "SELECT * FROM user WHERE Email = ? AND Password = ? AND IsDeleted = FALSE";
+        String sql = "SELECT * FROM user WHERE email = ? AND password = ? AND isdeleted = FALSE AND (is_email_verified = TRUE OR is_email_verified IS NULL)";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -73,7 +73,7 @@ public class DAOUser {
             return false;
         }
         
-        String sql = "INSERT INTO user (id, FullName, Email, Password, Phone, Role, Created_At) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO user (id, fullname, email, password, phone, role, created_At) VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -101,12 +101,132 @@ public class DAOUser {
     }
     
     /**
+     * Register a new user with email verification
+     * @param user User object to register
+     * @param verificationToken Verification token for email confirmation
+     * @return true if registration successful, false otherwise
+     */
+    public boolean registerWithVerification(User user, String verificationToken) {
+        // Check if email already exists
+        if (isEmailExists(user.getEmail())) {
+            System.out.println("Email already exists: " + user.getEmail());
+            return false;
+        }
+        
+        String sql = "INSERT INTO user (id, fullname, email, password, phone, role, created_At, verification_token, is_email_verified, verification_expiry_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            // Generate unique ID
+            String userId = generateUserId();
+            
+            // Set verification expiry time (15 minutes from now)
+            Timestamp expiryTime = new Timestamp(System.currentTimeMillis() + (15 * 60 * 1000));
+            
+            ps.setString(1, userId);
+            ps.setString(2, user.getFullName());
+            ps.setString(3, user.getEmail());
+            ps.setString(4, hashPassword(user.getPassword()));
+            ps.setString(5, user.getPhone());
+            ps.setString(6, user.getRole().getValue());
+            ps.setTimestamp(7, new Timestamp(System.currentTimeMillis()));
+            ps.setString(8, verificationToken);
+            ps.setBoolean(9, false); // Not verified initially
+            ps.setTimestamp(10, expiryTime);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error during registration with verification: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Verify user email with verification code
+     * @param email User's email
+     * @param verificationCode Verification code entered by user
+     * @return true if verification successful, false otherwise
+     */
+    public boolean verifyEmail(String email, String verificationCode) {
+        String sql = "SELECT * FROM user WHERE email = ? AND verification_token = ? AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, email);
+            ps.setString(2, verificationCode);
+            
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                // Check if verification token is expired
+                Timestamp expiryTime = rs.getTimestamp("verification_expiry_time");
+                if (expiryTime != null && expiryTime.before(new Timestamp(System.currentTimeMillis()))) {
+                    System.out.println("Verification token expired for email: " + email);
+                    return false;
+                }
+                
+                // Update user as verified
+                String updateSql = "UPDATE user SET is_email_verified = TRUE, verification_token = NULL, verification_expiry_time = NULL, updated_At = ? WHERE email = ?";
+                try (PreparedStatement updatePs = conn.prepareStatement(updateSql)) {
+                    updatePs.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+                    updatePs.setString(2, email);
+                    
+                    int result = updatePs.executeUpdate();
+                    return result > 0;
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error during email verification: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Resend verification code (update token and expiry time)
+     * @param email User's email
+     * @param newVerificationToken New verification token
+     * @return true if update successful, false otherwise
+     */
+    public boolean resendVerificationCode(String email, String newVerificationToken) {
+        String sql = "UPDATE user SET verification_token = ?, verification_expiry_time = ?, updated_At = ? WHERE email = ? AND is_email_verified = FALSE AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            // Set new expiry time (15 minutes from now)
+            Timestamp expiryTime = new Timestamp(System.currentTimeMillis() + (15 * 60 * 1000));
+            
+            ps.setString(1, newVerificationToken);
+            ps.setTimestamp(2, expiryTime);
+            ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+            ps.setString(4, email);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error resending verification code: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
      * Check if email already exists in database
      * @param email Email to check
      * @return true if email exists, false otherwise
      */
     public boolean isEmailExists(String email) {
-        String sql = "SELECT COUNT(*) FROM user WHERE Email = ? AND IsDeleted = FALSE";
+        String sql = "SELECT COUNT(*) FROM user WHERE email = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -132,7 +252,7 @@ public class DAOUser {
      * @return User object if found, null otherwise
      */
     public User getUserById(String userId) {
-        String sql = "SELECT * FROM user WHERE id = ? AND IsDeleted = FALSE";
+        String sql = "SELECT * FROM user WHERE id = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -158,7 +278,7 @@ public class DAOUser {
      * @return User object if found, null otherwise
      */
     public User getUserByEmail(String email) {
-        String sql = "SELECT * FROM user WHERE Email = ? AND IsDeleted = FALSE";
+        String sql = "SELECT * FROM user WHERE email = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -233,99 +353,7 @@ public class DAOUser {
         return false;
     }
     
-    /**
-     * Get user by Google ID
-     * @param googleId Google OAuth ID
-     * @return User object if found, null otherwise
-     */
-    public User getUserByGoogleId(String googleId) {
-        String sql = "SELECT * FROM user WHERE GoogleId = ? AND IsDeleted = FALSE";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, googleId);
-            ResultSet rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                return mapResultSetToUser(rs);
-            }
-            
-        } catch (SQLException e) {
-            System.err.println("Error getting user by Google ID: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Register user with Google OAuth
-     * @param user User object with Google information
-     * @return true if registration successful, false otherwise
-     */
-    public boolean registerWithGoogle(User user) {
-        // Check if email already exists
-        if (isEmailExists(user.getEmail())) {
-            System.out.println("Email already exists: " + user.getEmail());
-            return false;
-        }
-        
-        String sql = "INSERT INTO user (id, FullName, Email, GoogleId, Role, Created_At) VALUES (?, ?, ?, ?, ?, ?)";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            // Generate unique ID
-            String userId = generateUserId();
-            
-            ps.setString(1, userId);
-            ps.setString(2, user.getFullName());
-            ps.setString(3, user.getEmail());
-            ps.setString(4, user.getGoogleId());
-            ps.setString(5, user.getRole().getValue());
-            ps.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
-            
-            int result = ps.executeUpdate();
-            if (result > 0) {
-                user.setId(userId); // Set the generated ID back to the user object
-                return true;
-            }
-            
-        } catch (SQLException e) {
-            System.err.println("Error during Google registration: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Link existing user account with Google ID
-     * @param email User's email
-     * @param googleId Google OAuth ID
-     * @return true if linking successful, false otherwise
-     */
-    public boolean linkGoogleAccount(String email, String googleId) {
-        String sql = "UPDATE user SET GoogleId = ?, Updated_At = ? WHERE Email = ? AND IsDeleted = FALSE";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, googleId);
-            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-            ps.setString(3, email);
-            
-            int result = ps.executeUpdate();
-            return result > 0;
-            
-        } catch (SQLException e) {
-            System.err.println("Error linking Google account: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
-        return false;
-    }
+
     
     /**
      * Hash password using SHA-256
@@ -371,16 +399,25 @@ public class DAOUser {
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getString("id"));
-        user.setFullName(rs.getString("FullName"));
-        user.setEmail(rs.getString("Email"));
-        user.setPassword(rs.getString("Password"));
-        user.setPhone(rs.getString("Phone"));
-        user.setRole(User.Role.fromString(rs.getString("Role")));
-        user.setGoogleId(rs.getString("GoogleId"));
-        user.setCreatedAt(rs.getTimestamp("Created_At"));
-        user.setUpdatedBy(rs.getString("Updated_By"));
-        user.setUpdatedAt(rs.getTimestamp("Updated_At"));
-        user.setDeleted(rs.getBoolean("IsDeleted"));
+        user.setFullName(rs.getString("fullname"));
+        user.setEmail(rs.getString("email"));
+        user.setPassword(rs.getString("password"));
+        user.setPhone(rs.getString("phone"));
+        user.setRole(User.Role.fromString(rs.getString("role")));
+        user.setCreatedAt(rs.getTimestamp("created_At"));
+        user.setUpdatedBy(rs.getString("updated_By"));
+        user.setUpdatedAt(rs.getTimestamp("updated_At"));
+        user.setDeleted(rs.getBoolean("isdeleted"));
+        
+        // Map verification fields (may be null for existing users)
+        try {
+            user.setVerificationToken(rs.getString("verification_token"));
+            user.setEmailVerified(rs.getBoolean("is_email_verified"));
+            user.setVerificationExpiryTime(rs.getTimestamp("verification_expiry_time"));
+        } catch (SQLException e) {
+            // These columns might not exist for old database schema
+            user.setEmailVerified(true); // Default to verified for existing users
+        }
         
         return user;
     }
