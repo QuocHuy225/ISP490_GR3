@@ -211,7 +211,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6" data-aos="fade-left">
-                        <img src="images/doan2.jpg" alt="Đặt lịch khám" class="img-fluid rounded-4 shadow-lg">
+                        <img src="${pageContext.request.contextPath}/images/doan2.jpg" alt="Đặt lịch khám" class="img-fluid rounded-4 shadow-lg">
                     </div>
                 </div>
             </div>
@@ -237,7 +237,7 @@
                     </div>
                     <div class="col-lg-6" data-aos="fade-left">
                         <div class="position-relative">
-                            <img src="images/doan1.png" 
+                            <img src="${pageContext.request.contextPath}/images/doan1.png" 
                                  alt="Bác sĩ tư vấn" >
                         </div>
                     </div>
@@ -440,7 +440,7 @@
                                             <h1 class="display-5 fw-bold mb-3" style="font-family: 'Poppins', sans-serif; color: #ffffff;">Ánh Dương Clinic</h1>
                                             <p class="lead opacity-90 mb-4" style="color: #f1f5f9;">Chăm sóc sức khỏe phụ nữ với tình yêu thương</p>
                                             <div class="d-flex justify-content-center mb-4">
-                                                <img src="images/doan3.jpg" alt="Doctor" class="img-fluid shadow-lg" 
+                                                <img src="${pageContext.request.contextPath}/images/doan3.jpg" alt="Doctor" class="img-fluid shadow-lg" 
                                                      style="max-width: 250px; border-radius: 15px; border: 3px solid rgba(255,255,255,0.3);" />
                                             </div>
                                             <div class="d-flex justify-content-center gap-3">
@@ -519,17 +519,6 @@
                                                 <button type="submit" class="btn btn-lg w-100 mb-3 fw-medium shadow-sm login-btn" 
                                                         style="border-radius: 15px; background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); border: none; color: white; transition: all 0.3s ease;">
                                                     <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
-                                                </button>
-                                                
-                                                <div class="text-center mb-3">
-                                                    <span class="text-muted small" style="color: #9ca3af;">hoặc</span>
-                                                </div>
-                                                
-                                                <button type="button" class="btn btn-outline-secondary btn-lg w-100 mb-4 fw-medium google-btn" 
-                                                        style="border-radius: 15px; border: 2px solid #d1d5db; transition: all 0.3s ease; color: #374151;"
-                                                        onclick="window.location.href='${pageContext.request.contextPath}/auth/google'">
-                                                    <img src="https://www.google.com/favicon.ico" width="20" alt="Google" class="me-2" />
-                                                    Đăng nhập với Google
                                                 </button>
                                                 
                                                 <div class="text-center">
@@ -654,7 +643,7 @@
                                             <h1 class="display-5 fw-bold mb-3" style="font-family: 'Poppins', sans-serif; color: #ffffff;">Tham Gia Với Chúng Tôi</h1>
                                             <p class="lead mb-4 opacity-90" style="color: #dbeafe;">Bắt đầu hành trình chăm sóc sức khỏe của bạn</p>
                                             <div class="d-flex justify-content-center mb-4">
-                                                <img src="images/doan3.jpg" alt="Doctor" class="img-fluid shadow-lg" 
+                                                <img src="${pageContext.request.contextPath}/images/doan3.jpg" alt="Doctor" class="img-fluid shadow-lg" 
                                                      style="max-width: 250px; border-radius: 15px; border: 3px solid rgba(255,255,255,0.3);" />
                                             </div>
                                             <div class="row">
@@ -681,6 +670,115 @@
             </div>
         </div>
 
+        <!-- Email Verification Modal -->
+        <div class="modal fade" id="emailVerificationModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden; backdrop-filter: blur(10px);">
+                    <div class="modal-body p-0">
+                        <div class="container-fluid">
+                            <div class="row g-0 min-vh-50">
+                                <!-- Left side - Image and branding -->
+                                <div class="col-lg-6 d-flex">
+                                    <div class="w-100 d-flex flex-column justify-content-center align-items-center text-white position-relative" 
+                                         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 500px;">
+                                        <!-- Decorative shapes -->
+                                        <div class="position-absolute" style="top: 10%; left: 10%; width: 60px; height: 60px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: float 3s ease-in-out infinite;"></div>
+                                        <div class="position-absolute" style="top: 60%; right: 15%; width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: float 3s ease-in-out infinite reverse;"></div>
+                                        <div class="position-absolute" style="bottom: 20%; left: 20%; width: 30px; height: 30px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: float 2s ease-in-out infinite;"></div>
+                                        
+                                        <div class="text-center z-index-2 position-relative">
+                                            <div class="mb-4">
+                                                <i class="bi bi-envelope-open" style="font-size: 4rem; color: rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                            <h1 class="display-5 fw-bold mb-3" style="font-family: 'Poppins', sans-serif; color: #ffffff;">Xác Thực Email</h1>
+                                            <p class="lead opacity-90 mb-4" style="color: #f1f5f9;">Bước cuối cùng để hoàn tất đăng ký</p>
+                                            <div class="d-flex justify-content-center mb-4">
+                                                <img src="${pageContext.request.contextPath}/images/doan1.png" alt="Email Verification" class="img-fluid shadow-lg" 
+                                                     style="max-width: 250px; border-radius: 15px; border: 3px solid rgba(255,255,255,0.3);" />
+                                            </div>
+                                            <div class="d-flex justify-content-center gap-3">
+                                                <div class="text-center">
+                                                    <div class="fw-bold h4" style="color: #ffffff;">📧</div>
+                                                    <small class="opacity-75" style="color: #cbd5e1;">Email gửi đi</small>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="fw-bold h4" style="color: #ffffff;">🔒</div>
+                                                    <small class="opacity-75" style="color: #cbd5e1;">Bảo mật</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Right side - Verification form -->
+                                <div class="col-lg-6">
+                                    <div class="p-5 d-flex flex-column justify-content-center h-100" style="min-height: 500px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+                                        <div class="text-end mb-3">
+                                            <button type="button" class="btn-close btn-lg" data-bs-dismiss="modal" style="background-size: 1.5em;"></button>
+                                        </div>
+                                        
+                                        <div class="mx-auto w-100" style="max-width: 400px;">
+                                            <div class="text-center mb-4">
+                                                <div class="d-inline-block p-3 rounded-circle mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                                    <i class="bi bi-envelope-check-fill text-white" style="font-size: 2rem;"></i>
+                                                </div>
+                                                <h2 class="h3 fw-bold mb-2" style="color: #1f2937;">Xác thực Email</h2>
+                                                <p class="text-muted mb-3" style="color: #6b7280;">Chúng tôi đã gửi mã xác thực đến:</p>
+                                                <p class="fw-bold text-primary" style="color: #667eea !important;" id="verificationEmailDisplay">${verificationEmail}</p>
+                                            </div>
+                                            
+                                            <!-- Error/Success Messages for Email Verification -->
+                                            <div id="verificationErrorAlert" class="alert alert-danger mb-3 d-none" style="border-radius: 10px; border: none;">
+                                                <i class="bi bi-exclamation-circle me-2"></i>
+                                                <span id="verificationErrorMessage"></span>
+                                            </div>
+                                            
+                                            <div id="verificationSuccessAlert" class="alert alert-success mb-3 d-none" style="border-radius: 10px; border: none;">
+                                                <i class="bi bi-check-circle me-2"></i>
+                                                <span id="verificationSuccessMessage"></span>
+                                            </div>
+                                            
+                                            <form id="emailVerificationForm" action="${pageContext.request.contextPath}/auth/verify-email" method="post" class="needs-validation" novalidate>
+                                                <input type="hidden" name="email" id="verificationEmailInput" value="${verificationEmail}">
+                                                
+                                                <div class="form-floating mb-3">
+                                                    <input type="text" name="verificationCode" class="form-control border-0 shadow-sm text-center" 
+                                                           id="verificationCode" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required
+                                                           style="border-radius: 15px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); color: #374151; font-size: 1.5rem; font-weight: 600; letter-spacing: 0.5em;">
+                                                    <label for="verificationCode" style="color: #6b7280;"><i class="bi bi-key me-2"></i>Mã xác thực (6 số)</label>
+                                                    <div class="invalid-feedback">Vui lòng nhập mã xác thực 6 số.</div>
+                                                </div>
+                                                
+                                                <button type="submit" class="btn btn-lg w-100 mb-3 fw-medium shadow-sm" 
+                                                        style="border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; transition: all 0.3s ease;">
+                                                    <i class="bi bi-check-circle me-2"></i>Xác thực Email
+                                                </button>
+                                            </form>
+                                            
+                                            <form id="resendVerificationForm" action="${pageContext.request.contextPath}/auth/resend-verification" method="post">
+                                                <input type="hidden" name="email" id="resendEmailInput" value="${verificationEmail}">
+                                                <button type="submit" class="btn btn-outline-primary btn-lg w-100 fw-medium" 
+                                                        style="border-radius: 15px; border: 2px solid #667eea; color: #667eea; transition: all 0.3s ease;">
+                                                    <i class="bi bi-arrow-clockwise me-2"></i>Gửi lại mã xác thực
+                                                </button>
+                                            </form>
+                                            
+                                            <div class="text-center mt-4">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Mã xác thực có hiệu lực trong 15 phút
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Scripts -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -691,6 +789,9 @@
         <input type="hidden" id="registerSuccess" value="${registerSuccess != null ? 'true' : 'false'}">
         <input type="hidden" id="registerError" value="${registerError != null ? 'true' : 'false'}">
         <input type="hidden" id="logoutSuccess" value="${logoutSuccess != null ? 'true' : 'false'}">
+        <input type="hidden" id="needEmailVerification" value="${needEmailVerification != null ? 'true' : 'false'}">
+        <input type="hidden" id="verificationError" value="${verificationError}">
+        <input type="hidden" id="verificationSuccess" value="${verificationSuccess}">
 
         <script>
                                 // Initialize AOS
@@ -724,6 +825,11 @@
                                     registerModal.show();
                                 }
 
+                                function showEmailVerificationModal() {
+                                    var emailVerificationModal = new bootstrap.Modal(document.getElementById('emailVerificationModal'));
+                                    emailVerificationModal.show();
+                                }
+
                                 // Auto-hide alerts
                                 window.addEventListener('DOMContentLoaded', function () {
                                     var alerts = document.querySelectorAll('.alert-dismissible');
@@ -741,12 +847,62 @@
                                     var hasLoginError = document.getElementById('loginError').value === 'true';
                                     var hasRegisterSuccess = document.getElementById('registerSuccess').value === 'true';
                                     var hasRegisterError = document.getElementById('registerError').value === 'true';
+                                    var needEmailVerification = document.getElementById('needEmailVerification').value === 'true';
+                                    var verificationError = document.getElementById('verificationError').value;
+                                    var verificationSuccess = document.getElementById('verificationSuccess').value;
                                     
-                                    if (hasLoginError || hasRegisterSuccess) {
+                                    if (needEmailVerification || verificationError || verificationSuccess) {
+                                        showEmailVerificationModal();
+                                        
+                                        // Show error/success messages in the modal
+                                        if (verificationError && verificationError !== 'null' && verificationError !== '') {
+                                            document.getElementById('verificationErrorAlert').classList.remove('d-none');
+                                            document.getElementById('verificationErrorMessage').textContent = verificationError;
+                                        }
+                                        if (verificationSuccess && verificationSuccess !== 'null' && verificationSuccess !== '') {
+                                            document.getElementById('verificationSuccessAlert').classList.remove('d-none');
+                                            document.getElementById('verificationSuccessMessage').textContent = verificationSuccess;
+                                        }
+                                    } else if (hasLoginError || hasRegisterSuccess) {
                                         showLoginModal();
                                     } else if (hasRegisterError) {
                                         showRegisterModal();
                                     }
+
+                                    // Email verification code input validation
+                                    const verificationCodeInput = document.getElementById('verificationCode');
+                                    if (verificationCodeInput) {
+                                        verificationCodeInput.addEventListener('input', function(e) {
+                                            // Only allow numbers
+                                            this.value = this.value.replace(/[^0-9]/g, '');
+                                            
+                                            // Auto-submit when 6 digits are entered
+                                            if (this.value.length === 6) {
+                                                // Add visual feedback
+                                                this.classList.add('is-valid');
+                                            } else {
+                                                this.classList.remove('is-valid');
+                                            }
+                                        });
+                                        
+                                        verificationCodeInput.addEventListener('paste', function(e) {
+                                            // Handle paste events
+                                            setTimeout(() => {
+                                                this.value = this.value.replace(/[^0-9]/g, '').substring(0, 6);
+                                            }, 0);
+                                        });
+                                    }
+
+                                    // Hide alerts when clicking close button in modal
+                                    document.addEventListener('click', function(e) {
+                                        if (e.target.classList.contains('btn-close')) {
+                                            const modal = e.target.closest('.modal');
+                                            if (modal) {
+                                                const alerts = modal.querySelectorAll('.alert');
+                                                alerts.forEach(alert => alert.classList.add('d-none'));
+                                            }
+                                        }
+                                    });
                                 });
 
                                 // All styles are now in landing.css

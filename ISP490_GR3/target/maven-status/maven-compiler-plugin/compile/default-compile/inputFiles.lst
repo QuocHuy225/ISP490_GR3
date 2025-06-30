@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 C:\Users\FPT SHOP\Desktop\clone\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\PatientController.java
 C:\Users\FPT SHOP\Desktop\clone\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOUser.java
 C:\Users\FPT SHOP\Desktop\clone\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\WarehouseController.java
@@ -47,52 +46,3 @@ C:\Users\FPT SHOP\Desktop\clone\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompan
 C:\Users\FPT SHOP\Desktop\clone\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\JakartaRestConfiguration.java
 C:\Users\FPT SHOP\Desktop\clone\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Schedule.java
 C:\Users\FPT SHOP\Desktop\clone\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Slot.java
-=======
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\PrescriptionController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\AppointmentController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\MedicalExamTemplate.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Doctor.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOPatient.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\ReceptionistScheduleController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\MedicalService.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOPrescription.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\DoctorSchedule.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOService.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\PrescriptionMedicine.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\DoctorController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\resources\JakartaEE10Resource.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\HomepageController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Appointment.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\User.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOSlot.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Schedule.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAODoctorSchedule.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOMedicalRecord.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\MedicalRecord.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\MedicalSupply.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\PatientController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\JakartaRestConfiguration.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Slot.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\service\EmailService.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\CheckinController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DBContext.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\SlotController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\WarehouseController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOUser.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\MedicalExamTemplateController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\ServiceController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\MedicalRecordController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOWarehouse.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Patient.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\UserProfileController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\AuthorizationController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\DoctorScheduleController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOAppointment.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAOMedicalExamTemplate.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dto\SlotDetailDTO.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\model\Medicine.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\MakeAppointmentController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\controller\AuthenticationController.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dao\DAODoctor.java
-C:\Users\vuong\Documents\GitHub\ISP490_GR3\ISP490_GR3\src\main\java\com\mycompany\isp490_gr3\dto\SlotViewDTO.java
->>>>>>> Stashed changes

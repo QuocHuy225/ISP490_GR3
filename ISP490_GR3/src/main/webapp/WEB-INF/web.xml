@@ -42,6 +42,8 @@
     <servlet-mapping>
         <servlet-name>DoctorScheduleController</servlet-name>
         <url-pattern>/doctor/schedule</url-pattern>
+        <url-pattern>/doctor/schedule/detailed</url-pattern>
+        
     </servlet-mapping>
     
     <servlet>
