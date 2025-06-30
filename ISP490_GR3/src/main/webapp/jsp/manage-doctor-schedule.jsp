@@ -9,14 +9,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Lịch Làm Việc Bác Sĩ (Lễ tân)</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"  crossorigin="anonymous">
     
-    <!-- Custom CSS -->
     <link href="${pageContext.request.contextPath}/css/manage-doctor-schedule.css" rel="stylesheet" type="text/css"/>
     
-    <!-- Flatpickr CSS for Date Range Picker -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script>const contextPath = "${pageContext.request.contextPath}";</script>
 </head>
 <body>
     <div class="container">
@@ -44,7 +42,6 @@
                     </c:if>
                 </div>
 
-                <!-- Doctor List -->
                 <div class="mb-4 p-4 bg-light rounded-lg shadow-sm">
                     <h2 class="text-primary mb-3">
                         🧑‍⚕️ Danh sách Bác sĩ
@@ -91,7 +88,6 @@
         </div>
     </div>
 
-    <!-- Edit Schedule Modal -->
     <div class="modal fade" id="editScheduleModal" tabindex="-1" aria-labelledby="editScheduleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
@@ -106,7 +102,6 @@
                         <input type="hidden" id="modalDoctorId" name="doctor_id">
                         <input type="hidden" id="modalDoctorAccountId" name="doctor_account_id">
 
-                        <!-- Schedule Type Selection -->
                         <div class="mb-4 p-3 border rounded bg-light">
                             <h6 class="mb-3">
                                 Chọn khoảng thời gian mà bệnh nhân có thể đặt lịch khám:
@@ -129,7 +124,6 @@
                             </div>
                         </div>
 
-                        <!-- Appointment Duration -->
                         <div class="mb-4 p-3 border rounded bg-light">
                             <label for="appointmentDuration" class="form-label fw-bold">
                                 Thời gian cuộc hẹn mặc định (phút):
@@ -142,17 +136,13 @@
                             </select>
                         </div>
                         
-                        <!-- Consolidated General Consultation Settings (replaces tabs) -->
                         <div class="mb-4 p-3 border rounded bg-light">
                             <h6 class="mb-3">
                                 Cài đặt lịch làm việc chung:
                             </h6>
-                            <%-- Đã bỏ phần "Thời gian chuẩn bị/chờ (trước mỗi cuộc hẹn)" --%>
-                            <!-- Weekly Schedule -->
                             <h6 class="mt-4 mb-3">Chỉnh sửa lịch làm việc hàng tuần:</h6>
                             <div id="weeklySchedule">
-                                <!-- Days of the week will be dynamically added here by JS -->
-                            </div>
+                                </div>
                         </div>
 
                         <div class="modal-footer d-flex justify-content-between align-items-center mt-4">
@@ -168,25 +158,19 @@
         </div>
     </div>
 
-    <!-- Apply Similar Overlay (Hidden by default) -->
     <div id="applySimilarOverlay" class="apply-similar-overlay card p-3 position-absolute d-none">
         <h6 class="mb-3">Áp dụng tương tự cho:</h6>
         <div id="applySimilarCheckboxes">
-            <!-- Checkboxes for days will be dynamically added here -->
-        </div>
+            </div>
         <div class="d-flex justify-content-end mt-3">
             <button type="button" class="btn btn-secondary btn-sm me-2" id="cancelApplySimilarBtn">Hủy</button>
             <button type="button" class="btn btn-primary btn-sm" id="confirmApplySimilarBtn">Áp dụng</button>
         </div>
     </div>
 
-    <!-- Bootstrap JS (bundle includes Popper) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eJqAQ1uGknoFuWdY" crossorigin="anonymous"></script>
-    <!-- Flatpickr JS for Date Range Picker -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"  crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <!-- Define contextPath for external JS -->
-    <script>const contextPath = "${pageContext.request.contextPath}";</script>
-    <!-- Custom JavaScript -->
+    
     <script src="${pageContext.request.contextPath}/js/manage-doctor-schedule.js"></script>
 </body>
 </html>

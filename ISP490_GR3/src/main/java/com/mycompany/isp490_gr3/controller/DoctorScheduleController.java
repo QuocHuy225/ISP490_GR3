@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mycompany.isp490_gr3.dao.DAODoctor;
 import com.mycompany.isp490_gr3.dao.DAODoctorSchedule;
-import com.mycompany.isp490_gr3.model.DoctorSchedule; 
+import com.mycompany.isp490_gr3.model.DoctorSchedule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -68,41 +68,44 @@ public class DoctorScheduleController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
-
         if (!checkAdminOrReceptionistRole(request, response, out)) {
             return;
         }
 
         String servletPath = request.getServletPath(); // Sẽ là /doctor/schedule hoặc /doctor/schedule/detailed
 
-        String doctorIdRaw = request.getParameter("doctorId");
+        String doctorAccountIdParam = request.getParameter("doctorAccountId"); // Tham số từ JS
 
-        if (doctorIdRaw == null || doctorIdRaw.trim().isEmpty()) {
+        if (doctorAccountIdParam == null || doctorAccountIdParam.trim().isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.write("{\"error\": \"Tham số doctorId bị thiếu.\"}");
-            LOGGER.warning("Missing doctorId parameter in GET request for " + servletPath);
+            out.write("{\"error\": \"Tham số doctorAccountId bị thiếu.\"}");
+            LOGGER.warning("Missing doctorAccountId parameter in GET request for " + servletPath);
             return;
         }
         try {
-            int doctorId = Integer.parseInt(doctorIdRaw);
+            
+            Integer doctorId = daoDoctor.getDoctorIdByAccountId(doctorAccountIdParam);
 
+            if (doctorId == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                out.write("{\"error\": \"Không tìm thấy bác sĩ với ID tài khoản đã chọn.\"}");
+                LOGGER.warning("Doctor not found for account ID: " + doctorAccountIdParam + " during GET schedule fetch.");
+                return;
+            }
 
             if (servletPath.endsWith("/detailed")) {
-                LOGGER.log(Level.INFO, "Fetching detailed schedule for doctorId: {0} from DB.", doctorId);
+                LOGGER.log(Level.INFO, "Fetching detailed schedule for doctorId: {0} from DB via /detailed endpoint.", doctorId);
                 String detailedConfigJson = daoDoctor.getDoctorDetailedScheduleConfigJson(doctorId);
                 Map<String, Object> detailedScheduleConfig;
 
                 if (detailedConfigJson != null && !detailedConfigJson.trim().isEmpty()) {
-                    // Nếu có dữ liệu trong DB, parse nó
                     detailedScheduleConfig = objectMapper.readValue(detailedConfigJson, Map.class);
                     LOGGER.log(Level.INFO, "Đã lấy cấu hình chi tiết từ DB cho doctorId: {0}", doctorId);
                 } else {
-                    // Nếu không có dữ liệu trong DB, trả về cấu hình mặc định
                     LOGGER.log(Level.INFO, "Không tìm thấy cấu hình chi tiết trong DB cho doctorId: {0}. Trả về cấu hình mặc định.", doctorId);
                     detailedScheduleConfig = new HashMap<>();
                     detailedScheduleConfig.put("appointment_duration", "30");
-                    detailedScheduleConfig.put("schedule_period", "future"); 
-                    // Nếu bạn muốn mặc định có các slot mẫu khi chưa có trong DB, bạn có thể thêm vào đây
+                    detailedScheduleConfig.put("schedule_period", "future");
                     Map<String, List<Map<String, String>>> defaultWeeklySchedule = new HashMap<>();
                     defaultWeeklySchedule.put("monday", new ArrayList<>());
                     defaultWeeklySchedule.put("tuesday", new ArrayList<>());
@@ -114,13 +117,16 @@ public class DoctorScheduleController extends HttpServlet {
                     detailedScheduleConfig.put("weekly_schedule", defaultWeeklySchedule);
                 }
 
-                String json = objectMapper.writeValueAsString(detailedScheduleConfig);
+                ObjectNode responseNode = objectMapper.createObjectNode();
+                responseNode.set("detailedScheduleConfig", objectMapper.valueToTree(detailedScheduleConfig));
+
+                String json = objectMapper.writeValueAsString(responseNode);
                 response.setStatus(HttpServletResponse.SC_OK);
                 out.write(json);
 
             } else if (servletPath.endsWith("/schedule")) {
                 // Xử lý yêu cầu GET cho /doctor/schedule (lấy danh sách ngày làm việc)
-                LOGGER.log(Level.INFO, "Fetching work dates for doctorId: {0}", doctorId);
+                LOGGER.log(Level.INFO, "Fetching work dates for doctorId: {0} via /schedule endpoint.", doctorId);
                 List<DoctorSchedule> doctorScheduleEntries = daoDoctorSchedule.getDoctorScheduleEntries(doctorId);
                 
                 // Trả về danh sách các chuỗi ngày làm việc active
@@ -141,17 +147,7 @@ public class DoctorScheduleController extends HttpServlet {
                 LOGGER.warning("Endpoint không tìm thấy cho yêu cầu GET: " + request.getRequestURI());
             }
 
-
-            List<String> dates = daoDoctorSchedule.getWorkingDatesByDoctorId(doctorId);
-            String json = new com.google.gson.Gson().toJson(dates != null ? dates : new ArrayList<>());
-            System.out.println(json);
-            response.getWriter().write(json);
-
-        } catch (NumberFormatException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.write("{\"error\": \"Định dạng doctorId không hợp lệ.\"}");
-            LOGGER.log(Level.WARNING, "Định dạng doctorId không hợp lệ trong yêu cầu GET: {0}", doctorIdRaw);
-        } catch (SQLException e) { 
+        } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi database trong doGet: " + e.getMessage(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.write("{\"error\": \"Lỗi database.\"}}");
@@ -180,12 +176,23 @@ public class DoctorScheduleController extends HttpServlet {
         }
 
         try {
-            // Đọc toàn bộ request body dưới dạng JSON
             Map<String, Object> requestBody = objectMapper.readValue(request.getReader(), Map.class);
             
-            String doctorAccountId = (String) requestBody.get("doctor_account_id");
+            Object doctorAccountIdObj = requestBody.get("doctor_account_id");
+            String doctorAccountId;
 
-            if (doctorAccountId == null) {
+            if (doctorAccountIdObj instanceof Integer) {
+                doctorAccountId = String.valueOf((Integer) doctorAccountIdObj);
+            } else if (doctorAccountIdObj instanceof String) {
+                doctorAccountId = (String) doctorAccountIdObj;
+            } else {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.write("{\"message\": \"ID tài khoản bác sĩ không hợp lệ hoặc thiếu.\"}");
+                LOGGER.warning("Invalid or missing doctor_account_id in POST request body.");
+                return;
+            }
+
+            if (doctorAccountId == null || doctorAccountId.isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.write("{\"message\": \"Thiếu ID tài khoản bác sĩ.\"}");
                 LOGGER.warning("Missing doctor_account_id in POST request body.");
@@ -201,19 +208,29 @@ public class DoctorScheduleController extends HttpServlet {
                 return;
             }
 
-            // Chuyển đổi toàn bộ requestBody thành JSON String để lưu vào DB
             String jsonConfigToSave = objectMapper.writeValueAsString(requestBody);
             LOGGER.log(Level.INFO, "Saving detailed schedule config JSON to DB: {0}", jsonConfigToSave);
 
             boolean updated = daoDoctor.updateDoctorDetailedScheduleConfig(doctorId, jsonConfigToSave);
 
+            // --- BƯỚC QUAN TRỌNG: GỌI HÀM TẠO LỊCH VÀ SLOT TẠI ĐÂY ---
+            if (updated) {
+                LOGGER.info("Successfully updated doctor's detailed schedule config. Now generating detailed schedules and slots.");
+                // Sử dụng daoDoctorSchedule để tạo các bản ghi lịch và slot
+                daoDoctorSchedule.generateDetailedDoctorScheduleAndSlots(doctorId, jsonConfigToSave);
+                LOGGER.info("Finished generating detailed schedules and slots for doctorId: " + doctorId);
+            } else {
+                LOGGER.warning("Failed to update doctor's detailed schedule config. Skipping slot generation.");
+            }
+            // -------------------------------------------------------------
+
             response.setStatus(HttpServletResponse.SC_OK);
             ObjectNode responseNode = objectMapper.createObjectNode();
             if (updated) {
-                responseNode.put("message", "Cấu hình lịch đã lưu thành công vào database.");
+                responseNode.put("message", "Cấu hình lịch và lịch trình chi tiết đã lưu/cập nhật thành công.");
             } else {
                 responseNode.put("message", "Không thể lưu cấu hình lịch vào database.");
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // Hoặc một lỗi phù hợp hơn
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); 
             }
             responseNode.put("doctor_id", doctorId);
             out.write(objectMapper.writeValueAsString(responseNode));
@@ -224,10 +241,10 @@ public class DoctorScheduleController extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.write("{\"message\": \"Dữ liệu yêu cầu không hợp lệ.\", \"error\": \"" + e.getMessage() + "\"}");
         } catch (SQLException e) { 
-            LOGGER.log(Level.SEVERE, "Lỗi database khi lấy doctorId hoặc cập nhật cấu hình: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Lỗi database khi lấy doctorId, cập nhật cấu hình hoặc tạo lịch/slot: " + e.getMessage(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.write("{\"message\": \"Lỗi database.\"}}");
-        } catch (Exception e) {
+        } catch (Exception e) { // Catch all other unexpected exceptions
             LOGGER.log(Level.SEVERE, "Lỗi không mong muốn trong doPost: " + e.getMessage(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.write("{\"message\": \"Lỗi máy chủ nội bộ không mong muốn.\", \"error\": \"" + e.getMessage() + "\"}");

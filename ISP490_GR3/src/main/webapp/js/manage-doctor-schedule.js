@@ -1,13 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     // contextPath sẽ được định nghĩa trong JSP trước khi tải file JS này.
-    // Ví dụ: <script>const contextPath = "${pageContext.request.contextPath}";</script>
-    // Đảm bảo dòng này có trong JSP của bạn.
-    const contextPath = "${pageContext.request.contextPath}"; // Lấy contextPath từ JSP
-
     const editScheduleModal = new bootstrap.Modal(document.getElementById('editScheduleModal'));
     const modalDoctorName = document.getElementById('modalDoctorName');
-    const modalDoctorId = document.getElementById('modalDoctorId'); // hidden input for doctorId
-    const modalDoctorAccountId = document.getElementById('modalDoctorAccountId'); // hidden input for doctorAccountId
+    const modalDoctorId = document.getElementById('modalDoctorId'); // input ẩn cho doctorId
+    const modalDoctorAccountId = document.getElementById('modalDoctorAccountId'); // input ẩn cho doctorAccountId
     const modalScheduleForm = document.getElementById('modalScheduleForm');
     const saveScheduleBtn = document.getElementById('saveScheduleBtn');
     const modalLoadingSpinner = document.getElementById('modalLoadingSpinner');
@@ -19,27 +15,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateRangePicker = document.getElementById('dateRangePicker');
 
     const appointmentDurationSelect = document.getElementById('appointmentDuration'); 
-    // Khôi phục prepTime để phù hợp với JSP mới nhất
-    const prepTimeSelect = document.getElementById('prepTime');
+    // const prepTimeSelect = document.getElementById('prepTime'); // Đã xóa
 
     const weeklyScheduleContainer = document.getElementById('weeklySchedule'); 
-    // Các biến cho overlay "Áp dụng tương tự" đã được khôi phục
     const applySimilarOverlay = document.getElementById('applySimilarOverlay');
     const applySimilarCheckboxes = document.getElementById('applySimilarCheckboxes');
     const cancelApplySimilarBtn = document.getElementById('cancelApplySimilarBtn');
     const confirmApplySimilarBtn = document.getElementById('confirmApplySimilarBtn');
 
     let flatpickrInstance;
-    let weeklyScheduleConfig = {}; // Object để lưu trữ cấu hình lịch làm việc hàng tuần
+    let weeklyScheduleConfig = {}; // Đối tượng để lưu trữ cấu hình lịch làm việc hàng tuần
 
-    // Initialize Flatpickr
+    // Khởi tạo Flatpickr
     flatpickrInstance = flatpickr(dateRangePicker, {
         mode: "range",
         dateFormat: "Y-m-d",
         minDate: "today" 
     });
 
-    // Toggle date range picker visibility based on radio selection
+    // Chuyển đổi hiển thị của bộ chọn ngày dựa trên lựa chọn radio
     periodFuture.addEventListener('change', () => {
         if (periodFuture.checked) {
             dateRangePickerContainer.style.display = 'none';
@@ -52,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Days of the week for scheduling (keys must match backend)
+    // Các ngày trong tuần để lập lịch (khóa phải khớp với backend)
     const daysOfWeekDisplay = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
     const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
@@ -60,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Tạo HTML cho một chip khung giờ.
      * @param {string} start - Thời gian bắt đầu (HH:mm).
      * @param {string} end - Thời gian kết thúc (HH:mm).
-     * @param {string} dayKey - Khóa ngày (e.g., 'monday').
+     * @param {string} dayKey - Khóa ngày (ví dụ: 'monday').
      * @param {number} slotIndex - Chỉ số của slot trong mảng của ngày.
      */
     function createSlotChipHTML(start, end, dayKey, slotIndex) {
@@ -73,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Render (hoặc re-render) các khung giờ cho một ngày cụ thể dựa trên weeklyScheduleConfig.
+     * Render (hoặc render lại) các khung giờ cho một ngày cụ thể dựa trên weeklyScheduleConfig.
      * @param {string} dayKey - Khóa ngày cần render.
      */
     function renderDaySlots(dayKey) {
@@ -98,8 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function generateDaySectionHTML(dayIndex) {
         const dayKey = dayKeys[dayIndex];
+        // Kiểm tra xem ngày có tồn tại trong cấu hình và có slot hay không
         const isChecked = weeklyScheduleConfig[dayKey] && weeklyScheduleConfig[dayKey].length > 0;
         const displayStyle = isChecked ? 'inline-block' : 'none';
+        const containerDisplayStyle = isChecked ? 'block' : 'none'; // Dành cho container slots
 
         return `
             <div class="d-flex align-items-center mb-3 border-bottom pb-2">
@@ -112,26 +108,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="ms-auto btn-group" role="group">
                     <button type="button" class="btn btn-sm btn-outline-success add-slot-btn me-2" data-day-key="${dayKey}" style="display: ${displayStyle};">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
                         </svg>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-info duplicate-slot-btn" data-day-key="${dayKey}" style="display: ${displayStyle};">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16">
-                          <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zM6 2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H6z"/>
-                          <path fill-rule="evenodd" d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z"/>
+                            <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zM6 2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H6z"/>
+                            <path fill-rule="evenodd" d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z"/>
                         </svg>
                     </button>
                 </div>
             </div>
-            <div id="day-${dayKey}-slots" class="mb-3 ms-4" style="display: ${isChecked ? 'block' : 'none'};">
-                <!-- Slots will be rendered here by renderDaySlots -->
-            </div>
+            <div id="day-${dayKey}-slots" class="mb-3 ms-4" style="display: ${containerDisplayStyle};">
+                </div>
         `;
     }
 
     /**
      * Khởi tạo hoặc cập nhật toàn bộ giao diện lịch làm việc hàng tuần.
-     * @param {Object} config - Cấu hình lịch làm việc (optional, dùng để load dữ liệu ban đầu).
+     * @param {Object} config - Cấu hình lịch làm việc (tùy chọn, dùng để tải dữ liệu ban đầu).
      */
     function populateWeeklySchedules(config = {}) {
         weeklyScheduleConfig = config; 
@@ -228,8 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle.checked = true; 
             handleDayToggleChange({ target: toggle }); 
         }
-        // Removed success message as per user request
-        // displayModalMessage('success', `Đã tạo các khung giờ ${duration} phút cho ${daysOfWeekDisplay[dayKeys.indexOf(dayKey)]}.`);
     }
 
     function handleRemoveSlotClick(e) {
@@ -256,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!weeklyScheduleConfig[sourceDayForDuplication] || weeklyScheduleConfig[sourceDayForDuplication].length === 0) {
             displayModalMessage('info', `Không có khung giờ nào để sao chép từ ${sourceDayDisplay}.`);
-            sourceDayForDuplication = null; // Reset
+            sourceDayForDuplication = null; // Đặt lại
             return;
         }
 
@@ -278,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Đổ dữ liệu checkboxes vào overlay
         applySimilarCheckboxes.innerHTML = '';
 
-        // Add "Select All" checkbox
+        // Thêm checkbox "Chọn tất cả"
         const selectAllDiv = document.createElement('div');
         selectAllDiv.className = 'form-check mb-2';
         selectAllDiv.innerHTML = `
@@ -302,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Add listener for "Select All"
+        // Thêm trình nghe cho "Chọn tất cả"
         selectAllCheckbox.addEventListener('change', (event) => {
             document.querySelectorAll('.apply-to-day-checkbox').forEach(checkbox => {
                 checkbox.checked = event.target.checked;
@@ -314,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applySimilarSchedule() {
         const selectedTargetDayKeys = Array.from(applySimilarCheckboxes.querySelectorAll('.apply-to-day-checkbox:checked'))
-                                           .map(cb => cb.value);
+                                       .map(cb => cb.value);
 
         if (selectedTargetDayKeys.length === 0) {
             displayModalMessage('warning', 'Vui lòng chọn ít nhất một ngày để áp dụng.');
@@ -327,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const sourceSlots = JSON.parse(JSON.stringify(weeklyScheduleConfig[sourceDayForDuplication])); // Deep copy
+        const sourceSlots = JSON.parse(JSON.stringify(weeklyScheduleConfig[sourceDayForDuplication])); // Sao chép sâu
 
         selectedTargetDayKeys.forEach(targetDayKey => {
             weeklyScheduleConfig[targetDayKey] = sourceSlots; // Gán bản sao
@@ -349,10 +342,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function hideApplySimilarOverlay() {
         applySimilarOverlay.classList.add('d-none');
-        sourceDayForDuplication = null; // Reset biến nguồn
+        sourceDayForDuplication = null; // Đặt lại biến nguồn
     }
 
-    // Event listener for "Chỉnh sửa lịch" buttons in doctor list
+    // Trình nghe sự kiện cho các nút "Chỉnh sửa lịch" trong danh sách bác sĩ
     document.querySelectorAll('.edit-schedule-btn').forEach(button => {
         button.addEventListener('click', async () => {
             const currentEditingDoctorId = button.dataset.doctorId;
@@ -379,15 +372,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Function to fetch and populate existing doctor schedule data
+    // Hàm để lấy và điền dữ liệu lịch trình bác sĩ hiện có
     async function fetchAndPopulateDoctorSchedule(doctorId) {
         modalLoadingSpinner.classList.remove('d-none'); 
         saveScheduleBtn.disabled = true; 
 
         try {
-            // Cập nhật endpoint để lấy cấu hình chi tiết từ DAODoctor thông qua DoctorScheduleController
-            // Endpoint trả về một object chứa cả workDates và detailedScheduleConfig
-            const response = await fetch(`${contextPath}/doctor/schedule?doctorAccountId=${doctorId}`); 
+            const response = await fetch(`${contextPath}/doctor/schedule/detailed?doctorAccountId=${modalDoctorAccountId.value}`); 
             
             let responseData;
             let isJson = false;
@@ -417,13 +408,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errorMessage);
             }
             
-            // Lấy phần detailedScheduleConfig từ responseData
             const detailedScheduleConfigData = responseData.detailedScheduleConfig || {}; 
 
             // Cập nhật các trường form
             appointmentDurationSelect.value = detailedScheduleConfigData.appointment_duration || "30";
-            // Xử lý prepTime
-            prepTimeSelect.value = detailedScheduleConfigData.prep_time || "0"; 
+            // Đã xóa: prepTimeSelect.value = detailedScheduleConfigData.prep_time || "0"; 
 
             if (detailedScheduleConfigData.schedule_period === 'range') {
                 periodRange.checked = true;
@@ -437,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 flatpickrInstance.clear();
             }
 
-            // Populate weekly schedules
+            // Điền lịch trình hàng tuần
             populateWeeklySchedules(detailedScheduleConfigData.weekly_schedule || {});
 
         } catch (error) {
@@ -460,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // Handle form submission inside the modal
+    // Xử lý gửi biểu mẫu bên trong modal
     modalScheduleForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         modalMessageContainer.innerHTML = ''; 
@@ -472,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataToSend = {
             doctor_account_id: formData.get('doctor_account_id'),
             appointment_duration: formData.get('appointment_duration'),
-            prep_time: formData.get('prep_time'), // Bao gồm prep_time
+            // Đã xóa: prep_time: formData.get('prep_time'), 
             schedule_period: formData.get('schedulePeriod')
         };
 
@@ -509,7 +498,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         try {
-            // Endpoint để lưu cấu hình chi tiết là /doctor/schedule (doPost của DoctorScheduleController)
             const response = await fetch(`${contextPath}/doctor/schedule`, {
                 method: 'POST',
                 headers: {
