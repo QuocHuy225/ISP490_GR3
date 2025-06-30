@@ -35,17 +35,27 @@
         <!-- Đây là URL bạn sẽ truy cập -->
     </servlet-mapping>
 
-  <servlet>
+    <servlet>
         <servlet-name>DoctorScheduleController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.DoctorScheduleController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>DoctorScheduleController</servlet-name>
-        <url-pattern>/doctor/schedule</url-pattern>
-        <url-pattern>/doctor/schedule/detailed</url-pattern>
+        <url-pattern>/api/doctor-schedules</url-pattern>
+        <url-pattern>/api/doctor-schedules/*</url-pattern>
+        <url-pattern>/api/doctors</url-pattern>
         
     </servlet-mapping>
     
+    <servlet>
+        <servlet-name>ReceptionistScheduleController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistScheduleController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReceptionistScheduleController</servlet-name>
+        <url-pattern>/receptionist/manage-doctor-schedule</url-pattern>
+        <!-- Đây là URL bạn sẽ truy cập -->
+    </servlet-mapping>
     <servlet>
         <servlet-name>CheckinController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.CheckinController</servlet-class>
@@ -74,27 +84,8 @@
         <servlet-name>MakeAppointmentController</servlet-name>
         <url-pattern>/makeappointments</url-pattern> <!-- Đây là URL bạn sẽ truy cập -->
     </servlet-mapping>
-    <servlet>
-        <servlet-name>DoctorController</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.DoctorController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>DoctorController</servlet-name>
-        <url-pattern>/doctors</url-pattern>
-        <url-pattern>/viewdoctor</url-pattern>
-        <url-pattern>/book-appointment</url-pattern>
-
-    </servlet-mapping>
-        <servlet>
-        <servlet-name>ReceptionistScheduleController</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistScheduleController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>ReceptionistScheduleController</servlet-name>
-        <url-pattern>/receptionist/manage-doctor-schedule</url-pattern>
-        
-
-    </servlet-mapping>
+    
+      
     <error-page>
         <error-code>404</error-code>
         <location>/jsp/error/404.jsp</location>

@@ -126,32 +126,32 @@
                 <!-- Menu cho Lễ tân -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
+                        <i class="bi bi-house-door-fill"></i> Trang chủ
                     </a>
                 </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý đặt lịch
+                        <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
                     </a>
                 </li>
                  <li>
                     <a href="${pageContext.request.contextPath}/checkin">
-                        <i class="bi bi-calendar-check"></i> Quản lý check-in
+                        <i class="bi bi-person-check-fill"></i> Quản lý check-in
                     </a>
                 </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/#">
-                        <i class="bi bi-calendar-check"></i> Quản lý hàng đợi
+                        <i class="bi bi-people-fill"></i> Quản lý hàng đợi
                     </a>
                 </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/#">
-                        <i class="bi bi-speedometer2"></i> Quản lý bệnh nhân
+                        <i class="bi bi-person-lines-fill"></i> Quản lý bệnh nhân
                     </a>
                 </li> 
                <li>
                     <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
-                        <i class="bi bi-speedometer2"></i> Quản lý lịch bác sĩ
+                        <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
                     </a>
                 </li> 
 
