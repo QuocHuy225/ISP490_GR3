@@ -1,38 +1,40 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.isp490_gr3.model;
 
-import java.sql.Date;
+import java.sql.Date; // Use java.sql.Date for database interaction
+import java.sql.Timestamp;
 
-/**
- *
- * @author FPT SHOP
- */
 public class DoctorSchedule {
-
-    private int id;
+    private String id; // Changed to String to match frontend dummy data for easier mapping
     private int doctorId;
-    private Date workDate;
+    private Date workDate; // Use java.sql.Date for database DATE type
     private boolean isActive;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 
-    public DoctorSchedule() {
-    }
+    // Additional fields for frontend display (not directly from DB table, but useful)
+    private String doctorName;
+    private String name; // This maps to 'eventName' from frontend
 
-    public DoctorSchedule(int id, int doctorId, Date workDate, boolean isActive) {
+    // Constructors
+    public DoctorSchedule() {}
+
+    public DoctorSchedule(String id, int doctorId, Date workDate, boolean isActive, Timestamp createdAt, Timestamp updatedAt, String doctorName, String name) {
         this.id = id;
         this.doctorId = doctorId;
         this.workDate = workDate;
         this.isActive = isActive;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.doctorName = doctorName;
+        this.name = name;
     }
 
-    // Getters và setters
-    public int getId() {
+    // Getters and Setters
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -58,5 +60,37 @@ public class DoctorSchedule {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getDoctorName() {
+        return doctorName;
+    }
+
+    public void setDoctorName(String doctorName) {
+        this.doctorName = doctorName;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

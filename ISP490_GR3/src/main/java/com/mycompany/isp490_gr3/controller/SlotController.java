@@ -1,3 +1,4 @@
+
 package com.mycompany.isp490_gr3.controller;
 
 import com.mycompany.isp490_gr3.dao.DAODoctor;
@@ -108,7 +109,7 @@ public class SlotController extends HttpServlet {
         int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
 
         DAODoctor daoDoctor = new DAODoctor();
-        List<Doctor> doctors = daoDoctor.getAllDoctors();
+        List<Doctor> doctors = daoDoctor.findAllDoctors();
 
         // Truyền dữ liệu cho JSP
         request.setAttribute("doctors", doctors);
@@ -190,7 +191,7 @@ public class SlotController extends HttpServlet {
         int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
 
         DAODoctor daoDoctor = new DAODoctor();
-        List<Doctor> doctors = daoDoctor.getAllDoctors();
+        List<Doctor> doctors = daoDoctor.findAllDoctors();
 
         request.setAttribute("doctors", doctors);
         request.setAttribute("currentPageSlots", currentPageSlots);
