@@ -163,8 +163,8 @@
                 <div class="d-flex align-items-center">
                     <select class="form-select form-select-sm me-2 rounded-md" id="viewMode" style="width: auto;">
                         <option value="month">Month</option>
-                        <option value="week">Week (Chưa hỗ trợ)</option>
-                        <option value="day">Day (Chưa hỗ trợ)</option>
+                        <option value="week">Week</option>
+                        <option value="day">Day</option>
                     </select>
                     <button class="btn btn-primary rounded-md" id="addEventButton">THÊM LỊCH LÀM VIỆC</button>
                 </div>
