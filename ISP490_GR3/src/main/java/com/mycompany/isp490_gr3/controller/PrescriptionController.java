@@ -102,33 +102,29 @@ public class PrescriptionController extends HttpServlet {
         }
     }
     
+    /**
+     * Check admin access - standardized across all controllers
+     */
     private boolean checkAdminAccess(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        
         HttpSession session = request.getSession(false);
         
-        if (session == null) {
-            response.sendRedirect(request.getContextPath() + "/auth/login");
+        // Check if user is logged in
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
             return false;
         }
         
-        Object userRole = session.getAttribute("userRole");
-        if (userRole == null) {
-            response.sendRedirect(request.getContextPath() + "/auth/login");
+        // Get current user
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
             return false;
         }
         
-        User.Role role = null;
-        if (userRole instanceof User.Role) {
-            role = (User.Role) userRole;
-        } else {
-            try {
-                role = User.Role.valueOf(userRole.toString().toUpperCase());
-            } catch (Exception e) {
-                role = User.Role.fromString(userRole.toString());
-            }
-        }
-        
-        if (role != User.Role.ADMIN) {
+        // Check if user is admin
+        if (currentUser.getRole() != User.Role.ADMIN) {
             response.sendRedirect(request.getContextPath() + "/homepage");
             return false;
         }

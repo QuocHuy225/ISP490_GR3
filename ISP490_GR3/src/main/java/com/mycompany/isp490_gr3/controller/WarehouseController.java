@@ -194,6 +194,9 @@ public class WarehouseController extends HttpServlet {
         }
     }
     
+    /**
+     * Check admin access - standardized across all controllers
+     */
     private boolean checkAdminAccess(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
@@ -205,24 +208,16 @@ public class WarehouseController extends HttpServlet {
             return false;
         }
         
-        // Check if user is admin
-        Object userRoleObj = session.getAttribute("userRole");
-        User.Role currentRole = null;
-        
-        if (userRoleObj != null) {
-            if (userRoleObj instanceof User.Role) {
-                currentRole = (User.Role) userRoleObj;
-            } else {
-                try {
-                    currentRole = User.Role.valueOf(userRoleObj.toString().toUpperCase());
-                } catch (Exception e) {
-                    currentRole = User.Role.fromString(userRoleObj.toString());
-                }
-            }
+        // Get current user
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
         }
         
-        if (currentRole != User.Role.ADMIN) {
-            response.sendRedirect(request.getContextPath() + "/homepage?error=access_denied");
+        // Check if user is admin
+        if (currentUser.getRole() != User.Role.ADMIN) {
+            response.sendRedirect(request.getContextPath() + "/homepage");
             return false;
         }
         
