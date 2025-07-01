@@ -65,7 +65,7 @@
         <ul class="list-unstyled components">
             <li><a href="<%= contextPath %>/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
             <li><a href="<%= contextPath %>/makeappointments"><i class="bi bi-calendar-check"></i> Đặt lịch hẹn</a></li>
-            <li><a href="#"><i class="bi bi-calendar-check"></i> Lịch hẹn của tôi</a></li>
+            <li><a href="<%= contextPath %>/api/patient/*"><i class="bi bi-calendar-check"></i> Lịch hẹn của tôi</a></li>
             <li><a href="#"><i class="bi bi-file-medical"></i> Hồ sơ sức khỏe</a></li>
             <li><a href="#"><i class="bi bi-hospital"></i> Dịch vụ</a></li>
             <li><a href="#"><i class="bi bi-chat-dots"></i> Liên hệ bác sĩ</a></li>
