@@ -168,7 +168,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/api/patient/*">
                         <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
                     </a>
                 </li>
