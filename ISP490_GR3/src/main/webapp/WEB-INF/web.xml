@@ -48,15 +48,7 @@
         
     </servlet-mapping>
     
-    <servlet>
-        <servlet-name>ReceptionistScheduleController</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistScheduleController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>ReceptionistScheduleController</servlet-name>
-        <url-pattern>/receptionist/manage-doctor-schedule</url-pattern>
-        <!-- Đây là URL bạn sẽ truy cập -->
-    </servlet-mapping>
+    
     <servlet>
         <servlet-name>CheckinController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.CheckinController</servlet-class>
@@ -102,8 +94,8 @@
         <url-pattern>/doctors</url-pattern>
         <url-pattern>/viewdoctor</url-pattern>
         <url-pattern>/book-appointment</url-pattern>
-
     </servlet-mapping>
+    
     <servlet>
         <servlet-name>ReceptionistScheduleController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistScheduleController</servlet-class>
@@ -112,7 +104,6 @@
         <servlet-name>ReceptionistScheduleController</servlet-name>
         <url-pattern>/receptionist/manage-doctor-schedule</url-pattern>
         
-
     </servlet-mapping>
     <error-page>
         <error-code>404</error-code>
