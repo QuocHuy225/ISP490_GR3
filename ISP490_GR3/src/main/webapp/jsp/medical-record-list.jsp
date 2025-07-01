@@ -500,7 +500,7 @@
                                     <h5 class="card-title mb-0">
                                         <i class="bi bi-table me-2"></i>Danh sách hồ sơ bệnh án
                                     </h5>
-                                    <a href="${pageContext.request.contextPath}/medical-records?action=new&patientId=<%= patient.getId() %>" 
+                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=new&patientId=<%= patient.getId() %>" 
                                        class="btn btn-success">
                                         <i class="bi bi-plus-circle me-2"></i>Tạo hồ sơ mới
                                     </a>
@@ -554,26 +554,26 @@
                                                         </td>
                                                         <td>
                                                             <div class="action-buttons-group">
-                                                            <a href="${pageContext.request.contextPath}/medical-records?action=view&recordId=<%= record.getId() %>" 
+                                                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=view&recordId=<%= record.getId() %>" 
                                                                class="action-btn action-btn-view" title="Xem & In">
                                                                 <i class="bi bi-eye"></i>
                                                                 <span class="btn-text">Xem</span>
                                                             </a>
                                                             
-                                                            <a href="${pageContext.request.contextPath}/medical-records?action=edit&recordId=<%= record.getId() %>" 
+                                                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=edit&recordId=<%= record.getId() %>" 
                                                                class="action-btn action-btn-edit" 
                                                                title="<%= "completed".equals(record.getStatus()) ? "Chỉnh sửa ghi chú (hồ sơ đã hoàn thành)" : "Chỉnh sửa" %>">
                                                                 <i class="bi bi-pencil-square"></i>
                                                                 <span class="btn-text"><%= "completed".equals(record.getStatus()) ? "Ghi chú" : "Sửa" %></span>
                                                             </a>
                                                             
-                                                            <a href="${pageContext.request.contextPath}/invoices?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
+                                                            <a href="${pageContext.request.contextPath}/doctor/invoices?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
                                                                class="action-btn action-btn-invoice" title="Quản lý hóa đơn">
                                                                 <i class="bi bi-receipt"></i>
                                                                 <span class="btn-text">Hóa đơn</span>
                                                             </a>
                                                             
-                                                            <a href="${pageContext.request.contextPath}/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
+                                                            <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
                                                                class="action-btn action-btn-prescription" title="Quản lý đơn thuốc">
                                                                 <i class="bi bi-capsule"></i>
                                                                 <span class="btn-text">Đơn thuốc</span>
