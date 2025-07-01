@@ -25,8 +25,9 @@ import java.util.logging.Logger;
 
 /**
  * Controller quản lý đơn thuốc thực tế (ActualPrescription)
+ * Allows both ADMIN and DOCTOR access
  */
-@WebServlet(name = "ActualPrescriptionController", urlPatterns = {"/actual-prescriptions"})
+@WebServlet(name = "ActualPrescriptionController", urlPatterns = {"/doctor/actual-prescriptions"})
 public class ActualPrescriptionController extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(ActualPrescriptionController.class.getName());
 
@@ -45,6 +46,12 @@ public class ActualPrescriptionController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        
+        // Check doctor access (Admin and Doctor allowed)
+        if (!checkDoctorAccess(request, response)) {
+            return;
+        }
+        
         String action = request.getParameter("action");
         if (action == null) action = "list";
 
@@ -70,12 +77,18 @@ public class ActualPrescriptionController extends HttpServlet {
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error in ActualPrescriptionController: {0}", e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/actual-prescriptions?error=system_error");
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=system_error");
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        
+        // Check doctor access (Admin and Doctor allowed)
+        if (!checkDoctorAccess(request, response)) {
+            return;
+        }
+        
         String action = request.getParameter("action");
         if (action == null) action = "add";
 
@@ -123,12 +136,12 @@ public class ActualPrescriptionController extends HttpServlet {
     private void handleNewForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String medicalRecordId = request.getParameter("medicalRecordId");
         if (medicalRecordId == null || medicalRecordId.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/actual-prescriptions?error=invalid_record");
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=invalid_record");
             return;
         }
         MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
         if (record == null) {
-            response.sendRedirect(request.getContextPath() + "/actual-prescriptions?error=record_not_found");
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=record_not_found");
             return;
         }
         Patient patient = daoPatient.getPatientById(record.getPatientId());
@@ -144,12 +157,12 @@ public class ActualPrescriptionController extends HttpServlet {
     private void handleEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String formId = request.getParameter("formId");
         if (formId == null || formId.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/actual-prescriptions?error=invalid_form");
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=invalid_form");
             return;
         }
         ActualPrescriptionForm form = daoRx.getFormById(formId);
         if (form == null) {
-            response.sendRedirect(request.getContextPath() + "/actual-prescriptions?error=form_not_found");
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=form_not_found");
             return;
         }
         MedicalRecord record = daoMedicalRecord.getMedicalRecordById(form.getMedicalRecordId());
@@ -211,13 +224,13 @@ public class ActualPrescriptionController extends HttpServlet {
 
             boolean success = daoRx.addForm(form, medicines);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId + "&success=added");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId + "&success=added");
             } else {
-                response.sendRedirect(request.getContextPath() + "/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId + "&error=add_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId + "&error=add_failed");
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error adding prescription form: {0}", e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/actual-prescriptions?error=system_error");
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=system_error");
         }
     }
 
@@ -233,7 +246,7 @@ public class ActualPrescriptionController extends HttpServlet {
 
             ActualPrescriptionForm form = daoRx.getFormById(formId);
             if (form == null) {
-                response.sendRedirect(request.getContextPath() + "/actual-prescriptions?error=form_not_found");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=form_not_found");
                 return;
             }
             form.setFormName(formName);
@@ -243,13 +256,13 @@ public class ActualPrescriptionController extends HttpServlet {
             List<ActualPrescriptionMedicine> medicines = parseMedicinesFromRequest(request);
             boolean success = daoRx.updateForm(form, medicines);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + form.getMedicalRecordId() + "&success=updated");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + form.getMedicalRecordId() + "&success=updated");
             } else {
-                response.sendRedirect(request.getContextPath() + "/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + form.getMedicalRecordId() + "&error=update_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + form.getMedicalRecordId() + "&error=update_failed");
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error updating prescription form: {0}", e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/actual-prescriptions?error=system_error");
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=system_error");
         }
     }
 
@@ -257,11 +270,11 @@ public class ActualPrescriptionController extends HttpServlet {
         String formId = request.getParameter("formId");
         String medicalRecordId = request.getParameter("medicalRecordId");
         if (formId == null || formId.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/actual-prescriptions");
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions");
             return;
         }
         boolean success = daoRx.deleteForm(formId);
-        String redirectUrl = request.getContextPath() + "/actual-prescriptions";
+        String redirectUrl = request.getContextPath() + "/doctor/actual-prescriptions";
         if (medicalRecordId != null) {
             redirectUrl += "?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId;
         }
@@ -297,5 +310,35 @@ public class ActualPrescriptionController extends HttpServlet {
             meds.add(med);
         }
         return meds;
+    }
+    
+    /**
+     * Check doctor access - allows both ADMIN and DOCTOR
+     */
+    private boolean checkDoctorAccess(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        
+        HttpSession session = request.getSession(false);
+        
+        // Check if user is logged in
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+        
+        // Get current user
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+        
+        // Allow both Admin and Doctor to access
+        if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.DOCTOR) {
+            response.sendRedirect(request.getContextPath() + "/homepage");
+            return false;
+        }
+        
+        return true;
     }
 } 
