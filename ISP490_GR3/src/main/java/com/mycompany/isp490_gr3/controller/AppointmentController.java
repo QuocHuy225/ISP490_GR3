@@ -70,7 +70,7 @@ public class AppointmentController extends HttpServlet {
         int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
 
         DAODoctor daoDoctor = new DAODoctor();
-        List<Doctor> doctors = daoDoctor.getAllDoctors();
+        List<Doctor> doctors = daoDoctor.findAllDoctors();
 
         DAOService daoService = new DAOService();
         List<MedicalService> services = daoService.getAllServices();
@@ -168,7 +168,7 @@ public class AppointmentController extends HttpServlet {
         // doctor + service list
         DAODoctor daoDoctor = new DAODoctor();
         DAOService daoService = new DAOService();
-        List<Doctor> doctors = daoDoctor.getAllDoctors();
+        List<Doctor> doctors = daoDoctor.findAllDoctors();
         List<MedicalService> services = daoService.getAllServices();
 
         // truyền thuộc tính về JSP
