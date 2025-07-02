@@ -17,7 +17,7 @@ import com.google.gson.Gson;
 /**
  * Servlet xử lý các yêu cầu liên quan đến bệnh nhân.
  */
-@WebServlet(name = "PatientController", urlPatterns = {"/patients", "/patients/*"})
+@WebServlet(name = "PatientController", urlPatterns = {"/doctor/patients", "/doctor/patients/*"})
 public class PatientController extends HttpServlet {
 
     private DAOPatient patientDAO = new DAOPatient();

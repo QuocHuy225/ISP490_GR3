@@ -335,12 +335,12 @@
                                 </li>
                                 <% if (patient != null) { %>
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%= patient.getId() %>">
+                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>">
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord.getId() %>">
+                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord.getId() %>">
                                         Đơn thuốc
                                     </a>
                                 </li>
@@ -398,7 +398,7 @@
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <form method="post" action="${pageContext.request.contextPath}/actual-prescriptions" id="prescriptionForm">
+                                <form method="post" action="${pageContext.request.contextPath}/doctor/actual-prescriptions" id="prescriptionForm">
                                     <input type="hidden" name="action" value="<%= "add".equals(action) ? "add" : "update" %>">
                                     <% if (form != null) { %>
                                         <input type="hidden" name="formId" value="<%= form.getActualPrescriptionFormId() %>">
@@ -528,7 +528,7 @@
 
                                     <!-- Form Actions -->
                                     <div class="d-flex justify-content-end gap-2">
-                                        <a href="${pageContext.request.contextPath}/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord != null ? medicalRecord.getId() : "" %>" 
+                                        <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord != null ? medicalRecord.getId() : "" %>" 
                                            class="btn btn-outline-secondary">
                                             <i class="bi bi-x-circle me-2"></i>Hủy
                                         </a>
