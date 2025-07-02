@@ -278,7 +278,7 @@
                                 </li>
                                 <% if (patient != null) { %>
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%= patient.getId() %>">
+                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>">
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
@@ -296,7 +296,7 @@
                     <div class="col-12">
                         <% if (medicalRecord != null && patient != null) { %>
                         <div class="d-flex justify-content-start align-items-center mb-3">
-                            <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%= patient.getId() %>" 
+                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
                                class="btn btn-outline-secondary me-3">
                                 <i class="bi bi-arrow-left me-2"></i>Quay lại Hồ sơ bệnh án
                             </a>
@@ -310,7 +310,7 @@
                                     <i class="bi bi-printer me-2"></i>In hồ sơ
                                 </button>
                                 <% if (medicalRecord != null) { %>
-                                <a href="${pageContext.request.contextPath}/medical-records?action=edit&recordId=<%= medicalRecord.getId() %>" 
+                                <a href="${pageContext.request.contextPath}/doctor/medical-records?action=edit&recordId=<%= medicalRecord.getId() %>" 
                                    class="btn btn-primary">
                                     <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                                 </a>
