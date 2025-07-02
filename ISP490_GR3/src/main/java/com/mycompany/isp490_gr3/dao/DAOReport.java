@@ -235,4 +235,102 @@ public class DAOReport extends DBContext {
         return stats;
     }
 
+    public Map<String, Object> getDoctorStatistics(int doctorId) {
+        Map<String, Object> stats = new HashMap<>();
+
+        String sqlTotalAppointments = "SELECT COUNT(*) AS total FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "WHERE s.doctor_id = ? AND a.is_deleted = FALSE";
+
+        String sqlUniquePatients = "SELECT COUNT(DISTINCT a.patient_id) AS total FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "WHERE s.doctor_id = ? AND a.is_deleted = FALSE";
+
+        String sqlAppointmentsByService = "SELECT ms.service_name, COUNT(*) AS total FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "JOIN medical_services ms ON a.services_id = ms.services_id "
+                + "WHERE s.doctor_id = ? AND a.is_deleted = FALSE AND ms.isdeleted = FALSE "
+                + "GROUP BY ms.service_name ORDER BY total DESC";
+
+        String sqlAppointmentsByStatus = "SELECT a.status, COUNT(*) AS total FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "WHERE s.doctor_id = ? AND a.is_deleted = FALSE "
+                + "GROUP BY a.status";
+
+        try (Connection conn = getConnection()) {
+            // Tổng lịch hẹn
+            try (PreparedStatement ps = conn.prepareStatement(sqlTotalAppointments)) {
+                ps.setInt(1, doctorId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        stats.put("totalAppointments", rs.getInt("total"));
+                    }
+                }
+            }
+
+            // Tổng bệnh nhân đã khám
+            try (PreparedStatement ps = conn.prepareStatement(sqlUniquePatients)) {
+                ps.setInt(1, doctorId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        stats.put("uniquePatients", rs.getInt("total"));
+                    }
+                }
+            }
+
+            // Lịch hẹn theo dịch vụ
+            List<Map<String, Object>> serviceStats = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sqlAppointmentsByService)) {
+                ps.setInt(1, doctorId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("service", rs.getString("service_name"));
+                        row.put("count", rs.getInt("total"));
+                        serviceStats.add(row);
+                    }
+                }
+            }
+            stats.put("appointmentsByService", serviceStats);
+
+            // Lịch hẹn theo trạng thái
+            List<Map<String, Object>> statusStats = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sqlAppointmentsByStatus)) {
+                ps.setInt(1, doctorId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("status", rs.getString("status"));
+                        row.put("count", rs.getInt("total"));
+                        statusStats.add(row);
+                    }
+                }
+            }
+            stats.put("appointmentsByStatus", statusStats);
+
+        } catch (SQLException e) {
+            System.out.println("Error in getDoctorStatistics: " + e.getMessage());
+        }
+
+        return stats;
+    }
+
+    public int getDoctorIdByAccountId(String accountId) {
+        int doctorId = -1;
+        String sql = "SELECT id FROM doctors WHERE account_id = ? AND is_deleted = FALSE";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, accountId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    doctorId = rs.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in getDoctorIdByAccountId: " + e.getMessage());
+        }
+
+        return doctorId;
+    }
+
 }
