@@ -166,7 +166,7 @@
                         <i class="bi bi-calendar-check"></i> Quản lý đặt lịch
                     </a>
                 </li>
-                 <li>
+                <li>
                     <a href="${pageContext.request.contextPath}/checkin">
                         <i class="bi bi-calendar-check"></i> Quản lý check-in
                     </a>
@@ -181,7 +181,7 @@
                         <i class="bi bi-people"></i> Quản lý bệnh nhân
                     </a>
                 </li> 
-               <li>
+                <li>
                     <a href="${pageContext.request.contextPath}/#">
                         <i class="bi bi-speedometer2"></i> Quản lý lịch bác sĩ
                     </a>
@@ -231,7 +231,7 @@
                     <button type="button" id="sidebarCollapse" class="btn btn-primary">
                         <i class="bi bi-list"></i>
                     </button>
-                    
+
                     <div style="margin-left: 60px; margin-top: 10px">
                         <h3>
                             <span style="color: #007bff;">Ánh Dương</span>
@@ -288,7 +288,7 @@
             <!-- Main Content Area -->
             <div class="container-fluid mt-4">
                 <h2 class="mb-4">Tổng Quan Thống Kê</h2>
-                
+
                 <div class="row">
                     <!-- Thống kê bệnh nhân -->
                     <div class="col-md-4">
@@ -298,7 +298,7 @@
                             <div class="stat-value text-primary">${summaryData.totalPatients}</div>
                         </div>
                     </div>
-                    
+
                     <!-- Thống kê bác sĩ -->
                     <div class="col-md-4">
                         <div class="stat-card bg-success bg-opacity-10">
@@ -307,7 +307,7 @@
                             <div class="stat-value text-success">${summaryData.totalDoctors}</div>
                         </div>
                     </div>
-                    
+
                     <!-- Thống kê cuộc hẹn -->
                     <div class="col-md-4">
                         <div class="stat-card bg-info bg-opacity-10">
@@ -316,7 +316,7 @@
                             <div class="stat-value text-info">${summaryData.totalAppointments}</div>
                         </div>
                     </div>
-                    
+
                     <!-- Thống kê hồ sơ bệnh án -->
                     <div class="col-md-4">
                         <div class="stat-card bg-warning bg-opacity-10">
@@ -325,7 +325,7 @@
                             <div class="stat-value text-warning">${summaryData.totalMedicalRecords}</div>
                         </div>
                     </div>
-                    
+
                     <!-- Thống kê hóa đơn -->
                     <div class="col-md-4">
                         <div class="stat-card bg-danger bg-opacity-10">
@@ -334,7 +334,7 @@
                             <div class="stat-value text-danger">${summaryData.totalInvoices}</div>
                         </div>
                     </div>
-                    
+
                     <!-- Thống kê doanh thu -->
                     <div class="col-md-4">
                         <div class="stat-card bg-secondary bg-opacity-10">
@@ -344,7 +344,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Nút chuyển đến các báo cáo chi tiết -->
                 <div class="row mt-4">
                     <div class="col-md-4">
@@ -362,13 +362,18 @@
                             <i class="bi bi-receipt me-2"></i>Báo cáo hóa đơn
                         </a>
                     </div>
+                    <div class="col-md-3">
+                        <a href="${pageContext.request.contextPath}/admin/report/appointment" class="btn btn-outline-info w-100 mb-3">
+                            <i class="bi bi-calendar-check me-2"></i>Báo cáo lịch hẹn
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        
+
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 // Sidebar toggle
