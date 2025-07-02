@@ -3,84 +3,82 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="vi">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Dashboard - Ánh Dương Clinic</title>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
-        <style>
-            .stat-card {
-                border-radius: 10px;
-                padding: 20px;
-                margin-bottom: 20px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                transition: transform 0.3s;
+<head>
+    <meta charset="UTF-8">
+    <title>Báo cáo chi tiết lịch hẹn - Ánh Dương Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
+    <style>
+        .back-link {
+                background-color: #e6f3fc; /* Light blue */
+                color: #1976d2; /* Stronger blue */
+                padding: 8px 15px;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: 500;
+                border: 2px solid #1976d2;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                /* Removed position: absolute; for simpler flexbox layout */
             }
-            .stat-card:hover {
-                transform: translateY(-5px);
+            .back-link:hover {
+                background-color: #1976d2; /* Darker blue on hover */
+                color: white;
             }
-            .stat-icon {
-                font-size: 2.5rem;
-                margin-bottom: 15px;
+            .back-link:active {
+                transform: scale(0.97);
             }
-            .stat-title {
-                font-size: 1.1rem;
-                color: #6c757d;
-                margin-bottom: 10px;
-            }
-            .stat-value {
-                font-size: 1.8rem;
-                font-weight: bold;
-                margin-bottom: 0;
-            }
-        </style>
-    </head>
-    <body>
-        <%
-            // Get user role for access control
-            Object userRole = session.getAttribute("userRole");
-            User.Role currentRole = null;
-            
-            if (userRole != null) {
-                if (userRole instanceof User.Role) {
-                    currentRole = (User.Role) userRole;
-                } else {
-                    // Try to parse from string
-                    try {
-                        currentRole = User.Role.valueOf(userRole.toString().toUpperCase());
-                    } catch (Exception e) {
-                        // Fallback to parsing from display value
-                        currentRole = User.Role.fromString(userRole.toString());
-                    }
+    </style>
+</head>
+<body>
+<%
+        // Get user role for access control
+        Object userRole = session.getAttribute("userRole");
+        User.Role currentRole = null;
+        
+        if (userRole != null) {
+            if (userRole instanceof User.Role) {
+                currentRole = (User.Role) userRole;
+            } else {
+                // Try to parse from string
+                try {
+                    currentRole = User.Role.valueOf(userRole.toString().toUpperCase());
+                } catch (Exception e) {
+                    // Fallback to parsing from display value
+                    currentRole = User.Role.fromString(userRole.toString());
                 }
             }
-            
-            // Default to PATIENT if no role found
-            if (currentRole == null) {
-                currentRole = User.Role.PATIENT;
-            }
-            
-            // Get user information
-            Object userObj = session.getAttribute("user");
-            String userName = "User";
-            String userRoleDisplay = "Patient";
-            if (userObj instanceof User) {
-                User user = (User) userObj;
-                userName = user.getFullName() != null ? user.getFullName() : user.getEmail();
-                userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
-            }
+        }
+        
+        // Default to PATIENT if no role found
+        if (currentRole == null) {
+            currentRole = User.Role.PATIENT;
+        }
+        
+        // Get user information
+        Object userObj = session.getAttribute("user");
+        String userName = "User";
+        String userRoleDisplay = "Patient";
+        if (userObj instanceof User) {
+            User user = (User) userObj;
+            userName = user.getFullName() != null ? user.getFullName() : user.getEmail();
+            userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
+        }
         %>
 
+        <!-- Sidebar -->
         <nav id="sidebar">
             <div class="sidebar-header">
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
                 <% if (currentRole == User.Role.ADMIN) { %>
+                <!-- Menu cho Admin -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -122,6 +120,7 @@
                     </a>
                 </li>
                 <% } else if (currentRole == User.Role.DOCTOR) { %>
+                <!-- Menu cho Bác sĩ -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -143,11 +142,12 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="bi bi-journal-medical"></i> Chỉ định dịch vụ
+                    <a href="${pageContext.request.contextPath}/doctor/report">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
                 </li>
                 <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
+                <!-- Menu cho Lễ tân -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -172,14 +172,15 @@
                     <a href="${pageContext.request.contextPath}/patients">
                         <i class="bi bi-people"></i> Quản lý bệnh nhân
                     </a>
-                </li>
+                </li> 
                 <li>
                     <a href="${pageContext.request.contextPath}/#">
                         <i class="bi bi-speedometer2"></i> Quản lý lịch bác sĩ
                     </a>
-                </li>
+                </li> 
 
                 <% } else { %>
+                <!-- Menu cho Bệnh nhân (PATIENT) -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -214,7 +215,9 @@
             </ul>
         </nav>
 
+        <!-- Main Content -->
         <div id="content">
+            <!-- Top Navbar -->
             <nav class="navbar navbar-expand-lg top-navbar">
                 <div class="container-fluid">
                     <button type="button" id="sidebarCollapse" class="btn btn-primary">
@@ -274,115 +277,94 @@
                 </div>
             </nav>
 
-            <div class="container-fluid mt-4">
-                <h2 class="mb-4">Tổng Quan Thống Kê</h2>
 
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="stat-card bg-primary bg-opacity-10">
-                            <i class="bi bi-people stat-icon text-primary"></i>
-                            <div class="stat-title">Tổng số bệnh nhân</div>
-                            <div class="stat-value text-primary">${summaryData.totalPatients}</div>
-                        </div>
-                    </div>
+    <!-- CONTENT -->
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Báo Cáo Chi Tiết Lịch Hẹn</h2>
+            <a href="${pageContext.request.contextPath}/doctor/report" class="back-link">← Quay lại Dashboard</a>
+        </div>
 
-                    <div class="col-md-4">
-                        <div class="stat-card bg-success bg-opacity-10">
-                            <i class="bi bi-person-workspace stat-icon text-success"></i>
-                            <div class="stat-title">Tổng số bác sĩ</div>
-                            <div class="stat-value text-success">${summaryData.totalDoctors}</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="stat-card bg-info bg-opacity-10">
-                            <i class="bi bi-calendar-check stat-icon text-info"></i>
-                            <div class="stat-title">Tổng số cuộc hẹn</div>
-                            <div class="stat-value text-info">${summaryData.totalAppointments}</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="stat-card bg-warning bg-opacity-10">
-                            <i class="bi bi-file-medical stat-icon text-warning"></i>
-                            <div class="stat-title">Tổng số hồ sơ bệnh án</div>
-                            <div class="stat-value text-warning">${summaryData.totalMedicalRecords}</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="stat-card bg-danger bg-opacity-10">
-                            <i class="bi bi-receipt stat-icon text-danger"></i>
-                            <div class="stat-title">Tổng số hóa đơn</div>
-                            <div class="stat-value text-danger">${summaryData.totalInvoices}</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="stat-card bg-secondary bg-opacity-10">
-                            <i class="bi bi-currency-dollar stat-icon text-secondary"></i>
-                            <div class="stat-title">Tổng doanh thu</div>
-                            <div class="stat-value text-secondary">${String.format("%,.0f", summaryData.totalRevenue)} VNĐ</div>
-                        </div>
+        <div class="row justify-content-center">
+            <!-- Biểu đồ theo dịch vụ -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Lịch hẹn theo dịch vụ</h5>
+                        <canvas id="appointmentsByServiceChart"></canvas>
                     </div>
                 </div>
+            </div>
 
-                <div class="row mt-4">
-                    <div class="col-md-4">
-                        <a href="${pageContext.request.contextPath}/admin/report/patient" class="btn btn-outline-primary w-100 mb-3">
-                            <i class="bi bi-people me-2"></i>Báo cáo chi tiết bệnh nhân
-                        </a>
-                    </div>
-                    <div class="col-md-4">
-                        <a href="${pageContext.request.contextPath}/admin/report/medical-record" class="btn btn-outline-warning w-100 mb-3">
-                            <i class="bi bi-file-medical me-2"></i>Báo cáo hồ sơ bệnh án
-                        </a>
-                    </div>
-                    <div class="col-md-4">
-                        <a href="${pageContext.request.contextPath}/admin/report/invoice" class="btn btn-outline-danger w-100 mb-3">
-                            <i class="bi bi-receipt me-2"></i>Báo cáo hóa đơn
-                        </a>
-                    </div>
-                    <div class="col-md-4"> <%-- Đã thay đổi từ col-md-3 sang col-md-4 --%>
-                        <a href="${pageContext.request.contextPath}/admin/report/appointment" class="btn btn-outline-info w-100 mb-3">
-                            <i class="bi bi-calendar-check me-2"></i>Báo cáo lịch hẹn
-                        </a>
+            <!-- Biểu đồ theo trạng thái -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Lịch hẹn theo trạng thái</h5>
+                        <canvas id="appointmentsByStatusChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarCollapse = document.getElementById('sidebarCollapse');
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content');
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Sidebar toggle
-                const sidebarCollapse = document.getElementById('sidebarCollapse');
-                const sidebar = document.getElementById('sidebar');
-                const content = document.getElementById('content');
+        sidebarCollapse.addEventListener('click', function () {
+            sidebar.classList.toggle('collapsed');
+            content.classList.toggle('expanded');
+        });
 
-                sidebarCollapse.addEventListener('click', function () {
-                    sidebar.classList.toggle('collapsed');
-                    content.classList.toggle('expanded');
-                });
+        function checkWidth() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+                content.classList.add('expanded');
+            } else {
+                sidebar.classList.remove('collapsed');
+                content.classList.remove('expanded');
+            }
+        }
 
-                // Responsive sidebar
-                function checkWidth() {
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.add('collapsed');
-                        content.classList.add('expanded');
-                    } else {
-                        sidebar.classList.remove('collapsed');
-                        content.classList.remove('expanded');
-                    }
-                }
+        checkWidth();
+        window.addEventListener('resize', checkWidth);
+    });
 
-                // Initial check
-                checkWidth();
+    // Dữ liệu biểu đồ từ backend
+    const appointmentsByService = ${appointmentsByServiceJson};
+    const appointmentsByStatus = ${appointmentsByStatusJson};
 
-                // Listen for window resize
-                window.addEventListener('resize', checkWidth);
-            });
-        </script>
-    </body>
+    // Biểu đồ dịch vụ
+    new Chart(document.getElementById('appointmentsByServiceChart'), {
+        type: 'bar',
+        data: {
+            labels: appointmentsByService.map(e => e.service),
+            datasets: [{
+                label: 'Số lượng',
+                data: appointmentsByService.map(e => e.count),
+                backgroundColor: '#4e73df'
+            }]
+        }
+    });
+
+    // Biểu đồ trạng thái
+    new Chart(document.getElementById('appointmentsByStatusChart'), {
+        type: 'bar',
+        data: {
+            labels: appointmentsByStatus.map(e => e.status),
+            datasets: [{
+                label: 'Số lượng',
+                data: appointmentsByStatus.map(e => e.count),
+                backgroundColor: '#1cc88a'
+            }]
+        }
+    });
+</script>
+</body>
 </html>

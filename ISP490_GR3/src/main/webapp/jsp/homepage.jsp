@@ -122,6 +122,11 @@
                         <i class="bi bi-clipboard-pulse"></i> Toa thuốc
                     </a>
                 </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/doctor/report">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
+                    </a>
+                </li>
                 <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
                 <!-- Menu cho Lễ tân -->
                 <li>
