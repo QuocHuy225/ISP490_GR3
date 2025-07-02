@@ -1,443 +1,413 @@
-/* ====================================
-   CSS VARIABLES & ROOT SETTINGS
-   ==================================== */
-:root {
-    /* Colors derived from the provided image */
-    --primary-blue: #0360D9; /* Darker blue for sidebar background and primary accents */
-    --light-blue: #4A90E2; /* Lighter blue for active sidebar items/buttons */
-    --dark-text: #2B3674; /* Dark text for main content and "Clinic" part of name */
-    --light-text: #A3AED0; /* Lighter grey for secondary text (e.g., search icon) */
-    --white: #FFFFFF;
-    --off-white: #F8F9FA; /* Background for search input, general light background */
-    --border-color: #DEE2E6; /* Light border color */
-    --shadow-color: rgba(0, 0, 0, 0.1);
+/*
+ * File: patient-appointment-schedule.css
+ * Mục đích: Định nghĩa các style cụ thể cho trang lịch hẹn của bệnh nhân,
+ * bổ sung cho homepage.css và không gây xung đột với nó.
+ *
+ * LƯU Ý QUAN TRỌNG:
+ * - KHÔNG định nghĩa lại các style cho 'body'. homepage.css sẽ quản lý nó.
+ * - KHÔNG định nghĩa lại các style cho các class nút Bootstrap (.btn, .btn-primary, v.v.).
+ * Chúng sẽ được kế thừa từ homepage.css (qua Bootstrap).
+ */
 
-    --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    --radius: 0.5rem; /* Standard border-radius */
-    --radius-lg: 1rem; /* Larger border-radius */
-
-    /* Gradients for active states/buttons (if needed, currently using solid colors from image) */
-    --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, #00d4ff 100%);
-    --gradient-button: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-
-    /* Shadows */
-    --shadow-light: 0 5px 25px rgba(3, 96, 217, 0.1);
-    --shadow-medium: 0 10px 40px rgba(3, 96, 217, 0.15);
+/* ==========================================================================
+   Container chính của nội dung trang lịch hẹn
+   ========================================================================== */
+.container {
+    max-width: 1300px; /* Đã tăng chiều rộng tối đa từ 1100px lên 1300px */
+    margin: 20px auto; /* Căn giữa và tạo khoảng trống từ viền content chính */
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative; /* Dùng cho các positioning bên trong nếu cần */
+    z-index: 1; /* Đảm bảo nằm trên các yếu tố nền */
 }
 
-/* ====================================
-   RESET & BASE STYLES
-   ==================================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: var(--font-family);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-    line-height: 1.6;
-    font-size: 16px;
-    color: var(--dark-text);
-    background-color: var(--off-white); /* Use off-white for body background */
-    display: flex; /* Flexbox for sidebar and main content layout */
-    min-height: 100vh;
-}
-
-/* ====================================
-   SIDEBAR STYLES
-   ==================================== */
-#sidebar {
-    min-width: 250px;
-    max-width: 250px;
-    min-height: 100vh;
-    background: var(--primary-blue); /* Dark blue background from image */
-    color: var(--white);
-    transition: all 0.3s ease-in-out;
-    position: fixed; /* Fixed sidebar */
-    left: 0;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 4px 0 10px var(--shadow-color);
-    overflow-y: auto; /* Enable scrolling for long content */
-    padding-bottom: 20px; /* Add some padding at the bottom */
-}
-
-#sidebar.active { /* Class to hide sidebar */
-    margin-left: -250px;
-}
-
-#sidebar .sidebar-header {
-    padding: 20px;
-    background: var(--primary-blue); /* Same dark blue for header */
+/* ==========================================================================
+   Header của trang lịch hẹn
+   ========================================================================== */
+header {
     text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Subtle separator */
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
 }
 
-#sidebar .sidebar-header h3 {
-    color: var(--white); /* White color for "MENU" text */
-    margin: 0;
-    font-weight: 700;
-    font-size: 1.5rem;
+header h1 {
+    color: #0056b3; /* Một màu xanh tương đồng với primary của Bootstrap */
+    margin-bottom: 10px;
+    font-size: 2.5em;
+    /* Font family có thể kế thừa từ body (homepage.css) */
 }
 
-#sidebar ul.components {
-    padding: 20px 0;
-    list-style: none; /* Ensure no default list styling */
-}
-
-#sidebar ul li a {
-    padding: 15px 20px;
+header p {
+    color: #555;
     font-size: 1.1em;
-    display: flex;
-    align-items: center;
-    color: var(--white);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    border-radius: 8px;
-    margin: 4px 8px; /* Margin around list items */
-    gap: 10px; /* Space between icon and text */
 }
 
-#sidebar ul li a:hover {
-    background: rgba(255, 255, 255, 0.1); /* Light hover effect */
-    transform: translateX(5px);
-}
-
-#sidebar ul li.active > a {
-    background: var(--light-blue); /* Lighter blue for active item from image */
-    color: var(--white);
-    font-weight: 600;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Stronger shadow for active */
-    transform: translateX(0); /* No translation for active */
-}
-
-#sidebar ul li.active > a:hover {
-    background: var(--light-blue); /* Keep active color on hover */
-    color: var(--white);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Slightly stronger shadow on hover */
-}
-
-/* ====================================
-   MAIN CONTENT & NAVBAR
-   ==================================== */
-#main-wrapper { /* Renamed from #content to #main-wrapper as per your JSP */
-    width: calc(100% - 250px); /* Adjust width for fixed sidebar */
-    min-height: 100vh;
-    transition: all 0.3s ease-in-out;
-    margin-left: 250px; /* Push content right by sidebar width */
-    background-color: var(--off-white); /* Content background */
-    padding: 0; /* Remove padding here to allow navbar to go full width */
-    display: flex; /* Make main-wrapper a flex container */
-    flex-direction: column; /* Stack children vertically */
-}
-
-#main-wrapper.active { /* When sidebar is collapsed */
-    width: 100%;
-    margin-left: 0;
-}
-
-.top-navbar {
-    background: var(--white); /* White background for navbar from image */
-    padding: 15px 20px;
-    box-shadow: 0 2px 4px var(--shadow-color);
-    border-radius: 0; /* Sharp corners for full-width top navbar */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky; /* Sticky navbar */
-    top: 0;
-    z-index: 1020;
-    width: 100%; /* Full width of its parent (#main-wrapper) */
-    margin: 0; /* Remove any default margins */
-}
-
-.top-navbar .toggle-btn { /* Toggle button (3 horizontal lines) */
-    background-color: var(--primary-blue); /* Blue background from image */
-    border: none;
-    color: var(--white);
-    border-radius: var(--radius);
-    padding: 8px 12px;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.top-navbar .toggle-btn:hover {
-    background-color: var(--light-blue); /* Lighter blue on hover */
-}
-
-.navbar-brand-custom { /* Clinic name container */
-    margin-left: 60px; /* Space from toggle button */
-    font-size: 1.5rem;
+#patientName {
     font-weight: bold;
-    text-decoration: none; /* Remove underline from link */
-    white-space: nowrap; /* Prevent wrapping */
+    color: #007bff; /* Sử dụng màu primary của Bootstrap */
 }
 
-.navbar-brand-custom .text-primary { /* "Ánh Dương" part */
-    color: var(--primary-blue) !important; /* Blue from image */
+#btnNewAppointment {
+    margin-top: 20px; /* Khoảng cách từ văn bản phía trên */
+    /* Các style nút khác sẽ đến từ Bootstrap/homepage.css */
 }
 
-.navbar-brand-custom .text-dark { /* "Clinic" part */
-    color: var(--dark-text) !important; /* Dark text from image */
-}
-
-
-.navbar-search {
-    position: relative;
-    flex-grow: 1; /* Allows search bar to take available space */
-    max-width: 400px;
-    margin: 0 20px; /* Margin around search bar */
-}
-
-.navbar-search .bi-search { /* Search icon */
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--light-text); /* Light grey for search icon */
-    font-size: 1.2rem;
-}
-
-.navbar-search .form-control {
-    padding-left: 35px; /* Space for icon */
-    border-radius: 30px; /* Highly rounded */
-    border: 2px solid var(--border-color);
-    box-shadow: none;
-    background-color: var(--off-white); /* Off-white background for input */
-    font-size: 1.1rem;
-    padding-top: 0.8rem;
-    padding-bottom: 0.8rem;
-}
-
-.navbar-search .form-control:focus {
-    border-color: var(--primary-blue);
-    box-shadow: 0 0 0 0.2rem rgba(3, 96, 217, 0.25);
-}
-
-/* ====================================
-   USER DROPDOWN STYLES
-   ==================================== */
-.user-dropdown {
-    position: relative;
-}
-
-.user-dropdown .btn.dropdown-toggle { /* Targeting the specific button */
-    background: var(--primary-blue); /* Blue background for the entire button from image */
-    border: none;
-    border-radius: 50px; /* Pill shape */
-    padding: 0.75rem 1.5rem;
-    color: var(--white);
-    font-weight: 600;
-    box-shadow: var(--shadow-light);
-    transition: all 0.3s ease;
-    text-decoration: none;
+/* ==========================================================================
+   Bộ điều khiển Tab
+   ========================================================================== */
+.tab-controls {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-}
-
-.user-dropdown .btn.dropdown-toggle:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
-    background: var(--light-blue); /* Lighter blue on hover */
-}
-
-.user-dropdown .btn.dropdown-toggle:focus {
-    box-shadow: var(--shadow-medium);
-}
-
-.user-dropdown .btn.dropdown-toggle::after { /* Custom dropdown arrow icon */
-    border: none;
-    content: '\f282'; /* Bootstrap Icons chevron-down */
-    font-family: 'bootstrap-icons'; /* Use bootstrap-icons font-family */
-    margin-left: 0.5rem;
-    transition: transform 0.3s ease;
-}
-
-.user-dropdown .btn.dropdown-toggle[aria-expanded="true"]::after {
-    transform: rotate(180deg);
-}
-
-.user-profile-icon {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background: var(--white); /* White background for avatar circle from image */
-    display: flex;
-    align-items: center;
     justify-content: center;
-    border: 2px solid rgba(255, 255, 255, 0.3); /* Subtle white border */
-    color: var(--primary-blue); /* Primary blue for the person icon from image */
-    font-size: 1.5rem;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e0e0e0; /* Đường kẻ dưới các tab */
 }
 
-.user-info {
+.tab-button {
+    background-color: transparent;
+    border: none;
+    padding: 15px 25px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    color: #777; /* Màu chữ khi không active */
+    transition: color 0.3s, border-bottom 0.3s;
+    border-bottom: 2px solid transparent; /* Đường kẻ dưới ẩn ban đầu */
+    margin: 0 10px; /* Khoảng cách giữa các nút tab */
+    outline: none; /* Bỏ outline khi focus */
+}
+
+.tab-button:hover {
+    color: #007bff; /* Màu chữ khi hover (màu primary của Bootstrap) */
+}
+
+.tab-button.active {
+    color: #007bff; /* Màu chữ khi active */
+    border-bottom-color: #007bff; /* Đường kẻ dưới khi active */
+}
+
+.tab-button i {
+    margin-right: 8px; /* Khoảng cách giữa icon và chữ */
+}
+
+/* ==========================================================================
+   Nội dung của Tab
+   ========================================================================== */
+.tab-content {
+    display: none; /* Mặc định ẩn */
+    padding-top: 20px; /* Khoảng cách từ tab controls */
+}
+
+.tab-content.active-tab-content {
+    display: block; /* Hiển thị nội dung tab active */
+}
+
+.tab-content h2 {
+    color: #0056b3; /* Một màu xanh tương đồng với primary */
+    margin-bottom: 20px;
+    font-size: 2em;
+    display: flex;
+    align-items: center;
+}
+
+.tab-content h2 i {
+    margin-right: 10px;
+    font-size: 1.2em;
+}
+
+/* ==========================================================================
+   Danh sách lịch hẹn và các mục lịch hẹn
+   ========================================================================== */
+.appointment-list {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 150px; /* Chiều cao tối thiểu */
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    gap: 15px; /* Khoảng cách giữa các item */
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05); /* Bóng đổ nhẹ bên trong */
 }
 
-.user-name {
-    font-size: 1rem;
-    font-weight: 600;
-    margin: 0;
-    line-height: 1.2;
-    color: var(--white); /* White text for name */
+.no-appointments {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 30px;
 }
 
-.user-role {
-    font-size: 0.8rem;
-    opacity: 0.8;
-    margin: 0;
-    line-height: 1.2;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--white); /* White text for role */
+/* Style cho mỗi mục lịch hẹn có thể click được */
+.appointment-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    /* margin-bottom được quản lý bởi gap trong .appointment-list */
+    transition: all 0.2s ease-in-out;
+    cursor: pointer; /* Thay đổi con trỏ chuột thành hình bàn tay để gợi ý có thể click */
+    display: flex; /* Dùng flexbox để bố cục nội dung bên trong */
+    flex-direction: column;
+    justify-content: center;
 }
 
-.dropdown-menu {
-    border: none;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    padding: 1rem 0;
-    margin-top: 0.5rem;
-    backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.95);
-    min-width: 280px;
+.appointment-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Hiệu ứng bóng đổ khi hover */
+    transform: translateY(-3px); /* Hiệu ứng nhấc nhẹ lên */
+    border-color: #007bff; /* Thay đổi màu viền khi hover */
 }
 
-.dropdown-item {
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    border: none;
-    background: none;
+.appointment-item h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #0056b3;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    color: var(--dark-text);
-    text-decoration: none;
-    margin: 0.25rem 0;
+    font-size: 1.3em;
 }
 
-.dropdown-item:hover {
-    background: var(--primary-light); /* Light blue background on hover */
-    color: var(--primary-dark); /* Darker blue text on hover */
-    transform: translateX(5px);
-    padding-left: 2rem;
+.appointment-item h4 i {
+    margin-right: 10px;
+    color: #007bff;
 }
 
-.dropdown-item i {
-    font-size: 1.1rem;
-    width: 20px;
-    text-align: center;
+.appointment-item p {
+    margin-bottom: 5px;
+    color: #444;
 }
 
-.dropdown-item.text-danger {
-    color: #dc3545;
+.appointment-item strong {
+    color: #333;
 }
 
-.dropdown-item.text-danger:hover {
-    background: #fee; /* Light red background on hover */
-    color: #c82333;
+/* Style cho trạng thái lịch hẹn */
+/* Bao gồm #detailStatus để áp dụng cho cả modal */
+.appointment-item .status,
+#detailStatus {
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    display: inline-block; /* Quan trọng để hiển thị đúng */
+    margin-left: 5px; /* Khoảng cách với chữ "Trạng thái:" */
 }
 
-.dropdown-divider {
-    margin: 0.5rem 1rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    background: none;
+/* Màu sắc cụ thể cho từng trạng thái - ĐÃ THÊM !IMPORTANT VÀO background-color và color */
+/* Bao gồm #detailStatus để áp dụng cho cả modal */
+.appointment-item .status.sắp-tới,
+#detailStatus.sắp-tới {
+    background-color: #28a745 !important; /* Bootstrap success green */
+    color: #fff !important;
 }
 
-/* Overlay for mobile sidebar */
-#sidebarOverlay {
-    position: fixed;
-    top: 0;
+.appointment-item .status.đã-hoàn-thành,
+#detailStatus.đã-hoàn-thành {
+    background-color: #007bff !important; /* Bootstrap primary blue */
+    color: #fff !important;
+}
+
+.appointment-item .status.đã-hủy,
+#detailStatus.đã-hủy {
+    background-color: #dc3545 !important; /* Bootstrap danger red */
+    color: #fff !important;
+}
+
+.appointment-item .status.đang-chờ,
+#detailStatus.đang-chờ {
+    background-color: #ffc107 !important; /* Bootstrap warning yellow */
+    color: #333 !important; /* Đặt màu chữ riêng cho trạng thái này nếu cần */
+}
+
+/* ==========================================================================
+   Phân trang
+   ========================================================================== */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 10px; /* Khoảng cách giữa các nút phân trang */
+}
+
+.pagination-controls button {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    background-color: #e0e0e0;
+    border-color: #999;
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pagination-controls button.active {
+    background-color: #007bff; /* Màu primary của Bootstrap */
+    color: #fff;
+    border-color: #007bff;
+}
+
+/* ==========================================================================
+   Modal (Popup chi tiết lịch hẹn)
+   ========================================================================== */
+.modal {
+    display: none; /* Mặc định ẩn */
+    position: fixed; /* Cố định trên màn hình */
+    z-index: 2000; /* Nằm trên tất cả các yếu tố khác (ví dụ: sidebar có z-index 1000) */
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999; /* Below sidebar, above content */
-    display: none; /* Hidden by default */
+    overflow: auto; /* Cho phép cuộn nếu nội dung dài */
+    background-color: rgba(0,0,0,0.6); /* Nền overlay màu đen trong suốt */
+    /* Dòng 'display: flex;' ở đây đã được xóa khỏi định nghĩa ban đầu của .modal.
+        Nó sẽ chỉ được thêm vào bằng JavaScript khi modal cần hiển thị. */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    justify-content: center; /* Căn giữa theo chiều ngang */
 }
 
-/* ====================================
-   MAIN CONTENT AREA (from patient_appointment_html)
-   ==================================== */
-main {
-    padding: 24px; /* Default padding for main content */
-}
-
-.bg-white {
-    background-color: var(--white);
-}
-
-.rounded-lg {
-    border-radius: var(--radius);
-}
-
-.shadow-lg {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.table-container::-webkit-scrollbar {
-    height: 8px;
-}
-.table-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
+.modal-content {
+    background-color: #fefefe;
+    margin: auto; /* Cũng có thể giúp căn giữa */
+    padding: 30px;
+    border: 1px solid #888;
+    width: 80%; /* Chiều rộng tương đối */
+    max-width: 600px; /* Chiều rộng tối đa */
     border-radius: 10px;
-}
-.table-container::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 10px;
-}
-.table-container::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-.modal-body-scrollable {
-    max-height: 70vh;
-    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Bóng đổ cho modal */
+    position: relative;
+    animation: fadeIn 0.3s ease-out; /* Hiệu ứng hiện ra */
 }
 
-/* Responsive adjustments */
-@media (max-width: 991.98px) {
-    #main-wrapper {
-        width: 100%;
-        margin-left: 0;
-    }
-    #main-wrapper.active { /* When sidebar is active on mobile */
-        margin-left: 250px; /* Push content right */
-    }
-    #sidebar {
-        margin-left: -250px; /* Hidden by default on mobile */
-    }
-    #sidebar.active {
-        margin-left: 0; /* Show sidebar on mobile */
-    }
-    #sidebarOverlay.active {
-        display: block; /* Show overlay when sidebar is active */
-    }
-    .top-navbar .navbar-search {
-        display: none; /* Hide search bar on small screens */
-    }
-    .navbar-brand-custom {
-        margin-left: 10px; /* Adjust margin for smaller screens */
-    }
-    .user-dropdown .user-info {
-        display: none !important; /* Hide user info text on small screens */
-    }
-    .user-dropdown .btn.dropdown-toggle {
-        padding: 0.5rem 1rem;
-    }
-    .dropdown-menu {
-        min-width: 250px;
-    }
+/* Hiệu ứng fadeIn cho modal */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 767.98px) {
-    /* Further mobile adjustments if needed */
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1; /* Để căn chỉnh dấu x tốt hơn */
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+.modal-content h3 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 25px;
+    font-size: 1.8em;
+}
+
+#detailContent p {
+    margin-bottom: 10px;
+    line-height: 1.8;
+}
+#detailContent strong {
+    color: #333;
+}
+
+.modal-actions {
+    text-align: right;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end; /* Căn các nút sang phải */
+    gap: 10px; /* Khoảng cách giữa các nút */
+}
+
+/* ==========================================================================
+   Style cho modal xác nhận & thông báo nhỏ hơn
+   ========================================================================== */
+.small-modal-content {
+    max-width: 450px; /* Giảm chiều rộng tối đa */
+    padding: 25px;
+}
+
+.small-modal-content h3 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+}
+
+.small-modal-content p {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.small-modal-content #confirmAppointmentIdDisplay {
+    font-weight: bold;
+    color: #dc3545; /* Màu đỏ cho ID lịch hẹn đang hủy */
+}
+
+.small-modal-content .modal-actions {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    justify-content: center; /* Căn giữa các nút trong modal nhỏ */
+}
+
+.small-modal-content .modal-actions .btn {
+    min-width: 120px; /* Đảm bảo các nút có độ rộng tương đồng */
+}
+
+/* Tùy chỉnh cho thông báo thành công */
+#successMessageModal h3 {
+    color: #28a745; /* Màu xanh lá cây cho tiêu đề thành công */
+}
+#successMessageText {
+    color: #333;
+    font-weight: 500;
+}
+#successMessageModal .modal-actions .btn {
+    min-width: 80px; /* Nút OK nhỏ hơn chút */
+}
+
+
+/* ==========================================================================
+   Tùy chỉnh Responsive (ví dụ đơn giản)
+   ========================================================================== */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+        margin: 10px auto;
+    }
+
+    header h1 {
+        font-size: 2em;
+    }
+
+    .tab-button {
+        padding: 10px 15px;
+        font-size: 1em;
+        margin: 0 5px;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    /* Responsive cho modal xác nhận */
+    .small-modal-content {
+        max-width: 90%;
+    }
 }

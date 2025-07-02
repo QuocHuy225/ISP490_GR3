@@ -2,319 +2,345 @@
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch Hẹn Của Tôi - Phòng khám Ánh Dương</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts - Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Bootstrap Icons (Crucial for sidebar and navbar icons, though Font Awesome is used in image) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/patient-appointment-schedule.css">
-    <script> const contextPath = "<%= request.getContextPath() %>";</script>
-</head>
-<body class="flex flex-col min-h-screen">
-    <%
-        Object userRole = session.getAttribute("userRole");
-        User.Role currentRole = null;
-        if (userRole != null) {
-            if (userRole instanceof User.Role) {
-                currentRole = (User.Role) userRole;
-            } else {
-                try {
-                    currentRole = User.Role.valueOf(userRole.toString().toUpperCase());
-                } catch (Exception e) {
-                    currentRole = User.Role.fromString(userRole.toString());
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lịch Hẹn Của Bạn - Phòng Khám</title>
+        <%-- Bootstrap CSS --%>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <%-- Bootstrap Icons --%>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <%-- Font Awesome (nếu vẫn cần các icon FA cụ thể) --%>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+        <%-- CSS chung cho homepage/layout (TẢI TRƯỚC để thiết lập base styles) --%>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
+        <%-- CSS cụ thể cho trang lịch hẹn (TẢI SAU để tinh chỉnh/bổ sung mà không xung đột base) --%>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/patient-appointment-schedule.css">
+        
+    </head>
+    <body>
+        <%
+            // Get user role for access control
+            Object userRole = session.getAttribute("userRole");
+            User.Role currentRole = null;
+            
+            if (userRole != null) {
+                if (userRole instanceof User.Role) {
+                    currentRole = (User.Role) userRole;
+                } else {
+                    // Try to parse from string
+                    try {
+                        currentRole = User.Role.valueOf(userRole.toString().toUpperCase());
+                    } catch (Exception e) {
+                        // Fallback to parsing from display value
+                        currentRole = User.Role.fromString(userRole.toString());
+                    }
                 }
             }
-        }
-        if (currentRole == null) {
-            currentRole = User.Role.PATIENT;
-        }
-        Object userObj = session.getAttribute("user");
-        String loggedInPatientFullName = "User";
-        String loggedInPatientId = ""; // Initialize loggedInPatientId
-        String userRoleDisplay = "Patient";
-        if (userObj instanceof User) {
-            User user = (User) userObj;
-            loggedInPatientFullName = user.getFullName() != null ? user.getFullName() : user.getEmail();
-            loggedInPatientId = user.getId(); // Assuming User model has a getId() method for the unique user ID
-            userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
-        }
-        boolean isAdmin = (currentRole == User.Role.ADMIN);
-        boolean isReceptionist = (currentRole == User.Role.RECEPTIONIST);
-        boolean isDoctor = (currentRole == User.Role.DOCTOR);
-        boolean isPatient = (currentRole == User.Role.PATIENT);
-    %>
+            
+            // Default to PATIENT if no role found
+            if (currentRole == null) {
+                currentRole = User.Role.PATIENT;
+            }
+            
+            // Get user information
+            Object userObj = session.getAttribute("user");
+            String userName = "User";
+            String userRoleDisplay = "Patient";
+            if (userObj instanceof User) {
+                User user = (User) userObj;
+                userName = user.getFullName() != null ? user.getFullName() : user.getEmail();
+                userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
+            }
+        %>
 
-    <!-- Hidden inputs to pass patient data to JavaScript -->
-    <input type="hidden" id="loggedInPatientId" value="<%= loggedInPatientId %>">
-    <input type="hidden" id="loggedInPatientFullName" value="<%= loggedInPatientFullName %>">
-
-    <!-- Sidebar -->
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <h3>MENU</h3>
-        </div>
-        <ul class="list-unstyled components">
-            <li>
-                <a href="<%= contextPath %>/homepage">
-                    <i class="fas fa-home"></i> Trang chủ
-                </a>
-            </li>
-            <li class="active">
-                <a href="<%= contextPath %>/makeappointments">
-                    <i class="fas fa-calendar-check"></i> Đặt lịch hẹn
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-calendar-alt"></i> Lịch hẹn của tôi
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-notes-medical"></i> Hồ sơ sức khỏe
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-hand-holding-medical"></i> Dịch vụ
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-comment-dots"></i> Liên hệ bác sĩ
-                </a>
-            </li>
-            <% if (isReceptionist || isAdmin || isDoctor) { %>
-            <li>
-                <a href="<%= contextPath %>/appointments">
-                    <i class="fas fa-chart-bar"></i> Thống kê lịch hẹn
-                </a>
-            </li>
-            <% } %>
-        </ul>
-    </nav>
-
-    <!-- Overlay for mobile sidebar -->
-    <div id="sidebarOverlay"></div>
-
-    <!-- Main Content Wrapper -->
-    <div id="main-wrapper" class="flex-grow flex flex-col">
-        <!-- Top Navbar -->
-        <nav class="navbar navbar-expand-lg top-navbar">
-            <div class="container-fluid flex justify-between items-center w-full">
-                <button type="button" id="sidebarToggle" class="toggle-btn">
-                    <i class="fas fa-bars"></i> <!-- Toggle button (3 horizontal lines) -->
-                </button>
-
-                <a class="navbar-brand-custom" href="#">
-                    <span class="text-primary">Ánh Dương</span> <span class="text-dark">Clinic</span>
-                </a>
-
-                <div class="navbar-search mx-auto">
-                    <i class="fas fa-search search-icon"></i> <!-- Search icon -->
-                    <input type="text" class="form-control" placeholder="Tìm kiếm...">
-                </div>
-
-                <div class="dropdown user-dropdown">
-                    <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <div class="user-profile-icon">
-                            <i class="fas fa-user"></i> <!-- Avatar icon -->
-                        </div>
-                        <div class="user-info d-none d-md-block">
-                            <div class="user-name"><%= loggedInPatientFullName %></div>
-                            <div class="user-role"><%= userRoleDisplay %></div>
-                        </div>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <% if (isAdmin) { %>
-                        <li>
-                            <a class="dropdown-item" href="<%= contextPath %>/admin/authorization">
-                                <i class="fas fa-users-cog"></i>
-                                <span>Quản lý người dùng</span>
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <% } %>
-                        <li>
-                            <a class="dropdown-item" href="<%= contextPath %>/user/profile">
-                                <i class="fas fa-user-circle"></i>
-                                <span>Thông tin cá nhân</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="<%= contextPath %>/user/change-password">
-                                <i class="fas fa-key"></i>
-                                <span>Đổi mật khẩu</span>
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item text-danger" id="logoutBtn" href="<%= contextPath %>/auth/logout">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Đăng xuất</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>MENU</h3>
             </div>
+            <ul class="list-unstyled components">
+                <% if (currentRole == User.Role.ADMIN) { %>
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/authorization">
+                        <i class="bi bi-people-fill"></i> Quản lý người dùng
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/services">
+                        <i class="bi bi-file-medical"></i> Quản lý dịch vụ
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medicines">
+                        <i class="bi bi-hospital"></i> Quản lý kho thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
+                        <i class="bi bi-capsule"></i> Quản lý đơn thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-supplies">
+                        <i class="bi bi-gear-fill"></i> Quản lý vật tư
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/report">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
+                    </a>
+                </li>
+                <% } else if (currentRole == User.Role.DOCTOR) { %>
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-calendar-check"></i> Lịch khám bệnh
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/patients">
+                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/doctor/report">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
+                    </a>
+                </li>
+                <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-house-door-fill"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/appointments">
+                        <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/checkin">
+                        <i class="bi bi-person-check-fill"></i> Quản lý check-in
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/#">
+                        <i class="bi bi-people-fill"></i> Quản lý hàng đợi
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/patients">
+                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
+                        <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/receptionist/report">
+                        <i class="bi bi-speedometer2"></i> Báo cáo thống kê
+                    </a>
+                </li>
+                <% } else { %>
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/makeappointments">
+                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
+                    </a>
+                </li>
+                <%-- Đã bỏ class "active" ở đây theo yêu cầu --%>
+                <li>
+                    <a href="${pageContext.request.contextPath}/patient/my-appointments">
+                        <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-file-medical"></i> Hồ sơ sức khỏe
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-hospital"></i> Dịch vụ
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
+                    </a>
+                </li>
+                <% } %>
+            </ul>
         </nav>
 
-        <!-- Main Content Area -->
-        <main class="container mx-auto p-6 flex-grow">
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <!-- Tabs Navigation -->
-                <div class="flex border-b border-gray-200 mb-6">
-                    <button id="myAppointmentsTab" class="px-6 py-3 text-lg font-medium text-blue-600 border-b-2 border-blue-600 focus:outline-none">
-                        Lịch hẹn của tôi
+        <div id="content">
+            <nav class="navbar navbar-expand-lg top-navbar">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                        <i class="bi bi-list"></i>
                     </button>
-                    <button id="bookAppointmentTab" class="px-6 py-3 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent focus:outline-none">
-                        Đặt lịch hẹn mới
-                    </button>
-                </div>
 
-                <!-- My Appointments View -->
-                <div id="myAppointmentsView" class="tab-content">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Danh sách lịch hẹn</h2>
-                    <div class="table-container overflow-x-auto rounded-lg border border-gray-200">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã lịch hẹn</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giờ</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bác sĩ</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dịch vụ</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="appointmentsTableBody" class="bg-white divide-y divide-gray-200">
-                                <!-- Appointments will be loaded here by JavaScript -->
-                                <tr>
-                                    <td colspan="7" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">Đang tải lịch hẹn...</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div style="margin-left: 60px; margin-top: 10px">
+                        <h3>
+                            <span style="color: #007bff;">Ánh Dương</span>
+                            <span style="color: #333;">Clinic</span>
+                        </h3>
                     </div>
-                    <p id="noAppointmentsMessage" class="text-center text-gray-500 mt-4 hidden">Bạn chưa có lịch hẹn nào.</p>
+
+                    <div class="navbar-search mx-auto">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" placeholder="Tìm kiếm">
+                    </div>
+
+                    <div class="dropdown user-dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-profile-icon">
+                                <i class="bi bi-person-fill" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div class="user-info d-none d-md-block">
+                                <div class="user-name"><%= userName %></div>
+                                <div class="user-role"><%= userRoleDisplay %></div>
+                            </div>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
+                                    <i class="bi bi-person-fill"></i>
+                                    <span>Thông tin cá nhân</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
+                                    <i class="bi bi-key-fill"></i>
+                                    <span>Đổi mật khẩu</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-gear-fill"></i>
+                                    <span>Cài đặt</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/auth/logout">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>Đăng xuất</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <div class="container">
+                <header>
+                    <h1>Lịch Hẹn Của Bạn</h1>
+                    <p>Chào mừng, <span id="patientName"><%= userName %></span>!</p>
+                    <button id="btnNewAppointment" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Đặt Hẹn Mới</button>
+                </header>
+
+                <%-- Bộ điều khiển Tab --%>
+                <div class="tab-controls">
+                    <button class="tab-button active" data-tab-id="upcomingAppointmentsContent">
+                        <i class="fas fa-calendar-alt"></i> Lịch Hẹn Sắp Tới
+                    </button>
+                    <button class="tab-button" data-tab-id="appointmentHistoryContent">
+                        <i class="fas fa-history"></i> Lịch Sử Các Cuộc Hẹn
+                    </button>
                 </div>
 
-                <!-- Book New Appointment View -->
-                <div id="bookAppointmentView" class="tab-content hidden">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Đặt lịch hẹn mới</h2>
-                    <form id="newAppointmentForm" class="space-y-4">
-                        <div>
-                            <label for="patientFullName" class="block text-sm font-medium text-gray-700">Họ và tên bệnh nhân</label>
-                            <input type="text" id="patientFullName" name="patientFullName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" readonly>
+                <%-- Nội dung của Tab "Lịch hẹn sắp tới" --%>
+                <section id="upcomingAppointmentsContent" class="tab-content active-tab-content">
+                    <h2><i class="fas fa-calendar-alt"></i> Lịch Hẹn Sắp Tới</h2>
+                    <div id="upcomingAppointmentsList" class="appointment-list">
+                        <p class="no-appointments" id="noUpcomingAppointments">Bạn không có lịch hẹn sắp tới nào.</p>
+                    </div>
+                    <%-- Thêm container cho phân trang sắp tới --%>
+                    <div id="upcomingPagination" class="pagination-controls"></div>
+                </section>
+
+                <%-- Nội dung của Tab "Lịch sử các cuộc hẹn" --%>
+                <section id="appointmentHistoryContent" class="tab-content">
+                    <h2><i class="fas fa-history"></i> Lịch Sử Các Cuộc Hẹn</h2>
+                    <div id="appointmentHistoryList" class="appointment-list">
+                        <p class="no-appointments" id="noHistoryAppointments">Bạn chưa có lịch sử cuộc hẹn nào.</p>
+                    </div>
+                    <%-- Thêm container cho phân trang lịch sử --%>
+                    <div id="historyPagination" class="pagination-controls"></div>
+                </section>
+
+                <%-- Modal chi tiết lịch hẹn --%>
+                <div id="appointmentDetailModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-button">&times;</span>
+                        <h3>Chi Tiết Lịch Hẹn</h3>
+                        <div id="detailContent">
                         </div>
-                        <div>
-                            <label for="newAppointmentDate" class="block text-sm font-medium text-gray-700">Ngày hẹn</label>
-                            <input type="date" id="newAppointmentDate" name="appointmentDate" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" id="btnCancelAppointment" style="display: none;"><i class="fas fa-times-circle"></i> Hủy Hẹn</button>
+                            <button class="btn btn-primary" id="btnCloseDetail"><i class="fas fa-check-circle"></i> Đóng</button>
                         </div>
-                        <div>
-                            <label for="newAppointmentTime" class="block text-sm font-medium text-gray-700">Giờ hẹn</label>
-                            <input type="time" id="newAppointmentTime" name="appointmentTime" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="newAppointmentDoctor" class="block text-sm font-medium text-gray-700">Bác sĩ</label>
-                            <select id="newAppointmentDoctor" name="doctor" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                <option value="">-- Chọn bác sĩ --</option>
-                                <!-- Doctors will be loaded here by JavaScript -->
-                            </select>
-                        </div>
-                        <div>
-                            <label for="newAppointmentService" class="block text-sm font-medium text-gray-700">Dịch vụ</label>
-                            <select id="newAppointmentService" name="service" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                <option value="">-- Chọn dịch vụ --</option>
-                                <!-- Services will be loaded here by JavaScript -->
-                            </select>
-                        </div>
-                        <div>
-                            <label for="newAppointmentNotes" class="block text-sm font-medium text-gray-700">Ghi chú (tùy chọn)</label>
-                            <textarea id="newAppointmentNotes" name="notes" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
-                        </div>
-                        <div class="flex justify-end">
-                            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                <i class="fas fa-plus-circle mr-2"></i>Đặt lịch hẹn
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
-        </main>
 
-        <!-- Footer -->
-        <footer class="bg-gray-800 text-white p-4 mt-6">
-            <div class="container mx-auto text-center text-sm">
-                &copy; 2025 Phòng khám Ánh Dương. Tất cả quyền được bảo lưu.
-            </div>
-        </footer>
-    </div>
+                <%-- MODAL XÁC NHẬN TÙY CHỈNH --%>
+                <div id="cancelConfirmModal" class="modal">
+                    <div class="modal-content small-modal-content">
+                        <span class="close-button" id="closeConfirmModalBtn">&times;</span>
+                        <h3>Xác nhận Hủy Lịch Hẹn</h3>
+                        <p>Bạn có chắc chắn muốn hủy lịch hẹn này không?</p>
+                        <p>ID Lịch Hẹn: <span id="confirmAppointmentIdDisplay"></span></p>
+                        <div class="modal-actions justify-content-center">
+                            <button class="btn btn-danger" id="confirmCancelBtn"><i class="fas fa-check"></i> Xác nhận Hủy</button>
+                            <button class="btn btn-secondary" id="cancelConfirmBtn"><i class="fas fa-times"></i> Hủy bỏ</button>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Modals (kept in JSP for simplicity as they are part of the page structure) -->
+                <%-- MODAL THÔNG BÁO THÀNH CÔNG --%>
+                <div id="successMessageModal" class="modal">
+                    <div class="modal-content small-modal-content">
+                        <span class="close-button" id="closeSuccessModalBtn">&times;</span>
+                        <h3><i class="fas fa-check-circle text-success"></i> Thành công!</h3>
+                        <p id="successMessageText" style="font-size: 1.1em; text-align: center;"></p>
+                        <div class="modal-actions justify-content-center">
+                            <button class="btn btn-primary" id="okSuccessModalBtn">OK</button>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Appointment Details Modal -->
-    <div id="appointmentDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="text-xl font-semibold text-gray-800">Chi tiết lịch hẹn</h3>
-                <button class="text-gray-500 hover:text-gray-700 text-2xl" onclick="closeModal('appointmentDetailsModal')">&times;</button>
-            </div>
-            <div class="modal-body-scrollable">
-                <p class="mb-2"><strong class="text-gray-700">Mã lịch hẹn:</strong> <span id="detailAppointmentCode"></span></p>
-                <p class="mb-2"><strong class="text-gray-700">Ngày:</strong> <span id="detailAppointmentDate"></span></p>
-                <p class="mb-2"><strong class="text-gray-700">Giờ:</strong> <span id="detailAppointmentTime"></span></p>
-                <p class="mb-2"><strong class="text-gray-700">Bác sĩ:</strong> <span id="detailDoctorName"></span></p>
-                <p class="mb-2"><strong class="text-gray-700">Dịch vụ:</strong> <span id="detailService"></span></p>
-                <p class="mb-2"><strong class="text-gray-700">Trạng thái:</strong> <span id="detailStatus" class="font-semibold"></span></p>
-                <p class="mb-2"><strong class="text-gray-700">Ghi chú:</strong> <span id="detailNotes"></span></p>
-            </div>
-            <div class="flex justify-end mt-4">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md" onclick="closeModal('appointmentDetailsModal')">Đóng</button>
             </div>
         </div>
-    </div>
 
-    <!-- Confirm Action Modal -->
-    <div id="confirmActionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="text-xl font-semibold text-gray-800">Xác nhận hành động</h3>
-                <button class="text-gray-500 hover:text-gray-700 text-2xl" onclick="closeModal('confirmActionModal')">&times;</button>
-            </div>
-            <p id="confirmActionMessage" class="mb-4 text-gray-700"></p>
-            <div class="flex justify-end space-x-3">
-                <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md" onclick="closeModal('confirmActionModal')">Hủy</button>
-                <button id="confirmActionButton" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md">Xác nhận</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Message Modal -->
-    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 id="messageModalTitle" class="text-xl font-semibold text-gray-800">Thông báo</h3>
-                <button class="text-gray-500 hover:text-gray-700 text-2xl" onclick="closeModal('messageModal')">&times;</button>
-            </div>
-            <p id="messageModalContent" class="mb-4 text-gray-700"></p>
-            <div class="flex justify-end">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md" onclick="closeModal('messageModal')">Đóng</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JavaScript -->
-    <script src="${pageContext.request.contextPath}/js/patient-appointment-schedule.js"></script>
-</body>
+        <%-- Bootstrap Bundle with Popper --%>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <%-- Đường dẫn JS của bạn --%>
+        <script src="${pageContext.request.contextPath}/js/patient-appointment-schedule.js"></script>
+    </body>
 </html>
