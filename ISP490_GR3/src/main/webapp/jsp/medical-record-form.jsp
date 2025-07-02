@@ -608,7 +608,7 @@
                                     </a>
                                 </li>
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%= patient.getId() %>">
+                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>">
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
@@ -640,7 +640,7 @@
 
                 <!-- Medical Record Form -->
                 <div class="medical-form-container">
-                <form method="POST" action="${pageContext.request.contextPath}/medical-records">
+                <form method="POST" action="${pageContext.request.contextPath}/doctor/medical-records">
                     <input type="hidden" name="action" value="<%= isEdit ? "update" : "add" %>">
                     <input type="hidden" name="patientId" value="<%= patient.getId() %>">
                     <% if (isEdit && medicalRecord != null) { %>
@@ -881,7 +881,7 @@
                                     </div>
                                     
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%= patient.getId() %>" 
+                                        <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
                                            class="btn btn-enhanced btn-clear">
                                             <i class="bi bi-arrow-left me-2"></i>Quay lại
                                         </a>

@@ -12,6 +12,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -20,8 +21,9 @@ import com.google.gson.Gson;
 
 /**
  * Controller for managing medical records
+ * Allows both ADMIN and DOCTOR access
  */
-@WebServlet(name = "MedicalRecordController", urlPatterns = {"/medical-records", "/medical-records/*"})
+@WebServlet(name = "MedicalRecordController", urlPatterns = {"/doctor/medical-records", "/doctor/medical-records/*"})
 public class MedicalRecordController extends HttpServlet {
     
     private DAOMedicalRecord medicalRecordDAO = new DAOMedicalRecord();
@@ -34,6 +36,11 @@ public class MedicalRecordController extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
+        
+        // Check doctor access (Admin and Doctor allowed)
+        if (!checkDoctorAccess(request, response)) {
+            return;
+        }
         
         String action = request.getParameter("action");
         String patientIdStr = request.getParameter("patientId");
@@ -60,6 +67,11 @@ public class MedicalRecordController extends HttpServlet {
         
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
+        
+        // Check doctor access (Admin and Doctor allowed)
+        if (!checkDoctorAccess(request, response)) {
+            return;
+        }
         
         String action = request.getParameter("action");
         
@@ -189,16 +201,16 @@ public class MedicalRecordController extends HttpServlet {
             boolean success = medicalRecordDAO.addMedicalRecord(record);
             
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/medical-records?action=list&patientId=" + 
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
                                     record.getPatientId() + "&success=added");
             } else {
-                response.sendRedirect(request.getContextPath() + "/medical-records?action=list&patientId=" + 
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
                                     record.getPatientId() + "&error=add_failed");
             }
         } catch (Exception e) {
             e.printStackTrace();
             String patientId = request.getParameter("patientId");
-            response.sendRedirect(request.getContextPath() + "/medical-records?action=list&patientId=" + 
+            response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
                                 patientId + "&error=system_error");
         }
     }
@@ -231,7 +243,7 @@ public class MedicalRecordController extends HttpServlet {
             if (currentRecord.isCompleted()) {
                 // Check if trying to change status from completed to ongoing
                 if ("ongoing".equals(newStatus)) {
-                    response.sendRedirect(request.getContextPath() + "/medical-records?action=list&patientId=" + 
+                    response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
                                         currentRecord.getPatientId() + "&error=status_change_not_allowed");
                     return;
                 }
@@ -259,16 +271,16 @@ public class MedicalRecordController extends HttpServlet {
                 if (currentRecord.isOngoing() && "completed".equals(newStatus)) {
                     successMessage = "status_completed";
                 }
-                response.sendRedirect(request.getContextPath() + "/medical-records?action=list&patientId=" + 
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
                                     currentRecord.getPatientId() + "&success=" + successMessage);
             } else {
-                response.sendRedirect(request.getContextPath() + "/medical-records?action=list&patientId=" + 
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
                                     currentRecord.getPatientId() + "&error=update_failed");
             }
         } catch (Exception e) {
             e.printStackTrace();
             String patientId = request.getParameter("patientId");
-            response.sendRedirect(request.getContextPath() + "/medical-records?action=list&patientId=" + 
+            response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
                                 patientId + "&error=system_error");
         }
     }
@@ -356,6 +368,36 @@ public class MedicalRecordController extends HttpServlet {
         }
         
         return record;
+    }
+    
+    /**
+     * Check doctor access - allows both ADMIN and DOCTOR
+     */
+    private boolean checkDoctorAccess(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        
+        HttpSession session = request.getSession(false);
+        
+        // Check if user is logged in
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+        
+        // Get current user
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+        
+        // Allow both Admin and Doctor to access
+        if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.DOCTOR) {
+            response.sendRedirect(request.getContextPath() + "/homepage");
+            return false;
+        }
+        
+        return true;
     }
     
     @Override
