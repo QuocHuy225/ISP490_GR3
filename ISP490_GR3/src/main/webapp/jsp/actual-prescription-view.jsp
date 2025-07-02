@@ -354,12 +354,12 @@
                                 </li>
                                 <% if (patient != null) { %>
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%= patient.getId() %>">
+                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>">
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>">
+                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>">
                                         Đơn thuốc
                                     </a>
                                 </li>
@@ -377,7 +377,7 @@
                     <div class="col-12">
                         <% if (form != null && patient != null) { %>
                         <div class="d-flex justify-content-start align-items-center mb-3">
-                            <a href="${pageContext.request.contextPath}/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
+                            <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
                                class="btn btn-outline-secondary me-3">
                                 <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách đơn thuốc
                             </a>
@@ -391,7 +391,7 @@
                                     <i class="bi bi-printer me-2"></i>In đơn thuốc
                                 </button>
                                 <% if (form != null) { %>
-                                <a href="${pageContext.request.contextPath}/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
+                                <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
                                    class="btn btn-primary">
                                     <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                                 </a>

@@ -396,7 +396,7 @@
                                 </li>
                                 <% if (patient != null) { %>
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%= patient.getId() %>">
+                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>">
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
@@ -475,7 +475,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%= patient.getId() %>" 
+                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
                                class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left me-2"></i>Quay lại Hồ sơ bệnh án
                             </a>
@@ -487,7 +487,7 @@
                                     <h5 class="card-title mb-0">
                                         <i class="bi bi-capsule-pill me-2"></i>Danh sách đơn thuốc
                                     </h5>
-                                    <a href="${pageContext.request.contextPath}/actual-prescriptions?action=new&medicalRecordId=<%= medicalRecord.getId() %>" 
+                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=new&medicalRecordId=<%= medicalRecord.getId() %>" 
                                        class="btn btn-success">
                                         <i class="bi bi-plus-circle me-2"></i>Tạo đơn thuốc mới
                                     </a>
@@ -531,13 +531,13 @@
                                                         </td>
                                                         <td>
                                                             <div class="action-buttons-group">
-                                                                <a href="${pageContext.request.contextPath}/actual-prescriptions?action=view&formId=<%= form.getActualPrescriptionFormId() %>" 
+                                                                <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=view&formId=<%= form.getActualPrescriptionFormId() %>" 
                                                                    class="action-btn action-btn-view" title="Xem & In đơn thuốc">
                                                                     <i class="bi bi-eye"></i>
                                                                     <span class="btn-text">Xem</span>
                                                                 </a>
                                                                 
-                                                                <a href="${pageContext.request.contextPath}/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
+                                                                <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
                                                                    class="action-btn action-btn-edit" title="Chỉnh sửa đơn thuốc">
                                                                     <i class="bi bi-pencil-square"></i>
                                                                     <span class="btn-text">Sửa</span>
@@ -590,7 +590,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <form method="POST" action="${pageContext.request.contextPath}/actual-prescriptions" style="display: inline;">
+                        <form method="POST" action="${pageContext.request.contextPath}/doctor/actual-prescriptions" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" id="deleteFormId" name="formId">
                             <input type="hidden" id="deleteMedicalRecordId" name="medicalRecordId">
