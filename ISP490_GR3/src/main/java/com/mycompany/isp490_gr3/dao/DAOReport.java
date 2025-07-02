@@ -5,9 +5,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class DAOReport extends DBContext {
@@ -331,6 +334,119 @@ public class DAOReport extends DBContext {
         }
 
         return doctorId;
+    }
+
+    public Map<String, Object> getReceptionistStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+
+        String sqlAppointmentsToday = "SELECT COUNT(*) AS total_today FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "WHERE s.slot_date = CURRENT_DATE AND a.is_deleted = FALSE";
+
+        String sqlPatientsToday = "SELECT COUNT(DISTINCT a.patient_id) AS total_patients FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "WHERE s.slot_date = CURRENT_DATE AND a.is_deleted = FALSE";
+
+        String sqlDoctorsToday = "SELECT COUNT(DISTINCT s.doctor_id) AS total_doctors FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "WHERE s.slot_date = CURRENT_DATE AND a.is_deleted = FALSE";
+
+        String sqlByStatusToday = "SELECT a.status, COUNT(*) AS total FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "WHERE s.slot_date = CURRENT_DATE AND a.is_deleted = FALSE "
+                + "GROUP BY a.status";
+
+        try (Connection conn = getConnection()) {
+            // Tổng số lịch hẹn hôm nay
+            try (PreparedStatement ps = conn.prepareStatement(sqlAppointmentsToday); ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("appointmentsToday", rs.getInt("total_today"));
+                }
+            }
+
+            // Tổng số bệnh nhân hôm nay
+            try (PreparedStatement ps = conn.prepareStatement(sqlPatientsToday); ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("patientsToday", rs.getInt("total_patients"));
+                }
+            }
+
+            // Tổng số bác sĩ hôm nay
+            try (PreparedStatement ps = conn.prepareStatement(sqlDoctorsToday); ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("doctorsToday", rs.getInt("total_doctors"));
+                }
+            }
+
+            // Thống kê lịch hẹn theo trạng thái hôm nay
+            List<Map<String, Object>> statusList = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sqlByStatusToday); ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("status", rs.getString("status"));
+                    entry.put("count", rs.getInt("total"));
+                    statusList.add(entry);
+                }
+            }
+            stats.put("appointmentsByStatusToday", statusList);
+
+        } catch (SQLException e) {
+            System.out.println("Error in getReceptionistStatistics: " + e.getMessage());
+        }
+
+        return stats;
+    }
+
+    public List<Map<String, Object>> getNewPatientsByMonth() {
+        List<Map<String, Object>> data = new ArrayList<>();
+        String sql = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS total "
+                + "FROM patients "
+                + "WHERE is_deleted = FALSE "
+                + "GROUP BY month "
+                + "ORDER BY month";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("month", rs.getString("month"));
+                entry.put("count", rs.getInt("total"));
+                data.add(entry);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in getNewPatientsByMonth: " + e.getMessage());
+        }
+
+        return data;
+    }
+
+    public int getNewPatientsThisWeek() {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM patients WHERE created_at >= ? AND created_at <= ? AND is_deleted = FALSE";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            // Lấy ngày hiện tại
+            LocalDate today = LocalDate.now();
+
+            // Xác định ngày đầu và cuối tuần dựa trên Locale mặc định
+            // Ví dụ: Locale.US tuần bắt đầu từ Chủ Nhật (SUNDAY = 1), Locale.FRANCE tuần bắt đầu từ Thứ Hai (MONDAY = 1)
+            WeekFields weekFields = WeekFields.of(Locale.getDefault());
+            LocalDate startOfWeek = today.with(weekFields.dayOfWeek(), 1); // Ngày đầu tiên của tuần
+            LocalDate endOfWeek = startOfWeek.plusDays(6); // Ngày cuối cùng của tuần
+
+            // Đặt các tham số ngày vào PreparedStatement
+            ps.setDate(1, java.sql.Date.valueOf(startOfWeek));
+            ps.setDate(2, java.sql.Date.valueOf(endOfWeek));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in getNewPatientsThisWeek: " + e.getMessage());
+        }
+        return count;
     }
 
 }
