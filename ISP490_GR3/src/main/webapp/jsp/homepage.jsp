@@ -118,11 +118,6 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
-                    </a>
-                </li>
-                <li>
                     <a href="${pageContext.request.contextPath}/doctor/report">
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
