@@ -9,19 +9,14 @@ import com.mycompany.isp490_gr3.model.Appointment;
 import com.mycompany.isp490_gr3.model.Doctor;
 import com.mycompany.isp490_gr3.model.MedicalService;
 import com.mycompany.isp490_gr3.model.User; // Assuming User model exists
-
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +44,7 @@ public class AppointmentScheduleController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
-        if (!checkDoctorAccess(request, response)) {
+        if (!checkPatientAccess(request, response)) {
             return;
         }
         // pathInfo will now be relative to /api/patient/ (e.g., "/appointments/patient/PAT001", "/doctors", "/services")
@@ -134,7 +129,7 @@ public class AppointmentScheduleController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
-        if (!checkDoctorAccess(request, response)) {
+        if (!checkPatientAccess(request, response)) {
             return;
         }
         String pathInfo = request.getPathInfo();
@@ -307,7 +302,7 @@ public class AppointmentScheduleController extends HttpServlet {
         return "Khách";
     }
 
-    private boolean checkDoctorAccess(HttpServletRequest request, HttpServletResponse response)
+    private boolean checkPatientAccess(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
         HttpSession session = request.getSession(false);
@@ -326,7 +321,7 @@ public class AppointmentScheduleController extends HttpServlet {
         }
 
         // Allow both Admin and Doctor to access
-        if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.DOCTOR) {
+        if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.PATIENT) {
             response.sendRedirect(request.getContextPath() + "/homepage");
             return false;
         }

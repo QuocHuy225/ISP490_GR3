@@ -5,25 +5,25 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DAOReport extends DBContext {
 
     public ReportData getSummaryData() {
         ReportData data = new ReportData();
-        String sql = "SELECT " +
-                    "(SELECT COUNT(*) FROM patients WHERE is_deleted = FALSE) as total_patients, " +
-                    "(SELECT COUNT(*) FROM doctors WHERE is_deleted = FALSE) as total_doctors, " +
-                    "(SELECT COUNT(*) FROM appointment WHERE is_deleted = FALSE) as total_appointments, " +
-                    "(SELECT COUNT(*) FROM medical_record) as total_medical_records, " +
-                    "(SELECT COUNT(*) FROM invoices WHERE isdeleted = FALSE) as total_invoices, " +
-                    "(SELECT COALESCE(SUM(final_amount), 0) FROM invoices WHERE isdeleted = FALSE) as total_revenue";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
+        String sql = "SELECT "
+                + "(SELECT COUNT(*) FROM patients WHERE is_deleted = FALSE) as total_patients, "
+                + "(SELECT COUNT(*) FROM doctors WHERE is_deleted = FALSE) as total_doctors, "
+                + "(SELECT COUNT(*) FROM appointment WHERE is_deleted = FALSE) as total_appointments, "
+                + "(SELECT COUNT(*) FROM medical_record) as total_medical_records, "
+                + "(SELECT COUNT(*) FROM invoices WHERE isdeleted = FALSE) as total_invoices, "
+                + "(SELECT COALESCE(SUM(final_amount), 0) FROM invoices WHERE isdeleted = FALSE) as total_revenue";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
             if (rs.next()) {
                 data.setTotalPatients(rs.getInt("total_patients"));
                 data.setTotalDoctors(rs.getInt("total_doctors"));
@@ -40,19 +40,17 @@ public class DAOReport extends DBContext {
 
     public Map<String, Object> getPatientStatistics() {
         Map<String, Object> stats = new HashMap<>();
-        String sql = "SELECT " +
-                    "COUNT(*) as total_patients, " +
-                    "SUM(CASE WHEN gender = 1 THEN 1 ELSE 0 END) as male_count, " +
-                    "SUM(CASE WHEN gender = 0 THEN 1 ELSE 0 END) as female_count, " +
-                    "(SELECT COUNT(*) FROM appointment WHERE is_deleted = FALSE) as total_visits, " +
-                    "(SELECT COUNT(DISTINCT patient_id) FROM appointment WHERE is_deleted = FALSE) as patients_with_appointments " +
-                    "FROM patients " +
-                    "WHERE is_deleted = FALSE";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
+        String sql = "SELECT "
+                + "COUNT(*) as total_patients, "
+                + "SUM(CASE WHEN gender = 1 THEN 1 ELSE 0 END) as male_count, "
+                + "SUM(CASE WHEN gender = 0 THEN 1 ELSE 0 END) as female_count, "
+                + "(SELECT COUNT(*) FROM appointment WHERE is_deleted = FALSE) as total_visits, "
+                + "(SELECT COUNT(DISTINCT patient_id) FROM appointment WHERE is_deleted = FALSE) as patients_with_appointments "
+                + "FROM patients "
+                + "WHERE is_deleted = FALSE";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
             if (rs.next()) {
                 stats.put("totalPatients", rs.getInt("total_patients"));
                 stats.put("maleCount", rs.getInt("male_count"));
@@ -68,18 +66,16 @@ public class DAOReport extends DBContext {
 
     public Map<String, Object> getMedicalRecordStatistics() {
         Map<String, Object> stats = new HashMap<>();
-        String sql = "SELECT " +
-                    "COUNT(*) as total_records, " +
-                    "COUNT(DISTINCT patient_id) as unique_patients, " +
-                    "COUNT(DISTINCT doctor_id) as unique_doctors, " +
-                    "COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_records, " +
-                    "COUNT(CASE WHEN status = 'ongoing' THEN 1 END) as ongoing_records " +
-                    "FROM medical_record";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
+        String sql = "SELECT "
+                + "COUNT(*) as total_records, "
+                + "COUNT(DISTINCT patient_id) as unique_patients, "
+                + "COUNT(DISTINCT doctor_id) as unique_doctors, "
+                + "COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_records, "
+                + "COUNT(CASE WHEN status = 'ongoing' THEN 1 END) as ongoing_records "
+                + "FROM medical_record";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
             if (rs.next()) {
                 stats.put("totalRecords", rs.getInt("total_records"));
                 stats.put("uniquePatients", rs.getInt("unique_patients"));
@@ -95,21 +91,19 @@ public class DAOReport extends DBContext {
 
     public Map<String, Object> getInvoiceStatistics() {
         Map<String, Object> stats = new HashMap<>();
-        String sql = "SELECT " +
-                    "COUNT(*) as total_invoices, " +
-                    "SUM(final_amount) as total_revenue, " +
-                    "AVG(final_amount) as average_invoice_amount, " +
-                    "COUNT(DISTINCT patient_id) as unique_patients, " +
-                    "SUM(total_service_amount) as total_service_amount, " +
-                    "SUM(total_supply_amount) as total_supply_amount, " +
-                    "SUM(discount_amount) as total_discount_amount " +
-                    "FROM invoices " +
-                    "WHERE isdeleted = FALSE";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
+        String sql = "SELECT "
+                + "COUNT(*) as total_invoices, "
+                + "SUM(final_amount) as total_revenue, "
+                + "AVG(final_amount) as average_invoice_amount, "
+                + "COUNT(DISTINCT patient_id) as unique_patients, "
+                + "SUM(total_service_amount) as total_service_amount, "
+                + "SUM(total_supply_amount) as total_supply_amount, "
+                + "SUM(discount_amount) as total_discount_amount "
+                + "FROM invoices "
+                + "WHERE isdeleted = FALSE";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
             if (rs.next()) {
                 stats.put("totalInvoices", rs.getInt("total_invoices"));
                 stats.put("totalRevenue", rs.getDouble("total_revenue"));
@@ -124,4 +118,121 @@ public class DAOReport extends DBContext {
         }
         return stats;
     }
-} 
+
+    public Map<String, Object> getAppointmentStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+
+        String sqlTotal = "SELECT COUNT(*) AS total FROM appointment WHERE is_deleted = FALSE";
+        String sqlDone = "SELECT COUNT(*) AS done FROM appointment WHERE status = 'done' AND is_deleted = FALSE";
+        String sqlCancelled = "SELECT COUNT(*) AS cancelled FROM appointment WHERE status = 'cancelled' AND is_deleted = FALSE";
+        String sqlToday = "SELECT COUNT(*) AS today "
+                + "FROM appointment a JOIN slot s ON a.slot_id = s.id "
+                + "WHERE s.slot_date = CURRENT_DATE AND a.is_deleted = FALSE";
+
+        String sqlByDate = "SELECT s.slot_date, COUNT(*) AS total "
+                + "FROM appointment a JOIN slot s ON a.slot_id = s.id "
+                + "WHERE a.is_deleted = FALSE GROUP BY s.slot_date ORDER BY s.slot_date";
+
+        String sqlByDoctor = "SELECT d.full_name AS doctor_name, COUNT(*) AS total "
+                + "FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "JOIN doctors d ON s.doctor_id = d.id "
+                + "WHERE a.is_deleted = FALSE AND d.is_deleted = FALSE "
+                + "GROUP BY d.full_name ORDER BY total DESC";
+
+        String sqlByService = "SELECT sv.service_name AS service_name, COUNT(*) AS total "
+                + "FROM appointment a "
+                + "JOIN medical_services sv ON a.services_id = sv.services_id "
+                + "WHERE a.is_deleted = FALSE AND sv.isdeleted = FALSE "
+                + "GROUP BY sv.service_name ORDER BY total DESC";
+
+        String sqlByStatus = "SELECT a.status AS status, COUNT(*) AS total "
+                + "FROM appointment a "
+                + "WHERE a.is_deleted = FALSE "
+                + "GROUP BY a.status";
+
+        try (Connection conn = getConnection()) {
+            // Tổng số lịch hẹn
+            try (PreparedStatement ps = conn.prepareStatement(sqlTotal); ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("totalAppointments", rs.getInt("total"));
+                }
+            }
+
+            // Lịch hẹn đã hoàn tất
+            try (PreparedStatement ps = conn.prepareStatement(sqlDone); ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("doneAppointments", rs.getInt("done"));
+                }
+            }
+
+            // Lịch hẹn đã hủy
+            try (PreparedStatement ps = conn.prepareStatement(sqlCancelled); ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("cancelledAppointments", rs.getInt("cancelled"));
+                }
+            }
+
+            // Lịch hẹn hôm nay
+            try (PreparedStatement ps = conn.prepareStatement(sqlToday); ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("todayAppointments", rs.getInt("today"));
+                }
+            }
+
+            // Thống kê theo ngày
+            List<Map<String, Object>> appointmentsByDate = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sqlByDate); ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("date", rs.getDate("slot_date").toString());
+                    entry.put("count", rs.getInt("total"));
+                    appointmentsByDate.add(entry);
+                }
+            }
+            stats.put("appointmentsByDate", appointmentsByDate);
+
+            // Thống kê theo bác sĩ
+            List<Map<String, Object>> appointmentsByDoctor = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sqlByDoctor); ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("doctor", rs.getString("doctor_name"));
+                    entry.put("count", rs.getInt("total"));
+                    appointmentsByDoctor.add(entry);
+                }
+            }
+            stats.put("appointmentsByDoctor", appointmentsByDoctor);
+
+            // Thống kê theo dịch vụ
+            List<Map<String, Object>> appointmentsByService = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sqlByService); ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("service", rs.getString("service_name"));
+                    entry.put("count", rs.getInt("total"));
+                    appointmentsByService.add(entry);
+                }
+            }
+            stats.put("appointmentsByService", appointmentsByService);
+
+            // Thống kê theo trạng thái
+            List<Map<String, Object>> appointmentsByStatus = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sqlByStatus); ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("status", rs.getString("status"));
+                    entry.put("count", rs.getInt("total"));
+                    appointmentsByStatus.add(entry);
+                }
+            }
+            stats.put("appointmentsByStatus", appointmentsByStatus);
+
+        } catch (SQLException e) {
+            System.out.println("Error in getAppointmentStatistics: " + e.getMessage());
+        }
+
+        return stats;
+    }
+
+}

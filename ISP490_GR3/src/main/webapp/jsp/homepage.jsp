@@ -96,7 +96,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/report">
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
                 </li>
@@ -168,7 +168,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/api/patient/*">
+                    <a href="${pageContext.request.contextPath}/patient/my-appointments">
                         <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
                     </a>
                 </li>
