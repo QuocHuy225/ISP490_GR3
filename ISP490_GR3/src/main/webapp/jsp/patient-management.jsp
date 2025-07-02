@@ -599,7 +599,7 @@
                                                     <td><%= patient.getAddress() %></td>
                                                     <td>
                                                         <div class="action-buttons-group">
-                                                            <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%=patient.getId()%>" 
+                                                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%=patient.getId()%>" 
                                                                class="action-btn action-btn-view" 
                                                                title="Xem hồ sơ bệnh án">
                                                                 <i class="bi bi-file-medical"></i>
