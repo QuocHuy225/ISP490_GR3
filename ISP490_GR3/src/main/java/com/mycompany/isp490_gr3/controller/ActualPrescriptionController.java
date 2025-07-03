@@ -311,7 +311,7 @@ public class ActualPrescriptionController extends HttpServlet {
     }
     
     /**
-     * Check doctor access - allows both ADMIN and DOCTOR
+     * Check doctor access - allows DOCTOR
      */
     private boolean checkDoctorAccess(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
