@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
         <%-- CSS cụ thể cho trang lịch hẹn (TẢI SAU để tinh chỉnh/bổ sung mà không xung đột base) --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/patient-appointment-schedule.css">
-        
+
     </head>
     <body>
         <%
@@ -333,14 +333,95 @@
                             <button class="btn btn-primary" id="okSuccessModalBtn">OK</button>
                         </div>
                     </div>
-                </div>
-
+                </div>               
             </div>
         </div>
-
+        <div id="newAppointmentModal" class="modal">
+            <div class="modal-content large-modal-content">
+                <span class="close-button" id="closeNewAppointmentModalBtn">&times;</span>
+                <h3><i class="fas fa-plus-circle"></i> Đặt Lịch Hẹn Mới</h3>
+                <form id="newAppointmentForm">
+                    <div class="form-group">
+                        <label for="newDoctorName">Chọn Bác sĩ:</label>
+                        <select id="newDoctorName" name="doctorName" required>
+                            <option value="">-- Chọn bác sĩ --</option>
+                            <option value="Dr. Nguyễn Văn A">Dr. Nguyễn Văn A</option>
+                            <option value="Dr. Trần Thị B">Dr. Trần Thị B</option>
+                            <option value="Dr. Lê Văn C">Dr. Lê Văn C</option>
+                            <option value="Dr. Phạm Thị D">Dr. Phạm Thị D</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="newService">Dịch vụ:</label>
+                        <select id="newService" name="service" required>
+                            <option value="">-- Chọn dịch vụ --</option>
+                            <option value="Khám tổng quát">Khám tổng quát</option>
+                            <option value="Tư vấn dinh dưỡng">Tư vấn dinh dưỡng</option>
+                            <option value="Siêu âm">Siêu âm</option>
+                            <option value="Khám răng">Khám răng</option>
+                            <option value="Tái khám">Tái khám</option>
+                            <option value="Xét nghiệm máu">Xét nghiệm máu</option>
+                            <option value="Kiểm tra huyết áp">Kiểm tra huyết áp</option>
+                            <option value="Tiêm phòng">Tiêm phòng</option>
+                            <option value="Tư vấn tâm lý">Tư vấn tâm lý</option>
+                            <option value="Kiểm tra sức khỏe định kỳ">Kiểm tra sức khỏe định kỳ</option>
+                            <option value="Khám chuyên khoa">Khám chuyên khoa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="newAppointmentDate">Ngày hẹn:</label>
+                        <input type="date" id="newAppointmentDate" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newAppointmentTime">Giờ hẹn:</label>
+                        <select id="newAppointmentTime" name="time" required>
+                            <option value="">-- Chọn giờ hẹn --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="newNotes">Ghi chú (tùy chọn):</label>
+                        <textarea id="newNotes" name="notes" rows="3"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary" id="submitNewAppointmentBtn"><i class="fas fa-paper-plane"></i> Đặt Lịch</button>
+                        <button type="button" class="btn btn-secondary" id="cancelNewAppointmentBtn"><i class="fas fa-times"></i> Hủy</button>
+                    </div>
+                </form>
+            </div>
+        </div>
         <%-- Bootstrap Bundle with Popper --%>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
         <%-- Đường dẫn JS của bạn --%>
         <script src="${pageContext.request.contextPath}/js/patient-appointment-schedule.js"></script>
+         <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Sidebar toggle
+                const sidebarCollapse = document.getElementById('sidebarCollapse');
+                const sidebar = document.getElementById('sidebar');
+                const content = document.getElementById('content');
+
+                sidebarCollapse.addEventListener('click', function () {
+                    sidebar.classList.toggle('collapsed');
+                    content.classList.toggle('expanded');
+                });
+
+                // Responsive sidebar
+                function checkWidth() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.add('collapsed');
+                        content.classList.add('expanded');
+                    } else {
+                        sidebar.classList.remove('collapsed');
+                        content.classList.remove('expanded');
+                    }
+                }
+
+                // Initial check
+                checkWidth();
+
+                // Listen for window resize
+                window.addEventListener('resize', checkWidth);
+            });
+        </script>
     </body>
 </html>

@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const noUpcomingAppointments = document.getElementById('noUpcomingAppointments');
     const noHistoryAppointments = document.getElementById('noHistoryAppointments');
 
-    // === CÁC PHẦN TỬ MODAL ===
+    // === CÁC PHẦN TỬ MODAL HIỆN CÓ ===
     const modal = document.getElementById("appointmentDetailModal");
     const closeButton = document.querySelector("#appointmentDetailModal .close-button");
     const btnCloseDetail = document.getElementById("btnCloseDetail");
@@ -178,6 +178,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const successMessageText = document.getElementById("successMessageText");
 
     let currentAppointmentIdToCancel = null; // Biến để lưu ID lịch hẹn đang được xem xét hủy
+
+    // === CÁC BIẾN CHO MODAL ĐẶT LỊCH HẸN MỚI (ĐÃ THÊM) ===
+    const newAppointmentModal = document.getElementById("newAppointmentModal");
+    const closeNewAppointmentModalBtn = document.getElementById("closeNewAppointmentModalBtn");
+    const cancelNewAppointmentBtn = document.getElementById("cancelNewAppointmentBtn");
+    const newAppointmentForm = document.getElementById("newAppointmentForm");
+    const submitNewAppointmentBtn = document.getElementById("submitNewAppointmentBtn");
+
+    // Thêm các element input/select cụ thể cho modal mới
+    const newDoctorNameSelect = document.getElementById('newDoctorName');
+    const newAppointmentDateInput = document.getElementById('newAppointmentDate');
+    const newAppointmentTimeSelect = document.getElementById('newAppointmentTime'); // Bây giờ là <select>
+
+    // Danh sách các khung giờ mặc định khả dụng
+    const defaultTimeSlots = [
+        "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
+        "11:00 AM", "11:30 AM", "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
+        "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM"
+    ];
+
+    // Thời gian tối thiểu cần để đặt lịch trước (ví dụ: 2 giờ)
+    const MIN_BOOKING_LEAD_TIME_HOURS = 2;
+    // Giới hạn số ngày tối đa cho phép đặt trước (ví dụ: 90 ngày)
+    const MAX_BOOKING_DAYS_IN_ADVANCE = 90;
+
 
     // === CÁC HÀM TIỆN ÍCH ===
 
@@ -341,6 +366,108 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedAppointment) {
             showAppointmentDetail(selectedAppointment);
         }
+    }
+
+    // Hàm để điền các slot thời gian trống vào dropdown "Giờ hẹn"
+    async function populateAvailableTimeSlots() {
+        const selectedDoctorName = newDoctorNameSelect.value;
+        const selectedDateStr = newAppointmentDateInput.value; // Dạng YYYY-MM-DD
+
+        // Xóa các option cũ
+        newAppointmentTimeSelect.innerHTML = '<option value="">-- Chọn giờ hẹn --</option>';
+
+        if (!selectedDoctorName || !selectedDateStr) {
+            return; // Không làm gì nếu chưa chọn bác sĩ hoặc ngày
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Đặt về đầu ngày để so sánh
+
+        const selectedDate = new Date(selectedDateStr);
+        selectedDate.setHours(0, 0, 0, 0); // Đặt về đầu ngày để so sánh
+
+        // Kiểm tra ngày quá khứ
+        if (selectedDate < today) {
+            newAppointmentTimeSelect.innerHTML = '<option value="" disabled>Ngày đã qua</option>';
+            return;
+        }
+
+        // Kiểm tra giới hạn ngày đặt trước
+        const maxDate = new Date();
+        maxDate.setDate(today.getDate() + MAX_BOOKING_DAYS_IN_ADVANCE);
+        maxDate.setHours(0, 0, 0, 0);
+
+        if (selectedDate > maxDate) {
+            newAppointmentTimeSelect.innerHTML = `<option value="" disabled>Chỉ được đặt trước tối đa ${MAX_BOOKING_DAYS_IN_ADVANCE} ngày</option>`;
+            return;
+        }
+
+        let bookedTimes = [];
+        // Lọc các lịch hẹn ĐANG SẮP TỚI hoặc ĐANG CHỜ của bác sĩ được chọn vào ngày được chọn
+        // Sử dụng dữ liệu giả lập từ allAppointmentsData
+        const appointmentsOnSelectedDate = allAppointmentsData.filter(app => {
+            const [day, month, year] = app.date.split('/');
+            const appDateFormatted = `${year}-${month}-${day}`; // Chuyển đổi DD/MM/YYYY sang YYYY-MM-DD
+            return app.doctorName === selectedDoctorName && appDateFormatted === selectedDateStr &&
+                   (app.status === 'Sắp tới' || app.status === 'Đang chờ');
+        });
+
+        bookedTimes = appointmentsOnSelectedDate.map(app => app.time);
+
+        console.log(`Các giờ đã đặt cho ${selectedDoctorName} vào ngày ${selectedDateStr}:`, bookedTimes);
+
+        // Lấy thời gian hiện tại
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+
+        // Duyệt qua các slot mặc định để điền vào dropdown
+        defaultTimeSlots.forEach(slot => {
+            const option = document.createElement('option');
+            option.value = slot;
+            option.textContent = slot;
+
+            let isDisabled = false;
+            let reason = '';
+
+            // Kiểm tra nếu slot đã bị đặt
+            if (bookedTimes.includes(slot)) {
+                isDisabled = true;
+                reason = ' (Đã đầy)';
+            }
+
+            // Kiểm tra nếu ngày được chọn là hôm nay và giờ slot đã qua hoặc quá gần (theo MIN_BOOKING_LEAD_TIME_HOURS)
+            if (selectedDateStr === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`) {
+                const [slotHourStr, slotMinuteStr] = slot.replace(/ AM| PM/, '').split(':');
+                let slotHour = parseInt(slotHourStr);
+                const isPM = slot.includes('PM');
+
+                if (isPM && slotHour !== 12) { // 12 PM is 12, 1-11 PM is +12
+                    slotHour += 12;
+                }
+                if (!isPM && slotHour === 12) { // 12 AM (midnight) is 0
+                    slotHour = 0;
+                }
+
+                const slotTotalMinutes = slotHour * 60 + parseInt(slotMinuteStr);
+                const currentTimeTotalMinutes = currentHour * 60 + currentMinute;
+
+                // Tính thời gian còn lại (phút) từ bây giờ đến slot
+                const minutesUntilSlot = slotTotalMinutes - currentTimeTotalMinutes;
+
+                if (minutesUntilSlot < (MIN_BOOKING_LEAD_TIME_HOURS * 60)) {
+                    isDisabled = true;
+                    reason = ' (Không khả dụng)'; // Giờ đã qua hoặc quá sát
+                }
+            }
+
+            if (isDisabled) {
+                option.disabled = true;
+                option.textContent += reason;
+            }
+
+            newAppointmentTimeSelect.appendChild(option);
+        });
     }
 
     // Hàm chính để tải dữ liệu và cập nhật giao diện
@@ -569,6 +696,134 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // === XỬ LÝ SỰ KIỆN CHO MODAL ĐẶT LỊCH HẸN MỚI (ĐÃ THÊM) ===
+
+    // Nút đóng modal đặt lịch hẹn mới
+    if (closeNewAppointmentModalBtn) {
+        closeNewAppointmentModalBtn.onclick = function() {
+            newAppointmentModal.style.display = "none";
+        }
+    }
+    if (cancelNewAppointmentBtn) {
+        cancelNewAppointmentBtn.onclick = function() {
+            newAppointmentModal.style.display = "none";
+        }
+    }
+
+    // Gán sự kiện thay đổi cho các trường Bác sĩ và Ngày để cập nhật slot giờ
+    if (newDoctorNameSelect) {
+        newDoctorNameSelect.addEventListener('change', populateAvailableTimeSlots);
+    }
+    if (newAppointmentDateInput) {
+        newAppointmentDateInput.addEventListener('change', populateAvailableTimeSlots);
+    }
+
+    // Xử lý nút "Đặt Hẹn Mới" (hiển thị modal thay vì chuyển hướng)
+    const btnNewAppointment = document.getElementById('btnNewAppointment');
+    if (btnNewAppointment) {
+        btnNewAppointment.addEventListener('click', () => {
+            newAppointmentForm.reset(); // Xóa dữ liệu cũ nếu có
+            newAppointmentModal.style.display = "flex"; // Hiển thị modal
+
+            // Đặt ngày hiện tại làm giá trị mặc định cho input date
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Tháng bắt đầu từ 0
+            const day = String(today.getDate()).padStart(2, '0');
+            const defaultDate = `${year}-${month}-${day}`;
+            newAppointmentDateInput.value = defaultDate;
+
+            // Đặt min/max cho input date để giới hạn chọn ngày
+            newAppointmentDateInput.min = defaultDate; // Không cho chọn ngày quá khứ
+            const maxDate = new Date();
+            maxDate.setDate(today.getDate() + MAX_BOOKING_DAYS_IN_ADVANCE);
+            const maxYear = maxDate.getFullYear();
+            const maxMonth = String(maxDate.getMonth() + 1).padStart(2, '0');
+            const maxDay = String(maxDate.getDate()).padStart(2, '0');
+            newAppointmentDateInput.max = `${maxYear}-${maxMonth}-${maxDay}`;
+
+            // Gọi hàm populate ngay khi modal hiện ra và ngày được đặt
+            populateAvailableTimeSlots();
+        });
+    }
+
+    // Xử lý khi form đặt lịch hẹn mới được gửi
+    if (newAppointmentForm) {
+        newAppointmentForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // Ngăn chặn form gửi đi theo cách truyền thống
+
+            const doctorName = newDoctorNameSelect.value;
+            const service = document.getElementById('newService').value;
+            const appointmentDateStr = newAppointmentDateInput.value; // Dạng YYYY-MM-DD
+            const appointmentTime = newAppointmentTimeSelect.value; // Lấy từ <select>
+            const notes = document.getElementById('newNotes').value;
+
+            // Basic Validation
+            if (!doctorName || !service || !appointmentDateStr || !appointmentTime) {
+                showSuccessMessage("Vui lòng điền đầy đủ các thông tin bắt buộc (Bác sĩ, Dịch vụ, Ngày, Giờ).");
+                return;
+            }
+
+            // Kiểm tra lại slot có khả dụng không (phòng trường hợp người dùng chọn rồi nhưng slot bị đầy do cập nhật nhanh)
+            const selectedOption = newAppointmentTimeSelect.options[newAppointmentTimeSelect.selectedIndex];
+            if (selectedOption && selectedOption.disabled) {
+                showSuccessMessage("Giờ hẹn bạn chọn đã bị đầy hoặc không khả dụng. Vui lòng chọn giờ khác.");
+                // Không reset nút submit ở đây, vì showSuccessMessage sẽ đóng và người dùng có thể thử lại
+                return; // Ngừng quá trình gửi form
+            }
+
+            // Chuyển đổi định dạng ngày từ YYYY-MM-DD sang DD/MM/YYYY để phù hợp với dữ liệu mẫu
+            const [year, month, day] = appointmentDateStr.split('-');
+            const formattedDate = `${day}/${month}/${year}`;
+
+            // Tạo ID mới. Trong hệ thống thực tế, ID sẽ do backend tạo.
+            // Ở đây, giả lập ID lớn nhất + 1.
+            const newId = allAppointmentsData.length > 0 ? Math.max(...allAppointmentsData.map(app => app.id)) + 1 : 1;
+
+            const newAppointmentData = {
+                id: newId,
+                doctorName: doctorName,
+                date: formattedDate,
+                time: appointmentTime,
+                service: service,
+                status: "Sắp tới", // Mặc định là 'Sắp tới' cho lịch hẹn mới
+                notes: notes
+            };
+
+            console.log("Dữ liệu đặt lịch hẹn mới:", newAppointmentData);
+
+            // Tắt nút submit để tránh gửi nhiều lần
+            submitNewAppointmentBtn.disabled = true;
+            submitNewAppointmentBtn.textContent = 'Đang xử lý...';
+
+            try {
+                // --- Giả lập đặt lịch thành công và cập nhật dữ liệu mẫu + LocalStorage ---
+                await new Promise(resolve => setTimeout(resolve, 1500)); // Giả lập độ trễ mạng
+
+                // Thêm lịch hẹn mới vào dữ liệu gốc (allAppointmentsData)
+                allAppointmentsData.push(newAppointmentData);
+                localStorage.setItem('patientAppointmentsData', JSON.stringify(allAppointmentsData));
+                console.log("Lịch hẹn mới đã được thêm vào allAppointmentsData và lưu vào LocalStorage.");
+                // --- Hết phần giả lập ---
+
+                newAppointmentModal.style.display = "none"; // Đóng modal đặt lịch
+                newAppointmentForm.reset(); // Reset form
+                showSuccessMessage(`Bạn đã đặt lịch hẹn thành công! Lịch hẹn với ${newAppointmentData.doctorName} vào ngày ${newAppointmentData.date} đã được thêm. Mã: ${newAppointmentData.id}`);
+
+                // Sau khi đặt thành công, tải lại dữ liệu và cập nhật UI.
+                currentPageUpcoming = 1; // Reset trang sắp tới về 1
+                fetchAppointmentsAndRenderUI(); // Gọi lại hàm chính để làm mới toàn bộ dữ liệu và UI
+
+            } catch (error) {
+                console.error('Lỗi khi đặt lịch hẹn:', error);
+                showSuccessMessage(`Không thể đặt lịch hẹn: ${error.message || 'Đã xảy ra lỗi không xác định.'}`);
+            } finally {
+                submitNewAppointmentBtn.disabled = false;
+                submitNewAppointmentBtn.textContent = 'Đặt Lịch';
+            }
+        });
+    }
+
     // Đóng bất kỳ modal nào khi click vào vùng tối bên ngoài modal
     window.onclick = function(event) {
         if (event.target == modal) {
@@ -580,16 +835,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (event.target == successMessageModal) {
             successMessageModal.style.display = "none";
         }
-    }
-
-    // Xử lý nút "Đặt Hẹn Mới"
-    const btnNewAppointment = document.getElementById('btnNewAppointment');
-    if (btnNewAppointment) {
-        btnNewAppointment.addEventListener('click', () => {
-            // Chuyển hướng người dùng đến trang đặt lịch hẹn
-            // Đảm bảo đường dẫn này đúng với URL của trang đặt lịch hẹn của bạn
-            window.location.href = `${window.location.origin}${window.location.pathname.replace('/patient/my-appointments', '/makeappointments')}`;
-        });
+        if (event.target == newAppointmentModal) { // Thêm dòng này để đóng modal đặt lịch hẹn mới
+            newAppointmentModal.style.display = "none";
+        }
     }
 
     // === KHỞI TẠO TRANG KHI DOM ĐÃ TẢI XONG ===

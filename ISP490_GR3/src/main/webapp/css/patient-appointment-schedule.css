@@ -288,8 +288,14 @@ header p {
 
 /* Hiệu ứng fadeIn cho modal */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .close-button {
@@ -405,9 +411,69 @@ header p {
         width: 95%;
         padding: 20px;
     }
-    
+
     /* Responsive cho modal xác nhận */
     .small-modal-content {
         max-width: 90%;
     }
+}
+/* ==========================================================================
+   New Appointment Modal Specific Styles
+   ========================================================================== */
+.large-modal-content {
+    max-width: 700px; /* Tăng chiều rộng tối đa cho modal đặt lịch hẹn mới */
+    width: 90%; /* Chiều rộng tương đối */
+}
+
+/* Form Group Styling */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block; /* Đảm bảo label nằm trên input */
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+/* .form-group input[type="time"], (Đã bỏ vì đổi sang select) */
+.form-group select,
+.form-group textarea {
+    width: 100%; /* Chiếm toàn bộ chiều rộng của form-group */
+    padding: 10px 12px;
+    border: 1px solid #ced4da; /* Màu viền giống Bootstrap */
+    border-radius: 5px;
+    font-size: 1em;
+    box-sizing: border-box; /* Đảm bảo padding và border không làm tăng chiều rộng tổng thể */
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="date"]:focus,
+/* .form-group input[type="time"]:focus, (Đã bỏ vì đổi sang select) */
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #80bdff; /* Màu viền khi focus */
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Hiệu ứng shadow khi focus */
+}
+
+.form-group textarea {
+    resize: vertical; /* Chỉ cho phép thay đổi kích thước theo chiều dọc */
+    min-height: 80px;
+}
+
+/* Icon trong tiêu đề modal */
+#newAppointmentModal h3 i {
+    margin-right: 10px;
+    color: #007bff; /* Màu primary */
+}
+
+/* Buttons in modal-actions (using existing .modal-actions styles but ensuring alignment) */
+#newAppointmentModal .modal-actions {
+    justify-content: center; /* Căn giữa các nút trong modal đặt lịch */
+    gap: 15px; /* Tăng khoảng cách giữa các nút */
 }
