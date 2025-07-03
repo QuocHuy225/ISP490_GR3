@@ -168,11 +168,6 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/makeappointments">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
                     <a href="${pageContext.request.contextPath}/patient/my-appointments">
                         <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
                     </a>

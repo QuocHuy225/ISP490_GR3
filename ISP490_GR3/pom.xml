@@ -32,6 +32,7 @@
             <version>2.10.1</version>
         </dependency>
         
+        
         <!-- JavaMail API for sending emails -->
         <dependency>
             <groupId>com.sun.mail</groupId>

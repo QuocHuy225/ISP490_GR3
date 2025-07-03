@@ -32,8 +32,8 @@
     <servlet-mapping>
         <servlet-name>AppointmentController</servlet-name>
         <url-pattern>/appointments</url-pattern>
-        <url-pattern>/appointments/delete</url-pattern>
-      
+        <url-pattern>/appointments/add</url-pattern>
+        <url-pattern>/patient/search</url-pattern>
     </servlet-mapping>
 
     <servlet>
