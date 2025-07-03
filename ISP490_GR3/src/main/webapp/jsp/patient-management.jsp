@@ -580,14 +580,14 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addCccd" class="form-label">CCCD <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addCccd" name="cccd" pattern="[0-9]{12}" required>
-                                <div class="form-text">12 chữ số</div>
+                                <label for="addCccd" class="form-label">CCCD</label>
+                                <input type="text" class="form-control" id="addCccd" name="cccd" pattern="[0-9]{12}">
+                                <div class="form-text">12 chữ số (tùy chọn)</div>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addAddress" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="addAddress" name="address" rows="3" required></textarea>
+                                <label for="addAddress" class="form-label">Địa chỉ</label>
+                                <textarea class="form-control" id="addAddress" name="address" rows="3"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -660,15 +660,15 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editCccd" class="form-label">CCCD <span class="text-danger">*</span></label>
+                                <label for="editCccd" class="form-label">CCCD</label>
                                 <input type="text" class="form-control" id="editCccd" name="cccd" 
-                                       value="<%= editPatient.getCccd() %>" pattern="[0-9]{12}" required>
-                                <div class="form-text">12 chữ số</div>
+                                       value="<%= editPatient.getCccd() %>" pattern="[0-9]{12}">
+                                <div class="form-text">12 chữ số (tùy chọn)</div>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editAddress" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="editAddress" name="address" rows="3" required><%= editPatient.getAddress() %></textarea>
+                                <label for="editAddress" class="form-label">Địa chỉ</label>
+                                <textarea class="form-control" id="editAddress" name="address" rows="3"><%= editPatient.getAddress() %></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
