@@ -10,7 +10,7 @@ package com.mycompany.isp490_gr3.dto;
  */
 public class AppointmentViewDTO {
 
-     private int id;
+    private int id;
     private String appointmentCode;
     private String slotDate;
     private String slotTimeRange;
@@ -21,14 +21,14 @@ public class AppointmentViewDTO {
     private String serviceName;
     private String status;
     private String paymentStatus;
-    
-    
-
+    private int bookedPatients;
+    private int maxPatients;
+    private String bookingStatus;
 
     public AppointmentViewDTO() {
     }
 
-    public AppointmentViewDTO(int id, String appointmentCode, String slotDate, String slotTimeRange, String patientCode, String patientName, String patientPhone, String doctorName, String serviceName, String status, String paymentStatus) {
+    public AppointmentViewDTO(int id, String appointmentCode, String slotDate, String slotTimeRange, String patientCode, String patientName, String patientPhone, String doctorName, String serviceName, String status, String paymentStatus, int bookedPatients, int maxPatients, String bookingStatus) {
         this.id = id;
         this.appointmentCode = appointmentCode;
         this.slotDate = slotDate;
@@ -40,6 +40,9 @@ public class AppointmentViewDTO {
         this.serviceName = serviceName;
         this.status = status;
         this.paymentStatus = paymentStatus;
+        this.bookedPatients = bookedPatients;
+        this.maxPatients = maxPatients;
+        this.bookingStatus = bookingStatus;
     }
 
     public int getId() {
@@ -129,8 +132,29 @@ public class AppointmentViewDTO {
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
     }
-    
-    
+
+    public int getBookedPatients() {
+        return bookedPatients;
+    }
+
+    public void setBookedPatients(int bookedPatients) {
+        this.bookedPatients = bookedPatients;
+    }
+
+    public int getMaxPatients() {
+        return maxPatients;
+    }
+
+    public void setMaxPatients(int maxPatients) {
+        this.maxPatients = maxPatients;
+    }
+
+    public String getBookingStatus() {
+        return bookingStatus;
+    }
+
+    public void setBookingStatus(String bookingStatus) {
+        this.bookingStatus = bookingStatus;
+    }
 
 }
-

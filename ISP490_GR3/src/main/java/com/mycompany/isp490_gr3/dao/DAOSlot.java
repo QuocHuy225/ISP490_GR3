@@ -1,6 +1,7 @@
 package com.mycompany.isp490_gr3.dao;
 
 import com.mycompany.isp490_gr3.dto.SlotViewDTO;
+import com.mycompany.isp490_gr3.model.Slot;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -10,15 +11,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.UUID;
 
 public class DAOSlot {
 
     private static final Logger LOGGER = Logger.getLogger(DAOSlot.class.getName());
 
-    //getter
+    
+    // Lấy danh sách slot của ngày hiện tại với phân trang
     public List<SlotViewDTO> getTodaySlotViewDTOs(int offset, int limit) {
         String sql = "SELECT s.id, s.slot_date, s.start_time, s.end_time, s.max_patients, d.full_name AS doctor_name, "
-                + "(SELECT COUNT(*) FROM appointment a WHERE a.slot_id = s.id AND a.status != 'cancelled') AS booked_patients "
+                + "(SELECT COUNT(*) FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NOT NULL AND a.status != 'cancelled') AS booked_patients "
                 + "FROM slot s JOIN doctors d ON s.doctor_id = d.id "
                 + "WHERE s.is_deleted = FALSE AND s.slot_date = CURRENT_DATE "
                 + "ORDER BY s.start_time DESC LIMIT ? OFFSET ?";
@@ -29,23 +32,25 @@ public class DAOSlot {
             return extractSlotViewDTOs(ps.executeQuery());
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot hôm nay: " + e.getMessage(), e);
+            return new ArrayList<>();
         }
-        return new ArrayList<>();
     }
 
+    // Đếm số slot của ngày hiện tại
     public int countTodaySlotViewDTOs() {
         String sql = "SELECT COUNT(*) FROM slot WHERE is_deleted = FALSE AND slot_date = CURRENT_DATE";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getInt(1) : 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi đếm slot hôm nay: " + e.getMessage(), e);
+            return 0;
         }
-        return 0;
     }
 
+    // Tìm kiếm slot theo doctorId và/hoặc slotDate với phân trang
     public List<SlotViewDTO> searchSlotViewDTOs(Integer doctorId, LocalDate slotDate, int offset, int limit) {
         StringBuilder sql = new StringBuilder("SELECT s.id, s.slot_date, s.start_time, s.end_time, s.max_patients, d.full_name AS doctor_name, ");
-        sql.append("(SELECT COUNT(*) FROM appointment a WHERE a.slot_id = s.id AND a.status != 'cancelled') AS booked_patients ");
+        sql.append("(SELECT COUNT(*) FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NOT NULL AND a.status != 'cancelled') AS booked_patients ");
         sql.append("FROM slot s JOIN doctors d ON s.doctor_id = d.id WHERE s.is_deleted = FALSE");
         if (doctorId != null) {
             sql.append(" AND s.doctor_id = ?");
@@ -68,10 +73,11 @@ public class DAOSlot {
             return extractSlotViewDTOs(ps.executeQuery());
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi tìm kiếm slot: " + e.getMessage(), e);
+            return new ArrayList<>();
         }
-        return new ArrayList<>();
     }
 
+    // Đếm số slot theo bộ lọc
     public int countFilteredSlotViewDTOs(Integer doctorId, LocalDate slotDate) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM slot WHERE is_deleted = FALSE");
         if (doctorId != null) {
@@ -93,52 +99,106 @@ public class DAOSlot {
             return rs.next() ? rs.getInt(1) : 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi đếm slot tìm kiếm: " + e.getMessage(), e);
+            return 0;
         }
-        return 0;
     }
 
-    // insert
+    // Chèn một slot đơn, kiểm tra không trùng giờ, và tạo maxPatients bản ghi appointment
     public boolean insertSlotWithValidation(int doctorId, LocalDate date, LocalTime start, int duration, int maxPatients) throws SQLException {
         LocalTime end = start.plusMinutes(duration);
         try (Connection conn = DBContext.getConnection()) {
-            return !isSlotConflict(conn, doctorId, date, start, end) && insertSlot(conn, doctorId, date, start, end, maxPatients);
+            conn.setAutoCommit(false);
+            try {
+                boolean success = !isSlotConflict(conn, doctorId, date, start, end) && insertSlot(conn, doctorId, date, start, end, maxPatients);
+                if (success) {
+                    conn.commit();
+                } else {
+                    conn.rollback();
+                }
+                return success;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         }
     }
 
+    // Chèn nhiều slot trong khoảng thời gian, kiểm tra không trùng giờ
     public int insertRangeSlots(int doctorId, LocalDate date, String startStr, String endStr, int duration, int maxPatients) throws SQLException {
         LocalTime startTime = LocalTime.parse(startStr);
         LocalTime endTime = LocalTime.parse(endStr);
         int inserted = 0;
 
         try (Connection conn = DBContext.getConnection()) {
-            LocalTime current = startTime;
-            while (!current.plusMinutes(duration).isAfter(endTime)) {
-                LocalTime next = current.plusMinutes(duration);
-                if (!isSlotConflict(conn, doctorId, date, current, next)) {
-                    if (insertSlot(conn, doctorId, date, current, next, maxPatients)) {
-                        inserted++;
+            conn.setAutoCommit(false);
+            try {
+                LocalTime current = startTime;
+                while (!current.plusMinutes(duration).isAfter(endTime)) {
+                    LocalTime next = current.plusMinutes(duration);
+                    if (!isSlotConflict(conn, doctorId, date, current, next)) {
+                        if (insertSlot(conn, doctorId, date, current, next, maxPatients)) {
+                            inserted++;
+                        }
                     }
+                    current = next;
                 }
-                current = next;
+                conn.commit();
+                return inserted;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
         }
-        return inserted;
     }
 
-    //Private
+    // Chèn slot và maxPatients bản ghi appointment với appointment_code ngắn
     private boolean insertSlot(Connection conn, int doctorId, LocalDate date, LocalTime start, LocalTime end, int maxPatients) throws SQLException {
-        String sql = "INSERT INTO slot (doctor_id, slot_date, start_time, end_time, max_patients, is_deleted, created_at) "
+        if (maxPatients > 100) {
+            throw new IllegalArgumentException("maxPatients quá lớn: " + maxPatients);
+        }
+        String slotSql = "INSERT INTO slot (doctor_id, slot_date, start_time, end_time, max_patients, is_deleted, created_at) "
                 + "VALUES (?, ?, ?, ?, ?, FALSE, CURRENT_TIMESTAMP)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        int slotId;
+        try (PreparedStatement ps = conn.prepareStatement(slotSql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, doctorId);
             ps.setDate(2, Date.valueOf(date));
             ps.setTime(3, Time.valueOf(start));
             ps.setTime(4, Time.valueOf(end));
             ps.setInt(5, maxPatients);
-            return ps.executeUpdate() > 0;
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 0) {
+                return false;
+            }
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (!generatedKeys.next()) {
+                    return false;
+                }
+                slotId = generatedKeys.getInt(1);
+            }
         }
+
+        String appointmentSql = "INSERT INTO appointment (slot_id, appointment_code, status, payment_status, is_deleted, created_at) "
+                + "VALUES (?, ?, 'pending', 'unpaid', FALSE, CURRENT_TIMESTAMP)";
+        try (PreparedStatement ps = conn.prepareStatement(appointmentSql)) {
+            for (int i = 0; i < maxPatients; i++) {
+                String appointmentCode;
+                do {
+                    appointmentCode = "A" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                } while (!isAppointmentCodeUnique(conn, appointmentCode));
+                ps.setInt(1, slotId);
+                ps.setString(2, appointmentCode);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+        return true;
     }
 
+    // Kiểm tra trùng giờ
     private boolean isSlotConflict(Connection conn, int doctorId, LocalDate date, LocalTime start, LocalTime end) throws SQLException {
         String sql = "SELECT COUNT(*) FROM slot WHERE doctor_id = ? AND slot_date = ? AND is_deleted = FALSE "
                 + "AND ((start_time < ? AND end_time > ?) OR (start_time < ? AND end_time > ?) OR (start_time >= ? AND end_time <= ?))";
@@ -156,6 +216,7 @@ public class DAOSlot {
         }
     }
 
+    // Chuyển ResultSet thành danh sách SlotViewDTO
     private List<SlotViewDTO> extractSlotViewDTOs(ResultSet rs) throws SQLException {
         List<SlotViewDTO> slots = new ArrayList<>();
         DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -174,55 +235,102 @@ public class DAOSlot {
             dto.setBookingStatus(dto.getBookedPatients() + " / " + dto.getMaxPatients());
             slots.add(dto);
         }
-
         return slots;
     }
 
-    //Xóa
+    // Xóa mềm slot và cập nhật status của appointment
     public void deleteSlot(String slotId) throws SQLException {
         try {
-            int id = Integer.parseInt(slotId); // Kiểm tra slotId là số nguyên
-            String sql = "UPDATE slot SET is_deleted = TRUE WHERE id = ? AND is_deleted = FALSE";
-            try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, id);
-                stmt.executeUpdate();
+            int id = Integer.parseInt(slotId);
+            try (Connection conn = DBContext.getConnection()) {
+                conn.setAutoCommit(false);
+                try {
+                    if (!slotExists(slotId)) {
+                        throw new SQLException("Slot không tồn tại hoặc đã bị xóa: " + slotId);
+                    }
+                    if (isSlotBooked(slotId)) {
+                        throw new SQLException("Không thể xóa slot vì đã có lịch hẹn của bệnh nhân.");
+                    }
+                    String updateAppointmentSql = "UPDATE appointment SET is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP " + "WHERE slot_id = ? AND is_deleted = FALSE";
+                    try (PreparedStatement ps = conn.prepareStatement(updateAppointmentSql)) {
+                        ps.setInt(1, id);
+                        int appointmentsUpdated = ps.executeUpdate();
+                        LOGGER.info("Đã xóa ");
+                    }
+                    String updateSlotSql = "UPDATE slot SET is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP " + "WHERE id = ? AND is_deleted = FALSE";
+                    try (PreparedStatement ps = conn.prepareStatement(updateSlotSql)) {
+                        ps.setInt(1, id);
+                        int rowsAffected = ps.executeUpdate();
+                        if (rowsAffected == 0) {
+                            throw new SQLException("Không thể xóa slot: " + slotId);
+                        }
+                    }
+                    conn.commit();
+                } catch (SQLException e) {
+                    conn.rollback();
+                    throw e;
+                } finally {
+                    conn.setAutoCommit(true);
+                }
             }
         } catch (NumberFormatException e) {
             throw new SQLException("ID slot không hợp lệ: " + slotId, e);
         }
     }
 
+    // Xóa mềm nhiều slot
     public int deleteMultipleSlots(String[] slotIds) throws SQLException {
         if (slotIds == null || slotIds.length == 0) {
             return 0;
         }
-        int[] ids = new int[slotIds.length];
-        try {
-            for (int i = 0; i < slotIds.length; i++) {
-                ids[i] = Integer.parseInt(slotIds[i]); // Kiểm tra slotId là số nguyên
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                int updatedSlots = 0;
+                for (String slotId : slotIds) {
+                    if (!slotExists(slotId)) {
+                        LOGGER.warning("Slot không tồn tại hoặc đã bị xóa: " + slotId);
+                        continue;
+                    }
+                    if (isSlotBooked(slotId)) {
+                        LOGGER.warning("Không thể xóa slot vì đã có lịch hẹn của bệnh nhân: " + slotId);
+                        continue;
+                    }
+                    String updateAppointmentSql = "UPDATE appointment SET is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP " + "WHERE slot_id = ? AND is_deleted = FALSE";
+                    try (PreparedStatement ps = conn.prepareStatement(updateAppointmentSql)) {
+                        ps.setInt(1, Integer.parseInt(slotId));
+                        int appointmentsUpdated = ps.executeUpdate();
+                        LOGGER.info("Đã cập nhật trạng thái 'cancelled' cho " + appointmentsUpdated + " lịch hẹn của slot " + slotId);
+                    }
+                    String updateSlotSql = "UPDATE slot SET is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP " + "WHERE id = ? AND is_deleted = FALSE";
+                    try (PreparedStatement ps = conn.prepareStatement(updateSlotSql)) {
+                        ps.setInt(1, Integer.parseInt(slotId));
+                        updatedSlots += ps.executeUpdate();
+                    }
+                }
+                conn.commit();
+                return updatedSlots;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
-        } catch (NumberFormatException e) {
-            throw new SQLException("Một hoặc nhiều ID slot không hợp lệ", e);
-        }
-        String placeholders = String.join(",", Collections.nCopies(slotIds.length, "?"));
-        String sql = "UPDATE slot SET is_deleted = TRUE WHERE id IN (" + placeholders + ") AND is_deleted = FALSE";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            for (int i = 0; i < ids.length; i++) {
-                stmt.setInt(i + 1, ids[i]);
-            }
-            return stmt.executeUpdate();
         }
     }
 
+    // Kiểm tra slot có lịch hẹn của bệnh nhân
     public boolean isSlotBooked(String slotId) throws SQLException {
         try {
-            int id = Integer.parseInt(slotId); // Kiểm tra slotId là số nguyên
-            String sql = "SELECT COUNT(*) FROM appointment WHERE slot_id = ? AND status != 'cancelled'";
+            int id = Integer.parseInt(slotId);
+            String sql = "SELECT COUNT(*) FROM appointment WHERE slot_id = ? AND patient_id IS NOT NULL AND status != 'cancelled'";
             try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, id);
                 ResultSet rs = stmt.executeQuery();
                 if (rs.next()) {
-                    return rs.getInt(1) > 0;
+                    int count = rs.getInt(1);
+                    LOGGER.info("Slot " + slotId + " có " + count + " lịch hẹn của bệnh nhân.");
+                    return count > 0;
                 }
                 return false;
             }
@@ -231,9 +339,10 @@ public class DAOSlot {
         }
     }
 
+    // Kiểm tra slot tồn tại
     public boolean slotExists(String slotId) throws SQLException {
         try {
-            int id = Integer.parseInt(slotId); // Kiểm tra slotId là số nguyên
+            int id = Integer.parseInt(slotId);
             String sql = "SELECT COUNT(*) FROM slot WHERE id = ? AND is_deleted = FALSE";
             try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, id);
@@ -245,53 +354,198 @@ public class DAOSlot {
         }
     }
 
-    public static void main(String[] args) {
-        DAOSlot daoSlot = new DAOSlot();
+    // Kiểm tra tính duy nhất của appointment_code
+    private boolean isAppointmentCodeUnique(Connection conn, String code) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM appointment WHERE appointment_code = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, code);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() && rs.getInt(1) == 0;
+        }
+    }
 
+    // Kiểm tra bác sĩ có slot không
+    public boolean hasSlotsForDoctor(int doctorId, LocalDate date) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM slot WHERE doctor_id = ? AND slot_date = ? AND is_deleted = FALSE";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, doctorId);
+            stmt.setDate(2, Date.valueOf(date));
+            ResultSet rs = stmt.executeQuery();
+            return rs.next() && rs.getInt(1) > 0;
+        }
+    }
+
+    // Lấy slot có sẵn (chưa có lịch hẹn của bệnh nhân)
+    public List<Slot> getAvailableSlots(int doctorId, String slotDate) {
+        List<Slot> availableSlots = new ArrayList<>();
+        LocalDate date;
         try {
-            // Test 1: Kiểm tra trạng thái booking của một slot
-            String slotIdToCheck = "24"; // Thay bằng ID slot có trong bảng slot
-            System.out.println("Test 1: Kiểm tra slot " + slotIdToCheck + " có được đặt không");
-            boolean isBooked = daoSlot.isSlotBooked(slotIdToCheck);
-            System.out.println("Slot " + slotIdToCheck + " booked: " + isBooked);
+            date = LocalDate.parse(slotDate);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Ngày không hợp lệ: " + slotDate, e);
+            return availableSlots;
+        }
 
-            // Test 2: Xóa một slot (soft delete)
-            String slotIdToDelete = "24"; // Thay bằng ID slot có trong bảng slot
-            System.out.println("\nTest 2: Xóa một slot với ID " + slotIdToDelete);
-            if (!daoSlot.slotExists(slotIdToDelete)) {
-                System.out.println("Slot " + slotIdToDelete + " không tồn tại");
-            } else if (daoSlot.isSlotBooked(slotIdToDelete)) {
-                System.out.println("Không thể xóa slot " + slotIdToDelete + " vì đã được đặt");
-            } else {
-                daoSlot.deleteSlot(slotIdToDelete);
-                System.out.println("Đã đánh dấu xóa slot " + slotIdToDelete + " (is_deleted = TRUE)");
+        String sql = "SELECT s.id, s.slot_date, s.start_time, s.end_time, s.max_patients "
+                + "FROM slot s "
+                + "WHERE s.doctor_id = ? AND s.slot_date = ? AND s.is_deleted = FALSE "
+                + "AND NOT EXISTS (SELECT 1 FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NOT NULL AND a.status != 'cancelled')";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, doctorId);
+            ps.setDate(2, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Slot slot = new Slot();
+                    slot.setId(rs.getInt("id"));
+                    slot.setSlotDate(rs.getDate("slot_date").toLocalDate());
+                    slot.setStartTime(rs.getTime("start_time").toLocalTime());
+                    slot.setEndTime(rs.getTime("end_time").toLocalTime());
+                    slot.setMaxPatients(rs.getInt("max_patients"));
+                    availableSlots.add(slot);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot có sẵn cho bác sĩ " + doctorId + " vào ngày " + slotDate + ": " + e.getMessage(), e);
+        }
+        return availableSlots;
+    }
+
+    // Test các chức năng
+  public static void main(String[] args) {
+        DAOSlot dao = new DAOSlot();
+        try {
+            // Test 0: Kiểm tra slot cho bác sĩ
+            System.out.println("=== Test 0: hasSlotsForDoctor ===");
+            int doctorId = 2; // Giả sử bác sĩ ID = 2 tồn tại
+            LocalDate date = LocalDate.of(2025, 7, 3);
+            try {
+                if (dao.hasSlotsForDoctor(doctorId, date)) {
+                    System.out.println("Bác sĩ " + doctorId + " đã có slot vào ngày " + date);
+                } else {
+                    System.out.println("Bác sĩ " + doctorId + " chưa có slot vào ngày " + date);
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, "Lỗi khi kiểm tra slot của bác sĩ: " + e.getMessage(), e);
             }
 
-//            // Test 3: Xóa nhiều slot (soft delete)
-//            String[] slotIdsToDelete = {"3", "4", "5"}; // Thay bằng danh sách ID slot có trong bảng slot
-//            System.out.println("\nTest 3: Xóa nhiều slot với ID " + String.join(", ", slotIdsToDelete));
-//            boolean canDeleteAll = true;
-//            for (String slotId : slotIdsToDelete) {
-//                if (!daoSlot.slotExists(slotId)) {
-//                    System.out.println("Slot " + slotId + " không tồn tại");
-//                    canDeleteAll = false;
-//                } else if (daoSlot.isSlotBooked(slotId)) {
-//                    System.out.println("Không thể xóa slot " + slotId + " vì đã được đặt");
-//                    canDeleteAll = false;
-//                }
-//            }
-//            if (canDeleteAll) {
-//                int deletedCount = daoSlot.deleteMultipleSlots(slotIdsToDelete);
-//                System.out.println("Đã đánh dấu xóa " + deletedCount + " slot (is_deleted = TRUE)");
-//            } else {
-//                System.out.println("Không thể xóa vì có slot không tồn tại hoặc đã được đặt");
-//            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi SQL: " + e.getMessage());
-            e.printStackTrace();
+            // Test 1: Chèn slot đơn và kiểm tra bookingStatus
+            System.out.println("\n=== Test 1: insertSlotWithValidation ===");
+            LocalTime start = LocalTime.of(10, 0);
+            int duration = 30;
+            int maxPatients = 4;
+            try {
+                boolean inserted = dao.insertSlotWithValidation(doctorId, date, start, duration, maxPatients);
+                System.out.println("Chèn slot đơn: " + (inserted ? "Thành công" : "Thất bại (có thể do trùng giờ)"));
+                printSlotAndAppointments(dao, doctorId, date);
+                // Kiểm tra bookingStatus
+                System.out.println("Kiểm tra bookingStatus sau khi chèn slot đơn:");
+                List<SlotViewDTO> slots = dao.searchSlotViewDTOs(doctorId, date, 0, 10);
+                for (SlotViewDTO slot : slots) {
+                    System.out.println("Slot ID: " + slot.getId() + ", Booking Status: " + slot.getBookingStatus());
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, "Lỗi khi chèn slot đơn: " + e.getMessage(), e);
+            }
+
+            // Test 2: Chèn dải slot và kiểm tra bookingStatus
+            System.out.println("\n=== Test 2: insertRangeSlots ===");
+            String startStr = "14:00";
+            String endStr = "16:00";
+            try {
+                int inserted = dao.insertRangeSlots(doctorId, date, startStr, endStr, duration, maxPatients);
+                System.out.println("Đã chèn " + inserted + " slot trong khoảng " + startStr + "-" + endStr);
+                printSlotAndAppointments(dao, doctorId, date);
+                // Kiểm tra bookingStatus
+                System.out.println("Kiểm tra bookingStatus sau khi chèn dải slot:");
+                List<SlotViewDTO> slots = dao.searchSlotViewDTOs(doctorId, date, 0, 10);
+                for (SlotViewDTO slot : slots) {
+                    System.out.println("Slot ID: " + slot.getId() + ", Booking Status: " + slot.getBookingStatus());
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, "Lỗi khi chèn dải slot: " + e.getMessage(), e);
+            }
+
+            // Test 3: Xóa slot đơn
+            System.out.println("\n=== Test 3: deleteSlot ===");
+            String slotId = "1001"; // Thay bằng slotId thực tế
+            try {
+                if (dao.slotExists(slotId)) {
+                    if (!dao.isSlotBooked(slotId)) {
+                        dao.deleteSlot(slotId);
+                        System.out.println("Xóa slot " + slotId + " thành công");
+                        printSlotAndAppointments(dao, doctorId, date);
+                    } else {
+                        System.out.println("Không thể xóa slot " + slotId + " vì đã có lịch hẹn của bệnh nhân");
+                    }
+                } else {
+                    System.out.println("Slot " + slotId + " không tồn tại");
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, "Lỗi khi xóa slot " + slotId + ": " + e.getMessage(), e);
+            }
+
+            // Test 4: Xóa nhiều slot
+            System.out.println("\n=== Test 4: deleteMultipleSlots ===");
+            String[] slotIds = {"1002", "1003"}; // Thay bằng slotId thực tế
+            try {
+                int deletedCount = dao.deleteMultipleSlots(slotIds);
+                System.out.println("Đã xóa " + deletedCount + " slot");
+                printSlotAndAppointments(dao, doctorId, date);
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, "Lỗi khi xóa nhiều slot: " + e.getMessage(), e);
+            }
+
+            // Test 5: Lấy slot có sẵn
+            System.out.println("\n=== Test 5: getAvailableSlots ===");
+            String slotDate = "2025-07-03";
+            List<Slot> availableSlots = dao.getAvailableSlots(doctorId, slotDate);
+            if (availableSlots.isEmpty()) {
+                System.out.println("Không có slot có sẵn vào ngày " + slotDate + " cho bác sĩ " + doctorId);
+            } else {
+                System.out.println("Danh sách slot có sẵn:");
+                for (Slot slot : availableSlots) {
+                    System.out.println("Slot ID: " + slot.getId() + ", Thời gian: " + slot.getStartTime() + " - " + slot.getEndTime() + ", Max Patients: " + slot.getMaxPatients());
+                }
+            }
         } catch (Exception e) {
-            System.err.println("Lỗi khác: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Lỗi trong main: " + e.getMessage(), e);
+        }
+    }
+
+    // Phương thức phụ trợ để in slot và appointment
+    private static void printSlotAndAppointments(DAOSlot dao, int doctorId, LocalDate date) {
+        try (Connection conn = DBContext.getConnection()) {
+            // In slot
+            String slotSql = "SELECT id, slot_date, start_time, end_time, max_patients, is_deleted FROM slot WHERE doctor_id = ? AND slot_date = ? AND is_deleted = FALSE";
+            try (PreparedStatement ps = conn.prepareStatement(slotSql)) {
+                ps.setInt(1, doctorId);
+                ps.setDate(2, Date.valueOf(date));
+                ResultSet rs = ps.executeQuery();
+                System.out.println("Slots trong bảng slot:");
+                while (rs.next()) {
+                    System.out.println("Slot ID: " + rs.getInt("id") + ", Date: " + rs.getDate("slot_date") + ", Time: " +
+                            rs.getTime("start_time") + " - " + rs.getTime("end_time") + ", Max Patients: " + rs.getInt("max_patients") +
+                            ", Is Deleted: " + rs.getBoolean("is_deleted"));
+                }
+            }
+
+            // In appointment
+            String apptSql = "SELECT id, slot_id, appointment_code, status, patient_id FROM appointment WHERE slot_id IN " +
+                    "(SELECT id FROM slot WHERE doctor_id = ? AND slot_date = ? AND is_deleted = FALSE) AND is_deleted = FALSE";
+            try (PreparedStatement ps = conn.prepareStatement(apptSql)) {
+                ps.setInt(1, doctorId);
+                ps.setDate(2, Date.valueOf(date));
+                ResultSet rs = ps.executeQuery();
+                System.out.println("Appointments trong bảng appointment:");
+                while (rs.next()) {
+                    System.out.println("Appointment ID: " + rs.getInt("id") + ", Slot ID: " + rs.getInt("slot_id") +
+                            ", Code: " + rs.getString("appointment_code") + ", Status: " + rs.getString("status") +
+                            ", Patient ID: " + (rs.getObject("patient_id") == null ? "NULL" : rs.getInt("patient_id")));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi in slot và appointment: " + e.getMessage(), e);
         }
     }
 }
