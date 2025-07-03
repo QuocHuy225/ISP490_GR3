@@ -186,7 +186,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/report">
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
                 </li>
