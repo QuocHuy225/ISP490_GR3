@@ -132,9 +132,7 @@ public class PatientController extends HttpServlet {
             if (fullName == null || fullName.trim().isEmpty() ||
                 genderStr == null || genderStr.trim().isEmpty() ||
                 dobStr == null || dobStr.trim().isEmpty() ||
-                phone == null || phone.trim().isEmpty() ||
-                cccd == null || cccd.trim().isEmpty() ||
-                address == null || address.trim().isEmpty()) {
+                phone == null || phone.trim().isEmpty()) {
                 response.sendRedirect(request.getContextPath() + "/doctor/patients?error=missing_fields");
                 return;
             }
@@ -168,7 +166,8 @@ public class PatientController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_phone");
                 return;
             }
-            if (!cccd.matches("\\d{12}")) {
+            // Validate CCCD chỉ khi có nhập giá trị
+            if (cccd != null && !cccd.trim().isEmpty() && !cccd.matches("\\d{12}")) {
                 response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_cccd");
                 return;
             }
@@ -179,8 +178,8 @@ public class PatientController extends HttpServlet {
             patient.setGender(gender);
             patient.setDob(dob);
             patient.setPhone(phone.trim());
-            patient.setCccd(cccd.trim());
-            patient.setAddress(address.trim());
+            patient.setCccd(cccd != null ? cccd.trim() : null);
+            patient.setAddress(address != null ? address.trim() : null);
 
             // Lưu vào DB
             boolean success = patientDAO.addPatient(patient);
@@ -213,9 +212,7 @@ public class PatientController extends HttpServlet {
                 fullName == null || fullName.trim().isEmpty() ||
                 genderStr == null || genderStr.trim().isEmpty() ||
                 dobStr == null || dobStr.trim().isEmpty() ||
-                phone == null || phone.trim().isEmpty() ||
-                cccd == null || cccd.trim().isEmpty() ||
-                address == null || address.trim().isEmpty()) {
+                phone == null || phone.trim().isEmpty()) {
                 response.sendRedirect(request.getContextPath() + "/doctor/patients?error=missing_fields");
                 return;
             }
@@ -257,7 +254,8 @@ public class PatientController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_phone");
                 return;
             }
-            if (!cccd.matches("\\d{12}")) {
+            // Validate CCCD chỉ khi có nhập giá trị
+            if (cccd != null && !cccd.trim().isEmpty() && !cccd.matches("\\d{12}")) {
                 response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_cccd");
                 return;
             }
@@ -269,8 +267,8 @@ public class PatientController extends HttpServlet {
             patient.setGender(gender);
             patient.setDob(dob);
             patient.setPhone(phone.trim());
-            patient.setCccd(cccd.trim());
-            patient.setAddress(address.trim());
+            patient.setCccd(cccd != null ? cccd.trim() : null);
+            patient.setAddress(address != null ? address.trim() : null);
 
             // Cập nhật trong DB
             boolean success = patientDAO.updatePatient(patient);
