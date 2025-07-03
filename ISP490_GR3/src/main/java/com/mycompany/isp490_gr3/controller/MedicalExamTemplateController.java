@@ -27,7 +27,7 @@ import jakarta.servlet.http.HttpSession;
  * - Thêm mẫu đơn mới
  * - Chỉnh sửa mẫu đơn
  * - Xóa mẫu đơn (soft delete)
- * - Chỉ Admin và Doctor có quyền truy cập
+ * - Chỉ Admin có quyền truy cập
  * =====================================================
  */
 @WebServlet(name = "MedicalExamTemplateController", urlPatterns = {"/admin/medical-exam-templates/*"})
@@ -45,8 +45,8 @@ public class MedicalExamTemplateController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // Kiểm tra quyền truy cập
-        if (!hasPermission(request, response)) {
+        // Check admin access
+        if (!checkAdminAccess(request, response)) {
             return;
         }
         
@@ -82,8 +82,8 @@ public class MedicalExamTemplateController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // Kiểm tra quyền truy cập
-        if (!hasPermission(request, response)) {
+        // Check admin access
+        if (!checkAdminAccess(request, response)) {
             return;
         }
         
@@ -108,34 +108,28 @@ public class MedicalExamTemplateController extends HttpServlet {
     }
     
     /**
-     * Kiểm tra quyền truy cập - chỉ Admin và Doctor được phép
+     * Check admin access - standardized across all controllers
      */
-    private boolean hasPermission(HttpServletRequest request, HttpServletResponse response)
+    private boolean checkAdminAccess(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        
+        // Check if user is logged in
+        if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
             return false;
         }
         
-        Object userRole = session.getAttribute("userRole");
-        User.Role currentRole = null;
-        
-        if (userRole != null) {
-            if (userRole instanceof User.Role) {
-                currentRole = (User.Role) userRole;
-            } else {
-                try {
-                    currentRole = User.Role.valueOf(userRole.toString().toUpperCase());
-                } catch (Exception e) {
-                    currentRole = User.Role.fromString(userRole.toString());
-                }
-            }
+        // Get current user
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
         }
         
-        // Chỉ cho phép Admin và Doctor truy cập
-        if (currentRole != User.Role.ADMIN && currentRole != User.Role.DOCTOR) {
+        // Check if user is admin
+        if (currentUser.getRole() != User.Role.ADMIN) {
             response.sendRedirect(request.getContextPath() + "/homepage");
             return false;
         }

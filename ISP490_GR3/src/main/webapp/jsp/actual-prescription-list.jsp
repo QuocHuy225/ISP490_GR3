@@ -2,6 +2,7 @@
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="com.mycompany.isp490_gr3.model.Patient" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalRecord" %>
+<%@ page import="com.mycompany.isp490_gr3.model.ActualPrescriptionForm" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <!DOCTYPE html>
@@ -10,7 +11,7 @@
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Hồ sơ bệnh án - Ánh Dương Clinic</title>
+        <title>Quản lý đơn thuốc - Ánh Dương Clinic</title>
         <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <!-- Bootstrap CSS -->
@@ -80,15 +81,6 @@
                 color: white;
             }
             
-            .action-btn-invoice {
-                background: linear-gradient(135deg, #28a745, #1e7e34);
-                color: white;
-            }
-            .action-btn-invoice:hover {
-                background: linear-gradient(135deg, #1e7e34, #155724);
-                color: white;
-            }
-            
             .action-btn-delete {
                 background: linear-gradient(135deg, #dc3545, #bd2130);
                 color: white;
@@ -98,15 +90,6 @@
                 background: linear-gradient(135deg, #bd2130, #a71e2a);
                 color: white;
                 border-color: #dc3545;
-            }
-            
-            .action-btn-prescription {
-                background: linear-gradient(135deg, #6f42c1, #563d7c);
-                color: white;
-            }
-            .action-btn-prescription:hover {
-                background: linear-gradient(135deg, #563d7c, #452c63);
-                color: white;
             }
             
             /* Responsive design */
@@ -190,9 +173,10 @@
             userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
         }
         
-        // Get patient and medical records data
+        // Get data from request
         Patient patient = (Patient) request.getAttribute("patient");
-        List<MedicalRecord> medicalRecords = (List<MedicalRecord>) request.getAttribute("medicalRecords");
+        MedicalRecord medicalRecord = (MedicalRecord) request.getAttribute("medicalRecord");
+        List<ActualPrescriptionForm> forms = (List<ActualPrescriptionForm>) request.getAttribute("forms");
         
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         SimpleDateFormat shortSdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -304,8 +288,15 @@
                                         <i class="bi bi-people me-1"></i>Quản lý bệnh nhân
                                     </a>
                                 </li>
+                                <% if (patient != null) { %>
+                                <li class="breadcrumb-item">
+                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>">
+                                        Hồ sơ bệnh án
+                                    </a>
+                                </li>
+                                <% } %>
                                 <li class="breadcrumb-item active" aria-current="page">
-                                    Hồ sơ bệnh án
+                                    Quản lý đơn thuốc
                                 </li>
                             </ol>
                         </nav>
@@ -314,7 +305,7 @@
                         <div class="card bg-light">
                             <div class="card-body">
                                 <h4 class="text-primary mb-3">
-                                    <i class="bi bi-file-medical me-2"></i>Hồ sơ bệnh án
+                                    <i class="bi bi-capsule me-2"></i>Quản lý đơn thuốc
                                 </h4>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -323,17 +314,14 @@
                                         <p class="mb-0"><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? shortSdf.format(patient.getDob()) : "" %></p>
                                     </div>
                                     <div class="col-md-6">
-                                        <p class="mb-2"><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
-                                        <p class="mb-2"><strong>CCCD:</strong> <%= patient.getCccd() %></p>
-                                        <p class="mb-0"><strong>Địa chỉ:</strong> <%= patient.getAddress() %></p>
+                                        <% if (medicalRecord != null) { %>
+                                        <p class="mb-2"><strong>Mã hồ sơ:</strong> <%= medicalRecord.getId() %></p>
+                                        <p class="mb-2"><strong>Ngày tạo hồ sơ:</strong> <%= medicalRecord.getCreatedAt() != null ? shortSdf.format(medicalRecord.getCreatedAt()) : "" %></p>
+                                        <% } %>
+                                        <p class="mb-0"><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <% } else { %>
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            Không tìm thấy thông tin bệnh nhân!
                         </div>
                         <% } %>
                     </div>
@@ -348,12 +336,11 @@
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="bi bi-check-circle me-2"></i>
                     <% if ("added".equals(success)) { %>
-                        Thêm hồ sơ bệnh án thành công!
+                        Thêm đơn thuốc thành công!
                     <% } else if ("updated".equals(success)) { %>
-                        Cập nhật hồ sơ bệnh án thành công!
-                    <% } else if ("status_completed".equals(success)) { %>
-                        <strong>Chuyển trạng thái thành công!</strong> Hồ sơ bệnh án đã được chuyển sang trạng thái "Hoàn thành". 
-                        Từ giờ chỉ có thể chỉnh sửa trường "Ghi chú".
+                        Cập nhật đơn thuốc thành công!
+                    <% } else if ("deleted".equals(success)) { %>
+                        Xóa đơn thuốc thành công!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -363,11 +350,11 @@
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     <% if ("add_failed".equals(error)) { %>
-                        Thêm hồ sơ bệnh án thất bại!
+                        Thêm đơn thuốc thất bại!
                     <% } else if ("update_failed".equals(error)) { %>
-                        Cập nhật hồ sơ bệnh án thất bại!
-                    <% } else if ("status_change_not_allowed".equals(error)) { %>
-                        <strong>Không thể thay đổi trạng thái!</strong> Hồ sơ đã hoàn thành không thể chuyển về trạng thái "Đang điều trị".
+                        Cập nhật đơn thuốc thất bại!
+                    <% } else if ("delete_failed".equals(error)) { %>
+                        Xóa đơn thuốc thất bại!
                     <% } else if ("system_error".equals(error)) { %>
                         Có lỗi hệ thống xảy ra!
                     <% } else { %>
@@ -377,14 +364,14 @@
                 </div>
                 <% } %>
 
-                <!-- Back Button & Add Record Button -->
-                <% if (patient != null) { %>
+                <!-- Back Button & Add Prescription Button -->
+                <% if (medicalRecord != null) { %>
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <a href="${pageContext.request.contextPath}/doctor/patients" 
+                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
                                class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-2"></i>Quay lại Quản lý bệnh nhân
+                                <i class="bi bi-arrow-left me-2"></i>Quay lại Hồ sơ bệnh án
                             </a>
                         </div>
                         
@@ -392,11 +379,11 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <h5 class="card-title mb-0">
-                                        <i class="bi bi-table me-2"></i>Danh sách hồ sơ bệnh án
+                                        <i class="bi bi-capsule-pill me-2"></i>Danh sách đơn thuốc
                                     </h5>
-                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=new&patientId=<%= patient.getId() %>" 
+                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=new&medicalRecordId=<%= medicalRecord.getId() %>" 
                                        class="btn btn-success">
-                                        <i class="bi bi-plus-circle me-2"></i>Tạo hồ sơ mới
+                                        <i class="bi bi-plus-circle me-2"></i>Tạo đơn thuốc mới
                                     </a>
                                 </div>
                             </div>
@@ -404,74 +391,58 @@
                     </div>
                 </div>
 
-                <!-- Medical Records Table -->
+                <!-- Prescriptions Table -->
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <% if (medicalRecords != null && !medicalRecords.isEmpty()) { %>
-                                        <table id="medicalRecordsTable" class="table table-striped table-hover">
+                                    <% if (forms != null && !forms.isEmpty()) { %>
+                                        <table id="prescriptionsTable" class="table table-striped table-hover">
                                             <thead class="table-primary">
                                                 <tr>
-                                                    <th>Mã hồ sơ</th>
-                                                    <th>Ngày tạo</th>
-                                                    <th>Chẩn đoán</th>
-                                                    <th>Trạng thái</th>
+                                                    <th>Mã đơn thuốc</th>
+                                                    <th>Ngày kê</th>
+                                                    <th>Tên đơn thuốc</th>
+                                                    <th>Ghi chú</th>
                                                     <th>Thao tác</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <% for (MedicalRecord record : medicalRecords) { %>
+                                                <% for (ActualPrescriptionForm form : forms) { %>
                                                     <tr>
-                                                        <td><%= record.getId() %></td>
-                                                        <td><%= record.getCreatedAt() != null ? sdf.format(record.getCreatedAt()) : "" %></td>
+                                                        <td><%= form.getActualPrescriptionFormId() %></td>
+                                                        <td><%= form.getPrescriptionDate() != null ? sdf.format(form.getPrescriptionDate()) : "" %></td>
+                                                        <td><%= form.getFormName() %></td>
                                                         <td>
-                                                            <% if (record.getFinalDiagnosis() != null && !record.getFinalDiagnosis().isEmpty()) { %>
-                                                                <%= record.getFinalDiagnosis().length() > 50 ? 
-                                                                    record.getFinalDiagnosis().substring(0, 50) + "..." : 
-                                                                    record.getFinalDiagnosis() %>
+                                                            <% if (form.getNotes() != null && !form.getNotes().isEmpty()) { %>
+                                                                <%= form.getNotes().length() > 50 ? 
+                                                                    form.getNotes().substring(0, 50) + "..." : 
+                                                                    form.getNotes() %>
                                                             <% } else { %>
-                                                                <em class="text-muted">Chưa có chẩn đoán</em>
-                                                            <% } %>
-                                                        </td>
-                                                        <td>
-                                                            <% if ("ongoing".equals(record.getStatus())) { %>
-                                                                <span class="badge bg-warning text-dark">
-                                                                    <i class="bi bi-clock me-1"></i>Đang điều trị
-                                                                </span>
-                                                            <% } else { %>
-                                                                <span class="badge bg-success">
-                                                                    <i class="bi bi-check-circle me-1"></i>Hoàn thành
-                                                                </span>
+                                                                <em class="text-muted">Không có ghi chú</em>
                                                             <% } %>
                                                         </td>
                                                         <td>
                                                             <div class="action-buttons-group">
-                                                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=view&recordId=<%= record.getId() %>" 
-                                                               class="action-btn action-btn-view" title="Xem & In">
-                                                                <i class="bi bi-eye"></i>
-                                                                <span class="btn-text">Xem</span>
-                                                            </a>
-                                                            
-                                                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=edit&recordId=<%= record.getId() %>" 
-                                                               class="action-btn action-btn-edit" 
-                                                               title="<%= "completed".equals(record.getStatus()) ? "Chỉnh sửa ghi chú (hồ sơ đã hoàn thành)" : "Chỉnh sửa" %>">
-                                                                <i class="bi bi-pencil-square"></i>
-                                                                <span class="btn-text"><%= "completed".equals(record.getStatus()) ? "Ghi chú" : "Sửa" %></span>
-                                                            </a>
-                                                            
-                                                            <a href="${pageContext.request.contextPath}/doctor/invoices?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
-                                                               class="action-btn action-btn-invoice" title="Quản lý hóa đơn">
-                                                                <i class="bi bi-receipt"></i>
-                                                                <span class="btn-text">Hóa đơn</span>
-                                                            </a>
-                                                            
-                                                            <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
-                                                               class="action-btn action-btn-prescription" title="Quản lý đơn thuốc">
-                                                                <i class="bi bi-capsule"></i>
-                                                                <span class="btn-text">Đơn thuốc</span>
-                                                            </a>
+                                                                <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=view&formId=<%= form.getActualPrescriptionFormId() %>" 
+                                                                   class="action-btn action-btn-view" title="Xem & In đơn thuốc">
+                                                                    <i class="bi bi-eye"></i>
+                                                                    <span class="btn-text">Xem</span>
+                                                                </a>
+                                                                
+                                                                <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
+                                                                   class="action-btn action-btn-edit" title="Chỉnh sửa đơn thuốc">
+                                                                    <i class="bi bi-pencil-square"></i>
+                                                                    <span class="btn-text">Sửa</span>
+                                                                </a>
+                                                                
+                                                                <button type="button" class="action-btn action-btn-delete" 
+                                                                        onclick="deletePrescription('<%= form.getActualPrescriptionFormId() %>', '<%= medicalRecord.getId() %>')" 
+                                                                        title="Xóa đơn thuốc">
+                                                                    <i class="bi bi-trash3"></i>
+                                                                    <span class="btn-text">Xóa</span>
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -480,9 +451,9 @@
                                         </table>
                                     <% } else { %>
                                         <div class="text-center py-5">
-                                            <i class="bi bi-inbox display-1 text-muted"></i>
-                                            <h4 class="text-muted mt-3">Chưa có hồ sơ bệnh án nào</h4>
-                                            <p class="text-muted">Bắt đầu bằng cách tạo hồ sơ bệnh án đầu tiên cho bệnh nhân này.</p>
+                                            <i class="bi bi-capsule display-1 text-muted"></i>
+                                            <h4 class="text-muted mt-3">Chưa có đơn thuốc nào</h4>
+                                            <p class="text-muted">Bắt đầu bằng cách tạo đơn thuốc đầu tiên cho hồ sơ bệnh án này.</p>
                                         </div>
                                     <% } %>
                                 </div>
@@ -491,6 +462,38 @@
                     </div>
                 </div>
                 <% } %>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger" id="deleteConfirmModalLabel">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc chắn muốn xóa đơn thuốc này không?</p>
+                        <p class="text-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Hành động này không thể hoàn tác!
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <form method="POST" action="${pageContext.request.contextPath}/doctor/actual-prescriptions" style="display: inline;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" id="deleteFormId" name="formId">
+                            <input type="hidden" id="deleteMedicalRecordId" name="medicalRecordId">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Xóa
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -532,8 +535,8 @@
                 window.addEventListener('resize', checkWidth);
 
                 // Initialize DataTable only if table exists
-                if ($('#medicalRecordsTable').length > 0) {
-                    $('#medicalRecordsTable').DataTable({
+                if ($('#prescriptionsTable').length > 0) {
+                    $('#prescriptionsTable').DataTable({
                         "searching": false,
                         "ordering": true,
                         "columnDefs": [
@@ -555,6 +558,13 @@
                     });
                 }
             });
+
+            // Delete prescription function
+            function deletePrescription(formId, medicalRecordId) {
+                document.getElementById('deleteFormId').value = formId;
+                document.getElementById('deleteMedicalRecordId').value = medicalRecordId;
+                new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+            }
         </script>
     </body>
-</html>
+</html> 

@@ -59,6 +59,7 @@
         <!-- Đây là URL bạn sẽ truy cập -->
     </servlet-mapping>
     
+    
     <servlet-mapping>
         <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot</url-pattern>
@@ -85,6 +86,8 @@
         <servlet-name>MakeAppointmentController</servlet-name>
         <url-pattern>/makeappointments</url-pattern> <!-- Đây là URL bạn sẽ truy cập -->
     </servlet-mapping>
+    
+    
     <servlet>
         <servlet-name>DoctorController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.DoctorController</servlet-class>
@@ -97,14 +100,34 @@
     </servlet-mapping>
     
     <servlet>
+        <servlet-name>AppointmentScheduleController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.AppointmentScheduleController</servlet-class>
+    </servlet>
+    <servlet-mapping>   
+        <servlet-name>AppointmentScheduleController</servlet-name>
+        <url-pattern>/api/patient/*</url-pattern>      
+    </servlet-mapping>
+    
+    <servlet>
+            <servlet-name>PatientAppointmentPageController</servlet-name>
+            <servlet-class>com.mycompany.isp490_gr3.controller.PatientAppointmentPageController</servlet-class>
+        </servlet>
+        <servlet-mapping>
+            <servlet-name>PatientAppointmentPageController</servlet-name>
+            <url-pattern>/patient/my-appointments</url-pattern>
+        </servlet-mapping>
+        
+        
+    <servlet>
         <servlet-name>ReceptionistScheduleController</servlet-name>
         <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistScheduleController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ReceptionistScheduleController</servlet-name>
         <url-pattern>/receptionist/manage-doctor-schedule</url-pattern>
-        
     </servlet-mapping>
+    
+    
     <error-page>
         <error-code>404</error-code>
         <location>/jsp/error/404.jsp</location>

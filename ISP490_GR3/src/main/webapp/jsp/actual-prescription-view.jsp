@@ -2,16 +2,17 @@
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="com.mycompany.isp490_gr3.model.Patient" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalRecord" %>
+<%@ page import="com.mycompany.isp490_gr3.model.ActualPrescriptionForm" %>
+<%@ page import="com.mycompany.isp490_gr3.model.ActualPrescriptionMedicine" %>
 <%@ page import="java.text.SimpleDateFormat" %>
-<%@ page import="java.text.DecimalFormat" %>
-<%@ page import="java.math.BigDecimal" %>
+<%@ page import="java.util.*" %>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chi tiết hồ sơ bệnh án - Ánh Dương Clinic</title>
+        <title>Xem đơn thuốc - Ánh Dương Clinic</title>
         <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <!-- Bootstrap CSS -->
@@ -20,8 +21,83 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
         <!-- Homepage specific CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
-        <!-- Medical Record specific CSS -->
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/medical-record.css">
+        <style>
+            .prescription-header {
+                text-align: center;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            
+            .prescription-section {
+                margin-bottom: 25px;
+                padding: 20px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                background-color: #fff;
+            }
+            
+            .prescription-details {
+                background-color: #f8f9fa;
+            }
+            
+            .print-section {
+                page-break-inside: avoid;
+            }
+            
+            .medicine-table {
+                border: 2px solid #007bff;
+            }
+            
+            .medicine-table th {
+                background-color: #007bff;
+                color: white;
+                font-weight: 600;
+                text-align: center;
+                border: 1px solid #0056b3;
+            }
+            
+            .medicine-table td {
+                border: 1px solid #dee2e6;
+                padding: 12px 8px;
+                vertical-align: top;
+            }
+            
+            .medicine-table .medicine-name {
+                font-weight: 600;
+                color: #007bff;
+            }
+            
+            .medicine-table .usage-instructions {
+                font-style: italic;
+                color: #6c757d;
+            }
+            
+            @media print {
+                .no-print {
+                    display: none !important;
+                }
+                
+                body {
+                    font-size: 12pt;
+                    line-height: 1.4;
+                }
+                
+                .prescription-section {
+                    break-inside: avoid;
+                    margin-bottom: 15px;
+                }
+                
+                .medicine-table {
+                    font-size: 11pt;
+                }
+                
+                .medicine-table th,
+                .medicine-table td {
+                    padding: 8px 6px;
+                }
+            }
+        </style>
     </head>
     <body>
         <%
@@ -56,12 +132,12 @@
         }
         
         // Get data from request
+        ActualPrescriptionForm form = (ActualPrescriptionForm) request.getAttribute("form");
         Patient patient = (Patient) request.getAttribute("patient");
-        MedicalRecord medicalRecord = (MedicalRecord) request.getAttribute("medicalRecord");
+        MedicalRecord record = (MedicalRecord) request.getAttribute("medicalRecord");
         
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        SimpleDateFormat shortSdf = new SimpleDateFormat("dd/MM/yyyy");
-        DecimalFormat decimalFormat = new DecimalFormat("#,##0.0");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat fullSdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         %>
 
         <!-- Sidebar -->
@@ -176,9 +252,14 @@
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
+                                <li class="breadcrumb-item">
+                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>">
+                                        Đơn thuốc
+                                    </a>
+                                </li>
                                 <% } %>
                                 <li class="breadcrumb-item active" aria-current="page">
-                                    Chi tiết hồ sơ bệnh án
+                                    Chi tiết đơn thuốc
                                 </li>
                             </ol>
                         </nav>
@@ -188,23 +269,23 @@
                 <!-- Back Button & Actions -->
                 <div class="row mb-4 no-print">
                     <div class="col-12">
-                        <% if (medicalRecord != null && patient != null) { %>
+                        <% if (form != null && patient != null) { %>
                         <div class="d-flex justify-content-start align-items-center mb-3">
-                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
+                            <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
                                class="btn btn-outline-secondary me-3">
-                                <i class="bi bi-arrow-left me-2"></i>Quay lại Hồ sơ bệnh án
+                                <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách đơn thuốc
                             </a>
-                            <h4 class="mb-0 text-primary">Chi tiết hồ sơ bệnh án</h4>
+                            <h4 class="mb-0 text-primary">Chi tiết đơn thuốc</h4>
                         </div>
                         <% } %>
                         
                         <div class="d-flex justify-content-end align-items-center">
                             <div class="btn-group">
                                 <button type="button" class="btn btn-info" onclick="window.print()">
-                                    <i class="bi bi-printer me-2"></i>In hồ sơ
+                                    <i class="bi bi-printer me-2"></i>In đơn thuốc
                                 </button>
-                                <% if (medicalRecord != null) { %>
-                                <a href="${pageContext.request.contextPath}/doctor/medical-records?action=edit&recordId=<%= medicalRecord.getId() %>" 
+                                <% if (form != null) { %>
+                                <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
                                    class="btn btn-primary">
                                     <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                                 </a>
@@ -214,176 +295,126 @@
                     </div>
                 </div>
 
-                <% if (medicalRecord != null && patient != null) { %>
-                <!-- Medical Record Header -->
-                <div class="medical-header">
+                <% if (form != null && patient != null && record != null) { %>
+                <!-- Prescription Header -->
+                <div class="prescription-header">
                     <h2 class="text-primary mb-3">
                         <span style="color: #007bff;">Ánh Dương</span>
                         <span style="color: #333;">Clinic</span>
                     </h2>
-                    <h4>HỒ SƠ BỆNH ÁN</h4>
+                    <h4>ĐƠN THUỐC</h4>
                     <p class="mb-1">Địa chỉ: 123 Đường ABC, Quận XYZ, TP.HCM</p>
                     <p class="mb-0">Điện thoại: (028) 1234-5678 | Email: info@anhduongclinic.com</p>
                 </div>
 
-                <!-- Patient & Record Info -->
-                <div class="medical-section medical-details">
+                <!-- Patient & Prescription Info -->
+                <div class="prescription-section prescription-details">
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="text-primary mb-3"><i class="bi bi-person-fill me-2"></i>Thông tin bệnh nhân</h6>
                             <p class="mb-2"><strong>Mã bệnh nhân:</strong> <%= patient.getPatientCode() %></p>
                             <p class="mb-2"><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
-                            <p class="mb-2"><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? shortSdf.format(patient.getDob()) : "" %></p>
+                            <p class="mb-2"><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? sdf.format(patient.getDob()) : "" %></p>
                             <p class="mb-2"><strong>Giới tính:</strong> <%= patient.getGender() == 1 ? "Nam" : "Nữ" %></p>
-                            <p class="mb-2"><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
-                            <p class="mb-0"><strong>Địa chỉ:</strong> <%= patient.getAddress() %></p>
+                            <p class="mb-0"><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="text-primary mb-3"><i class="bi bi-file-medical me-2"></i>Thông tin hồ sơ</h6>
-                            <p class="mb-2"><strong>Mã hồ sơ:</strong> <%= medicalRecord.getId() %></p>
-                            <p class="mb-2"><strong>Ngày tạo:</strong> <%= medicalRecord.getCreatedAt() != null ? sdf.format(medicalRecord.getCreatedAt()) : "" %></p>
-                            <p class="mb-2"><strong>Trạng thái:</strong>
-                                <% if ("ongoing".equals(medicalRecord.getStatus())) { %>
-                                    <span class="badge bg-warning text-dark">
-                                        <i class="bi bi-clock me-1"></i>Đang điều trị
-                                    </span>
-                                <% } else { %>
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-check-circle me-1"></i>Hoàn thành
-                                    </span>
-                                <% } %>
-                            </p>
-                            <% if (medicalRecord.getUpdatedAt() != null) { %>
-                            <p class="mb-0"><strong>Cập nhật cuối:</strong> <%= sdf.format(medicalRecord.getUpdatedAt()) %></p>
+                            <h6 class="text-primary mb-3"><i class="bi bi-capsule me-2"></i>Thông tin đơn thuốc</h6>
+                            <p class="mb-2"><strong>Mã đơn thuốc:</strong> <%= form.getActualPrescriptionFormId() %></p>
+                            <p class="mb-2"><strong>Tên đơn thuốc:</strong> <%= form.getFormName() %></p>
+                            <p class="mb-2"><strong>Ngày kê đơn:</strong> <%= form.getPrescriptionDate() != null ? fullSdf.format(form.getPrescriptionDate()) : "" %></p>
+                            <p class="mb-2"><strong>Mã hồ sơ:</strong> <%= record.getId() %></p>
+                            <% if (form.getNotes() != null && !form.getNotes().trim().isEmpty()) { %>
+                            <p class="mb-0"><strong>Ghi chú:</strong> <%= form.getNotes() %></p>
                             <% } %>
                         </div>
                     </div>
                 </div>
 
-                <!-- Vital Signs -->
-                <div class="medical-section vital-signs">
-                    <h6 class="text-success mb-3"><i class="bi bi-heart-pulse me-2"></i>Dấu hiệu sinh tồn</h6>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <p class="mb-2"><strong>Nhiệt độ:</strong> 
-                                <%= medicalRecord.getTemperature() != null ? decimalFormat.format(medicalRecord.getTemperature()) + "°C" : "N/A" %>
-                            </p>
-                            <p class="mb-0"><strong>Mạch:</strong> 
-                                <%= medicalRecord.getPulse() != null ? medicalRecord.getPulse() + " lần/phút" : "N/A" %>
-                            </p>
+                <!-- Medicines Table -->
+                <div class="prescription-section">
+                    <h6 class="text-primary mb-3"><i class="bi bi-capsule-pill me-2"></i>Danh sách thuốc</h6>
+                    <% if (form.getMedicines() != null && !form.getMedicines().isEmpty()) { %>
+                        <div class="table-responsive">
+                            <table class="table medicine-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 5%;">STT</th>
+                                        <th style="width: 25%;">Tên thuốc</th>
+                                        <th style="width: 10%;">ĐVT</th>
+                                        <th style="width: 10%;">Đường dùng</th>
+                                        <th style="width: 8%;">Số ngày</th>
+                                        <th style="width: 8%;">Lần/ngày</th>
+                                        <th style="width: 8%;">Tổng SL</th>
+                                        <th style="width: 26%;">Hướng dẫn sử dụng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% int index = 1; for (ActualPrescriptionMedicine medicine : form.getMedicines()) { %>
+                                        <tr>
+                                            <td class="text-center"><%= index++ %></td>
+                                            <td class="medicine-name"><%= medicine.getMedicineName() %></td>
+                                            <td class="text-center"><%= medicine.getUnitOfMeasure() != null ? medicine.getUnitOfMeasure() : "" %></td>
+                                            <td class="text-center"><%= medicine.getAdministrationRoute() != null ? medicine.getAdministrationRoute() : "" %></td>
+                                            <td class="text-center"><%= medicine.getDaysOfTreatment() != null ? medicine.getDaysOfTreatment() : "" %></td>
+                                            <td class="text-center"><%= medicine.getUnitsPerDay() != null ? medicine.getUnitsPerDay() : "" %></td>
+                                            <td class="text-center"><%= medicine.getTotalQuantity() != null ? medicine.getTotalQuantity() : "" %></td>
+                                            <td class="usage-instructions">
+                                                <%= medicine.getUsageInstructions() != null ? medicine.getUsageInstructions() : "" %>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="col-md-3">
-                            <p class="mb-2"><strong>Huyết áp:</strong> 
-                                <%= medicalRecord.getBloodPressure() != null ? medicalRecord.getBloodPressure() + " mmHg" : "N/A" %>
-                            </p>
-                            <p class="mb-0"><strong>Nhịp thở:</strong> 
-                                <%= medicalRecord.getRespirationRate() != null ? medicalRecord.getRespirationRate() + " lần/phút" : "N/A" %>
-                            </p>
+                    <% } else { %>
+                        <div class="text-center py-4">
+                            <i class="bi bi-capsule display-4 text-muted"></i>
+                            <p class="text-muted mt-2">Không có thuốc nào trong đơn này.</p>
                         </div>
-                        <div class="col-md-3">
-                            <p class="mb-2"><strong>Chiều cao:</strong> 
-                                <%= medicalRecord.getHeight() != null ? decimalFormat.format(medicalRecord.getHeight()) + " cm" : "N/A" %>
-                            </p>
-                            <p class="mb-0"><strong>Cân nặng:</strong> 
-                                <%= medicalRecord.getWeight() != null ? decimalFormat.format(medicalRecord.getWeight()) + " kg" : "N/A" %>
-                            </p>
-                        </div>
-                        <div class="col-md-3">
-                            <p class="mb-2"><strong>BMI:</strong> 
-                                <%= medicalRecord.getBmi() != null ? decimalFormat.format(medicalRecord.getBmi()) : "N/A" %>
-                            </p>
-                            <p class="mb-0"><strong>SpO2:</strong> 
-                                <%= medicalRecord.getSpo2() != null ? decimalFormat.format(medicalRecord.getSpo2()) + "%" : "N/A" %>
-                            </p>
-                        </div>
+                    <% } %>
+                </div>
+
+                <!-- Additional Notes -->
+                <% if (form.getNotes() != null && !form.getNotes().trim().isEmpty()) { %>
+                <div class="prescription-section">
+                    <h6 class="text-primary mb-3"><i class="bi bi-chat-text me-2"></i>Lưu ý đặc biệt</h6>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <%= form.getNotes() %>
                     </div>
-                </div>
-
-                <!-- Medical History -->
-                <% if (medicalRecord.getMedicalHistory() != null && !medicalRecord.getMedicalHistory().trim().isEmpty()) { %>
-                <div class="medical-section medical-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-clock-history me-2"></i>Tiền sử bệnh</h6>
-                    <p class="mb-0"><%= medicalRecord.getMedicalHistory() %></p>
-                </div>
-                <% } %>
-
-                <!-- Current Disease -->
-                <% if (medicalRecord.getCurrentDisease() != null && !medicalRecord.getCurrentDisease().trim().isEmpty()) { %>
-                <div class="medical-section medical-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-bandaid me-2"></i>Bệnh hiện tại</h6>
-                    <p class="mb-0"><%= medicalRecord.getCurrentDisease() %></p>
-                </div>
-                <% } %>
-
-                <!-- Physical Examination -->
-                <% if (medicalRecord.getPhysicalExam() != null && !medicalRecord.getPhysicalExam().trim().isEmpty()) { %>
-                <div class="medical-section medical-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-search me-2"></i>Khám thể lực</h6>
-                    <p class="mb-0"><%= medicalRecord.getPhysicalExam() %></p>
-                </div>
-                <% } %>
-
-                <!-- Clinical Information -->
-                <% if (medicalRecord.getClinicalInfo() != null && !medicalRecord.getClinicalInfo().trim().isEmpty()) { %>
-                <div class="medical-section medical-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-clipboard-data me-2"></i>Thông tin lâm sàng</h6>
-                    <p class="mb-0"><%= medicalRecord.getClinicalInfo() %></p>
-                </div>
-                <% } %>
-
-                <!-- Final Diagnosis -->
-                <% if (medicalRecord.getFinalDiagnosis() != null && !medicalRecord.getFinalDiagnosis().trim().isEmpty()) { %>
-                <div class="medical-section medical-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-clipboard-check me-2"></i>Chẩn đoán cuối cùng</h6>
-                    <p class="mb-0"><%= medicalRecord.getFinalDiagnosis() %></p>
-                </div>
-                <% } %>
-
-                <!-- Treatment Plan -->
-                <% if (medicalRecord.getTreatmentPlan() != null && !medicalRecord.getTreatmentPlan().trim().isEmpty()) { %>
-                <div class="medical-section medical-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-prescription2 me-2"></i>Kế hoạch điều trị</h6>
-                    <p class="mb-0"><%= medicalRecord.getTreatmentPlan() %></p>
-                </div>
-                <% } %>
-
-                <!-- Note -->
-                <% if (medicalRecord.getNote() != null && !medicalRecord.getNote().trim().isEmpty()) { %>
-                <div class="medical-section medical-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-sticky me-2"></i>Ghi chú</h6>
-                    <p class="mb-0"><%= medicalRecord.getNote() %></p>
                 </div>
                 <% } %>
 
                 <!-- Signature Section -->
-                <div class="medical-section print-section">
+                <div class="prescription-section print-section">
                     <div class="row text-center">
                         <div class="col-md-4">
                             <p class="mb-5"><strong>Bệnh nhân</strong></p>
-                            <p>________________________</p>
+                            <p class="mb-1">________________________</p>
                             <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
                         </div>
                         <div class="col-md-4">
                             <p class="mb-5"><strong>Người nhà bệnh nhân</strong></p>
-                            <p>________________________</p>
+                            <p class="mb-1">________________________</p>
                             <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
                         </div>
                         <div class="col-md-4">
                             <p class="mb-5"><strong>Bác sĩ điều trị</strong></p>
-                            <p>________________________</p>
+                            <p class="mb-1">________________________</p>
                             <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
                         </div>
                     </div>
                     <div class="text-center mt-4">
                         <p class="mb-1"><em>Ngày <%= new java.text.SimpleDateFormat("dd").format(new java.util.Date()) %> tháng <%= new java.text.SimpleDateFormat("MM").format(new java.util.Date()) %> năm <%= new java.text.SimpleDateFormat("yyyy").format(new java.util.Date()) %></em></p>
-                        <p class="mb-0"><strong>Hồ sơ này được lập theo quy định của Bộ Y tế</strong></p>
+                        <p class="mb-0"><strong>Đơn thuốc này được kê theo quy định của Bộ Y tế</strong></p>
                     </div>
                 </div>
 
                 <% } else { %>
                 <div class="alert alert-danger">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    Không tìm thấy thông tin hồ sơ bệnh án!
+                    Không tìm thấy thông tin đơn thuốc!
                 </div>
                 <% } %>
             </div>

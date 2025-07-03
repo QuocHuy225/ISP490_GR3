@@ -4,12 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mycompany.isp490_gr3.model.Doctor;
 import com.mycompany.isp490_gr3.model.DoctorSchedule;
+import com.mycompany.isp490_gr3.model.User;
 import com.mycompany.isp490_gr3.service.DoctorScheduleService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -26,7 +28,9 @@ public class DoctorScheduleController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
-
+        if (!checkReceptionistAccess(request, response)) {
+            return;
+        }
         String pathInfo = request.getPathInfo(); // e.g., /123 for /api/doctor-schedules/123
         String servletPath = request.getServletPath(); // e.g., /api/doctor-schedules or /api/doctors
 
@@ -82,7 +86,9 @@ public class DoctorScheduleController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
-
+        if (!checkReceptionistAccess(request, response)) {
+            return;
+        }
         // Ensure this is for /api/doctor-schedules
         if (!"/api/doctor-schedules".equals(request.getServletPath())) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -102,10 +108,10 @@ public class DoctorScheduleController extends HttpServlet {
             }
 
             boolean success = scheduleService.createSchedule(
-                requestData.getDoctorId(),
-                requestData.getWorkDate(),
-                requestData.isActive(),
-                requestData.getEventName()
+                    requestData.getDoctorId(),
+                    requestData.getWorkDate(),
+                    requestData.isActive(),
+                    requestData.getEventName()
             );
 
             if (success) {
@@ -148,11 +154,11 @@ public class DoctorScheduleController extends HttpServlet {
             }
 
             boolean success = scheduleService.updateSchedule(
-                scheduleId,
-                requestData.getDoctorId(),
-                requestData.getWorkDate(),
-                requestData.isActive(),
-                requestData.getEventName()
+                    scheduleId,
+                    requestData.getDoctorId(),
+                    requestData.getWorkDate(),
+                    requestData.isActive(),
+                    requestData.getEventName()
             );
 
             if (success) {
@@ -207,16 +213,55 @@ public class DoctorScheduleController extends HttpServlet {
         }
     }
 
+    private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        HttpSession session = request.getSession(false);
+
+        // Check if user is logged in
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+
+        // Get current user
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+
+        // Allow both Admin and Doctor to access
+        if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.RECEPTIONIST) {
+            response.sendRedirect(request.getContextPath() + "/homepage");
+            return false;
+        }
+
+        return true;
+    }
+
     // Inner class to map incoming JSON request body for POST/PUT
     private static class DoctorScheduleRequest {
+
         private int doctorId;
         private String workDate; // Expecting "YYYY-MM-DD"
         private boolean isActive;
         private String eventName;
 
-        public int getDoctorId() { return doctorId; }
-        public String getWorkDate() { return workDate; }
-        public boolean isActive() { return isActive; }
-        public String getEventName() { return eventName; }
+        public int getDoctorId() {
+            return doctorId;
+        }
+
+        public String getWorkDate() {
+            return workDate;
+        }
+
+        public boolean isActive() {
+            return isActive;
+        }
+
+        public String getEventName() {
+            return eventName;
+        }
     }
 }

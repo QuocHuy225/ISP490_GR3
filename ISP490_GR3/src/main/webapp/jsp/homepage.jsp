@@ -96,7 +96,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/report">
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
                 </li>
@@ -113,13 +113,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/patients">
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
+                    <a href="${pageContext.request.contextPath}/doctor/report">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
                 </li>
                 <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
@@ -145,15 +145,20 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/#">
-                        <i class="bi bi-person-lines-fill"></i> Quản lý bệnh nhân
+                    <a href="${pageContext.request.contextPath}/patients">
+                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
-                </li> 
+                </li>
                <li>
                     <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
                         <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
                     </a>
                 </li> 
+                 <li>
+                    <a href="${pageContext.request.contextPath}/receptionist/report">
+                        <i class="bi bi-speedometer2"></i> Báo cáo thống kê
+                    </a>
+                </li>
 
                 <% } else { %>
                 <!-- Menu cho Bệnh nhân (PATIENT) -->
@@ -163,12 +168,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/makeappointments">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/patient/my-appointments">
                         <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
                     </a>
                 </li>

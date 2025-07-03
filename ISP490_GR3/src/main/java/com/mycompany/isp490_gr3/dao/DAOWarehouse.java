@@ -461,5 +461,149 @@ public class DAOWarehouse {
         
         return units;
     }
+    
+    // =====================================================
+    // PHẦN QUẢN LÝ KHO - CẬP NHẬT SỐ LƯỢNG
+    // =====================================================
+    
+    /**
+     * Cập nhật số lượng tồn kho của supply
+     * @param supplyId ID của supply
+     * @param quantityChange Số lượng thay đổi (âm = trừ, dương = cộng)
+     * @return true nếu thành công
+     */
+    public boolean updateSupplyStock(int supplyId, int quantityChange) {
+        if (quantityChange == 0) return true;
+        
+        String sql = "UPDATE medical_supply SET stock_quantity = stock_quantity + ?, updated_at = CURRENT_TIMESTAMP " +
+                    "WHERE supply_id = ? AND stock_quantity + ? >= 0 AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, quantityChange);
+            stmt.setInt(2, supplyId);
+            stmt.setInt(3, quantityChange);
+            
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected == 0) {
+                System.err.println("Cannot update supply stock: Insufficient stock or supply not found (ID: " + supplyId + ", Change: " + quantityChange + ")");
+                return false;
+            }
+            return true;
+            
+        } catch (SQLException e) {
+            System.err.println("Error updating supply stock: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Cập nhật số lượng tồn kho của medicine
+     * @param medicineId ID của medicine
+     * @param quantityChange Số lượng thay đổi (âm = trừ, dương = cộng)
+     * @return true nếu thành công
+     */
+    public boolean updateMedicineStock(int medicineId, int quantityChange) {
+        if (quantityChange == 0) return true;
+        
+        String sql = "UPDATE examination_medicines SET stock_quantity = stock_quantity + ?, updated_at = CURRENT_TIMESTAMP " +
+                    "WHERE exam_medicine_id = ? AND stock_quantity + ? >= 0 AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, quantityChange);
+            stmt.setInt(2, medicineId);
+            stmt.setInt(3, quantityChange);
+            
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected == 0) {
+                System.err.println("Cannot update medicine stock: Insufficient stock or medicine not found (ID: " + medicineId + ", Change: " + quantityChange + ")");
+                return false;
+            }
+            return true;
+            
+        } catch (SQLException e) {
+            System.err.println("Error updating medicine stock: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Kiểm tra số lượng tồn kho của supply
+     * @param supplyId ID của supply
+     * @return số lượng tồn kho, -1 nếu lỗi
+     */
+    public int getSupplyStockQuantity(int supplyId) {
+        String sql = "SELECT stock_quantity FROM medical_supply WHERE supply_id = ? AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, supplyId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("stock_quantity");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting supply stock quantity: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return -1;
+    }
+    
+    /**
+     * Kiểm tra số lượng tồn kho của medicine
+     * @param medicineId ID của medicine
+     * @return số lượng tồn kho, -1 nếu lỗi
+     */
+    public int getMedicineStockQuantity(int medicineId) {
+        String sql = "SELECT stock_quantity FROM examination_medicines WHERE exam_medicine_id = ? AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, medicineId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("stock_quantity");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting medicine stock quantity: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return -1;
+    }
+    
+    /**
+     * Kiểm tra xem có đủ hàng tồn kho để bán không
+     * @param supplyId ID của supply
+     * @param requiredQuantity Số lượng cần
+     * @return true nếu đủ hàng
+     */
+    public boolean hasEnoughSupplyStock(int supplyId, int requiredQuantity) {
+        int currentStock = getSupplyStockQuantity(supplyId);
+        return currentStock >= requiredQuantity;
+    }
+    
+    /**
+     * Kiểm tra xem có đủ medicine tồn kho để bán không
+     * @param medicineId ID của medicine
+     * @param requiredQuantity Số lượng cần
+     * @return true nếu đủ hàng
+     */
+    public boolean hasEnoughMedicineStock(int medicineId, int requiredQuantity) {
+        int currentStock = getMedicineStockQuantity(medicineId);
+        return currentStock >= requiredQuantity;
+    }
 
 } 

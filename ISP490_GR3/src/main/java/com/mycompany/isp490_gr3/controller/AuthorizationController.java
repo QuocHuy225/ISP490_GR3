@@ -55,18 +55,8 @@ public class AuthorizationController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        HttpSession session = request.getSession();
-        
-        // Check if user is logged in
-        User currentUser = (User) session.getAttribute("user");
-        if (currentUser == null) {
-            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
-            return;
-        }
-        
-        // Check if user is admin
-        if (currentUser.getRole() != User.Role.ADMIN) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này.");
+        // Check admin access
+        if (!checkAdminAccess(request, response)) {
             return;
         }
         
@@ -87,20 +77,14 @@ public class AuthorizationController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // Check admin access
+        if (!checkAdminAccess(request, response)) {
+            return;
+        }
+        
+        // Get current user for operations
         HttpSession session = request.getSession();
-        
-        // Check if user is logged in
         User currentUser = (User) session.getAttribute("user");
-        if (currentUser == null) {
-            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
-            return;
-        }
-        
-        // Check if user is admin
-        if (currentUser.getRole() != User.Role.ADMIN) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
-            return;
-        }
         
         String pathInfo = request.getServletPath();
         
@@ -323,5 +307,35 @@ public class AuthorizationController extends HttpServlet {
         }
         
         showAuthorizationPage(request, response, true);
+    }
+    
+    /**
+     * Check admin access - standardized across all controllers
+     */
+    private boolean checkAdminAccess(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        
+        HttpSession session = request.getSession(false);
+        
+        // Check if user is logged in
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+        
+        // Get current user
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+        
+        // Check if user is admin
+        if (currentUser.getRole() != User.Role.ADMIN) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này.");
+            return false;
+        }
+        
+        return true;
     }
 } 
