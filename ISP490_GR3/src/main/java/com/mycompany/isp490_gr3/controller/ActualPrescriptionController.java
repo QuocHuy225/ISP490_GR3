@@ -47,7 +47,6 @@ public class ActualPrescriptionController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         
-        // Check doctor access (Admin and Doctor allowed)
         if (!checkDoctorAccess(request, response)) {
             return;
         }
@@ -84,7 +83,6 @@ public class ActualPrescriptionController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         
-        // Check doctor access (Admin and Doctor allowed)
         if (!checkDoctorAccess(request, response)) {
             return;
         }
@@ -333,8 +331,8 @@ public class ActualPrescriptionController extends HttpServlet {
             return false;
         }
         
-        // Allow both Admin and Doctor to access
-        if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.DOCTOR) {
+        // Allow Doctor to access
+        if (currentUser.getRole() != User.Role.DOCTOR) {
             response.sendRedirect(request.getContextPath() + "/homepage");
             return false;
         }
