@@ -518,17 +518,6 @@
                                                     </td>
                                                 </tr>
                                                 <% } %>
-                                            <% } else { %>
-                                                <tr>
-                                                    <td colspan="8" class="text-center">
-                                                        <i class="bi bi-inbox me-2"></i>
-                                                        <% if (!searchCode.isEmpty() || !searchName.isEmpty() || !searchPhone.isEmpty() || !searchCccd.isEmpty()) { %>
-                                                            Không tìm thấy bệnh nhân nào
-                                                        <% } else { %>
-                                                            Chưa có bệnh nhân nào trong hệ thống
-                                                        <% } %>
-                                                    </td>
-                                                </tr>
                                             <% } %>
                                         </tbody>
                                     </table>
