@@ -215,7 +215,6 @@ public class DAOPatient {
         p.setDeleted(rs.getBoolean("is_deleted"));
         return p;
     }
-} 
 
     public static void main(String[] args) {
         DAOPatient daoPatient = new DAOPatient();
