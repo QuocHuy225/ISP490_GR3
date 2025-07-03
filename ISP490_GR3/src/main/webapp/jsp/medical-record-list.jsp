@@ -300,7 +300,7 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/patients">
+                                    <a href="${pageContext.request.contextPath}/doctor/patients">
                                         <i class="bi bi-people me-1"></i>Quản lý bệnh nhân
                                     </a>
                                 </li>
@@ -382,7 +382,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <a href="${pageContext.request.contextPath}/patients" 
+                            <a href="${pageContext.request.contextPath}/doctor/patients" 
                                class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left me-2"></i>Quay lại Quản lý bệnh nhân
                             </a>
