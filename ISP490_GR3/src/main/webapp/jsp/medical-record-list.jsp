@@ -57,7 +57,7 @@
             }
 
             .btn-text {
-                font-size: 12px;
+                font-size: 14px;
                 white-space: nowrap;
             }
 
