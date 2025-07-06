@@ -233,11 +233,6 @@
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
-                                <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord.getId() %>">
-                                        Đơn thuốc
-                                    </a>
-                                </li>
                                 <% } %>
                                 <li class="breadcrumb-item active" aria-current="page">
                                     <%= "add".equals(action) ? "Tạo đơn thuốc" : "Cập nhật đơn thuốc" %>
@@ -292,7 +287,10 @@
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <form method="post" action="${pageContext.request.contextPath}/doctor/actual-prescriptions" id="prescriptionForm">
+
+                                <!-- Form Content -->
+                                <form id="prescriptionForm" method="POST" action="${pageContext.request.contextPath}/doctor/actual-prescriptions" 
+                                      class="needs-validation" novalidate>
                                     <input type="hidden" name="action" value="<%= "add".equals(action) ? "add" : "update" %>">
                                     <% if (form != null) { %>
                                         <input type="hidden" name="formId" value="<%= form.getActualPrescriptionFormId() %>">
@@ -420,15 +418,23 @@
                                         </div>
                                     </div>
 
-                                    <!-- Form Actions -->
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord != null ? medicalRecord.getId() : "" %>" 
-                                           class="btn btn-outline-secondary">
-                                            <i class="bi bi-x-circle me-2"></i>Hủy
-                                        </a>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-save me-2"></i><%= "add".equals(action) ? "Tạo đơn thuốc" : "Cập nhật đơn thuốc" %>
+                                    <!-- Form Buttons -->
+                                    <div class="form-buttons mt-4">
+                                        <button type="submit" class="btn btn-primary me-2">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            <%= "add".equals(action) ? "Tạo đơn thuốc" : "Cập nhật" %>
                                         </button>
+                                        <% if ("add".equals(action)) { %>
+                                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= medicalRecord.getPatientId() %>" 
+                                               class="btn btn-secondary">
+                                                <i class="bi bi-x-circle me-2"></i>Hủy
+                                            </a>
+                                        <% } else { %>
+                                            <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=view&formId=<%= form.getActualPrescriptionFormId() %>" 
+                                               class="btn btn-secondary">
+                                                <i class="bi bi-x-circle me-2"></i>Hủy
+                                            </a>
+                                        <% } %>
                                     </div>
                                 </form>
                             </div>
