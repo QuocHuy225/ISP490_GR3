@@ -224,9 +224,15 @@
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-danger rounded-md me-auto" id="deleteScheduleBtn" style="display:none;">Xóa Lịch</button>
-                            <button type="button" class="btn btn-secondary rounded-md" data-bs-dismiss="modal">Đóng</button>
-                            <button type="button" class="btn btn-primary rounded-md" id="saveScheduleBtn">Lưu Lịch</button>
+                            <button type="button" class="btn btn-danger rounded-md me-auto" id="deleteScheduleBtn" style="display:none;">
+                                <i class="bi bi-trash me-2"></i>Xóa Lịch
+                            </button>
+                            <button type="button" class="btn btn-secondary rounded-md" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
+                            <button type="button" class="btn btn-primary rounded-md" id="saveScheduleBtn">
+                                <i class="bi bi-check-circle me-2"></i>Lưu Lịch
+                            </button>
                         </div>
                     </div>
                 </div>

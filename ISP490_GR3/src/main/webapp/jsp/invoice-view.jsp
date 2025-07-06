@@ -188,11 +188,6 @@
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
-                                <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/doctor/invoices?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord.getId() %>">
-                                        Quản lý hóa đơn
-                                    </a>
-                                </li>
                                 <% } %>
                                 <li class="breadcrumb-item active" aria-current="page">
                                     Chi tiết hóa đơn
@@ -202,32 +197,21 @@
                     </div>
                 </div>
 
-                <!-- Back Button & Actions -->
-                <div class="row mb-4 no-print">
-                    <div class="col-12">
-                        <% if (invoice != null) { %>
-                        <div class="d-flex justify-content-start align-items-center mb-3">
-                            <a href="${pageContext.request.contextPath}/doctor/invoices?action=listByMedicalRecord&medicalRecordId=<%= invoice.getMedicalRecordId() %>" 
-                               class="btn btn-outline-secondary me-3">
-                                <i class="bi bi-arrow-left me-2"></i>Quay lại Danh sách hóa đơn
-                            </a>
-                            <h4 class="mb-0 text-primary">Chi tiết hóa đơn</h4>
-                        </div>
-                        <% } %>
-                        
-                        <div class="d-flex justify-content-end align-items-center">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-info" onclick="window.print()">
-                                    <i class="bi bi-printer me-2"></i>In hóa đơn
-                                </button>
-                                <% if (invoice != null) { %>
-                                <a href="${pageContext.request.contextPath}/doctor/invoices?action=edit&invoiceId=<%= invoice.getInvoiceId() %>" 
-                                   class="btn btn-primary">
-                                    <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
-                                </a>
-                                <% } %>
-                            </div>
-                        </div>
+                <!-- Back Button -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Quay lại
+                    </a>
+                    
+                    <div class="action-buttons">
+                        <a href="${pageContext.request.contextPath}/doctor/invoices?action=edit&invoiceId=<%= invoice.getInvoiceId() %>" 
+                           class="btn btn-primary me-2">
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
+                        </a>
+                        <button type="button" class="btn btn-success" onclick="printInvoice()">
+                            <i class="bi bi-printer me-2"></i>In hóa đơn
+                        </button>
                     </div>
                 </div>
 

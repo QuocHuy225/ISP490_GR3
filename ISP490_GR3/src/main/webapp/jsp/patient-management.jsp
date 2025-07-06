@@ -68,27 +68,29 @@
             /* Custom Action Buttons Styling */
             .action-buttons-group {
                 display: flex;
-                gap: 8px;
-                justify-content: center;
+                gap: 6px;
+                justify-content: flex-start;
                 align-items: center;
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                padding-left: 0;
             }
             
             .action-btn {
                 display: inline-flex;
                 align-items: center;
-                gap: 6px;
-                padding: 8px 12px;
+                gap: 4px;
+                padding: 6px 10px;
                 border: none;
-                border-radius: 8px;
+                border-radius: 6px;
                 text-decoration: none;
-                font-size: 13px;
+                font-size: 12px;
                 font-weight: 500;
                 cursor: pointer;
                 transition: all 0.3s ease;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                min-width: 70px;
+                min-width: 65px;
                 justify-content: center;
+                height: 32px;
             }
             
             .action-btn:hover {
@@ -159,6 +161,18 @@
             /* Enhanced table styling */
             .table tbody tr:hover .action-btn {
                 transform: scale(1.05);
+            }
+            
+            /* Table column alignment */
+            #patientsTable th:last-child,
+            #patientsTable td:last-child {
+                text-align: left;
+                vertical-align: middle;
+                padding-left: 12px;
+            }
+            
+            #patientsTable th {
+                vertical-align: middle;
             }
             
             /* Loading effect */
@@ -531,7 +545,7 @@
 
         <!-- Add Patient Modal -->
         <div class="modal fade" id="addPatientModal" tabindex="-1" aria-labelledby="addPatientModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="addPatientModalLabel">
@@ -543,55 +557,45 @@
                         <div class="modal-body">
                             <input type="hidden" name="action" value="add">
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addFullName" class="form-label">Họ tên <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="addFullName" name="fullName" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addGender" class="form-label">Giới tính <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="addGender" name="gender" required>
-                                            <option value="">Chọn giới tính</option>
-                                            <option value="0">Nam</option>
-                                            <option value="1">Nữ</option>
-                                            <option value="2">Khác</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="addFullName" class="form-label">Họ tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addFullName" name="fullName" placeholder="Nhập họ tên đầy đủ" required>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addDob" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="addDob" name="dob" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addPhone" class="form-label">Điện thoại <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="addPhone" name="phone" pattern="[0-9]{10,11}" required>
-                                        <div class="form-text">10-11 chữ số</div>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="addGender" class="form-label">Giới tính <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addGender" name="gender" required>
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="0">Nam</option>
+                                    <option value="1">Nữ</option>
+                                    <option value="2">Khác</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="addDob" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="addDob" name="dob" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="addPhone" class="form-label">Điện thoại <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addPhone" name="phone" pattern="[0-9]{10,11}" placeholder="Nhập số điện thoại (10-11 chữ số)" required>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="addCccd" class="form-label">CCCD</label>
-                                <input type="text" class="form-control" id="addCccd" name="cccd" pattern="[0-9]{12}">
-                                <div class="form-text">12 chữ số (tùy chọn)</div>
+                                <input type="text" class="form-control" id="addCccd" name="cccd" pattern="[0-9]{12}" placeholder="Nhập CCCD (12 chữ số, tùy chọn)">
                             </div>
                             
                             <div class="mb-3">
                                 <label for="addAddress" class="form-label">Địa chỉ</label>
-                                <textarea class="form-control" id="addAddress" name="address" rows="3"></textarea>
+                                <textarea class="form-control" id="addAddress" name="address" rows="3" placeholder="Nhập địa chỉ"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-check-circle me-2"></i>Thêm bệnh nhân
                             </button>
@@ -607,7 +611,7 @@
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         %>
         <div class="modal fade show" id="editPatientModal" tabindex="-1" aria-labelledby="editPatientModalLabel" style="display: block;">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editPatientModalLabel">
@@ -620,59 +624,49 @@
                             <input type="hidden" name="action" value="update">
                             <input type="hidden" name="patientId" value="<%= editPatient.getId() %>">
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="editFullName" class="form-label">Họ tên <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="editFullName" name="fullName" 
-                                               value="<%= editPatient.getFullName() %>" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="editGender" class="form-label">Giới tính <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="editGender" name="gender" required>
-                                            <option value="">Chọn giới tính</option>
-                                            <option value="0" <%= editPatient.getGender() == 0 ? "selected" : "" %>>Nam</option>
-                                            <option value="1" <%= editPatient.getGender() == 1 ? "selected" : "" %>>Nữ</option>
-                                            <option value="2" <%= editPatient.getGender() == 2 ? "selected" : "" %>>Khác</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="editFullName" class="form-label">Họ tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editFullName" name="fullName" 
+                                       value="<%= editPatient.getFullName() %>" required>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="editDob" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="editDob" name="dob" 
-                                               value="<%= dateFormat.format(editPatient.getDob()) %>" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="editPhone" class="form-label">Điện thoại <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="editPhone" name="phone" 
-                                               value="<%= editPatient.getPhone() %>" pattern="[0-9]{10,11}" required>
-                                        <div class="form-text">10-11 chữ số</div>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="editGender" class="form-label">Giới tính <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editGender" name="gender" required>
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="0" <%= editPatient.getGender() == 0 ? "selected" : "" %>>Nam</option>
+                                    <option value="1" <%= editPatient.getGender() == 1 ? "selected" : "" %>>Nữ</option>
+                                    <option value="2" <%= editPatient.getGender() == 2 ? "selected" : "" %>>Khác</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editDob" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="editDob" name="dob" 
+                                       value="<%= dateFormat.format(editPatient.getDob()) %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editPhone" class="form-label">Điện thoại <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editPhone" name="phone" 
+                                       value="<%= editPatient.getPhone() %>" pattern="[0-9]{10,11}" placeholder="10-11 chữ số" required>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="editCccd" class="form-label">CCCD</label>
                                 <input type="text" class="form-control" id="editCccd" name="cccd" 
-                                       value="<%= editPatient.getCccd() %>" pattern="[0-9]{12}">
-                                <div class="form-text">12 chữ số (tùy chọn)</div>
+                                       value="<%= editPatient.getCccd() %>" pattern="[0-9]{12}" placeholder="12 chữ số (tùy chọn)">
                             </div>
                             
                             <div class="mb-3">
                                 <label for="editAddress" class="form-label">Địa chỉ</label>
-                                <textarea class="form-control" id="editAddress" name="address" rows="3"><%= editPatient.getAddress() %></textarea>
+                                <textarea class="form-control" id="editAddress" name="address" rows="3" placeholder="Nhập địa chỉ"><%= editPatient.getAddress() %></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <a href="${pageContext.request.contextPath}/doctor/patients" class="btn btn-secondary">Hủy</a>
+                            <a href="${pageContext.request.contextPath}/doctor/patients" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </a>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>Cập nhật
                             </button>
@@ -702,7 +696,9 @@
                         </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
                         <form method="POST" action="${pageContext.request.contextPath}/doctor/patients" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" id="deletePatientId" name="patientId">

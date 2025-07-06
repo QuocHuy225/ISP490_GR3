@@ -84,6 +84,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
+                    </a>
+                </li>
+                <li>
                     <a href="${pageContext.request.contextPath}/admin/services">
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
                     </a>
@@ -96,11 +101,6 @@
                 <li>
                     <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
                     </a>
                 </li>
                 <li class="active">
@@ -283,8 +283,6 @@
                     </div>
                 </div>
 
-
-
                 <!-- Supplies Table -->
                 <div class="row">
                     <div class="col-12">
@@ -366,7 +364,7 @@
 
         <!-- Add/Edit Supply Modal -->
         <div class="modal fade" id="addSupplyModal" tabindex="-1" aria-labelledby="addSupplyModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="addSupplyModalLabel">
@@ -381,93 +379,47 @@
                             <input type="hidden" name="supplyId" value="<%= editSupply.getSupplyId() %>">
                             <% } %>
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addSupplyGroup" class="form-label fw-bold">
-                                            <i class="bi bi-collection me-1"></i>Nhóm vật tư <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-control" id="addSupplyGroup" name="supplyGroup" 
-                                               placeholder="Ví dụ: Dụng cụ y tế, Tiêu hao phẩm..." 
-                                               value="<%= isEdit ? editSupply.getSupplyGroup() : "" %>" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addSupplyName" class="form-label fw-bold">
-                                            <i class="bi bi-box-seam me-1"></i>Tên vật tư <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-control form-control-lg" id="addSupplyName" name="supplyName" 
-                                               placeholder="Nhập tên cụ thể của vật tư" 
-                                               value="<%= isEdit ? editSupply.getSupplyName() : "" %>" required>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="addSupplyGroup" class="form-label">Nhóm vật tư <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addSupplyGroup" name="supplyGroup" 
+                                       placeholder="Nhập nhóm vật tư (Ví dụ: Dụng cụ y tế, Tiêu hao phẩm...)" 
+                                       value="<%= isEdit ? editSupply.getSupplyGroup() : "" %>" required>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addUnitPrice" class="form-label fw-bold">
-                                            <i class="bi bi-currency-dollar me-1"></i>Đơn giá (VNĐ) <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" 
-                                                   min="0" step="0.01" placeholder="0" 
-                                                   value="<%= isEdit ? editSupply.getUnitPrice() : "" %>" required>
-                                            <span class="input-group-text">VNĐ</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addStockQuantity" class="form-label fw-bold">
-                                            <i class="bi bi-boxes me-1"></i>Số lượng tồn kho <% if (!isEdit) { %><span class="text-danger">*</span><% } %>
-                                        </label>
-                                        <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" 
-                                               min="<%= isEdit ? "0" : "1" %>" placeholder="0" 
-                                               value="<%= isEdit ? editSupply.getStockQuantity() : "" %>" required>
-                                        <% if (isEdit) { %>
-                                        <div class="form-text">
-                                            <i class="bi bi-info-circle me-1"></i>Cập nhật số lượng hiện có trong kho
-                                        </div>
-                                        <% } %>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="addSupplyName" class="form-label">Tên vật tư <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addSupplyName" name="supplyName" 
+                                       placeholder="Nhập tên cụ thể của vật tư" 
+                                       value="<%= isEdit ? editSupply.getSupplyName() : "" %>" required>
                             </div>
                             
-                            <% if (!isEdit) { %>
-                            <div class="alert alert-success border-0">
-                                <div class="d-flex">
-                                    <i class="bi bi-lightbulb-fill me-2 mt-1"></i>
-                                    <div>
-                                        <strong>Lưu ý:</strong> Chức năng này để thêm vật tư mới vào hệ thống. 
-                                        Bạn có thể cập nhật số lượng tồn kho thông qua chức năng "Chỉnh sửa" sau này.
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="addUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" 
+                                       min="0" step="0.01" placeholder="Nhập đơn giá" 
+                                       value="<%= isEdit ? editSupply.getUnitPrice() : "" %>" required>
                             </div>
-                            <% } else { %>
-                            <div class="alert alert-info border-0">
-                                <div class="d-flex">
-                                    <i class="bi bi-lightbulb-fill me-2 mt-1"></i>
-                                    <div>
-                                        <strong>Mẹo:</strong> Thay đổi số lượng tồn kho để cập nhật số liệu chính xác. 
-                                        Hệ thống sẽ tự động cập nhật trạng thái cảnh báo dựa trên số lượng này.
-                                    </div>
-                                </div>
+                            
+                            <div class="mb-3">
+                                <label for="addStockQuantity" class="form-label">Số lượng <% if (!isEdit) { %><span class="text-danger">*</span><% } %></label>
+                                <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" 
+                                       min="<%= isEdit ? "0" : "1" %>" placeholder="Nhập số lượng" 
+                                       value="<%= isEdit ? editSupply.getStockQuantity() : "" %>" required>
                             </div>
-                            <% } %>
+                            
+
                         </div>
                         <div class="modal-footer bg-light">
                             <% if (isEdit) { %>
                             <a href="${pageContext.request.contextPath}/admin/medical-supplies" class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-1"></i>Hủy bỏ
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                             </a>
                             <% } else { %>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle me-1"></i>Hủy bỏ
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                             </button>
                             <% } %>
-                            <button type="submit" class="btn btn-<%= isEdit ? "primary" : "success" %> btn-lg">
+                            <button type="submit" class="btn btn-<%= isEdit ? "primary" : "success" %>">
                                 <i class="bi bi-check-circle me-2"></i><%= isEdit ? "Cập nhật thông tin" : "Thêm vật tư" %>
                             </button>
                         </div>
@@ -498,7 +450,9 @@
                         </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
                         <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" id="deleteSupplyId" name="supplyId">
