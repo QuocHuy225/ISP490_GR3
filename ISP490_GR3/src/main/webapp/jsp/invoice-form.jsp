@@ -470,11 +470,6 @@
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
-                                <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/doctor/invoices?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord.getId() %>">
-                                        Quản lý hóa đơn
-                                    </a>
-                                </li>
                                 <% } %>
                                 <li class="breadcrumb-item active" aria-current="page">
                                     <%= isEdit ? "Chỉnh sửa hóa đơn" : "Tạo hóa đơn mới" %>
@@ -693,16 +688,24 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Form Actions -->
-                            <div class="d-flex justify-content-between align-items-center">
-                                <a href="${pageContext.request.contextPath}/doctor/invoices?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord.getId() %>" 
-                                   class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left me-2"></i>Hủy và quay lại
-                                </a>
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-<%= isEdit ? "check" : "plus" %>-circle me-2"></i><%= isEdit ? "Cập nhật hóa đơn" : "Tạo hóa đơn" %>
+
+                            <!-- Form Buttons -->
+                            <div class="form-buttons mt-4">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    <%= "add".equals(action) ? "Tạo hóa đơn" : "Cập nhật" %>
                                 </button>
+                                <% if ("add".equals(action)) { %>
+                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= medicalRecord.getPatientId() %>" 
+                                       class="btn btn-secondary">
+                                        <i class="bi bi-x-circle me-2"></i>Hủy
+                                    </a>
+                                <% } else { %>
+                                    <a href="${pageContext.request.contextPath}/doctor/invoices?action=view&invoiceId=<%= invoice.getInvoiceId() %>" 
+                                       class="btn btn-secondary">
+                                        <i class="bi bi-x-circle me-2"></i>Hủy
+                                    </a>
+                                <% } %>
                             </div>
                         </div>
                     </div>
