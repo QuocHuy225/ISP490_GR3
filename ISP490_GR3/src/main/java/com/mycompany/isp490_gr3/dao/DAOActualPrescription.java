@@ -60,6 +60,12 @@ public class DAOActualPrescription {
             throw new IllegalArgumentException("Form data is incomplete");
         }
 
+        // Check if a prescription already exists for this medical record
+        List<ActualPrescriptionForm> existingForms = getFormsByMedicalRecord(form.getMedicalRecordId());
+        if (!existingForms.isEmpty()) {
+            throw new IllegalStateException("A prescription already exists for this medical record.");
+        }
+
         Connection conn = null;
         try {
             conn = DBContext.getConnection();
@@ -145,18 +151,6 @@ public class DAOActualPrescription {
             if (conn != null) {
                 try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) {}
             }
-        }
-    }
-
-    public boolean deleteForm(String formId) {
-        String sql = "UPDATE actual_prescription_form SET is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP WHERE actual_prescription_form_id = ?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, formId);
-            int rows = ps.executeUpdate();
-            return rows > 0;
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error deleting prescription form: {0}", e.getMessage());
-            return false;
         }
     }
 
