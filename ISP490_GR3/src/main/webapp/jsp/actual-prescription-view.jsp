@@ -252,11 +252,6 @@
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
-                                <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>">
-                                        Đơn thuốc
-                                    </a>
-                                </li>
                                 <% } %>
                                 <li class="breadcrumb-item active" aria-current="page">
                                     Chi tiết đơn thuốc
@@ -266,32 +261,21 @@
                     </div>
                 </div>
 
-                <!-- Back Button & Actions -->
-                <div class="row mb-4 no-print">
-                    <div class="col-12">
-                        <% if (form != null && patient != null) { %>
-                        <div class="d-flex justify-content-start align-items-center mb-3">
-                            <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
-                               class="btn btn-outline-secondary me-3">
-                                <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách đơn thuốc
-                            </a>
-                            <h4 class="mb-0 text-primary">Chi tiết đơn thuốc</h4>
-                        </div>
-                        <% } %>
-                        
-                        <div class="d-flex justify-content-end align-items-center">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-info" onclick="window.print()">
-                                    <i class="bi bi-printer me-2"></i>In đơn thuốc
-                                </button>
-                                <% if (form != null) { %>
-                                <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
-                                   class="btn btn-primary">
-                                    <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
-                                </a>
-                                <% } %>
-                            </div>
-                        </div>
+                <!-- Back Button -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Quay lại
+                    </a>
+                    
+                    <div class="action-buttons">
+                        <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
+                           class="btn btn-primary me-2">
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
+                        </a>
+                        <button type="button" class="btn btn-success" onclick="printPrescription()">
+                            <i class="bi bi-printer me-2"></i>In đơn thuốc
+                        </button>
                     </div>
                 </div>
 
