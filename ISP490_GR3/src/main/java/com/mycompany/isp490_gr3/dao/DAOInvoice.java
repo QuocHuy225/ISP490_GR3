@@ -31,50 +31,6 @@ public class DAOInvoice {
 
     // ===== INVOICE OPERATIONS =====
     
-    public List<Invoice> getAllInvoices() {
-        List<Invoice> invoices = new ArrayList<>();
-        String sql = "SELECT i.*, p.full_name as patient_name, mr.id as medical_record_id " +
-                     "FROM invoices i " +
-                     "LEFT JOIN patients p ON i.patient_id = p.id " +
-                     "LEFT JOIN medical_record mr ON i.medical_record_id = mr.id " +
-                     "WHERE i.isdeleted = 0 ORDER BY i.created_at DESC";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                invoices.add(extractInvoice(rs));
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error getting all invoices: {0}", e.getMessage());
-        }
-
-        return invoices;
-    }
-
-    public List<Invoice> getInvoicesByPatient(int patientId) {
-        List<Invoice> invoices = new ArrayList<>();
-        String sql = "SELECT i.*, p.full_name as patient_name, mr.id as medical_record_id " +
-                     "FROM invoices i " +
-                     "LEFT JOIN patients p ON i.patient_id = p.id " +
-                     "LEFT JOIN medical_record mr ON i.medical_record_id = mr.id " +
-                     "WHERE i.patient_id = ? AND i.isdeleted = 0 ORDER BY i.created_at DESC";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, patientId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    invoices.add(extractInvoice(rs));
-                }
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error getting invoices by patient: {0}", e.getMessage());
-        }
-
-        return invoices;
-    }
-
     public List<Invoice> getInvoicesByMedicalRecord(String medicalRecordId) {
         List<Invoice> invoices = new ArrayList<>();
         String sql = "SELECT i.*, p.full_name as patient_name, mr.id as medical_record_id " +
@@ -125,6 +81,12 @@ public class DAOInvoice {
     public boolean addInvoice(Invoice invoice, List<InvoiceItem> items) {
         if (invoice == null || invoice.getMedicalRecordId() == null) {
             throw new IllegalArgumentException("Invoice data is incomplete.");
+        }
+
+        // Check if an invoice already exists for this medical record
+        List<Invoice> existingInvoices = getInvoicesByMedicalRecord(invoice.getMedicalRecordId());
+        if (!existingInvoices.isEmpty()) {
+            throw new IllegalStateException("An invoice already exists for this medical record.");
         }
 
         Connection conn = null;
@@ -271,58 +233,6 @@ public class DAOInvoice {
                 }
             }
             LOGGER.log(Level.SEVERE, "Error updating invoice: {0}", e.getMessage());
-            return false;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException e) {
-                    LOGGER.log(Level.SEVERE, "Error closing connection: {0}", e.getMessage());
-                }
-            }
-        }
-    }
-
-    public boolean deleteInvoice(String invoiceId) {
-        Connection conn = null;
-        try {
-            conn = DBContext.getConnection();
-            conn.setAutoCommit(false);
-            
-            // Lấy danh sách items để hoàn trả kho
-            List<InvoiceItem> items = getInvoiceItems(invoiceId);
-            
-            // Hoàn trả kho
-            if (items != null && !items.isEmpty()) {
-                if (!updateWarehouseStock(items, true)) {
-                    throw new SQLException("Failed to restore warehouse stock");
-                }
-            }
-            
-            // Soft delete invoice
-            String sql = "UPDATE invoices SET isdeleted = 1, updated_at = CURRENT_TIMESTAMP WHERE invoice_id = ?";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, invoiceId);
-                
-                int rows = ps.executeUpdate();
-                if (rows == 0) {
-                    throw new SQLException("Invoice not found or already deleted");
-                }
-            }
-            
-            conn.commit();
-            return true;
-            
-        } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    LOGGER.log(Level.SEVERE, "Error rolling back transaction: {0}", ex.getMessage());
-                }
-            }
-            LOGGER.log(Level.SEVERE, "Error deleting invoice: {0}", e.getMessage());
             return false;
         } finally {
             if (conn != null) {
