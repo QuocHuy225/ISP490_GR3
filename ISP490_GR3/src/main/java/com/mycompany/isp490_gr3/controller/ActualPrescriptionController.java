@@ -52,13 +52,16 @@ public class ActualPrescriptionController extends HttpServlet {
         }
         
         String action = request.getParameter("action");
-        if (action == null) action = "list";
+        String medicalRecordId = request.getParameter("medicalRecordId");
+        
+        // If no action but has medicalRecordId, check if prescription exists
+        if (action == null && medicalRecordId != null) {
+            handleMedicalRecordPrescription(request, response);
+            return;
+        }
 
         try {
             switch (action) {
-                case "listByMedicalRecord":
-                    handleListByMedicalRecord(request, response);
-                    break;
                 case "new":
                     handleNewForm(request, response);
                     break;
@@ -67,9 +70,6 @@ public class ActualPrescriptionController extends HttpServlet {
                     break;
                 case "view":
                     handleViewForm(request, response);
-                    break;
-                case "delete":
-                    handleDeleteForm(request, response);
                     break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/homepage");
@@ -98,9 +98,6 @@ public class ActualPrescriptionController extends HttpServlet {
                 case "update":
                     handleUpdateForm(request, response);
                     break;
-                case "delete":
-                    handleDeleteForm(request, response);
-                    break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/actual-prescriptions");
             }
@@ -111,7 +108,7 @@ public class ActualPrescriptionController extends HttpServlet {
     }
 
     // ===== GET HANDLERS =====
-    private void handleListByMedicalRecord(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void handleMedicalRecordPrescription(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String medicalRecordId = request.getParameter("medicalRecordId");
         if (medicalRecordId == null || medicalRecordId.isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/homepage");
@@ -122,13 +119,17 @@ public class ActualPrescriptionController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/homepage");
             return;
         }
-        Patient patient = daoPatient.getPatientById(medicalRecord.getPatientId());
+        
+        // Get the single prescription form for this medical record
         List<ActualPrescriptionForm> forms = daoRx.getFormsByMedicalRecord(medicalRecordId);
-
-        request.setAttribute("medicalRecord", medicalRecord);
-        request.setAttribute("patient", patient);
-        request.setAttribute("forms", forms);
-        request.getRequestDispatcher("/jsp/actual-prescription-list.jsp").forward(request, response);
+        
+        // If form exists, show it. If not, create new one
+        if (!forms.isEmpty()) {
+            ActualPrescriptionForm form = forms.get(0);
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=view&formId=" + form.getActualPrescriptionFormId());
+        } else {
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=new&medicalRecordId=" + medicalRecordId);
+        }
     }
 
     private void handleNewForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -222,9 +223,21 @@ public class ActualPrescriptionController extends HttpServlet {
 
             boolean success = daoRx.addForm(form, medicines);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId + "&success=added");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?medicalRecordId=" + medicalRecordId + "&success=added");
             } else {
-                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId + "&error=add_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?medicalRecordId=" + medicalRecordId + "&error=add_failed");
+            }
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.SEVERE, "Invalid number format: {0}", e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=invalid_data");
+        } catch (IllegalStateException e) {
+            if (e.getMessage().contains("already exists")) {
+                // Prescription already exists for this medical record
+                String redirectMedicalRecordId = request.getParameter("medicalRecordId");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?medicalRecordId=" + redirectMedicalRecordId + "&error=prescription_exists");
+            } else {
+                LOGGER.log(Level.SEVERE, "State error: {0}", e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=state_error");
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error adding prescription form: {0}", e.getMessage());
@@ -254,32 +267,13 @@ public class ActualPrescriptionController extends HttpServlet {
             List<ActualPrescriptionMedicine> medicines = parseMedicinesFromRequest(request);
             boolean success = daoRx.updateForm(form, medicines);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + form.getMedicalRecordId() + "&success=updated");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=view&formId=" + form.getActualPrescriptionFormId() + "&success=updated");
             } else {
-                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=" + form.getMedicalRecordId() + "&error=update_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=edit&formId=" + form.getActualPrescriptionFormId() + "&error=update_failed");
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error updating prescription form: {0}", e.getMessage());
             response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=system_error");
-        }
-    }
-
-    private void handleDeleteForm(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String formId = request.getParameter("formId");
-        String medicalRecordId = request.getParameter("medicalRecordId");
-        if (formId == null || formId.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions");
-            return;
-        }
-        boolean success = daoRx.deleteForm(formId);
-        String redirectUrl = request.getContextPath() + "/doctor/actual-prescriptions";
-        if (medicalRecordId != null) {
-            redirectUrl += "?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId;
-        }
-        if (success) {
-            response.sendRedirect(redirectUrl + "&success=deleted");
-        } else {
-            response.sendRedirect(redirectUrl + "&error=delete_failed");
         }
     }
 
