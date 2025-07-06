@@ -160,6 +160,11 @@
                         <i class="bi bi-people-fill"></i> Quản lý người dùng
                     </a>
                 </li>
+                <li class="active">
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
+                    </a>
+                </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/admin/services">
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
@@ -173,11 +178,6 @@
                 <li>
                     <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý thuốc
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
                     </a>
                 </li>
                 <li>
@@ -474,7 +474,9 @@
                         </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
                         <form method="GET" action="${pageContext.request.contextPath}/admin/medical-exam-templates/delete" style="display: inline;">
                             <input type="hidden" id="deleteTemplateId" name="id">
                             <button type="submit" class="btn btn-danger">

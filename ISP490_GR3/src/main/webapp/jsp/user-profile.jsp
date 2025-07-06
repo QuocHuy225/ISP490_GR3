@@ -617,7 +617,7 @@
 
     <!-- Edit Profile Modal -->
     <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editProfileModalLabel">
@@ -653,22 +653,7 @@
                             </div>
                         </div>
                         
-                        <!-- Read-only fields info -->
-                        <div class="info-box">
-                            <h6><i class="bi bi-info-circle me-2"></i>Thông tin không thể thay đổi</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <strong>Email:</strong> <%= ((User) request.getAttribute("user")).getEmail() %>
-                                </div>
-                                <div class="col-md-6">
-                                    <strong>Vai trò:</strong> 
-                                    <span class="badge bg-primary ms-1">
-                                        <%= ((User) request.getAttribute("user")).getRole() != null ? 
-                                            ((User) request.getAttribute("user")).getRole().getValue() : "Patient" %>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+
                         
                         <div class="text-end">
                             <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
@@ -695,11 +680,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Security Info -->
-                    <div class="info-box">
-                        <h6><i class="bi bi-shield-check me-2"></i>Bảo mật tài khoản</h6>
-                        <p class="mb-0">Hãy chọn mật khẩu mạnh để bảo vệ tài khoản của bạn. Mật khẩu phải có ít nhất 6 ký tự.</p>
-                    </div>
+
                     
                     <form action="${pageContext.request.contextPath}/user/change-password" method="post" id="changePasswordForm">
                         <div class="form-floating mb-3">
