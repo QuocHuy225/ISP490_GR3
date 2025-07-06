@@ -83,6 +83,11 @@
                         <i class="bi bi-people-fill"></i> Quản lý người dùng
                     </a>
                 </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
+                    </a>
+                </li>
                 <li class="active">
                     <a href="${pageContext.request.contextPath}/admin/services">
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
@@ -96,11 +101,6 @@
                 <li>
                     <a href="${pageContext.request.contextPath}/admin/prescriptions">
                         <i class="bi bi-capsule"></i> Quản lý thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
                     </a>
                 </li>
                 <li>
@@ -238,7 +238,7 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body">
-                                <div class="row g-3">
+                                <div class="row align-items-center">
                                     <div class="col-md-8">
                                         <form method="GET" action="${pageContext.request.contextPath}/admin/services" class="d-flex">
                                             <input type="hidden" name="action" value="search">
@@ -370,13 +370,12 @@
                                 <input type="number" class="form-control" id="addPrice" name="price" min="0" step="0.01" placeholder="Nhập giá dịch vụ" required>
                             </div>
                             
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>
-                                <strong>Lưu ý:</strong> Chức năng này để thêm dịch vụ y tế mới vào hệ thống.
-                            </div>
+
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-check-circle me-2"></i>Thêm dịch vụ
                             </button>
@@ -417,7 +416,9 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>Cập nhật
                             </button>
@@ -445,7 +446,9 @@
                         </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
                         <form method="POST" action="${pageContext.request.contextPath}/admin/services" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" id="deleteServiceId" name="serviceId">
