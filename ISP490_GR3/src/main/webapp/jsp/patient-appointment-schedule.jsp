@@ -193,8 +193,8 @@
                         <div id="detailContent">
                         </div>
                         <div class="modal-actions">
-                            <button class="btn btn-secondary" id="btnCancelAppointment" style="display: none;"><i class="fas fa-times-circle"></i> Hủy Hẹn</button>
-                            <button class="btn btn-primary" id="btnCloseDetail"><i class="fas fa-check-circle"></i> Đóng</button>
+                            <button class="btn btn-secondary" id="btnCancelAppointment" style="display: none;"><i class="bi bi-x-circle"></i> Hủy Hẹn</button>
+                            <button class="btn btn-primary" id="btnCloseDetail"><i class="bi bi-check-circle"></i> Đóng</button>
                         </div>
                     </div>
                 </div>
@@ -207,8 +207,8 @@
                         <p>Bạn có chắc chắn muốn hủy lịch hẹn này không?</p>
                         <p>ID Lịch Hẹn: <span id="confirmAppointmentIdDisplay"></span></p>
                         <div class="modal-actions justify-content-center">
-                            <button class="btn btn-danger" id="confirmCancelBtn"><i class="fas fa-check"></i> Xác nhận Hủy</button>
-                            <button class="btn btn-secondary" id="cancelConfirmBtn"><i class="fas fa-times"></i> Hủy bỏ</button>
+                            <button class="btn btn-danger" id="confirmCancelBtn"><i class="bi bi-check-circle"></i> Xác nhận Hủy</button>
+                            <button class="btn btn-secondary" id="cancelConfirmBtn"><i class="bi bi-x-circle"></i> Hủy bỏ</button>
                         </div>
                     </div>
                 </div>
@@ -273,8 +273,8 @@
                         <textarea id="newNotes" name="notes" rows="3"></textarea>
                     </div>
                     <div class="modal-actions">
-                        <button type="submit" class="btn btn-primary" id="submitNewAppointmentBtn"><i class="fas fa-paper-plane"></i> Đặt Lịch</button>
-                        <button type="button" class="btn btn-secondary" id="cancelNewAppointmentBtn"><i class="fas fa-times"></i> Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="submitNewAppointmentBtn"><i class="bi bi-check-circle"></i> Đặt Lịch</button>
+                        <button type="button" class="btn btn-secondary" id="cancelNewAppointmentBtn"><i class="bi bi-x-circle"></i> Hủy</button>
                     </div>
                 </form>
             </div>
