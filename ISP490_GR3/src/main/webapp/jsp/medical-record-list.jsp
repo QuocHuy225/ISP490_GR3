@@ -379,6 +379,7 @@
                         </nav>
 
                         <% if (patient != null) { %>
+
                         <!-- Alert Messages -->
                         <%
                         String success = request.getParameter("success");
@@ -492,16 +493,18 @@
                                                             </td>
                                                             <td>
                                                                 <div class="action-buttons-group">
-                                                                    <a href="${pageContext.request.contextPath}/doctor/invoices?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
+                                                                    <a href="${pageContext.request.contextPath}/doctor/invoices?medicalRecordId=<%= record.getId() %>" 
                                                                        class="action-btn action-btn-invoice" title="Quản lý hóa đơn">
                                                                         <i class="bi bi-receipt"></i>
                                                                         <span class="btn-text">Hóa đơn</span>
                                                                     </a>
-                                                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= record.getId() %>" 
+                                                                    <% if ("completed".equals(record.getStatus())) { %>
+                                                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?medicalRecordId=<%= record.getId() %>" 
                                                                        class="action-btn action-btn-prescription" title="Quản lý đơn thuốc">
                                                                         <i class="bi bi-capsule"></i>
                                                                         <span class="btn-text">Đơn thuốc</span>
                                                                     </a>
+                                                                    <% } %>
                                                                 </div>
                                                             </td>
                                                         </tr>
