@@ -2,11 +2,13 @@ package com.mycompany.isp490_gr3.controller;
 
 import com.mycompany.isp490_gr3.dao.DAOPatient;
 import com.mycompany.isp490_gr3.model.Patient;
+import com.mycompany.isp490_gr3.model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Date;
@@ -16,8 +18,9 @@ import com.google.gson.Gson;
 
 /**
  * Servlet xử lý các yêu cầu liên quan đến bệnh nhân.
+ * Allows both ADMIN and DOCTOR access
  */
-@WebServlet(name = "PatientController", urlPatterns = {"/patients", "/patients/*"})
+@WebServlet(name = "PatientController", urlPatterns = {"/doctor/patients"})
 public class PatientController extends HttpServlet {
 
     private DAOPatient patientDAO = new DAOPatient();
@@ -28,7 +31,11 @@ public class PatientController extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
-
+        
+        if (!checkDoctorAccess(request, response)) {
+            return;
+        }
+        
         String action = request.getParameter("action");
         if ("get".equals(action)) {
             getPatientById(request, response);
@@ -42,6 +49,10 @@ public class PatientController extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
+
+        if (!checkDoctorAccess(request, response)) {
+            return;
+        }
 
         String action = request.getParameter("action");
         switch (action != null ? action : "") {
@@ -90,25 +101,19 @@ public class PatientController extends HttpServlet {
 
     private void getPatientById(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             Patient patient = patientDAO.getPatientById(id);
             
             if (patient != null) {
-                // Format date for JSON response
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                patient.setDob(Date.valueOf(sdf.format(patient.getDob())));
-                
-                PrintWriter out = response.getWriter();
-                out.print(gson.toJson(patient));
-                out.flush();
+                request.setAttribute("editPatient", patient);
+                request.setAttribute("showEditModal", true);
+                listPatients(request, response); // Hiển thị lại danh sách với modal edit
             } else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=patient_not_found");
             }
         } catch (NumberFormatException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_id");
         }
     }
 
@@ -127,10 +132,8 @@ public class PatientController extends HttpServlet {
             if (fullName == null || fullName.trim().isEmpty() ||
                 genderStr == null || genderStr.trim().isEmpty() ||
                 dobStr == null || dobStr.trim().isEmpty() ||
-                phone == null || phone.trim().isEmpty() ||
-                cccd == null || cccd.trim().isEmpty() ||
-                address == null || address.trim().isEmpty()) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=missing_fields");
+                phone == null || phone.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=missing_fields");
                 return;
             }
 
@@ -142,7 +145,7 @@ public class PatientController extends HttpServlet {
                     throw new NumberFormatException("Invalid gender value");
                 }
             } catch (NumberFormatException e) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_gender");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_gender");
                 return;
             }
 
@@ -150,21 +153,22 @@ public class PatientController extends HttpServlet {
             try {
                 dob = Date.valueOf(dobStr);
                 if (dob.after(new java.util.Date())) {
-                    response.sendRedirect(request.getContextPath() + "/patients?error=invalid_dob");
+                    response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_dob");
                     return;
                 }
             } catch (IllegalArgumentException e) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_date_format");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_date_format");
                 return;
             }
 
             // Validate phone và cccd
             if (!phone.matches("\\d{10,11}")) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_phone");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_phone");
                 return;
             }
-            if (!cccd.matches("\\d{12}")) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_cccd");
+            // Validate CCCD chỉ khi có nhập giá trị
+            if (cccd != null && !cccd.trim().isEmpty() && !cccd.matches("\\d{12}")) {
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_cccd");
                 return;
             }
 
@@ -174,20 +178,20 @@ public class PatientController extends HttpServlet {
             patient.setGender(gender);
             patient.setDob(dob);
             patient.setPhone(phone.trim());
-            patient.setCccd(cccd.trim());
-            patient.setAddress(address.trim());
+            patient.setCccd(cccd != null ? cccd.trim() : null);
+            patient.setAddress(address != null ? address.trim() : null);
 
             // Lưu vào DB
             boolean success = patientDAO.addPatient(patient);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/patients?success=added");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?success=added");
             } else {
-                response.sendRedirect(request.getContextPath() + "/patients?error=add_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=add_failed");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/patients?error=system_error");
+            response.sendRedirect(request.getContextPath() + "/doctor/patients?error=system_error");
         }
     }
 
@@ -208,10 +212,8 @@ public class PatientController extends HttpServlet {
                 fullName == null || fullName.trim().isEmpty() ||
                 genderStr == null || genderStr.trim().isEmpty() ||
                 dobStr == null || dobStr.trim().isEmpty() ||
-                phone == null || phone.trim().isEmpty() ||
-                cccd == null || cccd.trim().isEmpty() ||
-                address == null || address.trim().isEmpty()) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=missing_fields");
+                phone == null || phone.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=missing_fields");
                 return;
             }
 
@@ -220,7 +222,7 @@ public class PatientController extends HttpServlet {
             try {
                 id = Integer.parseInt(idStr);
             } catch (NumberFormatException e) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_id");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_id");
                 return;
             }
 
@@ -231,7 +233,7 @@ public class PatientController extends HttpServlet {
                     throw new NumberFormatException("Invalid gender value");
                 }
             } catch (NumberFormatException e) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_gender");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_gender");
                 return;
             }
 
@@ -239,21 +241,22 @@ public class PatientController extends HttpServlet {
             try {
                 dob = Date.valueOf(dobStr);
                 if (dob.after(new java.util.Date())) {
-                    response.sendRedirect(request.getContextPath() + "/patients?error=invalid_dob");
+                    response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_dob");
                     return;
                 }
             } catch (IllegalArgumentException e) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_date_format");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_date_format");
                 return;
             }
 
             // Validate phone và cccd
             if (!phone.matches("\\d{10,11}")) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_phone");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_phone");
                 return;
             }
-            if (!cccd.matches("\\d{12}")) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=invalid_cccd");
+            // Validate CCCD chỉ khi có nhập giá trị
+            if (cccd != null && !cccd.trim().isEmpty() && !cccd.matches("\\d{12}")) {
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_cccd");
                 return;
             }
 
@@ -264,20 +267,20 @@ public class PatientController extends HttpServlet {
             patient.setGender(gender);
             patient.setDob(dob);
             patient.setPhone(phone.trim());
-            patient.setCccd(cccd.trim());
-            patient.setAddress(address.trim());
+            patient.setCccd(cccd != null ? cccd.trim() : null);
+            patient.setAddress(address != null ? address.trim() : null);
 
             // Cập nhật trong DB
             boolean success = patientDAO.updatePatient(patient);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/patients?success=updated");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?success=updated");
             } else {
-                response.sendRedirect(request.getContextPath() + "/patients?error=update_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=update_failed");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/patients?error=system_error");
+            response.sendRedirect(request.getContextPath() + "/doctor/patients?error=system_error");
         }
     }
 
@@ -287,7 +290,7 @@ public class PatientController extends HttpServlet {
             String idStr = request.getParameter("patientId");
             
             if (idStr == null || idStr.trim().isEmpty()) {
-                response.sendRedirect(request.getContextPath() + "/patients?error=missing_id");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=missing_id");
                 return;
             }
 
@@ -295,17 +298,47 @@ public class PatientController extends HttpServlet {
             boolean success = patientDAO.deletePatient(id);
             
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/patients?success=deleted");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?success=deleted");
             } else {
-                response.sendRedirect(request.getContextPath() + "/patients?error=delete_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/patients?error=delete_failed");
             }
 
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/patients?error=invalid_id");
+            response.sendRedirect(request.getContextPath() + "/doctor/patients?error=invalid_id");
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/patients?error=system_error");
+            response.sendRedirect(request.getContextPath() + "/doctor/patients?error=system_error");
         }
+    }
+
+    /**
+     * Check doctor access - allows both ADMIN and DOCTOR
+     */
+    private boolean checkDoctorAccess(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        
+        HttpSession session = request.getSession(false);
+        
+        // Check if user is logged in
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+        
+        // Get current user
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            return false;
+        }
+        
+        // Allow Doctor to access
+        if (currentUser.getRole() != User.Role.DOCTOR) {
+            response.sendRedirect(request.getContextPath() + "/homepage");
+            return false;
+        }
+        
+        return true;
     }
 
     @Override

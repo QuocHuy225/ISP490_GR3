@@ -353,6 +353,105 @@ public class DAOUser {
         return false;
     }
     
+    /**
+     * Update reset password token for a user
+     * @param email User's email
+     * @param token Reset password token
+     * @param expiry Token expiry time
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateResetPasswordToken(String email, String token, Timestamp expiry) {
+        String sql = "UPDATE user SET reset_password_token = ?, reset_password_expiry = ?, updated_At = ? WHERE email = ? AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, token);
+            ps.setTimestamp(2, expiry);
+            ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+            ps.setString(4, email);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error updating reset password token: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get user by reset password token
+     * @param token Reset password token
+     * @return User object if found and token is valid, null otherwise
+     */
+    public User getUserByResetToken(String token) {
+        String sql = "SELECT * FROM user WHERE reset_password_token = ? AND reset_password_expiry > ? AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, token);
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis())); // Check token not expired
+            
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToUser(rs);
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting user by reset token: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Reset user password using token
+     * @param token Reset password token
+     * @param newPassword New password (plain text)
+     * @return true if password reset successful, false otherwise
+     */
+    public boolean resetPassword(String token, String newPassword) {
+        // First check if token is valid
+        User user = getUserByResetToken(token);
+        if (user == null) {
+            System.out.println("Invalid or expired reset token");
+            return false;
+        }
+        
+        String hashedPassword = hashPassword(newPassword);
+        String sql = "UPDATE user SET password = ?, reset_password_token = NULL, reset_password_expiry = NULL, updated_At = ? WHERE reset_password_token = ? AND isdeleted = FALSE";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, hashedPassword);
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            ps.setString(3, token);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error resetting password: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Generate reset password token
+     * @return Random token string
+     */
+    public String generateResetPasswordToken() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 32);
+    }
+    
 
     
     /**
@@ -417,6 +516,15 @@ public class DAOUser {
         } catch (SQLException e) {
             // These columns might not exist for old database schema
             user.setEmailVerified(true); // Default to verified for existing users
+        }
+        
+        // Map reset password fields (may be null for existing users)
+        try {
+            user.setResetPasswordToken(rs.getString("reset_password_token"));
+            user.setResetPasswordExpiry(rs.getTimestamp("reset_password_expiry"));
+        } catch (SQLException e) {
+            // These columns might not exist for old database schema
+            // Just leave them as null
         }
         
         return user;

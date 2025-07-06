@@ -244,54 +244,7 @@
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
-                <% if (currentRole == User.Role.ADMIN) { %>
-                <!-- Menu cho Admin -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/authorization">
-                        <i class="bi bi-people-fill"></i> Quản lý người dùng
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/services">
-                        <i class="bi bi-file-medical"></i> Quản lý dịch vụ
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="${pageContext.request.contextPath}/patients">
-                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medicines">
-                        <i class="bi bi-hospital"></i> Quản lý kho thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
-                        <i class="bi bi-capsule"></i> Quản lý đơn thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-supplies">
-                        <i class="bi bi-gear-fill"></i> Quản lý vật tư
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.DOCTOR) { %>
+                <% if (currentRole == User.Role.DOCTOR) { %>
                 <!-- Menu cho Bác sĩ -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
@@ -304,72 +257,13 @@
                     </a>
                 </li>
                 <li class="active">
-                    <a href="${pageContext.request.contextPath}/patients">
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-journal-medical"></i> Chỉ định dịch vụ
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
-                <!-- Menu cho Lễ tân -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý đặt lịch
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/checkin">
-                        <i class="bi bi-calendar-check"></i> Quản lý check-in
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="${pageContext.request.contextPath}/patients">
-                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
-                    </a>
-                </li>
-                <% } else { %>
-                <!-- Menu cho Bệnh nhân (PATIENT) -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/makeappointments">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-file-medical"></i> Hồ sơ sức khỏe
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-hospital"></i> Dịch vụ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
+                    <a href="${pageContext.request.contextPath}/doctor/report">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
                 </li>
                 <% } %>
@@ -505,7 +399,7 @@
                             <div class="card-body">
                                 <div class="row g-3 mb-3">
                                     <div class="col-md-9">
-                                        <form method="GET" action="${pageContext.request.contextPath}/patients" class="search-form">
+                                        <form method="GET" action="${pageContext.request.contextPath}/doctor/patients" class="search-form">
                                             <div class="row g-2">
                                                 <div class="col">
                                                     <input type="text" class="form-control" name="code" 
@@ -532,7 +426,7 @@
                                                         <i class="bi bi-search"></i>
                                                     </button>
                                                     <% if (!searchCode.isEmpty() || !searchName.isEmpty() || !searchPhone.isEmpty() || !searchCccd.isEmpty()) { %>
-                                                    <a href="${pageContext.request.contextPath}/patients" class="btn btn-outline-secondary h-100">
+                                                    <a href="${pageContext.request.contextPath}/doctor/patients" class="btn btn-outline-secondary h-100">
                                                         <i class="bi bi-x-circle me-2"></i>Xóa bộ lọc
                                                     </a>
                                                     <% } %>
@@ -599,20 +493,19 @@
                                                     <td><%= patient.getAddress() %></td>
                                                     <td>
                                                         <div class="action-buttons-group">
-                                                            <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%=patient.getId()%>" 
+                                                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%=patient.getId()%>" 
                                                                class="action-btn action-btn-view" 
                                                                title="Xem hồ sơ bệnh án">
                                                                 <i class="bi bi-file-medical"></i>
                                                                 <span class="btn-text">Hồ sơ</span>
                                                             </a>
                                                             
-                                                            <button type="button" 
+                                                            <a href="${pageContext.request.contextPath}/doctor/patients?action=get&id=<%=patient.getId()%>"
                                                                     class="action-btn action-btn-edit" 
-                                                                    onclick="editPatient(<%=patient.getId()%>)" 
                                                                     title="Chỉnh sửa thông tin">
                                                                 <i class="bi bi-pencil-square"></i>
                                                                 <span class="btn-text">Sửa</span>
-                                                            </button>
+                                                            </a>
                                                             
                                                             <button type="button" 
                                                                     class="action-btn action-btn-delete" 
@@ -625,17 +518,6 @@
                                                     </td>
                                                 </tr>
                                                 <% } %>
-                                            <% } else { %>
-                                                <tr>
-                                                    <td colspan="8" class="text-center">
-                                                        <i class="bi bi-inbox me-2"></i>
-                                                        <% if (!searchCode.isEmpty() || !searchName.isEmpty() || !searchPhone.isEmpty() || !searchCccd.isEmpty()) { %>
-                                                            Không tìm thấy bệnh nhân nào
-                                                        <% } else { %>
-                                                            Chưa có bệnh nhân nào trong hệ thống
-                                                        <% } %>
-                                                    </td>
-                                                </tr>
                                             <% } %>
                                         </tbody>
                                     </table>
@@ -657,7 +539,7 @@
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form method="POST" action="${pageContext.request.contextPath}/patients">
+                    <form method="POST" action="${pageContext.request.contextPath}/doctor/patients">
                         <div class="modal-body">
                             <input type="hidden" name="action" value="add">
                             
@@ -698,14 +580,14 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addCccd" class="form-label">CCCD <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addCccd" name="cccd" pattern="[0-9]{12}" required>
-                                <div class="form-text">12 chữ số</div>
+                                <label for="addCccd" class="form-label">CCCD</label>
+                                <input type="text" class="form-control" id="addCccd" name="cccd" pattern="[0-9]{12}">
+                                <div class="form-text">12 chữ số (tùy chọn)</div>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addAddress" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="addAddress" name="address" rows="3" required></textarea>
+                                <label for="addAddress" class="form-label">Địa chỉ</label>
+                                <textarea class="form-control" id="addAddress" name="address" rows="3"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -720,25 +602,30 @@
         </div>
 
         <!-- Edit Patient Modal -->
-        <div class="modal fade" id="editPatientModal" tabindex="-1" aria-labelledby="editPatientModalLabel" aria-hidden="true">
+        <% if (request.getAttribute("editPatient") != null && (Boolean)request.getAttribute("showEditModal")) { 
+            Patient editPatient = (Patient) request.getAttribute("editPatient");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        %>
+        <div class="modal fade show" id="editPatientModal" tabindex="-1" aria-labelledby="editPatientModalLabel" style="display: block;">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editPatientModalLabel">
                             <i class="bi bi-pencil me-2"></i>Chỉnh sửa thông tin bệnh nhân
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <a href="${pageContext.request.contextPath}/doctor/patients" class="btn-close"></a>
                     </div>
-                    <form method="POST" action="${pageContext.request.contextPath}/patients">
+                    <form method="POST" action="${pageContext.request.contextPath}/doctor/patients">
                         <div class="modal-body">
                             <input type="hidden" name="action" value="update">
-                            <input type="hidden" id="editPatientId" name="patientId">
+                            <input type="hidden" name="patientId" value="<%= editPatient.getId() %>">
                             
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="editFullName" class="form-label">Họ tên <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="editFullName" name="fullName" required>
+                                        <input type="text" class="form-control" id="editFullName" name="fullName" 
+                                               value="<%= editPatient.getFullName() %>" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -746,9 +633,9 @@
                                         <label for="editGender" class="form-label">Giới tính <span class="text-danger">*</span></label>
                                         <select class="form-select" id="editGender" name="gender" required>
                                             <option value="">Chọn giới tính</option>
-                                            <option value="0">Nam</option>
-                                            <option value="1">Nữ</option>
-                                            <option value="2">Khác</option>
+                                            <option value="0" <%= editPatient.getGender() == 0 ? "selected" : "" %>>Nam</option>
+                                            <option value="1" <%= editPatient.getGender() == 1 ? "selected" : "" %>>Nữ</option>
+                                            <option value="2" <%= editPatient.getGender() == 2 ? "selected" : "" %>>Khác</option>
                                         </select>
                                     </div>
                                 </div>
@@ -758,31 +645,34 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="editDob" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="editDob" name="dob" required>
+                                        <input type="date" class="form-control" id="editDob" name="dob" 
+                                               value="<%= dateFormat.format(editPatient.getDob()) %>" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="editPhone" class="form-label">Điện thoại <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="editPhone" name="phone" pattern="[0-9]{10,11}" required>
+                                        <input type="text" class="form-control" id="editPhone" name="phone" 
+                                               value="<%= editPatient.getPhone() %>" pattern="[0-9]{10,11}" required>
                                         <div class="form-text">10-11 chữ số</div>
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editCccd" class="form-label">CCCD <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editCccd" name="cccd" pattern="[0-9]{12}" required>
-                                <div class="form-text">12 chữ số</div>
+                                <label for="editCccd" class="form-label">CCCD</label>
+                                <input type="text" class="form-control" id="editCccd" name="cccd" 
+                                       value="<%= editPatient.getCccd() %>" pattern="[0-9]{12}">
+                                <div class="form-text">12 chữ số (tùy chọn)</div>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editAddress" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="editAddress" name="address" rows="3" required></textarea>
+                                <label for="editAddress" class="form-label">Địa chỉ</label>
+                                <textarea class="form-control" id="editAddress" name="address" rows="3"><%= editPatient.getAddress() %></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <a href="${pageContext.request.contextPath}/doctor/patients" class="btn btn-secondary">Hủy</a>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>Cập nhật
                             </button>
@@ -791,6 +681,8 @@
                 </div>
             </div>
         </div>
+        <div class="modal-backdrop fade show"></div>
+        <% } %>
 
         <!-- Delete Confirmation Modal -->
         <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
@@ -811,7 +703,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <form method="POST" action="${pageContext.request.contextPath}/patients" style="display: inline;">
+                        <form method="POST" action="${pageContext.request.contextPath}/doctor/patients" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" id="deletePatientId" name="patientId">
                             <button type="submit" class="btn btn-danger">
@@ -885,27 +777,7 @@
                 });
             });
 
-            // Edit patient function
-            function editPatient(patientId) {
-                var contextPath = '<%= request.getContextPath() %>';
-                fetch(contextPath + '/patients?action=get&id=' + patientId)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('editPatientId').value = data.id;
-                        document.getElementById('editFullName').value = data.fullName;
-                        document.getElementById('editGender').value = data.gender;
-                        document.getElementById('editDob').value = data.dob;
-                        document.getElementById('editPhone').value = data.phone;
-                        document.getElementById('editCccd').value = data.cccd;
-                        document.getElementById('editAddress').value = data.address;
-                        
-                        new bootstrap.Modal(document.getElementById('editPatientModal')).show();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Không thể tải thông tin bệnh nhân!');
-                    });
-            }
+            // Delete patient function
 
             // Delete patient function
             function deletePatient(patientId, patientName) {

@@ -127,54 +127,7 @@
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
-                <% if (currentRole == User.Role.ADMIN) { %>
-                <!-- Menu cho Admin -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/authorization">
-                        <i class="bi bi-people-fill"></i> Quản lý người dùng
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/services">
-                        <i class="bi bi-file-medical"></i> Quản lý dịch vụ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/patients">
-                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medicines">
-                        <i class="bi bi-hospital"></i> Quản lý kho thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
-                        <i class="bi bi-capsule"></i> Quản lý đơn thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-supplies">
-                        <i class="bi bi-gear-fill"></i> Quản lý vật tư
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.DOCTOR) { %>
+                <% if (currentRole == User.Role.DOCTOR) { %>
                 <!-- Menu cho Bác sĩ -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
@@ -186,73 +139,14 @@
                         <i class="bi bi-calendar-check"></i> Lịch khám bệnh
                     </a>
                 </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/patients">
+                <li class="active">
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-journal-medical"></i> Chỉ định dịch vụ
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
-                <!-- Menu cho Lễ tân -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý đặt lịch
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/checkin">
-                        <i class="bi bi-calendar-check"></i> Quản lý check-in
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/patients">
-                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
-                    </a>
-                </li>
-                <% } else { %>
-                <!-- Menu cho Bệnh nhân (PATIENT) -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/makeappointments">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-file-medical"></i> Hồ sơ sức khỏe
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-hospital"></i> Dịch vụ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
+                    <a href="${pageContext.request.contextPath}/doctor/report">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
                 </li>
                 <% } %>
@@ -329,18 +223,18 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/patients">
+                                    <a href="${pageContext.request.contextPath}/doctor/patients">
                                         <i class="bi bi-people me-1"></i>Quản lý bệnh nhân
                                     </a>
                                 </li>
                                 <% if (patient != null) { %>
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/medical-records?action=list&patientId=<%= patient.getId() %>">
+                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>">
                                         Hồ sơ bệnh án
                                     </a>
                                 </li>
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord.getId() %>">
+                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord.getId() %>">
                                         Đơn thuốc
                                     </a>
                                 </li>
@@ -398,7 +292,7 @@
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <form method="post" action="${pageContext.request.contextPath}/actual-prescriptions" id="prescriptionForm">
+                                <form method="post" action="${pageContext.request.contextPath}/doctor/actual-prescriptions" id="prescriptionForm">
                                     <input type="hidden" name="action" value="<%= "add".equals(action) ? "add" : "update" %>">
                                     <% if (form != null) { %>
                                         <input type="hidden" name="formId" value="<%= form.getActualPrescriptionFormId() %>">
@@ -528,7 +422,7 @@
 
                                     <!-- Form Actions -->
                                     <div class="d-flex justify-content-end gap-2">
-                                        <a href="${pageContext.request.contextPath}/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord != null ? medicalRecord.getId() : "" %>" 
+                                        <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=listByMedicalRecord&medicalRecordId=<%= medicalRecord != null ? medicalRecord.getId() : "" %>" 
                                            class="btn btn-outline-secondary">
                                             <i class="bi bi-x-circle me-2"></i>Hủy
                                         </a>

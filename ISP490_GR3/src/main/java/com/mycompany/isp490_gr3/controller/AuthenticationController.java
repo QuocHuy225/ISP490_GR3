@@ -62,6 +62,9 @@ public class AuthenticationController extends HttpServlet {
             case "/logout":
                 handleLogout(request, response);
                 break;
+            case "/reset-password":
+                handleResetPasswordPage(request, response);
+                break;
             default:
                 response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
                 break;
@@ -91,6 +94,12 @@ public class AuthenticationController extends HttpServlet {
                 break;
             case "/resend-verification":
                 handleResendVerification(request, response);
+                break;
+            case "/forgot-password":
+                handleForgotPassword(request, response);
+                break;
+            case "/reset-password":
+                handleResetPassword(request, response);
                 break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -365,5 +374,141 @@ public class AuthenticationController extends HttpServlet {
         request.setAttribute("regDob", dob);
         request.setAttribute("regGender", gender);
         request.setAttribute("regAddress", address);
+    }
+    
+    /**
+     * Handle forgot password request
+     */
+    private void handleForgotPassword(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String email = request.getParameter("email");
+        
+        // Validate input
+        if (email == null || email.trim().isEmpty()) {
+            request.setAttribute("forgotPasswordError", "Email không được để trống");
+            request.setAttribute("showForgotPasswordModal", "true");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        if (!isValidEmail(email)) {
+            request.setAttribute("forgotPasswordError", "Email không hợp lệ");
+            request.setAttribute("showForgotPasswordModal", "true");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        // Check if user exists
+        User user = daoUser.getUserByEmail(email.trim());
+        if (user == null) {
+            request.setAttribute("forgotPasswordError", "Không tìm thấy tài khoản với email này");
+            request.setAttribute("showForgotPasswordModal", "true");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        // Generate reset token
+        String resetToken = daoUser.generateResetPasswordToken();
+        
+        // Set token expiry time (30 minutes from now)
+        java.sql.Timestamp expiryTime = new java.sql.Timestamp(System.currentTimeMillis() + (30 * 60 * 1000));
+        
+        // Update user with reset token
+        boolean updateSuccess = daoUser.updateResetPasswordToken(email.trim(), resetToken, expiryTime);
+        
+        if (updateSuccess) {
+            // Send reset password email
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+            boolean emailSent = emailService.sendResetPasswordEmail(email.trim(), resetToken, user.getFullName(), baseUrl);
+            
+            if (emailSent) {
+                request.setAttribute("forgotPasswordSuccess", "Chúng tôi đã gửi link khôi phục mật khẩu đến email của bạn. Vui lòng kiểm tra email.");
+                request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            } else {
+                request.setAttribute("forgotPasswordError", "Không thể gửi email khôi phục mật khẩu. Vui lòng thử lại.");
+                request.setAttribute("showForgotPasswordModal", "true");
+                request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            }
+        } else {
+            request.setAttribute("forgotPasswordError", "Có lỗi xảy ra. Vui lòng thử lại.");
+            request.setAttribute("showForgotPasswordModal", "true");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+        }
+    }
+    
+    /**
+     * Handle reset password page (GET request)
+     */
+    private void handleResetPasswordPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String token = request.getParameter("token");
+        
+        // Validate token
+        if (token == null || token.trim().isEmpty()) {
+            request.setAttribute("resetPasswordError", "Link khôi phục mật khẩu không hợp lệ");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        // Check if token is valid
+        User user = daoUser.getUserByResetToken(token.trim());
+        if (user == null) {
+            request.setAttribute("resetPasswordError", "Link khôi phục mật khẩu không hợp lệ hoặc đã hết hạn");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        // Token is valid, show reset password form
+        request.setAttribute("resetPasswordToken", token.trim());
+        request.setAttribute("resetPasswordEmail", user.getEmail());
+        request.setAttribute("showResetPasswordModal", "true");
+        request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+    }
+    
+    /**
+     * Handle reset password form submission (POST request)
+     */
+    private void handleResetPassword(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String token = request.getParameter("token");
+        String newPassword = request.getParameter("newPassword");
+        String confirmPassword = request.getParameter("confirmPassword");
+        
+        // Validate input
+        if (token == null || token.trim().isEmpty()) {
+            request.setAttribute("resetPasswordError", "Token không hợp lệ");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        if (newPassword == null || newPassword.length() < 6) {
+            request.setAttribute("resetPasswordError", "Mật khẩu mới phải có ít nhất 6 ký tự");
+            request.setAttribute("resetPasswordToken", token.trim());
+            request.setAttribute("showResetPasswordModal", "true");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        if (confirmPassword == null || !newPassword.equals(confirmPassword)) {
+            request.setAttribute("resetPasswordError", "Mật khẩu xác nhận không khớp");
+            request.setAttribute("resetPasswordToken", token.trim());
+            request.setAttribute("showResetPasswordModal", "true");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+            return;
+        }
+        
+        // Reset password
+        boolean resetSuccess = daoUser.resetPassword(token.trim(), newPassword);
+        
+        if (resetSuccess) {
+            request.setAttribute("resetPasswordSuccess", "Mật khẩu đã được đặt lại thành công! Bạn có thể đăng nhập với mật khẩu mới.");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+        } else {
+            request.setAttribute("resetPasswordError", "Không thể đặt lại mật khẩu. Link có thể đã hết hạn hoặc đã được sử dụng.");
+            request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
+        }
     }
 } 

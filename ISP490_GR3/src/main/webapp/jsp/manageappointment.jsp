@@ -180,26 +180,22 @@
                 %>
             </c:if>
 
+
+
             <form id="searchForm" action="${pageContext.request.contextPath}/appointments" method="post" class="mb-4 mt-3 p-3 border rounded shadow-sm bg-light">
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="appointmentCode" class="form-label">Mã lịch hẹn</label>
-                        <input type="text" class="form-control" id="appointmentCode" name="appointmentCode"
-                               placeholder="Nhập" value="${param.appointmentCode}">
+                        <input type="text" class="form-control" id="appointmentCode" name="appointmentCode" placeholder="Nhập" value="${param.appointmentCode}">
                     </div>
-
                     <div class="col-md-4">
                         <label for="slotDate" class="form-label">Ngày hẹn</label>
-                        <input type="date" class="form-control" id="slotDate" name="slotDate"
-                               value="${param.slotDate}" />
+                        <input type="date" class="form-control" id="slotDate" name="slotDate" value="${empty slotDate ? LocalDate.now().toString() : slotDate}"/>
                     </div>
-
                     <div class="col-md-4">
                         <label for="patientCode" class="form-label">Mã bệnh nhân</label>
-                        <input type="text" class="form-control" id="patientCode" name="patientCode"
-                               placeholder="Nhập" value="${param.patientCode}">
+                        <input type="text" class="form-control" id="patientCode" name="patientCode" placeholder="Nhập" value="${param.patientCode}">
                     </div>
-
                     <div class="col-md-4">
                         <label for="doctorId" class="form-label">Bác sĩ</label>
                         <select id="doctorId" name="doctorId" class="form-select">
@@ -209,7 +205,6 @@
                             </c:forEach>
                         </select>
                     </div>
-
                     <div class="col-md-4">
                         <label for="servicesId" class="form-label">Dịch vụ</label>
                         <select id="servicesId" name="servicesId" class="form-select">
@@ -219,7 +214,6 @@
                             </c:forEach>
                         </select>
                     </div>
-
                     <div class="col-md-4">
                         <label for="status" class="form-label">Trạng thái</label>
                         <select id="status" name="status" class="form-select">
@@ -238,14 +232,10 @@
                         </select>
                     </div>
                 </div>
-
-
                 <div class="d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-light border" id="resetFilterButton">
                         <i class="bi bi-arrow-clockwise"></i> Đặt lại bộ lọc
                     </button>
-
-
                     <button type="submit" name="submitSearch" class="btn btn-primary">
                         <i class="bi bi-search"></i> Tìm kiếm
                     </button>
@@ -269,9 +259,6 @@
                     </form>
 
 
-                    <button type="button" class="btn btn-success btn-add-appointment" data-bs-toggle="modal" data-bs-target="#addAppointmentModal">
-                        <i class="bi bi-plus-circle"></i> Thêm Lịch hẹn mới
-                    </button>
                 </div>
             </div>
 
@@ -279,15 +266,15 @@
                 <table class="table table-hover table-bordered table-appointments">
                     <thead class="table-primary">
                         <tr>
-                            <th><input type="checkbox" id="checkAll" /></th>
+                            <!--                            <th><input type="checkbox" id="checkAll" /></th>-->
                             <th>STT</th>
                             <th>Mã lịch hẹn</th>
                             <th>Ngày khám</th>
                             <th>Slot khám</th>
+                            <th>Bác sĩ</th>
                             <th>Mã bệnh nhân</th>
                             <th>Bệnh nhân</th>
                             <th>Số điện thoại</th>
-                            <th>Bác sĩ</th>
                             <th>Dịch vụ</th>
                             <th>Trạng thái</th>
                             <!--                            <th>Thanh toán</th>-->
@@ -297,15 +284,16 @@
                     <tbody>
                         <c:forEach var="appointment" items="${currentPageAppointments}" varStatus="status">
                             <tr>
-                                <td><input type="checkbox" name="selectedAppointments" value="${appointment.id}" class="appointment-checkbox" /></td>
+<!--                                <td><input type="checkbox" name="selectedAppointments" value="${appointment.id}" class="appointment-checkbox" /></td>-->
                                 <td>${startIndex + status.index + 1}</td>
                                 <td>${appointment.appointmentCode}</td>
                                 <td>${appointment.slotDate}</td>
                                 <td>${appointment.slotTimeRange}</td>
+                                <td>${appointment.doctorName}</td>
                                 <td>${appointment.patientCode}</td>
                                 <td>${appointment.patientName}</td>
                                 <td>${appointment.patientPhone}</td>
-                                <td>${appointment.doctorName}</td>
+
                                 <td>${appointment.serviceName}</td>
                                 <td>
                                     <c:choose>
@@ -319,12 +307,23 @@
                                 <!--
                                                                 <td>${appointment.paymentStatus}</td>-->
                                 <td>
-                                    <a href="#" class="btn btn-sm btn-outline-primary" title="Xem / Sửa">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a href="#" class="btn btn-sm btn-outline-danger btn-delete-single" title="Xóa" data-bs-toggle="modal" data-bs-target="#confirmSingleDeleteModal" data-id="${appointment.id}">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                                    <c:choose>
+                                        <c:when test="${empty appointment.patientCode}">
+                                            <!-- No patient assigned: Show Assign -->
+                                            <a href="#" class="btn btn-sm btn-outline-success btn-assign" title="Gán bệnh nhân vào lịch hẹn" data-bs-toggle="modal" data-bs-target="#addAppointmentModal" data-id="${appointment.id}">
+                                                <i class="bi bi-person-plus"> Gán </i>
+                                            </a>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <!-- Patient assigned: Show Edit and Delete buttons -->
+<!--                                            <a href="#" class="btn btn-sm btn-outline-primary btn-edit" title="Đổi/Sửa lịch hẹn " data-bs-toggle="modal" data-bs-target="#updateAppointmentModal" data-id="${appointment.id}">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>-->
+                                            <a href="#" class="btn btn-sm btn-outline-warning btn-remove-patient" title="Bỏ gán bệnh nhân vào lịch hẹn" data-bs-toggle="modal" data-bs-target="#confirmRemovePatientModal" data-id="${appointment.id}" data-code="${appointment.appointmentCode}">
+                                                <i class="bi bi-person-x"> Bỏ gán </i>
+                                            </a>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </td>
                             </tr>
                         </c:forEach>
@@ -375,434 +374,299 @@
 
     <script src="${pageContext.request.contextPath}/js/appointment.js"></script>
 
-
-    <!-- Modal Thêm lịch hẹn -->
-    <div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentLabel" aria-hidden="true">
+    <%-- Modal gán bệnh nhân --%>
+    <div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content shadow-lg rounded-4">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="addAppointmentLabel">Thêm lịch hẹn mới</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    <h5 class="modal-title fw-bold" id="addAppointmentModalLabel">Gán bệnh nhân vào lịch hẹn</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <form id="addAppointmentForm" action="${pageContext.request.contextPath}/appointments/add" method="post">
+                    <input type="hidden" name="action" value="assignPatient">
+                    <input type="hidden" id="appointmentId" name="appointmentId" />
+                    <input type="hidden" id="patientId" name="patientId" />
 
-                <form action="${pageContext.request.contextPath}/appointments/add" method="post">
                     <div class="modal-body px-4 py-3">
-                        <!-- Dịch vụ -->
-                        <div class="mb-3">
-                            <label for="servicesId" class="form-label fw-semibold">Dịch vụ <span class="text-danger">*</span></label>
-                            <select class="form-select" id="servicesId" name="servicesId" required>
-                                <option value="">--Chọn--</option>
-                                <c:forEach var="service" items="${serviceList}">
-                                    <option value="${service.servicesId}">${service.serviceName}</option>
-                                </c:forEach>
-                            </select>
+                        <!-- Phần tìm kiếm bệnh nhân -->
+                        <div class="mb-4 border-bottom pb-3">
+                            <h6 class="fw-bold mb-3">Tìm kiếm bệnh nhân</h6>
+                            <div class="row g-2">
+                                <!-- 2 cột trên -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="filterPatientCode" class="form-label">Mã bệnh nhân</label>
+                                        <input type="text" class="form-control" id="filterPatientCode" placeholder="Nhập mã">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="filterPatientCCCD" class="form-label">CCCD</label>
+                                        <input type="text" class="form-control" id="filterPatientCCCD" placeholder="Nhập CCCD">
+                                    </div>
+                                </div>
+                                <!-- 2 cột dưới -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="filterPatientName" class="form-label">Họ tên</label>
+                                        <input type="text" class="form-control" id="filterPatientName" placeholder="Nhập tên">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="filterPatientPhone" class="form-label">Số điện thoại</label>
+                                        <input type="text" class="form-control" id="filterPatientPhone" placeholder="Nhập số">
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
-                        <!-- Slot check-in: dropdown + nút lọc -->
-                        <div class="mb-3">
-                            <label for="slotId" class="form-label fw-semibold">Slot <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <select class="form-select" id="slotId" name="slotId" required>
-                                    <option value="">--Chọn--</option>
-                                    <!-- Render bằng JS sau khi lọc -->
-                                </select>
-                                <button type="button" class="btn btn-outline-secondary" id="filterSlotBtn" title="Lọc slot">
-                                    <i class="bi bi-funnel-fill"></i>
-                                </button>
+                        <!-- Phần danh sách bệnh nhân -->
+                        <div class="mt-4">
+                            <h6 class="fw-bold mb-3">Danh sách bệnh nhân</h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered" id="patientListTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã bệnh nhân</th>
+                                            <th>CCCD</th>
+                                            <th>Họ tên</th>
+                                            <th>Số điện thoại</th>
+                                            <th>Chọn</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="patientListBody">
+                                        <!-- Dữ liệu sẽ được tải từ API -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-
-                        <!-- Bệnh nhân: dropdown + nút lọc -->
-                        <div class="mb-3">
-                            <label for="patientId" class="form-label fw-semibold">Bệnh nhân <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <select class="form-select" id="patientId" name="patientId" required>
-                                    <option value="">--Chọn--</option>
-                                    <c:forEach var="p" items="${patientList}">
-                                        <option value="${p.id}">${p.patientCode} - ${p.fullName}</option>
-                                    </c:forEach>
-                                </select>
-                                <button type="button" class="btn btn-outline-secondary" id="filterPatientBtn" title="Lọc bệnh nhân">
-                                    <i class="bi bi-funnel-fill"></i>
-                                </button>
-                            </div>
-                        </div>
-
                     </div>
-
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-primary">Lưu</button>
+                        <button type="submit" class="btn btn-primary" id="saveAssignmentBtn" disabled>Lưu</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Modal Lọc Slot -->
-    <div class="modal fade" id="filterSlotModal" tabindex="-1" aria-labelledby="filterSlotModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="filterSlotModalLabel">Lọc Slot</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Chọn bác sĩ -->
-                    <div class="mb-3">
-                        <label for="filterDoctorId" class="form-label">Bác sĩ</label>
-                        <select class="form-select" id="filterDoctorId">
-                            <option value="">--Tất cả bác sĩ--</option>
-                            <c:forEach var="doc" items="${doctorList}">
-                                <option value="${doc.id}">${doc.fullName}</option>
-                            </c:forEach>
-                        </select>
-                    </div>
-
-                    <!-- Ngày -->
-                    <div class="mb-3">
-                        <label for="filterSlotDate" class="form-label">Ngày</label>
-                        <input type="date" class="form-control" id="filterSlotDate" />
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-primary" id="applySlotFilter">Áp dụng</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Lọc Bệnh Nhân -->
-    <div class="modal fade" id="filterPatientModal" tabindex="-1" aria-labelledby="filterPatientModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="filterPatientModalLabel">Lọc bệnh nhân</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Mã bệnh nhân -->
-                    <div class="mb-3">
-                        <label for="filterPatientCode" class="form-label">Mã bệnh nhân</label>
-                        <input type="text" class="form-control" id="filterPatientCode" placeholder="Nhập mã bệnh nhân">
-                    </div>
-
-                    <!-- Họ tên bệnh nhân -->
-                    <div class="mb-3">
-                        <label for="filterPatientName" class="form-label">Họ tên</label>
-                        <input type="text" class="form-control" id="filterPatientName" placeholder="Nhập tên bệnh nhân">
-                    </div>
-
-                    <!-- Số điện thoại -->
-                    <div class="mb-3">
-                        <label for="filterPatientPhone" class="form-label">Số điện thoại</label>
-                        <input type="text" class="form-control" id="filterPatientPhone" placeholder="Nhập số điện thoại">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-primary" id="applyPatientFilter">Áp dụng</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- JS lọc slot, bệnh nhân -->
     <script>
-      
-        document.addEventListener("DOMContentLoaded", function () {
-            // Modal lọc slot
-            const filterSlotModal = new bootstrap.Modal(document.getElementById('filterSlotModal'));
-            document.getElementById("filterSlotBtn").addEventListener("click", function () {
-                filterSlotModal.show();
-            });
+        <%
+         String scheme = request.getScheme();             // http or https
+         String serverName = request.getServerName();     // localhost or domain
+         int serverPort = request.getServerPort();        // 8080, 443, etc.
+         String contextPath = request.getContextPath();   // /ISP490_GR3
+         String baseURL = scheme + "://" + serverName + ":" + serverPort + contextPath;
+        %>
+        var BASE_URL = "<%= baseURL %>";
+        console.log("BASE_URL:", BASE_URL);
 
-            // Áp dụng lọc slot
-            document.getElementById("applySlotFilter").addEventListener("click", function () {
-                const doctorId = document.getElementById("filterDoctorId").value;
-                const slotDate = document.getElementById("filterSlotDate").value;
-
-                // Gọi API lọc slot theo doctorId + slotDate, rồi render lại dropdown slot
-                const slotSelect = document.getElementById("slotId");
-                slotSelect.innerHTML = `<option value="">Đang tải...</option>`;
-
-                fetch(`/slot/filter?doctorId=${doctorId}&slotDate=${slotDate}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            slotSelect.innerHTML = '<option value="">--Chọn slot check-in--</option>';
-                            data.forEach(slot => {
-                                const option = document.createElement("option");
-                                option.value = slot.id;
-                                option.textContent = `${slot.slotDate} ${slot.startTime} - ${slot.endTime} (${slot.doctorName})`;
-                                slotSelect.appendChild(option);
-                            });
-                            filterSlotModal.hide();
-                        })
-                        .catch(err => {
-                            alert("Lỗi khi lọc slot!");
-                            console.error(err);
-                        });
-            });
-
-            // Modal lọc bệnh nhân
-            const filterPatientModal = new bootstrap.Modal(document.getElementById('filterPatientModal'));
-            document.getElementById("filterPatientBtn").addEventListener("click", function () {
-                filterPatientModal.show();
-            });
-
-            // Áp dụng lọc bệnh nhân
-            document.getElementById("applyPatientFilter").addEventListener("click", function () {
-                const code = document.getElementById("filterPatientCode").value.trim();
-                const name = document.getElementById("filterPatientName").value.trim();
-                const phone = document.getElementById("filterPatientPhone").value.trim();
-
-                const query = new URLSearchParams({
-                    patientCode: code,
-                    fullName: name,
-                    phone: phone
-                });
-
-                const patientSelect = document.getElementById("patientId");
-                patientSelect.innerHTML = `<option value="">Đang tải...</option>`;
-
-                fetch(`/patient/filter?${query.toString()}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            patientSelect.innerHTML = `<option value="">--Chọn bệnh nhân--</option>`;
-                            data.forEach(p => {
-                                const option = document.createElement("option");
-                                option.value = p.id;
-                                option.textContent = `${p.patientCode} - ${p.fullName}`;
-                                                            patientSelect.appendChild(option);
-                                                        });
-                                                        filterPatientModal.hide();
-                                                    })
-                                                    .catch(err => {
-                                                        alert("Lỗi khi lọc bệnh nhân!");
-                                                        console.error(err);
-                                                    });
-                                        });
-                                    });
-
-    </script>
-
-
-    <%-- NEW Modal Cập nhật lịch hẹn --%>
-    <div class="modal fade" id="updateAppointmentModal" tabindex="-1" aria-labelledby="updateAppointmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="updateAppointmentModalLabel">Cập nhật lịch hẹn</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="updateAppointmentForm" action="${pageContext.request.contextPath}/appointments" method="post">
-                        <input type="hidden" name="action" value="updateAppointment">
-                        <input type="hidden" name="id" id="updateAppointmentId">
-
-                        <div class="mb-3">
-                            <label for="updateAppointmentCode" class="form-label">Mã lịch hẹn</label>
-                            <input type="text" class="form-control" id="updateAppointmentCode" name="appointmentCode" placeholder="Mã lịch hẹn" readonly disable>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="updatePatientId" class="form-label">Mã bệnh nhân <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="updatePatientId" name="patientId" required placeholder="Nhập mã bệnh nhân">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="updateDoctorId" class="form-label">Bác sĩ phụ trách <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="updateDoctorId" name="doctorId" required placeholder="Nhập mã bác sĩ">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="updateSlotId" class="form-label">Slot <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="updateSlotId" name="slotId" required placeholder="Nhập mã slot">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="updateStatus" class="form-label">Trạng thái</label>
-                            <select class="form-select" id="updateStatus" name="status">
-                                <option value="pending">Đang chờ</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="done">Hoàn thành</option>
-                                <option value="cancelled">Đã hủy</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" form="updateAppointmentForm" class="btn btn-primary">Cập nhật</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Modal Xác nhận Xóa Từng Lịch hẹn -->
-    <div class="modal fade" id="confirmSingleDeleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="singleDeleteForm" action="${pageContext.request.contextPath}/appointments/delete" method="post">
-                    <input type="hidden" name="action" value="deleteSingle">
-                    <input type="hidden" id="singleDeleteAppointmentId" name="appointmentId" />
-                    <input type="hidden" name="page" value="${currentPage}"/>
-
-                    <div class="modal-header">
-                        <h5 class="modal-title">Xóa lịch hẹn</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        Bạn muốn xóa lịch hẹn <span class="text-primary fw-bold" id="modalAppointmentCode"></span> ngày <span class="text-primary fw-bold" id="modalSlotDate"></span>?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-danger">Xóa</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-
-
-
-    <!-- Modal Xác nhận Xóa Nhiều Slot -->
-    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Xóa nhiều lịch hẹn</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Bạn muốn xóa <span id="deleteCount" class="text-primary fw-bold"></span> lịch hẹn khỏi hệ thống?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteButton">Xóa</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Hiển thị/xóa nút "Xóa nhiều"
-            function updateDeleteMultipleVisibility() {
-                const checkboxes = document.querySelectorAll('.appointment-checkbox');
-                const selected = Array.from(checkboxes).filter(cb => cb.checked);
-                const count = selected.length;
 
-                const deleteForm = document.getElementById("deleteMultipleForm");
-                const countSpan = document.getElementById("selectedCount");
 
-                if (deleteForm && countSpan) {
-                    if (count > 0) {
-                        deleteForm.style.display = "inline-block";
-                        countSpan.textContent = count;
-                    } else {
-                        deleteForm.style.display = "none";
-                        countSpan.textContent = 0;
-                    }
-                }
+            const assignButtons = document.querySelectorAll('.btn-assign');
+            console.log('Số lượng nút .btn-assign:', assignButtons.length);
+            if (assignButtons.length === 0) {
+               
+                return;
             }
 
-            // Gắn sự kiện checkbox từng dòng
-            document.querySelectorAll('.appointment-checkbox').forEach(cb => {
-                cb.addEventListener("change", updateDeleteMultipleVisibility);
-            });
-
-            // Sự kiện "Chọn tất cả"
-            const checkAll = document.getElementById("checkAll");
-            if (checkAll) {
-                checkAll.addEventListener("change", function () {
-                    const checked = this.checked;
-                    document.querySelectorAll('.appointment-checkbox').forEach(cb => {
-                        cb.checked = checked;
-                    });
-                    updateDeleteMultipleVisibility();
-                });
-            }
-
-            // Sự kiện XÓA 1
-            document.querySelectorAll('.btn-delete-single').forEach(button => {
+            document.querySelectorAll('.btn-assign').forEach(button => {
                 button.addEventListener('click', function (event) {
                     event.preventDefault();
                     const appointmentId = this.dataset.id;
-                    document.getElementById('singleDeleteAppointmentId').value = appointmentId;
+                    console.log('Nhấp vào nút Gán, appointmentId:', appointmentId);
 
-                    const row = this.closest('tr');
-                    const appointmentCode = row.querySelector('td:nth-child(3)').textContent.trim();
-                    const slotDate = row.querySelector('td:nth-child(4)').textContent.trim();
-
-                    document.getElementById('modalAppointmentCode').textContent = appointmentCode;
-                    document.getElementById('modalSlotDate').textContent = slotDate;
-
-                    const modalEl = document.getElementById('confirmSingleDeleteModal');
-                    if (modalEl) {
-                        const modal = new bootstrap.Modal(modalEl);
-                        modal.show();
+                    if (!appointmentId) {
+                        console.error('appointmentId không tồn tại trong dataset!');
+                        return;
                     }
+
+                    const modalEl = document.getElementById('addAppointmentModal');
+                    if (!modalEl) {
+                        console.error('Không tìm thấy modal #addAppointmentModal!');
+                        return;
+                    }
+
+                    document.getElementById('appointmentId').value = appointmentId;
+                    console.log('Đã đặt appointmentId vào form:', appointmentId);
+
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                    console.log('Modal đã được hiển thị');
+
+
+
+
+                    // Reset filter trước khi load
+                    const filterInputs = ['filterPatientCode', 'filterPatientCCCD', 'filterPatientName', 'filterPatientPhone'];
+                    filterInputs.forEach(inputId => {
+                        const input = document.getElementById(inputId);
+                        if (input) {
+                            input.value = '';
+                            console.log(`Đã reset trường ${inputId}`);
+                        } else {
+                            console.error(`Không tìm thấy input ${inputId}!`);
+                        }
+                    });
+
+                    // Delay 300ms để đảm bảo modal đã render DOM đầy đủ
+                    setTimeout(() => {
+                        loadPatientList();
+                    }, 300);
                 });
             });
 
-            // Sự kiện bấm nút "Xóa đã chọn"
-            const btnDeleteSelected = document.getElementById('btnDeleteSelected');
-            if (btnDeleteSelected) {
-                btnDeleteSelected.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    const checkedCount = document.querySelectorAll('input[name="selectedAppointments"]:checked').length;
-                    const deleteCountSpan = document.getElementById('deleteCount');
-                    if (deleteCountSpan) {
-                        deleteCountSpan.textContent = checkedCount;
-                    }
-                });
-            }
+            // Load danh sách bệnh nhân 
 
-            // Xác nhận XÓA NHIỀU
-            const confirmDeleteButton = document.getElementById('confirmDeleteButton');
-            if (confirmDeleteButton) {
-                confirmDeleteButton.addEventListener('click', function () {
-                    const selected = document.querySelectorAll('input[name="selectedAppointments"]:checked');
-                    const container = document.getElementById('selectedAppointmentIds');
-                    if (container) {
-                        container.innerHTML = "";
-                        selected.forEach(checkbox => {
-                            const hiddenInput = document.createElement("input");
-                            hiddenInput.type = "hidden";
-                            hiddenInput.name = "appointmentIds";
-                            hiddenInput.value = checkbox.value;
-                            container.appendChild(hiddenInput);
+            function loadPatientList() {
+
+                console.log('Bắt đầu loadPatientList...');
+
+                const code = document.getElementById('filterPatientCode').value.trim();
+                const cccd = document.getElementById('filterPatientCCCD').value.trim();
+                const name = document.getElementById('filterPatientName').value.trim();
+                const phone = document.getElementById('filterPatientPhone').value.trim();
+                console.log('Tham số lọc:', {code, cccd, name, phone});
+
+                const query = new URLSearchParams({
+                    code: code,
+                    cccd: cccd,
+                    name: name,
+                    phone: phone
+                }).toString();
+                console.log('URL query:', query);
+
+                const url = BASE_URL + "/patient/search?" + query;
+                console.log('URL đầy đủ:', url);
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                        .then(res => {
+                            console.log('Response status:', res.status);
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+                            return res.json();
+                        })
+
+                        .then(data => {
+                            console.log("DATA NHẬN VỀ:", data);
+                            console.log("Array.isArray(data):", Array.isArray(data));
+                            console.log("data.length:", data.length);
+
+                            console.log('Dữ liệu nhận được từ server:', data);
+                            const tbody = document.getElementById('patientListBody');
+                            if (!tbody) {
+                                console.error('Không tìm thấy tbody #patientListBody!');
+                                return;
+                            }
+                            tbody.innerHTML = '';
+                            if (!Array.isArray(data) || data.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Không tìm thấy bệnh nhân.</td></tr>';
+                            } else {
+                                data.forEach(patient => {
+
+                                    const row = document.createElement('tr');
+                                    //Hiển thị patient list
+                                    row.innerHTML = '<td>' + (patient.patientCode || '-') + '</td>' +
+                                            '<td>' + (patient.cccd || '-') + '</td>' +
+                                            '<td>' + (patient.fullName || '-') + '</td>' +
+                                            '<td>' + (patient.phone || '-') + '</td>' +
+                                            '<td>' +
+                                            '<div class="form-check">' +
+                                            '<input type="radio" class="form-check-input select-patient" name="patientSelection" value="' + (patient.id || '') + '" data-id="' + (patient.id || '') + '">' +
+                                            '</div>' +
+                                            '</td>';
+                                    ;
+                                    tbody.appendChild(row);
+                                });
+                            }
+
+                            // Reattach event listeners to new buttons
+                            document.querySelectorAll('.select-patient').forEach(button => {
+                                button.addEventListener('click', function () {
+                                    const patientId = this.dataset.id;
+                                    console.log('Chọn bệnh nhân, patientId:', patientId);
+                                    if (!patientId) {
+                                        console.error('patientId không hợp lệ!');
+                                        return;
+                                    }
+                                    document.getElementById('patientId').value = patientId;
+                                    document.getElementById('saveAssignmentBtn').disabled = false;
+                                    console.log('Đã đặt patientId và kích hoạt nút Lưu');
+                                });
+                            });
+                        })
+                        .catch(err => {
+                            console.error('Lỗi khi tải danh sách bệnh nhân:', err);
+                            const tbody = document.getElementById('patientListBody');
+                            if (tbody) {
+                                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Lỗi: Không thể tải dữ liệu.</td></tr>';
+                            }
+                            alert("Lỗi khi tải danh sách bệnh nhân!");
                         });
-                        document.getElementById('deleteMultipleForm').submit();
-                    }
-                });
+            }
+            
+            
+                   
+
+            // Event listeners for filter inputs and buttons
+            const filterInputs = ['filterPatientCode', 'filterPatientCCCD', 'filterPatientName', 'filterPatientPhone'];
+            filterInputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.addEventListener('input', loadPatientList);
+                    console.log(`Đã gắn sự kiện input cho ${inputId}`);
+                } else {
+                    console.error(`Không tìm thấy input ${inputId} trong DOM!`);
+                }
+            });
+
+
+            const saveButton = document.getElementById('saveAssignmentBtn');
+            if (saveButton) {
+                saveButton.disabled = true;
+                console.log('Nút Lưu đã được vô hiệu hóa ban đầu');
+            } else {
+                console.error('Không tìm thấy nút #saveAssignmentBtn!');
             }
 
-            // Xử lý khi bất kỳ modal nào đóng
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('hidden.bs.modal', function () {
+                    console.log(`Modal ${modal.id} đang đóng`);
                     const backdrops = document.querySelectorAll('.modal-backdrop');
                     backdrops.forEach(backdrop => backdrop.remove());
                     document.body.classList.remove('modal-open');
                     document.body.style.overflow = '';
                     document.body.style.paddingRight = '';
                     console.log(`Modal ${modal.id} đã đóng, xóa backdrop`);
+                    const patientIdInput = document.getElementById('patientId');
+                    if (patientIdInput)
+                        patientIdInput.value = '';
+                    if (saveButton)
+                        saveButton.disabled = true;
+                    console.log('Đã reset form và vô hiệu hóa nút Lưu');
                 });
             });
-
-
         });
-        // Các biến từ Controller
+    </script>
+
+
+
+    <script>
         window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
         window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
     </script>
+
+
+
 
 
     <%!
@@ -847,5 +711,6 @@
             return params.toString();
         }
     %>
+
 </body>
 </html>

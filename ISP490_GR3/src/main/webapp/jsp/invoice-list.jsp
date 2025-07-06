@@ -2,16 +2,17 @@
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="com.mycompany.isp490_gr3.model.Patient" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalRecord" %>
-<%@ page import="com.mycompany.isp490_gr3.model.ActualPrescriptionForm" %>
+<%@ page import="com.mycompany.isp490_gr3.model.Invoice" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.text.DecimalFormat" %>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quản lý đơn thuốc - Ánh Dương Clinic</title>
+        <title>Quản lý hóa đơn - Ánh Dương Clinic</title>
         <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <!-- Bootstrap CSS -->
@@ -20,6 +21,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
         <!-- Homepage specific CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
+        <!-- Invoice specific CSS -->
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/invoice.css">
         <style>
             /* Custom Action Buttons Styling */
             .action-buttons-group {
@@ -176,10 +179,11 @@
         // Get data from request
         Patient patient = (Patient) request.getAttribute("patient");
         MedicalRecord medicalRecord = (MedicalRecord) request.getAttribute("medicalRecord");
-        List<ActualPrescriptionForm> forms = (List<ActualPrescriptionForm>) request.getAttribute("forms");
+        List<Invoice> invoices = (List<Invoice>) request.getAttribute("invoices");
         
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         SimpleDateFormat shortSdf = new SimpleDateFormat("dd/MM/yyyy");
+        DecimalFormat currencyFormat = new DecimalFormat("#,###");
         %>
 
         <!-- Sidebar -->
@@ -201,7 +205,7 @@
                     </a>
                 </li>
                 <li class="active">
-                    <a href="${pageContext.request.contextPath}/doctor/patients">
+                    <a href="${pageContext.request.contextPath}/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
@@ -284,7 +288,7 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/doctor/patients">
+                                    <a href="${pageContext.request.contextPath}/patients">
                                         <i class="bi bi-people me-1"></i>Quản lý bệnh nhân
                                     </a>
                                 </li>
@@ -296,7 +300,7 @@
                                 </li>
                                 <% } %>
                                 <li class="breadcrumb-item active" aria-current="page">
-                                    Quản lý đơn thuốc
+                                    Quản lý hóa đơn
                                 </li>
                             </ol>
                         </nav>
@@ -305,7 +309,7 @@
                         <div class="card bg-light">
                             <div class="card-body">
                                 <h4 class="text-primary mb-3">
-                                    <i class="bi bi-capsule me-2"></i>Quản lý đơn thuốc
+                                    <i class="bi bi-receipt me-2"></i>Quản lý hóa đơn
                                 </h4>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -336,11 +340,11 @@
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="bi bi-check-circle me-2"></i>
                     <% if ("added".equals(success)) { %>
-                        Thêm đơn thuốc thành công!
+                        Thêm hóa đơn thành công!
                     <% } else if ("updated".equals(success)) { %>
-                        Cập nhật đơn thuốc thành công!
+                        Cập nhật hóa đơn thành công!
                     <% } else if ("deleted".equals(success)) { %>
-                        Xóa đơn thuốc thành công!
+                        Xóa hóa đơn thành công!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -350,11 +354,11 @@
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     <% if ("add_failed".equals(error)) { %>
-                        Thêm đơn thuốc thất bại!
+                        Thêm hóa đơn thất bại!
                     <% } else if ("update_failed".equals(error)) { %>
-                        Cập nhật đơn thuốc thất bại!
+                        Cập nhật hóa đơn thất bại!
                     <% } else if ("delete_failed".equals(error)) { %>
-                        Xóa đơn thuốc thất bại!
+                        Xóa hóa đơn thất bại!
                     <% } else if ("system_error".equals(error)) { %>
                         Có lỗi hệ thống xảy ra!
                     <% } else { %>
@@ -364,7 +368,7 @@
                 </div>
                 <% } %>
 
-                <!-- Back Button & Add Prescription Button -->
+                <!-- Back Button & Add Invoice Button -->
                 <% if (medicalRecord != null) { %>
                 <div class="row mb-4">
                     <div class="col-12">
@@ -379,11 +383,11 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <h5 class="card-title mb-0">
-                                        <i class="bi bi-capsule-pill me-2"></i>Danh sách đơn thuốc
+                                        <i class="bi bi-receipt-cutoff me-2"></i>Danh sách hóa đơn
                                     </h5>
-                                    <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=new&medicalRecordId=<%= medicalRecord.getId() %>" 
+                                    <a href="${pageContext.request.contextPath}/doctor/invoices?action=new&medicalRecordId=<%= medicalRecord.getId() %>" 
                                        class="btn btn-success">
-                                        <i class="bi bi-plus-circle me-2"></i>Tạo đơn thuốc mới
+                                        <i class="bi bi-plus-circle me-2"></i>Tạo hóa đơn mới
                                     </a>
                                 </div>
                             </div>
@@ -391,55 +395,55 @@
                     </div>
                 </div>
 
-                <!-- Prescriptions Table -->
+                <!-- Invoices Table -->
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <% if (forms != null && !forms.isEmpty()) { %>
-                                        <table id="prescriptionsTable" class="table table-striped table-hover">
+                                    <% if (invoices != null && !invoices.isEmpty()) { %>
+                                        <table id="invoicesTable" class="table table-striped table-hover">
                                             <thead class="table-primary">
                                                 <tr>
-                                                    <th>Mã đơn thuốc</th>
-                                                    <th>Ngày kê</th>
-                                                    <th>Tên đơn thuốc</th>
-                                                    <th>Ghi chú</th>
+                                                    <th>Mã hóa đơn</th>
+                                                    <th>Ngày tạo</th>
+                                                    <th>Tổng tiền</th>
+                                                    <th>Giảm giá</th>
+                                                    <th>Thành tiền</th>
                                                     <th>Thao tác</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <% for (ActualPrescriptionForm form : forms) { %>
+                                                <% for (Invoice invoice : invoices) { %>
                                                     <tr>
-                                                        <td><%= form.getActualPrescriptionFormId() %></td>
-                                                        <td><%= form.getPrescriptionDate() != null ? sdf.format(form.getPrescriptionDate()) : "" %></td>
-                                                        <td><%= form.getFormName() %></td>
-                                                        <td>
-                                                            <% if (form.getNotes() != null && !form.getNotes().isEmpty()) { %>
-                                                                <%= form.getNotes().length() > 50 ? 
-                                                                    form.getNotes().substring(0, 50) + "..." : 
-                                                                    form.getNotes() %>
-                                                            <% } else { %>
-                                                                <em class="text-muted">Không có ghi chú</em>
-                                                            <% } %>
+                                                        <td><%= invoice.getInvoiceId() %></td>
+                                                        <td><%= invoice.getCreatedAt() != null ? sdf.format(invoice.getCreatedAt()) : "" %></td>
+                                                        <td class="text-end">
+                                                            <%= invoice.getTotalAmount() != null ? currencyFormat.format(invoice.getTotalAmount()) + "đ" : "0đ" %>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <%= invoice.getDiscountAmount() != null ? currencyFormat.format(invoice.getDiscountAmount()) + "đ" : "0đ" %>
+                                                        </td>
+                                                        <td class="text-end fw-bold">
+                                                            <%= invoice.getFinalAmount() != null ? currencyFormat.format(invoice.getFinalAmount()) + "đ" : "0đ" %>
                                                         </td>
                                                         <td>
                                                             <div class="action-buttons-group">
-                                                                <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=view&formId=<%= form.getActualPrescriptionFormId() %>" 
-                                                                   class="action-btn action-btn-view" title="Xem & In đơn thuốc">
+                                                                <a href="${pageContext.request.contextPath}/doctor/invoices?action=view&invoiceId=<%= invoice.getInvoiceId() %>" 
+                                                                   class="action-btn action-btn-view" title="Xem & In hóa đơn">
                                                                     <i class="bi bi-eye"></i>
                                                                     <span class="btn-text">Xem</span>
                                                                 </a>
                                                                 
-                                                                <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
-                                                                   class="action-btn action-btn-edit" title="Chỉnh sửa đơn thuốc">
+                                                                <a href="${pageContext.request.contextPath}/doctor/invoices?action=edit&invoiceId=<%= invoice.getInvoiceId() %>" 
+                                                                   class="action-btn action-btn-edit" title="Chỉnh sửa hóa đơn">
                                                                     <i class="bi bi-pencil-square"></i>
                                                                     <span class="btn-text">Sửa</span>
                                                                 </a>
                                                                 
                                                                 <button type="button" class="action-btn action-btn-delete" 
-                                                                        onclick="deletePrescription('<%= form.getActualPrescriptionFormId() %>', '<%= medicalRecord.getId() %>')" 
-                                                                        title="Xóa đơn thuốc">
+                                                                        onclick="deleteInvoice('<%= invoice.getInvoiceId() %>', '<%= medicalRecord.getId() %>')" 
+                                                                        title="Xóa hóa đơn">
                                                                     <i class="bi bi-trash3"></i>
                                                                     <span class="btn-text">Xóa</span>
                                                                 </button>
@@ -451,9 +455,9 @@
                                         </table>
                                     <% } else { %>
                                         <div class="text-center py-5">
-                                            <i class="bi bi-capsule display-1 text-muted"></i>
-                                            <h4 class="text-muted mt-3">Chưa có đơn thuốc nào</h4>
-                                            <p class="text-muted">Bắt đầu bằng cách tạo đơn thuốc đầu tiên cho hồ sơ bệnh án này.</p>
+                                            <i class="bi bi-receipt display-1 text-muted"></i>
+                                            <h4 class="text-muted mt-3">Chưa có hóa đơn nào</h4>
+                                            <p class="text-muted">Bắt đầu bằng cách tạo hóa đơn đầu tiên cho hồ sơ bệnh án này.</p>
                                         </div>
                                     <% } %>
                                 </div>
@@ -476,7 +480,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Bạn có chắc chắn muốn xóa đơn thuốc này không?</p>
+                        <p>Bạn có chắc chắn muốn xóa hóa đơn này không?</p>
                         <p class="text-danger">
                             <i class="bi bi-exclamation-triangle me-2"></i>
                             Hành động này không thể hoàn tác!
@@ -484,9 +488,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <form method="POST" action="${pageContext.request.contextPath}/doctor/actual-prescriptions" style="display: inline;">
+                        <form method="POST" action="${pageContext.request.contextPath}/doctor/invoices" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
-                            <input type="hidden" id="deleteFormId" name="formId">
+                            <input type="hidden" id="deleteInvoiceId" name="invoiceId">
                             <input type="hidden" id="deleteMedicalRecordId" name="medicalRecordId">
                             <button type="submit" class="btn btn-danger">
                                 <i class="bi bi-trash me-2"></i>Xóa
@@ -535,12 +539,12 @@
                 window.addEventListener('resize', checkWidth);
 
                 // Initialize DataTable only if table exists
-                if ($('#prescriptionsTable').length > 0) {
-                    $('#prescriptionsTable').DataTable({
+                if ($('#invoicesTable').length > 0) {
+                    $('#invoicesTable').DataTable({
                         "searching": false,
                         "ordering": true,
                         "columnDefs": [
-                            { "orderable": false, "targets": [4] }
+                            { "orderable": false, "targets": [5] }
                         ],
                         "language": {
                             "lengthMenu": "Hiển thị _MENU_ mục",
@@ -559,9 +563,9 @@
                 }
             });
 
-            // Delete prescription function
-            function deletePrescription(formId, medicalRecordId) {
-                document.getElementById('deleteFormId').value = formId;
+            // Delete invoice function
+            function deleteInvoice(invoiceId, medicalRecordId) {
+                document.getElementById('deleteInvoiceId').value = invoiceId;
                 document.getElementById('deleteMedicalRecordId').value = medicalRecordId;
                 new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
             }
