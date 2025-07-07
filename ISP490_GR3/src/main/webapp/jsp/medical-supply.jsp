@@ -234,6 +234,8 @@
                         Xóa vật tư thất bại!
                     <% } else if ("invalid_quantity".equals(error)) { %>
                         Số lượng phải lớn hơn 0!
+                    <% } else if ("invalid_values".equals(error)) { %>
+                        Giá trị nhập vào không hợp lệ! Đơn giá phải lớn hơn 0 và số lượng phải từ 1 trở lên.
                     <% } else if ("supply_exists".equals(error)) { %>
                         Vật tư này đã tồn tại!
                     <% } %>
@@ -320,8 +322,8 @@
                                                     <td>
                                                         <a href="${pageContext.request.contextPath}/admin/medical-supplies?edit=<%= supply.getSupplyId() %>" 
                                                            class="btn btn-sm btn-primary me-2" title="Chỉnh sửa thông tin vật tư">
-                                                             <i class="bi bi-pencil-square"></i>
-                                                         </a>
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </a>
                                                         <button type="button" class="btn btn-sm btn-outline-danger" 
                                                                 onclick="deleteSupply(<%= supply.getSupplyId() %>, '<%= supply.getSupplyName() %>')" 
                                                                 title="Xóa vật tư">
@@ -352,61 +354,103 @@
             </div>
         </div>
 
-        <%
-        // Get edit data for modal
-        MedicalSupply editSupply = (MedicalSupply) request.getAttribute("editSupply");
-        boolean isEdit = editSupply != null;
-        %>
-
-        <!-- Add/Edit Supply Modal -->
+        <!-- Add Supply Modal -->
         <div class="modal fade" id="addSupplyModal" tabindex="-1" aria-labelledby="addSupplyModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="addSupplyModalLabel">
-                            <i class="bi bi-<%= isEdit ? "pencil-square" : "plus-circle" %> me-2"></i><%= isEdit ? "Chỉnh sửa thông tin vật tư" : "Thêm vật tư mới" %>
+                            <i class="bi bi-plus-circle me-2"></i>Thêm vật tư mới
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies">
                         <div class="modal-body">
-                            <input type="hidden" name="action" value="<%= isEdit ? "update" : "add" %>">
-                            <% if (isEdit) { %>
-                            <input type="hidden" name="supplyId" value="<%= editSupply.getSupplyId() %>">
-                            <% } %>
+                            <input type="hidden" name="action" value="add">
                             
                             <div class="mb-3">
                                 <label for="addSupplyGroup" class="form-label">Nhóm vật tư <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addSupplyGroup" name="supplyGroup" 
-                                       placeholder="Nhập nhóm vật tư (Ví dụ: Dụng cụ y tế, Tiêu hao phẩm...)" 
-                                       value="<%= isEdit ? editSupply.getSupplyGroup() : "" %>" required>
+                                <input type="text" class="form-control" id="addSupplyGroup" name="supplyGroup" placeholder="Nhập tên nhóm vật tư" required>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="addSupplyName" class="form-label">Tên vật tư <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addSupplyName" name="supplyName" 
-                                       placeholder="Nhập tên cụ thể của vật tư" 
-                                       value="<%= isEdit ? editSupply.getSupplyName() : "" %>" required>
+                                <input type="text" class="form-control" id="addSupplyName" name="supplyName" placeholder="Nhập tên vật tư" required>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="addUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" 
-                                       min="0" step="0.01" placeholder="Nhập đơn giá" 
-                                       value="<%= isEdit ? editSupply.getUnitPrice() : "" %>" required>
+                                <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" min="0" step="0.01" placeholder="Nhập đơn giá" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addStockQuantity" class="form-label">Số lượng <% if (!isEdit) { %><span class="text-danger">*</span><% } %></label>
-                                <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" 
-                                       min="<%= isEdit ? "0" : "1" %>" placeholder="Nhập số lượng" 
-                                       value="<%= isEdit ? editSupply.getStockQuantity() : "" %>" required>
+                                <label for="addStockQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" min="1" placeholder="Nhập số lượng" required>
+                            </div>
+                            
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Thêm vật tư
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Supply Modal -->
+        <div class="modal fade" id="editSupplyModal" tabindex="-1" aria-labelledby="editSupplyModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editSupplyModalLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin vật tư
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies">
+                        <div class="modal-body">
+                            <%
+                            // Get edit data for modal
+                            MedicalSupply editSupply = (MedicalSupply) request.getAttribute("editSupply");
+                            boolean isEditSupply = editSupply != null;
+                            %>
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" name="supplyId" value="<%= isEditSupply ? editSupply.getSupplyId() : "" %>">
+                            
+                            <div class="mb-3">
+                                <label for="editSupplyGroup" class="form-label">Nhóm vật tư <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editSupplyGroup" name="supplyGroup" 
+                                       placeholder="Nhập tên nhóm vật tư" value="<%= isEditSupply ? editSupply.getSupplyGroup() : "" %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editSupplyName" class="form-label">Tên vật tư <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editSupplyName" name="supplyName" 
+                                       placeholder="Nhập tên vật tư" value="<%= isEditSupply ? editSupply.getSupplyName() : "" %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editUnitPrice" name="unitPrice" 
+                                       min="0" step="0.01" placeholder="Nhập đơn giá" value="<%= isEditSupply ? editSupply.getUnitPrice() : "" %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editStockQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editStockQuantity" name="stockQuantity" 
+                                       min="1" placeholder="Nhập số lượng" value="<%= isEditSupply ? editSupply.getStockQuantity() : "" %>" required>
                             </div>
                             
 
                         </div>
                         <div class="modal-footer bg-light">
-                            <% if (isEdit) { %>
+                            <% if (isEditSupply) { %>
                             <a href="${pageContext.request.contextPath}/admin/medical-supplies" class="btn btn-secondary">
                                 <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                             </a>
@@ -415,18 +459,14 @@
                                 <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                             </button>
                             <% } %>
-                            <button type="submit" class="btn btn-<%= isEdit ? "primary" : "success" %>">
-                                <i class="bi bi-check-circle me-2"></i><%= isEdit ? "Cập nhật" : "Thêm vật tư" %>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Cập nhật
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-
-
-
-
 
         <!-- Delete Confirmation Modal -->
         <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
@@ -460,8 +500,6 @@
                 </div>
             </div>
         </div>
-
-
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -518,12 +556,7 @@
                     }
                 });
 
-
             });
-
-
-
-            
 
             // Delete supply function
             function deleteSupply(supplyId, supplyName) {
@@ -533,10 +566,10 @@
             }
         </script>
 
-        <% if (editSupply != null) { %>
+        <% if (isEditSupply) { %>
         <script>
         document.addEventListener('DOMContentLoaded', function() {
-            new bootstrap.Modal(document.getElementById('addSupplyModal')).show();
+            new bootstrap.Modal(document.getElementById('editSupplyModal')).show();
         });
         </script>
         <% } %>

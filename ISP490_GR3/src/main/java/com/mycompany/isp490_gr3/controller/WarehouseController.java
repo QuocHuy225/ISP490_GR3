@@ -390,7 +390,7 @@ public class WarehouseController extends HttpServlet {
             BigDecimal unitPrice = new BigDecimal(unitPriceStr);
             int stockQuantity = Integer.parseInt(stockQuantityStr);
             
-            if (unitPrice.compareTo(BigDecimal.ZERO) <= 0 || stockQuantity < 0) {
+            if (unitPrice.compareTo(BigDecimal.ZERO) <= 0 || stockQuantity < 1) {
                 response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=invalid_values");
                 return;
             }
@@ -442,17 +442,44 @@ public class WarehouseController extends HttpServlet {
     private void handleListMedicines(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // Check if this is an edit request
+        String editId = request.getParameter("edit");
+        Medicine editMedicine = null;
+        
+        if (editId != null && !editId.trim().isEmpty()) {
+            try {
+                int medicineId = Integer.parseInt(editId);
+                editMedicine = warehouseDAO.getMedicineById(medicineId);
+            } catch (NumberFormatException e) {
+                // Invalid ID, ignore edit request
+            }
+        }
+        
         List<Medicine> medicines = warehouseDAO.getAllMedicines();
         List<String> medicineUnits = warehouseDAO.getAllMedicineUnits();
         
         request.setAttribute("medicines", medicines);
         request.setAttribute("medicineUnits", medicineUnits);
+        request.setAttribute("editMedicine", editMedicine);
         
         request.getRequestDispatcher("/jsp/medicine.jsp").forward(request, response);
     }
     
     private void handleSearchMedicines(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        // Check if this is an edit request
+        String editId = request.getParameter("edit");
+        Medicine editMedicine = null;
+        
+        if (editId != null && !editId.trim().isEmpty()) {
+            try {
+                int medicineId = Integer.parseInt(editId);
+                editMedicine = warehouseDAO.getMedicineById(medicineId);
+            } catch (NumberFormatException e) {
+                // Invalid ID, ignore edit request
+            }
+        }
         
         String keyword = request.getParameter("keyword");
         List<Medicine> medicines;
@@ -468,6 +495,7 @@ public class WarehouseController extends HttpServlet {
         request.setAttribute("medicines", medicines);
         request.setAttribute("medicineUnits", medicineUnits);
         request.setAttribute("searchKeyword", keyword);
+        request.setAttribute("editMedicine", editMedicine);
         
         request.getRequestDispatcher("/jsp/medicine.jsp").forward(request, response);
     }
@@ -573,7 +601,7 @@ public class WarehouseController extends HttpServlet {
             BigDecimal unitPrice = new BigDecimal(unitPriceStr);
             int stockQuantity = Integer.parseInt(stockQuantityStr);
             
-            if (unitPrice.compareTo(BigDecimal.ZERO) <= 0 || stockQuantity < 0) {
+            if (unitPrice.compareTo(BigDecimal.ZERO) <= 0 || stockQuantity < 1) {
                 response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_values");
                 return;
             }
