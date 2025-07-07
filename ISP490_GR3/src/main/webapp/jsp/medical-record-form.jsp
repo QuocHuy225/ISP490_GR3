@@ -559,23 +559,38 @@
                                             if (height > 0 && weight > 0) {
                                                 let bmi = weight / ((height / 100) * (height / 100));
                                                 bmiField.val(bmi.toFixed(2));
-                                                if (bmi < 18.5) {
-                                                    bmiStatus.text('Gầy').css('color', '#ffc107');
-                                                } else if (bmi >= 18.5 && bmi <= 24.9) {
-                                                    bmiStatus.text('Bình thường').css('color', '#28a745');
-                                                } else if (bmi >= 25 && bmi <= 29.9) {
-                                                    bmiStatus.text('Thừa cân').css('color', '#fd7e14');
-                                                } else {
-                                                    bmiStatus.text('Béo phì').css('color', '#dc3545');
-                                                }
+                                                validateBMI(); // Add validation for BMI
                                             } else {
                                                 bmiField.val('');
+                                                bmiField.removeClass('is-invalid is-valid');
                                                 bmiStatus.text('');
                                             }
                                         }
 
-                                        $('#height, #weight').on('input', calculateBMI);
-                                        calculateBMI(); // Initial calculation
+                                        // Enhanced BMI validation
+                                        function validateBMI() {
+                                            const bmiField = $('#bmi');
+                                            const bmiStatus = $('#bmi-status');
+                                            const bmiValue = parseFloat(bmiField.val());
+
+                                            if (bmiValue > 0) {
+                                                bmiField.removeClass('is-invalid').addClass('is-valid');
+                                                if (bmiValue < 18.5) {
+                                                    bmiStatus.text('Gầy').css('color', '#ffc107');
+                                                } else if (bmiValue >= 18.5 && bmiValue <= 24.9) {
+                                                    bmiStatus.text('Bình thường').css('color', '#28a745');
+                                                } else if (bmiValue >= 25 && bmiValue <= 29.9) {
+                                                    bmiStatus.text('Thừa cân').css('color', '#fd7e14');
+                                                } else {
+                                                    bmiStatus.text('Béo phì').css('color', '#dc3545');
+                                                }
+                                                return true;
+                                            } else {
+                                                bmiField.removeClass('is-invalid is-valid');
+                                                bmiStatus.text('');
+                                                return true;
+                                            }
+                                        }
 
                                         // Form validation for vital signs
                                         function validateField(fieldId, min, max, errorMessage) {
@@ -636,6 +651,7 @@
                                             }
                                         }
 
+                                        // Add input event listeners for all vital signs fields
                                         $('#respirationRate').on('input', function () {
                                             validateField('respirationRate', 8, 40, 'Nhịp thở phải từ 8 đến 40 lần/phút.');
                                         });
@@ -655,6 +671,37 @@
                                         $('#spo2').on('input', function () {
                                             validateField('spo2', 70, 100, 'SpO2 phải từ 70 đến 100%.');
                                         });
+
+                                        // Setup BMI calculation
+                                        $('#height, #weight').on('input', calculateBMI);
+                                        calculateBMI(); // Initial calculation
+
+                                        // Validate existing data on page load
+                                        // Validate all fields that have values on page load
+                                        if ($('#respirationRate').val()) {
+                                            validateField('respirationRate', 8, 40, 'Nhịp thở phải từ 8 đến 40 lần/phút.');
+                                        }
+                                        if ($('#temperature').val()) {
+                                            validateField('temperature', 32, 45, 'Nhiệt độ phải từ 32 đến 45°C.');
+                                        }
+                                        if ($('#pulse').val()) {
+                                            validateField('pulse', 30, 200, 'Mạch phải từ 30 đến 200 lần/phút.');
+                                        }
+                                        if ($('#bloodPressure').val()) {
+                                            validateBloodPressure();
+                                        }
+                                        if ($('#height').val()) {
+                                            validateField('height', 50, 250, 'Chiều cao phải từ 50 đến 250 cm.');
+                                        }
+                                        if ($('#weight').val()) {
+                                            validateField('weight', 5, 300, 'Cân nặng phải từ 5 đến 300 kg.');
+                                        }
+                                        if ($('#spo2').val()) {
+                                            validateField('spo2', 70, 100, 'SpO2 phải từ 70 đến 100%.');
+                                        }
+                                        if ($('#bmi').val()) {
+                                            validateBMI();
+                                        }
 
                                         window.applyTemplate = function () {
                                             const templateSelect = document.getElementById('templateSelect');
