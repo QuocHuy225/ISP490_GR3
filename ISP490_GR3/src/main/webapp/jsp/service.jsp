@@ -347,7 +347,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="addServiceModalLabel">
-                            <i class="bi bi-plus-circle me-2"></i>Thêm dịch vụ
+                            <i class="bi bi-plus-circle me-2"></i>Thêm dịch vụ mới
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -391,7 +391,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editServiceModalLabel">
-                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa dịch vụ
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin dịch vụ
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -411,7 +411,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editPrice" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
+                                <label for="editPrice" class="form-label">Đơn Giá (VNĐ) <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="editPrice" name="price" min="0" step="0.01" required>
                             </div>
                         </div>

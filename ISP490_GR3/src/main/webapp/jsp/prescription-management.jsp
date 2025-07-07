@@ -282,7 +282,7 @@
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title mb-0">
-                                    <i class="bi bi-table me-2"></i>Danh sách thuốc
+                                    <i class="bi bi-table me-2"></i>Danh sách thuốc kê về
                                     <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
                                     <span class="badge bg-primary ms-2">Kết quả tìm kiếm: "<%= medicineSearchKeyword %>"</span>
                                     <% } %>
@@ -397,7 +397,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editMedicineModalLabel">
-                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa thuốc
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin thuốc
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
