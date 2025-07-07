@@ -503,7 +503,7 @@
                     "searching": false, // Disable built-in search
                     "language": {
                         "lengthMenu": "Hiển thị _MENU_ mục",
-                        "zeroRecords": "", // Không hiển thị thông báo khi không có dữ liệu
+                        "zeroRecords": "Không có dữ liệu", // Không hiển thị thông báo khi không có dữ liệu
                         "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
                         "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
                         "infoFiltered": "(lọc từ _MAX_ tổng số mục)",
