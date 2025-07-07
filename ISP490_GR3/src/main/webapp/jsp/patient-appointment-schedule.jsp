@@ -85,7 +85,7 @@
                         <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
                     </a>
                 </li>
-                <% } %>
+                
             </ul>
         </nav>
 
