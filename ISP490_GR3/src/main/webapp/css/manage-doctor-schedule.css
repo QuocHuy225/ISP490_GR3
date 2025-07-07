@@ -1,6 +1,6 @@
 /* ====================================
-   CSS VARIABLES & ROOT SETTINGS
-   ==================================== */
+    CSS VARIABLES & ROOT SETTINGS
+    ==================================== */
 :root {
     --primary: #0360D9;
     --primary-light: #e3f2fd;
@@ -33,11 +33,29 @@
     --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, #00d4ff 100%);
     --shadow-light: 0 5px 25px rgba(3, 96, 217, 0.1);
     --shadow-medium: 0 10px 40px rgba(3, 96, 217, 0.15);
+
+    /* Bootstrap-like colors for notification modal */
+    --bs-success: #198754;
+    --bs-success-rgb: 25,135,84;
+    --bs-success-bg-subtle: #d1e7dd;
+    --bs-success-text-emphasis: #0f5132;
+
+    --bs-danger: #dc3545;
+    --bs-danger-rgb: 220,53,69;
+    --bs-danger-bg-subtle: #f8d7da;
+    --bs-danger-text-emphasis: #842029;
+
+    --bs-warning: #ffc107; /* For confirmation modal header */
+    --bs-warning-rgb: 255,193,7;
+    --bs-warning-bg-subtle: #fff3cd;
+    --bs-warning-text-emphasis: #664d03;
+
+    --bs-modal-border-radius: 0.5rem; /* Ensure consistency with your --radius variable if needed */
 }
 
 /* ====================================
-   RESET & BASE STYLES
-   ==================================== */
+    RESET & BASE STYLES
+    ==================================== */
 * {
     margin: 0;
     padding: 0;
@@ -58,8 +76,8 @@ body {
 }
 
 /* ====================================
-   TYPOGRAPHY
-   ==================================== */
+    TYPOGRAPHY
+    ==================================== */
 h1, h2, h3, h4, h5, h6 {
     color: var(--foreground);
     font-weight: 700;
@@ -67,8 +85,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   SIDEBAR STYLES
-   ==================================== */
+    SIDEBAR STYLES
+    ==================================== */
 #sidebar {
     min-width: 250px;
     max-width: 250px;
@@ -141,8 +159,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   MAIN CONTENT & NAVBAR
-   ==================================== */
+    MAIN CONTENT & NAVBAR
+    ==================================== */
 #content {
     width: calc(100% - 250px); /* Adjust width for sidebar */
     min-height: 100vh;
@@ -233,8 +251,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================
-   USER DROPDOWN STYLES
-   ==================================== */
+    USER DROPDOWN STYLES
+    ==================================== */
 .user-dropdown {
     position: relative;
 }
@@ -511,7 +529,7 @@ h1, h2, h3, h4, h5, h6 {
 .event.angular { background-color: #DD0031; }
 .event.vue { background-color: #42b883; }
 
-/* Modal specific styles */
+/* Modal specific styles (for scheduleModal) */
 .modal-content {
     background-color: #fff;
     color: #333;
@@ -520,7 +538,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .modal-header {
     border-bottom: 1px solid #dee2e6;
-    color: #007bff;
+    color: var(--primary); /* Use primary color for general modal headers */
 }
 .modal-footer {
     border-top: 1px solid #dee2e6;
@@ -608,4 +626,140 @@ h1, h2, h3, h4, h5, h6 {
         font-size: 0.75em;
         padding: 2px 4px;
     }
+}
+
+/* ====================================
+    NOTIFICATION MODAL STYLES (FROM PREVIOUS)
+    ==================================== */
+#notificationModal .modal-header {
+    border-bottom: none; /* Remove default border */
+    padding: 1.5rem; /* More padding */
+    justify-content: center; /* Center header content */
+    flex-direction: column; /* Stack title and icon */
+    text-align: center;
+    /* Use Bootstrap's variables for border-radius if they are defined, otherwise use your --radius */
+    border-top-left-radius: var(--bs-modal-border-radius, var(--radius));
+    border-top-right-radius: var(--bs-modal-border-radius, var(--radius));
+}
+
+#notificationModal .modal-header .modal-title {
+    font-size: 1.5rem; /* Larger title */
+    font-weight: bold;
+    margin-top: 0.5rem; /* Space between icon and title */
+    width: 100%; /* Ensure title takes full width to center properly */
+}
+
+#notificationModal .modal-body {
+    padding: 2rem 1.5rem; /* More padding */
+    text-align: center; /* Center message text */
+}
+
+#notificationModal #notificationMessage {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--bs-body-color, var(--foreground)); /* Use Bootstrap's default text color or your foreground */
+}
+
+#notificationModal .modal-footer {
+    border-top: none; /* Remove default border */
+    padding: 1rem 1.5rem;
+    justify-content: center; /* Center the close button */
+}
+
+/* Icon styling */
+.icon-wrapper {
+    font-size: 3rem; /* Large icon size */
+    margin-bottom: 0.5rem;
+    line-height: 1; /* Remove extra space below icon */
+}
+
+.icon-wrapper .icon {
+    display: inline-block; /* Ensure icon respects font-size */
+}
+
+/* Specific styles for success state (applied to #notificationModal when .success class is added) */
+#notificationModal.success .modal-header {
+    background-color: var(--bs-success-bg-subtle); /* A lighter success background */
+    color: var(--bs-success-text-emphasis); /* Darker green text */
+}
+
+#notificationModal.success .icon-wrapper .icon {
+    color: var(--bs-success); /* Main success color for icon */
+}
+
+/* Specific styles for error/failure state (applied to #notificationModal when .error class is added) */
+#notificationModal.error .modal-header {
+    background-color: var(--bs-danger-bg-subtle); /* A lighter danger background */
+    color: var(--bs-danger-text-emphasis); /* Darker red text */
+}
+
+#notificationModal.error .icon-wrapper .icon {
+    color: var(--bs-danger); /* Main danger color for icon */
+}
+
+/* ====================================
+    CONFIRMATION MODAL STYLES (NEW)
+    ==================================== */
+#confirmationModal .modal-header {
+    border-bottom: none;
+    padding: 1.5rem;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    background-color: var(--bs-warning-bg-subtle); /* Light yellow/orange background for warning */
+    color: var(--bs-warning-text-emphasis); /* Darker yellow/orange text */
+    border-top-left-radius: var(--bs-modal-border-radius, var(--radius));
+    border-top-right-radius: var(--bs-modal-border-radius, var(--radius));
+}
+
+#confirmationModal .modal-header .modal-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+    width: 100%;
+}
+
+#confirmationModal .modal-body {
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+
+#confirmationModal #confirmationMessage {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--foreground); /* Use your general foreground color for message */
+}
+
+#confirmationModal .modal-footer {
+    border-top: none;
+    padding: 1rem 1.5rem;
+    justify-content: center; /* Center the buttons */
+    gap: 1rem; /* Space between buttons */
+}
+
+#confirmationModal .modal-footer .btn {
+    min-width: 100px; /* Give buttons a consistent minimum width */
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+}
+
+#confirmationModal .modal-footer .btn-danger {
+    background-color: var(--bs-danger);
+    border-color: var(--bs-danger);
+}
+
+#confirmationModal .modal-footer .btn-danger:hover {
+    background-color: var(--bs-danger-text-emphasis); /* Darker red on hover */
+    border-color: var(--bs-danger-text-emphasis);
+}
+
+#confirmationModal .modal-footer .btn-secondary {
+    background-color: var(--muted); /* Use your muted color for secondary button */
+    border-color: var(--muted);
+    color: var(--white);
+}
+
+#confirmationModal .modal-footer .btn-secondary:hover {
+    background-color: #5a6268; /* Slightly darker grey on hover */
+    border-color: #5a6268;
 }

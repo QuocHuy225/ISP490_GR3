@@ -109,13 +109,13 @@
     </servlet-mapping>
     
     <servlet>
-            <servlet-name>PatientAppointmentPageController</servlet-name>
-            <servlet-class>com.mycompany.isp490_gr3.controller.PatientAppointmentPageController</servlet-class>
-        </servlet>
-        <servlet-mapping>
-            <servlet-name>PatientAppointmentPageController</servlet-name>
-            <url-pattern>/patient/my-appointments</url-pattern>
-        </servlet-mapping>
+        <servlet-name>PatientAppointmentPageController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.PatientAppointmentPageController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PatientAppointmentPageController</servlet-name>
+        <url-pattern>/patient/my-appointments</url-pattern>
+    </servlet-mapping>
         
         
     <servlet>
