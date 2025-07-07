@@ -28,9 +28,13 @@ public class DoctorScheduleController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
+
+        // Check user access first
         if (!checkReceptionistAccess(request, response)) {
+            // Error response already sent by checkReceptionistAccess
             return;
         }
+
         String pathInfo = request.getPathInfo(); // e.g., /123 for /api/doctor-schedules/123
         String servletPath = request.getServletPath(); // e.g., /api/doctor-schedules or /api/doctors
 
@@ -47,7 +51,7 @@ public class DoctorScheduleController extends HttpServlet {
 
                     if (yearStr == null || monthStr == null) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        out.print("{\"status\":\"error\",\"message\":\"Missing year or month parameter.\"}");
+                        out.print("{\"status\":\"error\",\"message\":\"Thiếu tham số năm hoặc tháng.\"}");
                         return;
                     }
 
@@ -63,20 +67,20 @@ public class DoctorScheduleController extends HttpServlet {
                         out.print(gson.toJson(schedule));
                     } else {
                         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                        out.print("{\"status\":\"error\",\"message\":\"Schedule not found.\"}");
+                        out.print("{\"status\":\"error\",\"message\":\"Không tìm thấy lịch làm việc.\"}");
                     }
                 }
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                out.print("{\"status\":\"error\",\"message\":\"API endpoint not found.\"}");
+                out.print("{\"status\":\"error\",\"message\":\"Điểm cuối API không tìm thấy.\"}");
             }
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"status\":\"error\",\"message\":\"Invalid number format for year/month/ID.\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Định dạng số không hợp lệ cho năm/tháng/ID.\"}");
             e.printStackTrace();
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print("{\"status\":\"error\",\"message\":\"Internal server error: " + e.getMessage() + "\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Lỗi máy chủ nội bộ: " + e.getMessage() + "\"}");
             e.printStackTrace();
         }
     }
@@ -86,13 +90,16 @@ public class DoctorScheduleController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
+
+        // Check user access first
         if (!checkReceptionistAccess(request, response)) {
             return;
         }
+
         // Ensure this is for /api/doctor-schedules
         if (!"/api/doctor-schedules".equals(request.getServletPath())) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            out.print("{\"status\":\"error\",\"message\":\"API endpoint not found for POST.\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Điểm cuối API không tìm thấy cho POST.\"}");
             return;
         }
 
@@ -103,27 +110,28 @@ public class DoctorScheduleController extends HttpServlet {
             // Basic validation
             if (requestData.getDoctorId() == 0 || requestData.getWorkDate() == null || requestData.getWorkDate().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print("{\"status\":\"error\",\"message\":\"Missing doctor ID or work date.\"}");
+                out.print("{\"status\":\"error\",\"message\":\"Thiếu ID bác sĩ hoặc ngày làm việc.\"}");
                 return;
             }
 
-            boolean success = scheduleService.createSchedule(
+            String result = scheduleService.createSchedule(
                     requestData.getDoctorId(),
                     requestData.getWorkDate(),
                     requestData.isActive(),
                     requestData.getEventName()
             );
 
-            if (success) {
+            if ("success".equals(result)) {
                 response.setStatus(HttpServletResponse.SC_CREATED); // 201 Created
                 out.print("{\"status\":\"success\",\"message\":\"Lịch làm việc đã được tạo thành công.\"}");
             } else {
-                response.setStatus(HttpServletResponse.SC_CONFLICT); // 409 Conflict (e.g., schedule already exists)
-                out.print("{\"status\":\"error\",\"message\":\"Lịch làm việc đã tồn tại hoặc có lỗi khi tạo.\"}");
+                // If result is not "success", it's an error message from the service
+                response.setStatus(HttpServletResponse.SC_CONFLICT); // 409 Conflict (e.g., schedule already exists or date out of range)
+                out.print("{\"status\":\"error\",\"message\":\"" + result + "\"}");
             }
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print("{\"status\":\"error\",\"message\":\"Lỗi server khi tạo lịch: " + e.getMessage() + "\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Lỗi máy chủ khi tạo lịch: " + e.getMessage() + "\"}");
             e.printStackTrace();
         }
     }
@@ -134,10 +142,15 @@ public class DoctorScheduleController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
+        // Check user access first
+        if (!checkReceptionistAccess(request, response)) {
+            return;
+        }
+
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"status\":\"error\",\"message\":\"Missing schedule ID for update.\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Thiếu ID lịch làm việc để cập nhật.\"}");
             return;
         }
         String scheduleId = pathInfo.substring(1); // Get ID from path
@@ -149,11 +162,11 @@ public class DoctorScheduleController extends HttpServlet {
             // Basic validation
             if (requestData.getDoctorId() == 0 || requestData.getWorkDate() == null || requestData.getWorkDate().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print("{\"status\":\"error\",\"message\":\"Missing doctor ID or work date.\"}");
+                out.print("{\"status\":\"error\",\"message\":\"Thiếu ID bác sĩ hoặc ngày làm việc.\"}");
                 return;
             }
 
-            boolean success = scheduleService.updateSchedule(
+            String result = scheduleService.updateSchedule(
                     scheduleId,
                     requestData.getDoctorId(),
                     requestData.getWorkDate(),
@@ -161,20 +174,29 @@ public class DoctorScheduleController extends HttpServlet {
                     requestData.getEventName()
             );
 
-            if (success) {
+            if ("success".equals(result)) {
                 response.setStatus(HttpServletResponse.SC_OK); // 200 OK
                 out.print("{\"status\":\"success\",\"message\":\"Lịch làm việc đã được cập nhật thành công.\"}");
             } else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND); // Or 409 Conflict if update fails due to conflict
-                out.print("{\"status\":\"error\",\"message\":\"Lịch làm việc không tìm thấy hoặc có lỗi khi cập nhật.\"}");
+                // Determine appropriate status code based on error message
+                int statusCode = HttpServletResponse.SC_BAD_REQUEST; // Default to Bad Request
+                if (result.contains("không tìm thấy")) {
+                    statusCode = HttpServletResponse.SC_NOT_FOUND; // 404 Not Found
+                } else if (result.contains("đã tồn tại")) {
+                    statusCode = HttpServletResponse.SC_CONFLICT; // 409 Conflict
+                } else if (result.contains("nằm ngoài khoảng thời gian cho phép")) {
+                    statusCode = HttpServletResponse.SC_FORBIDDEN; // 403 Forbidden or 400 Bad Request
+                }
+                response.setStatus(statusCode);
+                out.print("{\"status\":\"error\",\"message\":\"" + result + "\"}");
             }
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"status\":\"error\",\"message\":\"Invalid schedule ID format.\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Định dạng ID lịch làm việc không hợp lệ.\"}");
             e.printStackTrace();
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print("{\"status\":\"error\",\"message\":\"Lỗi server khi cập nhật lịch: " + e.getMessage() + "\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Lỗi máy chủ khi cập nhật lịch: " + e.getMessage() + "\"}");
             e.printStackTrace();
         }
     }
@@ -185,10 +207,15 @@ public class DoctorScheduleController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
+        // Check user access first
+        if (!checkReceptionistAccess(request, response)) {
+            return;
+        }
+
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"status\":\"error\",\"message\":\"Missing schedule ID for delete.\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Thiếu ID lịch làm việc để xóa.\"}");
             return;
         }
         String scheduleId = pathInfo.substring(1); // Get ID from path
@@ -199,44 +226,55 @@ public class DoctorScheduleController extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_OK); // 200 OK
                 out.print("{\"status\":\"success\",\"message\":\"Lịch làm việc đã được xóa thành công.\"}");
             } else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND); // Or 500 if DAO failed for other reasons
                 out.print("{\"status\":\"error\",\"message\":\"Lịch làm việc không tìm thấy hoặc có lỗi khi xóa.\"}");
             }
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"status\":\"error\",\"message\":\"Invalid schedule ID format.\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Định dạng ID lịch làm việc không hợp lệ.\"}");
             e.printStackTrace();
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print("{\"status\":\"error\",\"message\":\"Lỗi server khi xóa lịch: " + e.getMessage() + "\"}");
+            out.print("{\"status\":\"error\",\"message\":\"Lỗi máy chủ khi xóa lịch: " + e.getMessage() + "\"}");
             e.printStackTrace();
         }
     }
 
+    /**
+     * Checks if the current user has Receptionist or Admin access.
+     * If not, sends an appropriate error response and returns false.
+     *
+     * @param request The HttpServletRequest.
+     * @param response The HttpServletResponse.
+     * @return true if access is granted, false otherwise.
+     * @throws IOException If an input or output exception occurs.
+     */
     private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-
         HttpSession session = request.getSession(false);
+        PrintWriter out = response.getWriter();
 
         // Check if user is logged in
         if (session == null || session.getAttribute("user") == null) {
-            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+            out.print("{\"status\":\"error\",\"message\":\"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\"}");
             return false;
         }
 
         // Get current user
         User currentUser = (User) session.getAttribute("user");
         if (currentUser == null) {
-            response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+            out.print("{\"status\":\"error\",\"message\":\"Thông tin người dùng không hợp lệ trong phiên.\"}");
             return false;
         }
 
-        // Allow both Admin and Doctor to access
+        // Allow both Admin and Receptionist to access
         if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.RECEPTIONIST) {
-            response.sendRedirect(request.getContextPath() + "/homepage");
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403 Forbidden
+            out.print("{\"status\":\"error\",\"message\":\"Bạn không có quyền truy cập chức năng này.\"}");
             return false;
         }
-
         return true;
     }
 
