@@ -224,7 +224,7 @@
                     <% } else if ("medicine_exists".equals(error)) { %>
                         Tên thuốc này đã tồn tại trong hệ thống!
                     <% } else if ("add_failed".equals(error)) { %>
-                        Thêm thất bại!
+                        Thêm thuốc thất bại!
                     <% } else if ("update_failed".equals(error)) { %>
                         Cập nhật thất bại!
                     <% } else if ("delete_failed".equals(error)) { %>
@@ -513,7 +513,7 @@
                     "searching": false, // Disable built-in search since we have custom search
                     "language": {
                         "lengthMenu": "Hiển thị _MENU_ mục",
-                        "zeroRecords": "", // Don't show message when no data
+                        "zeroRecords": "Không có dữ liệu", // Don't show message when no data
                         "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
                         "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
                         "infoFiltered": "(lọc từ _MAX_ tổng số mục)",

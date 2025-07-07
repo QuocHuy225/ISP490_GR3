@@ -234,12 +234,8 @@
                         Xóa thuốc thất bại!
                     <% } else if ("invalid_quantity".equals(error)) { %>
                         Số lượng phải lớn hơn 0!
-                    <% } else if ("stock_add_failed".equals(error)) { %>
-                        Thêm số lượng vào kho thất bại!
-                    <% } else if ("stock_reduce_failed".equals(error)) { %>
-                        Giảm số lượng kho thất bại! Có thể số lượng trong kho không đủ.
                     <% } else if ("medicine_exists".equals(error)) { %>
-                        Thuốc này đã tồn tại! Vui lòng sử dụng chức năng "Thêm số lượng" để tăng số lượng tồn kho.
+                        Thuốc này đã tồn tại!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -452,7 +448,7 @@
                                 <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                             </button>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Cập nhật thông tin
+                                <i class="bi bi-check-circle me-2"></i>Cập nhật
                             </button>
                         </div>
                     </form>
@@ -537,7 +533,7 @@
                     "searching": false, // Disable built-in search
                     "language": {
                         "lengthMenu": "Hiển thị _MENU_ mục",
-                        "zeroRecords": "", // Không hiển thị thông báo khi không có dữ liệu
+                        "zeroRecords": "Không có dữ liệu", // Không hiển thị thông báo khi không có dữ liệu
                         "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
                         "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
                         "infoFiltered": "(lọc từ _MAX_ tổng số mục)",
