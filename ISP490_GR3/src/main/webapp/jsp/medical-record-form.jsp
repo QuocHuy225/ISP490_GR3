@@ -102,6 +102,14 @@
                 background: linear-gradient(135deg, #218838, #1e7e34);
                 color: white;
             }
+            .action-btn-prescription {
+                background: linear-gradient(135deg, #ffc107, #e0a800);
+                color: white;
+            }
+            .action-btn-prescription:hover {
+                background: linear-gradient(135deg, #e0a800, #c69500);
+                color: white;
+            }
             .back-btn, .action-btn-clear {
                 background: linear-gradient(135deg, #adb5bd, #868e96);
                 color: white;
@@ -523,6 +531,10 @@
                                     <span class="btn-text">Cập nhật</span>
                                 </button>
                                 <% } else { %>
+                                <a href="#" class="action-btn action-btn-prescription me-2" title="Phiếu chỉ định">
+                                    <i class="bi bi-prescription"></i>
+                                    <span class="btn-text">Phiếu chỉ định</span>
+                                </a>
                                 <button type="button" class="action-btn action-btn-save me-2" onclick="saveRecord('ongoing')" title="Lưu nháp">
                                     <i class="bi bi-save"></i>
                                     <span class="btn-text">Lưu nháp</span>
@@ -802,14 +814,14 @@
                                                 success: function (response) {
                                                     console.log('Form submitted successfully:', response);
                                                     window.location.href = '${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>';
-                                                                    },
-                                                                    error: function (xhr, status, error) {
-                                                                        console.error('AJAX submission failed:', xhr.responseText, status, error);
-                                                                        form.submit();
-                                                                    }
-                                                                });
-                                                            };
-                                                        });
+                                                },
+                                                error: function (xhr, status, error) {
+                                                    console.error('AJAX submission failed:', xhr.responseText, status, error);
+                                                    form.submit();
+                                                }
+                                            });
+                                        };
+                                    });
         </script>
     </body>
 </html>
