@@ -513,7 +513,7 @@
                                                             Ghi nhớ đăng nhập
                                                         </label>
                                                     </div>
-                                                    <a href="#" class="text-decoration-none small fw-medium" style="color: #2563eb;">Quên mật khẩu?</a>
+                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal" data-bs-dismiss="modal" class="text-decoration-none small fw-medium" style="color: #2563eb;">Quên mật khẩu?</a>
                                                 </div>
                                                 
                                                 <button type="submit" class="btn btn-lg w-100 mb-3 fw-medium shadow-sm login-btn" 
@@ -670,6 +670,212 @@
             </div>
         </div>
 
+        <!-- Forgot Password Modal -->
+        <div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden; backdrop-filter: blur(10px);">
+                    <div class="modal-body p-0">
+                        <div class="container-fluid">
+                            <div class="row g-0 min-vh-50">
+                                <!-- Left side - Image and branding -->
+                                <div class="col-lg-6 d-flex">
+                                    <div class="w-100 d-flex flex-column justify-content-center align-items-center text-white position-relative" 
+                                         style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); min-height: 500px;">
+                                        <!-- Decorative shapes -->
+                                        <div class="position-absolute" style="top: 10%; left: 10%; width: 60px; height: 60px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: float 3s ease-in-out infinite;"></div>
+                                        <div class="position-absolute" style="top: 60%; right: 15%; width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: float 3s ease-in-out infinite reverse;"></div>
+                                        <div class="position-absolute" style="bottom: 20%; left: 20%; width: 30px; height: 30px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: float 2s ease-in-out infinite;"></div>
+                                        
+                                        <div class="text-center z-index-2 position-relative">
+                                            <div class="mb-4">
+                                                <i class="bi bi-key" style="font-size: 4rem; color: rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                            <h1 class="display-5 fw-bold mb-3" style="font-family: 'Poppins', sans-serif; color: #ffffff;">Quên mật khẩu?</h1>
+                                            <p class="lead opacity-90 mb-4" style="color: #f1f5f9;">Đừng lo lắng, chúng tôi sẽ giúp bạn khôi phục</p>
+                                            <div class="d-flex justify-content-center mb-4">
+                                                <img src="${pageContext.request.contextPath}/images/doan3.jpg" alt="Password Recovery" class="img-fluid shadow-lg" 
+                                                     style="max-width: 250px; border-radius: 15px; border: 3px solid rgba(255,255,255,0.3);" />
+                                            </div>
+                                            <div class="d-flex justify-content-center gap-3">
+                                                <div class="text-center">
+                                                    <div class="fw-bold h4" style="color: #ffffff;">🔐</div>
+                                                    <small class="opacity-75" style="color: #fed7aa;">Bảo mật</small>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="fw-bold h4" style="color: #ffffff;">📧</div>
+                                                    <small class="opacity-75" style="color: #fed7aa;">Nhanh chóng</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Right side - Forgot password form -->
+                                <div class="col-lg-6">
+                                    <div class="p-5 d-flex flex-column justify-content-center h-100" style="min-height: 500px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+                                        <div class="text-end mb-3">
+                                            <button type="button" class="btn-close btn-lg" data-bs-dismiss="modal" style="background-size: 1.5em;"></button>
+                                        </div>
+                                        
+                                        <div class="mx-auto w-100" style="max-width: 400px;">
+                                            <div class="text-center mb-4">
+                                                <div class="d-inline-block p-3 rounded-circle mb-3" style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);">
+                                                    <i class="bi bi-envelope-at-fill text-white" style="font-size: 2rem;"></i>
+                                                </div>
+                                                <h2 class="h3 fw-bold mb-2" style="color: #1f2937;">Khôi phục mật khẩu</h2>
+                                                <p class="text-muted" style="color: #6b7280;">Nhập email để nhận link khôi phục mật khẩu</p>
+                                            </div>
+                                            
+                                            <!-- Error/Success Messages for Forgot Password -->
+                                            <div id="forgotPasswordErrorAlert" class="alert alert-danger mb-3 d-none" style="border-radius: 10px; border: none;">
+                                                <i class="bi bi-exclamation-circle me-2"></i>
+                                                <span id="forgotPasswordErrorMessage"></span>
+                                            </div>
+                                            
+                                            <div id="forgotPasswordSuccessAlert" class="alert alert-success mb-3 d-none" style="border-radius: 10px; border: none;">
+                                                <i class="bi bi-check-circle me-2"></i>
+                                                <span id="forgotPasswordSuccessMessage"></span>
+                                            </div>
+                                            
+                                            <form action="${pageContext.request.contextPath}/auth/forgot-password" method="post" class="needs-validation" novalidate>
+                                                <div class="form-floating mb-4">
+                                                    <input type="email" name="email" class="form-control border-0 shadow-sm" 
+                                                           id="forgotPasswordEmail" placeholder="name@example.com" required
+                                                           style="border-radius: 15px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); color: #374151;">
+                                                    <label for="forgotPasswordEmail" style="color: #6b7280;"><i class="bi bi-envelope me-2"></i>Địa chỉ email</label>
+                                                    <div class="invalid-feedback">Vui lòng nhập email hợp lệ.</div>
+                                                </div>
+                                                
+                                                <button type="submit" class="btn btn-lg w-100 mb-3 fw-medium shadow-sm" 
+                                                        style="border-radius: 15px; background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); border: none; color: white; transition: all 0.3s ease;">
+                                                    <i class="bi bi-send me-2"></i>Gửi link khôi phục
+                                                </button>
+                                                
+                                                <div class="text-center">
+                                                    <span style="color: #6b7280;">Đã nhớ mật khẩu? </span>
+                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal" 
+                                                       class="text-decoration-none fw-medium" style="color: #f59e0b;">Đăng nhập</a>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Password Modal -->
+        <div class="modal fade" id="resetPasswordModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden; backdrop-filter: blur(10px);">
+                    <div class="modal-body p-0">
+                        <div class="container-fluid">
+                            <div class="row g-0 min-vh-50">
+                                <!-- Left side - Image and branding -->
+                                <div class="col-lg-6 d-flex">
+                                    <div class="w-100 d-flex flex-column justify-content-center align-items-center text-white position-relative" 
+                                         style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); min-height: 500px;">
+                                        <!-- Decorative shapes -->
+                                        <div class="position-absolute" style="top: 10%; left: 10%; width: 60px; height: 60px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: float 3s ease-in-out infinite;"></div>
+                                        <div class="position-absolute" style="top: 60%; right: 15%; width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: float 3s ease-in-out infinite reverse;"></div>
+                                        <div class="position-absolute" style="bottom: 20%; left: 20%; width: 30px; height: 30px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: float 2s ease-in-out infinite;"></div>
+                                        
+                                        <div class="text-center z-index-2 position-relative">
+                                            <div class="mb-4">
+                                                <i class="bi bi-shield-lock" style="font-size: 4rem; color: rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                            <h1 class="display-5 fw-bold mb-3" style="font-family: 'Poppins', sans-serif; color: #ffffff;">Đặt lại mật khẩu</h1>
+                                            <p class="lead opacity-90 mb-4" style="color: #f1f5f9;">Tạo mật khẩu mới cho tài khoản của bạn</p>
+                                            <div class="d-flex justify-content-center mb-4">
+                                                <img src="${pageContext.request.contextPath}/images/doan3.jpg" alt="Reset Password" class="img-fluid shadow-lg" 
+                                                     style="max-width: 250px; border-radius: 15px; border: 3px solid rgba(255,255,255,0.3);" />
+                                            </div>
+                                            <div class="d-flex justify-content-center gap-3">
+                                                <div class="text-center">
+                                                    <div class="fw-bold h4" style="color: #ffffff;">🔒</div>
+                                                    <small class="opacity-75" style="color: #a7f3d0;">Bảo mật</small>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="fw-bold h4" style="color: #ffffff;">✨</div>
+                                                    <small class="opacity-75" style="color: #a7f3d0;">Mới</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Right side - Reset password form -->
+                                <div class="col-lg-6">
+                                    <div class="p-5 d-flex flex-column justify-content-center h-100" style="min-height: 500px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+                                        <div class="text-end mb-3">
+                                            <button type="button" class="btn-close btn-lg" data-bs-dismiss="modal" style="background-size: 1.5em;"></button>
+                                        </div>
+                                        
+                                        <div class="mx-auto w-100" style="max-width: 400px;">
+                                            <div class="text-center mb-4">
+                                                <div class="d-inline-block p-3 rounded-circle mb-3" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                                    <i class="bi bi-key-fill text-white" style="font-size: 2rem;"></i>
+                                                </div>
+                                                <h2 class="h3 fw-bold mb-2" style="color: #1f2937;">Tạo mật khẩu mới</h2>
+                                                <p class="text-muted mb-3" style="color: #6b7280;">Nhập mật khẩu mới cho tài khoản:</p>
+                                                <p class="fw-bold text-success" style="color: #059669 !important;" id="resetPasswordEmailDisplay">${resetPasswordEmail}</p>
+                                            </div>
+                                            
+                                            <!-- Error/Success Messages for Reset Password -->
+                                            <div id="resetPasswordErrorAlert" class="alert alert-danger mb-3 d-none" style="border-radius: 10px; border: none;">
+                                                <i class="bi bi-exclamation-circle me-2"></i>
+                                                <span id="resetPasswordErrorMessage"></span>
+                                            </div>
+                                            
+                                            <div id="resetPasswordSuccessAlert" class="alert alert-success mb-3 d-none" style="border-radius: 10px; border: none;">
+                                                <i class="bi bi-check-circle me-2"></i>
+                                                <span id="resetPasswordSuccessMessage"></span>
+                                            </div>
+                                            
+                                            <form action="${pageContext.request.contextPath}/auth/reset-password" method="post" class="needs-validation" novalidate>
+                                                <input type="hidden" name="token" id="resetPasswordTokenInput" value="${resetPasswordToken}">
+                                                
+                                                <div class="form-floating mb-3">
+                                                    <input type="password" name="newPassword" class="form-control border-0 shadow-sm" 
+                                                           id="newPassword" placeholder="Mật khẩu mới" required minlength="6"
+                                                           style="border-radius: 15px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); color: #374151;">
+                                                    <label for="newPassword" style="color: #6b7280;"><i class="bi bi-lock me-2"></i>Mật khẩu mới</label>
+                                                    <div class="invalid-feedback">Mật khẩu phải có ít nhất 6 ký tự.</div>
+                                                </div>
+                                                
+                                                <div class="form-floating mb-4">
+                                                    <input type="password" name="confirmPassword" class="form-control border-0 shadow-sm" 
+                                                           id="confirmNewPassword" placeholder="Xác nhận mật khẩu" required
+                                                           style="border-radius: 15px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); color: #374151;">
+                                                    <label for="confirmNewPassword" style="color: #6b7280;"><i class="bi bi-lock-fill me-2"></i>Xác nhận mật khẩu</label>
+                                                    <div class="invalid-feedback">Mật khẩu xác nhận không khớp.</div>
+                                                </div>
+                                                
+                                                <button type="submit" class="btn btn-lg w-100 mb-3 fw-medium shadow-sm" 
+                                                        style="border-radius: 15px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: white; transition: all 0.3s ease;">
+                                                    <i class="bi bi-check-circle me-2"></i>Đặt lại mật khẩu
+                                                </button>
+                                                
+                                                <div class="text-center">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-info-circle me-1"></i>
+                                                        Mật khẩu mới sẽ được áp dụng ngay lập tức
+                                                    </small>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Email Verification Modal -->
         <div class="modal fade" id="emailVerificationModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -792,6 +998,12 @@
         <input type="hidden" id="needEmailVerification" value="${needEmailVerification != null ? 'true' : 'false'}">
         <input type="hidden" id="verificationError" value="${verificationError}">
         <input type="hidden" id="verificationSuccess" value="${verificationSuccess}">
+        <input type="hidden" id="showForgotPasswordModal" value="${showForgotPasswordModal != null ? 'true' : 'false'}">
+        <input type="hidden" id="forgotPasswordError" value="${forgotPasswordError}">
+        <input type="hidden" id="forgotPasswordSuccess" value="${forgotPasswordSuccess}">
+        <input type="hidden" id="showResetPasswordModal" value="${showResetPasswordModal != null ? 'true' : 'false'}">
+        <input type="hidden" id="resetPasswordError" value="${resetPasswordError}">
+        <input type="hidden" id="resetPasswordSuccess" value="${resetPasswordSuccess}">
 
         <script>
                                 // Initialize AOS
@@ -830,6 +1042,16 @@
                                     emailVerificationModal.show();
                                 }
 
+                                function showForgotPasswordModal() {
+                                    var forgotPasswordModal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+                                    forgotPasswordModal.show();
+                                }
+
+                                function showResetPasswordModal() {
+                                    var resetPasswordModal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+                                    resetPasswordModal.show();
+                                }
+
                                 // Auto-hide alerts
                                 window.addEventListener('DOMContentLoaded', function () {
                                     var alerts = document.querySelectorAll('.alert-dismissible');
@@ -850,6 +1072,12 @@
                                     var needEmailVerification = document.getElementById('needEmailVerification').value === 'true';
                                     var verificationError = document.getElementById('verificationError').value;
                                     var verificationSuccess = document.getElementById('verificationSuccess').value;
+                                    var shouldShowForgotPasswordModal = document.getElementById('showForgotPasswordModal').value === 'true';
+                                    var forgotPasswordError = document.getElementById('forgotPasswordError').value;
+                                    var forgotPasswordSuccess = document.getElementById('forgotPasswordSuccess').value;
+                                    var shouldShowResetPasswordModal = document.getElementById('showResetPasswordModal').value === 'true';
+                                    var resetPasswordError = document.getElementById('resetPasswordError').value;
+                                    var resetPasswordSuccess = document.getElementById('resetPasswordSuccess').value;
                                     
                                     if (needEmailVerification || verificationError || verificationSuccess) {
                                         showEmailVerificationModal();
@@ -862,6 +1090,32 @@
                                         if (verificationSuccess && verificationSuccess !== 'null' && verificationSuccess !== '') {
                                             document.getElementById('verificationSuccessAlert').classList.remove('d-none');
                                             document.getElementById('verificationSuccessMessage').textContent = verificationSuccess;
+                                        }
+                                    } else if (shouldShowForgotPasswordModal || forgotPasswordError || forgotPasswordSuccess) {
+                                        showForgotPasswordModal();
+                                        
+                                        // Show error/success messages in the modal
+                                        if (forgotPasswordError && forgotPasswordError !== 'null' && forgotPasswordError !== '') {
+                                            document.getElementById('forgotPasswordErrorAlert').classList.remove('d-none');
+                                            document.getElementById('forgotPasswordErrorMessage').textContent = forgotPasswordError;
+                                        }
+                                        if (forgotPasswordSuccess && forgotPasswordSuccess !== 'null' && forgotPasswordSuccess !== '') {
+                                            document.getElementById('forgotPasswordSuccessAlert').classList.remove('d-none');
+                                            document.getElementById('forgotPasswordSuccessMessage').textContent = forgotPasswordSuccess;
+                                        }
+                                    } else if (shouldShowResetPasswordModal || resetPasswordError || resetPasswordSuccess) {
+                                        if (resetPasswordSuccess && resetPasswordSuccess !== 'null' && resetPasswordSuccess !== '') {
+                                            // Show success message in login modal
+                                            showLoginModal();
+                                            // You could add a success alert here if needed
+                                        } else {
+                                            showResetPasswordModal();
+                                            
+                                            // Show error/success messages in the modal
+                                            if (resetPasswordError && resetPasswordError !== 'null' && resetPasswordError !== '') {
+                                                document.getElementById('resetPasswordErrorAlert').classList.remove('d-none');
+                                                document.getElementById('resetPasswordErrorMessage').textContent = resetPasswordError;
+                                            }
                                         }
                                     } else if (hasLoginError || hasRegisterSuccess) {
                                         showLoginModal();

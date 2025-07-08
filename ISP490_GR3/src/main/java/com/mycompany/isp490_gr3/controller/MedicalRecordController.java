@@ -250,19 +250,11 @@ public class MedicalRecordController extends HttpServlet {
                 String note = request.getParameter("note");
                 success = medicalRecordDAO.updateMedicalRecordNote(recordId, note, updatedBy);
             } else {
-                // For ongoing records, check if trying to change to completed
-                if ("completed".equals(newStatus)) {
-                    // When changing from ongoing to completed, preserve all current data
-                    // and only update the status and note
-                    String note = request.getParameter("note");
-                    success = medicalRecordDAO.updateMedicalRecordStatusAndNote(recordId, newStatus, note, updatedBy);
-                } else {
-                    // For ongoing records staying ongoing, allow full update
-                    MedicalRecord record = extractMedicalRecordFromRequest(request);
-                    record.setId(recordId);
-                    record.setUpdatedBy(updatedBy);
-                    success = medicalRecordDAO.updateMedicalRecord(record);
-                }
+                // For ongoing records, allow full update regardless of status change
+                MedicalRecord record = extractMedicalRecordFromRequest(request);
+                record.setId(recordId);
+                record.setUpdatedBy(updatedBy);
+                success = medicalRecordDAO.updateMedicalRecord(record);
             }
             
             if (success) {

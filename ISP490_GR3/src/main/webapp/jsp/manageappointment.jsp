@@ -376,7 +376,7 @@
 
     <%-- Modal gán bệnh nhân --%>
     <div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg rounded-4">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold" id="addAppointmentModalLabel">Gán bệnh nhân vào lịch hẹn</h5>
@@ -465,6 +465,12 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                         <button type="submit" class="btn btn-primary" id="saveAssignmentBtn" disabled>Gán</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="saveAssignmentBtn" disabled>
+                            <i class="bi bi-check-circle me-2"></i>Lưu
+                        </button>
                     </div>
 
                 </form>

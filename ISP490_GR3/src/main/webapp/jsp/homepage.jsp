@@ -71,6 +71,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
+                    </a>
+                </li>
+                <li>
                     <a href="${pageContext.request.contextPath}/admin/services">
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
                     </a>
@@ -82,12 +87,7 @@
                 </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/admin/prescriptions">
-                        <i class="bi bi-capsule"></i> Quản lý đơn thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
+                        <i class="bi bi-capsule"></i> Quản lý thuốc
                     </a>
                 </li>
                 <li>

@@ -83,6 +83,11 @@
                         <i class="bi bi-people-fill"></i> Quản lý người dùng
                     </a>
                 </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
+                    </a>
+                </li>
                 <li class="active">
                     <a href="${pageContext.request.contextPath}/admin/services">
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
@@ -95,12 +100,7 @@
                 </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/admin/prescriptions">
-                        <i class="bi bi-capsule"></i> Quản lý đơn thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
+                        <i class="bi bi-capsule"></i> Quản lý thuốc
                     </a>
                 </li>
                 <li>
@@ -109,90 +109,8 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/report">
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.DOCTOR) { %>
-                <!-- Menu cho Bác sĩ -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-check"></i> Lịch khám bệnh
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-file-medical"></i> Hồ sơ bệnh án
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-people"></i> Danh sách bệnh nhân
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-journal-medical"></i> Chỉ định dịch vụ
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
-                <!-- Menu cho Lễ tân -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
-                    </a>
-                </li>
-               
-                <% } else { %>
-                <!-- Menu cho Bệnh nhân (PATIENT) -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-file-medical"></i> Hồ sơ sức khỏe
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-hospital"></i> Dịch vụ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
                     </a>
                 </li>
                 <% } %>
@@ -320,7 +238,7 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body">
-                                <div class="row g-3">
+                                <div class="row align-items-center">
                                     <div class="col-md-8">
                                         <form method="GET" action="${pageContext.request.contextPath}/admin/services" class="d-flex">
                                             <input type="hidden" name="action" value="search">
@@ -429,7 +347,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="addServiceModalLabel">
-                            <i class="bi bi-plus-circle me-2"></i>Thêm dịch vụ
+                            <i class="bi bi-plus-circle me-2"></i>Thêm dịch vụ mới
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -452,13 +370,12 @@
                                 <input type="number" class="form-control" id="addPrice" name="price" min="0" step="0.01" placeholder="Nhập giá dịch vụ" required>
                             </div>
                             
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>
-                                <strong>Lưu ý:</strong> Chức năng này để thêm dịch vụ y tế mới vào hệ thống.
-                            </div>
+
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-check-circle me-2"></i>Thêm dịch vụ
                             </button>
@@ -474,7 +391,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editServiceModalLabel">
-                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa dịch vụ
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin dịch vụ
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -494,12 +411,14 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editPrice" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
+                                <label for="editPrice" class="form-label">Đơn Giá (VNĐ) <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="editPrice" name="price" min="0" step="0.01" required>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>Cập nhật
                             </button>
@@ -527,7 +446,9 @@
                         </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
                         <form method="POST" action="${pageContext.request.contextPath}/admin/services" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" id="deleteServiceId" name="serviceId">
@@ -582,7 +503,7 @@
                     "searching": false, // Disable built-in search
                     "language": {
                         "lengthMenu": "Hiển thị _MENU_ mục",
-                        "zeroRecords": "", // Không hiển thị thông báo khi không có dữ liệu
+                        "zeroRecords": "Không có dữ liệu", // Không hiển thị thông báo khi không có dữ liệu
                         "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
                         "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
                         "infoFiltered": "(lọc từ _MAX_ tổng số mục)",

@@ -84,6 +84,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
+                    </a>
+                </li>
+                <li>
                     <a href="${pageContext.request.contextPath}/admin/services">
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
                     </a>
@@ -95,12 +100,7 @@
                 </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/admin/prescriptions">
-                        <i class="bi bi-capsule"></i> Quản lý đơn thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
+                        <i class="bi bi-capsule"></i> Quản lý thuốc
                     </a>
                 </li>
                 <li class="active">
@@ -109,90 +109,8 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/report">
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.DOCTOR) { %>
-                <!-- Menu cho Bác sĩ -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-check"></i> Lịch khám bệnh
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-file-medical"></i> Hồ sơ bệnh án
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-people"></i> Danh sách bệnh nhân
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-journal-medical"></i> Chỉ định dịch vụ
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
-                <!-- Menu cho Lễ tân -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
-                    </a>
-                </li>
-               
-                <% } else { %>
-                <!-- Menu cho Bệnh nhân (PATIENT) -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-file-medical"></i> Hồ sơ sức khỏe
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-hospital"></i> Dịch vụ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
                     </a>
                 </li>
                 <% } %>
@@ -316,12 +234,10 @@
                         Xóa vật tư thất bại!
                     <% } else if ("invalid_quantity".equals(error)) { %>
                         Số lượng phải lớn hơn 0!
-                    <% } else if ("stock_add_failed".equals(error)) { %>
-                        Thêm số lượng vào kho thất bại!
-                    <% } else if ("stock_reduce_failed".equals(error)) { %>
-                        Giảm số lượng kho thất bại! Có thể số lượng trong kho không đủ.
+                    <% } else if ("invalid_values".equals(error)) { %>
+                        Giá trị nhập vào không hợp lệ! Đơn giá phải lớn hơn 0 và số lượng phải từ 1 trở lên.
                     <% } else if ("supply_exists".equals(error)) { %>
-                        Vật tư này đã tồn tại! Vui lòng sử dụng chức năng "Thêm số lượng" để tăng số lượng tồn kho.
+                        Vật tư này đã tồn tại!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -365,8 +281,6 @@
                     </div>
                 </div>
 
-
-
                 <!-- Supplies Table -->
                 <div class="row">
                     <div class="col-12">
@@ -408,8 +322,8 @@
                                                     <td>
                                                         <a href="${pageContext.request.contextPath}/admin/medical-supplies?edit=<%= supply.getSupplyId() %>" 
                                                            class="btn btn-sm btn-primary me-2" title="Chỉnh sửa thông tin vật tư">
-                                                             <i class="bi bi-pencil-square"></i>
-                                                         </a>
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </a>
                                                         <button type="button" class="btn btn-sm btn-outline-danger" 
                                                                 onclick="deleteSupply(<%= supply.getSupplyId() %>, '<%= supply.getSupplyName() %>')" 
                                                                 title="Xóa vật tư">
@@ -440,117 +354,48 @@
             </div>
         </div>
 
-        <%
-        // Get edit data for modal
-        MedicalSupply editSupply = (MedicalSupply) request.getAttribute("editSupply");
-        boolean isEdit = editSupply != null;
-        %>
-
-        <!-- Add/Edit Supply Modal -->
+        <!-- Add Supply Modal -->
         <div class="modal fade" id="addSupplyModal" tabindex="-1" aria-labelledby="addSupplyModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="addSupplyModalLabel">
-                            <i class="bi bi-<%= isEdit ? "pencil-square" : "plus-circle" %> me-2"></i><%= isEdit ? "Chỉnh sửa thông tin vật tư" : "Thêm vật tư mới" %>
+                            <i class="bi bi-plus-circle me-2"></i>Thêm vật tư mới
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies">
                         <div class="modal-body">
-                            <input type="hidden" name="action" value="<%= isEdit ? "update" : "add" %>">
-                            <% if (isEdit) { %>
-                            <input type="hidden" name="supplyId" value="<%= editSupply.getSupplyId() %>">
-                            <% } %>
+                            <input type="hidden" name="action" value="add">
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addSupplyGroup" class="form-label fw-bold">
-                                            <i class="bi bi-collection me-1"></i>Nhóm vật tư <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-control" id="addSupplyGroup" name="supplyGroup" 
-                                               placeholder="Ví dụ: Dụng cụ y tế, Tiêu hao phẩm..." 
-                                               value="<%= isEdit ? editSupply.getSupplyGroup() : "" %>" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addSupplyName" class="form-label fw-bold">
-                                            <i class="bi bi-box-seam me-1"></i>Tên vật tư <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-control form-control-lg" id="addSupplyName" name="supplyName" 
-                                               placeholder="Nhập tên cụ thể của vật tư" 
-                                               value="<%= isEdit ? editSupply.getSupplyName() : "" %>" required>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="addSupplyGroup" class="form-label">Nhóm vật tư <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addSupplyGroup" name="supplyGroup" placeholder="Nhập tên nhóm vật tư" required>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addUnitPrice" class="form-label fw-bold">
-                                            <i class="bi bi-currency-dollar me-1"></i>Đơn giá (VNĐ) <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" 
-                                                   min="0" step="0.01" placeholder="0" 
-                                                   value="<%= isEdit ? editSupply.getUnitPrice() : "" %>" required>
-                                            <span class="input-group-text">VNĐ</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addStockQuantity" class="form-label fw-bold">
-                                            <i class="bi bi-boxes me-1"></i>Số lượng tồn kho <% if (!isEdit) { %><span class="text-danger">*</span><% } %>
-                                        </label>
-                                        <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" 
-                                               min="<%= isEdit ? "0" : "1" %>" placeholder="0" 
-                                               value="<%= isEdit ? editSupply.getStockQuantity() : "" %>" required>
-                                        <% if (isEdit) { %>
-                                        <div class="form-text">
-                                            <i class="bi bi-info-circle me-1"></i>Cập nhật số lượng hiện có trong kho
-                                        </div>
-                                        <% } %>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="addSupplyName" class="form-label">Tên vật tư <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addSupplyName" name="supplyName" placeholder="Nhập tên vật tư" required>
                             </div>
                             
-                            <% if (!isEdit) { %>
-                            <div class="alert alert-success border-0">
-                                <div class="d-flex">
-                                    <i class="bi bi-lightbulb-fill me-2 mt-1"></i>
-                                    <div>
-                                        <strong>Lưu ý:</strong> Chức năng này để thêm vật tư mới vào hệ thống. 
-                                        Bạn có thể cập nhật số lượng tồn kho thông qua chức năng "Chỉnh sửa" sau này.
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="addUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" min="0" step="0.01" placeholder="Nhập đơn giá" required>
                             </div>
-                            <% } else { %>
-                            <div class="alert alert-info border-0">
-                                <div class="d-flex">
-                                    <i class="bi bi-lightbulb-fill me-2 mt-1"></i>
-                                    <div>
-                                        <strong>Mẹo:</strong> Thay đổi số lượng tồn kho để cập nhật số liệu chính xác. 
-                                        Hệ thống sẽ tự động cập nhật trạng thái cảnh báo dựa trên số lượng này.
-                                    </div>
-                                </div>
+                            
+                            <div class="mb-3">
+                                <label for="addStockQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" min="1" placeholder="Nhập số lượng" required>
                             </div>
-                            <% } %>
+                            
+
                         </div>
-                        <div class="modal-footer bg-light">
-                            <% if (isEdit) { %>
-                            <a href="${pageContext.request.contextPath}/admin/medical-supplies" class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-1"></i>Hủy bỏ
-                            </a>
-                            <% } else { %>
+                        <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle me-1"></i>Hủy bỏ
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                             </button>
-                            <% } %>
-                            <button type="submit" class="btn btn-<%= isEdit ? "primary" : "success" %> btn-lg">
-                                <i class="bi bi-check-circle me-2"></i><%= isEdit ? "Cập nhật thông tin" : "Thêm vật tư" %>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Thêm vật tư
                             </button>
                         </div>
                     </form>
@@ -558,9 +403,70 @@
             </div>
         </div>
 
+        <!-- Edit Supply Modal -->
+        <div class="modal fade" id="editSupplyModal" tabindex="-1" aria-labelledby="editSupplyModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editSupplyModalLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin vật tư
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies">
+                        <div class="modal-body">
+                            <%
+                            // Get edit data for modal
+                            MedicalSupply editSupply = (MedicalSupply) request.getAttribute("editSupply");
+                            boolean isEditSupply = editSupply != null;
+                            %>
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" name="supplyId" value="<%= isEditSupply ? editSupply.getSupplyId() : "" %>">
+                            
+                            <div class="mb-3">
+                                <label for="editSupplyGroup" class="form-label">Nhóm vật tư <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editSupplyGroup" name="supplyGroup" 
+                                       placeholder="Nhập tên nhóm vật tư" value="<%= isEditSupply ? editSupply.getSupplyGroup() : "" %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editSupplyName" class="form-label">Tên vật tư <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editSupplyName" name="supplyName" 
+                                       placeholder="Nhập tên vật tư" value="<%= isEditSupply ? editSupply.getSupplyName() : "" %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editUnitPrice" name="unitPrice" 
+                                       min="0" step="0.01" placeholder="Nhập đơn giá" value="<%= isEditSupply ? editSupply.getUnitPrice() : "" %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editStockQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editStockQuantity" name="stockQuantity" 
+                                       min="1" placeholder="Nhập số lượng" value="<%= isEditSupply ? editSupply.getStockQuantity() : "" %>" required>
+                            </div>
+                            
 
-
-
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <% if (isEditSupply) { %>
+                            <a href="${pageContext.request.contextPath}/admin/medical-supplies" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </a>
+                            <% } else { %>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
+                            <% } %>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Cập nhật
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
         <!-- Delete Confirmation Modal -->
         <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
@@ -580,7 +486,9 @@
                         </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
                         <form method="POST" action="${pageContext.request.contextPath}/admin/medical-supplies" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" id="deleteSupplyId" name="supplyId">
@@ -592,8 +500,6 @@
                 </div>
             </div>
         </div>
-
-
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -637,7 +543,7 @@
                     "searching": false, // Disable built-in search
                     "language": {
                         "lengthMenu": "Hiển thị _MENU_ mục",
-                        "zeroRecords": "", // Không hiển thị thông báo khi không có dữ liệu
+                        "zeroRecords": "Không có dữ liệu", // Không hiển thị thông báo khi không có dữ liệu
                         "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
                         "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
                         "infoFiltered": "(lọc từ _MAX_ tổng số mục)",
@@ -650,12 +556,7 @@
                     }
                 });
 
-
             });
-
-
-
-            
 
             // Delete supply function
             function deleteSupply(supplyId, supplyName) {
@@ -665,10 +566,10 @@
             }
         </script>
 
-        <% if (editSupply != null) { %>
+        <% if (isEditSupply) { %>
         <script>
         document.addEventListener('DOMContentLoaded', function() {
-            new bootstrap.Modal(document.getElementById('addSupplyModal')).show();
+            new bootstrap.Modal(document.getElementById('editSupplyModal')).show();
         });
         </script>
         <% } %>

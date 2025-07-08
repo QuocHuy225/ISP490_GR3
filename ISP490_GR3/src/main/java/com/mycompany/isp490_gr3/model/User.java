@@ -51,6 +51,10 @@ public class User {
     private boolean isEmailVerified;
     private Timestamp verificationExpiryTime;
     
+    // Reset password fields
+    private String resetPasswordToken;
+    private Timestamp resetPasswordExpiry;
+    
     // Default constructor
     public User() {
         this.role = Role.PATIENT;
@@ -181,6 +185,22 @@ public class User {
     
     public void setVerificationExpiryTime(Timestamp verificationExpiryTime) {
         this.verificationExpiryTime = verificationExpiryTime;
+    }
+    
+    public String getResetPasswordToken() {
+        return resetPasswordToken;
+    }
+    
+    public void setResetPasswordToken(String resetPasswordToken) {
+        this.resetPasswordToken = resetPasswordToken;
+    }
+    
+    public Timestamp getResetPasswordExpiry() {
+        return resetPasswordExpiry;
+    }
+    
+    public void setResetPasswordExpiry(Timestamp resetPasswordExpiry) {
+        this.resetPasswordExpiry = resetPasswordExpiry;
     }
     
     @Override

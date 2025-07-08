@@ -55,16 +55,17 @@ public class InvoiceController extends HttpServlet {
         }
         
         String action = request.getParameter("action");
-        if (action == null) action = "list";
+        String medicalRecordId = request.getParameter("medicalRecordId");
         
+        // If no action but has medicalRecordId, check if invoice exists
+        if (action == null && medicalRecordId != null) {
+            handleMedicalRecordInvoice(request, response);
+            return;
+        }
+        
+        // Otherwise process specific actions
         try {
             switch (action) {
-                case "list":
-                    handleListInvoices(request, response);
-                    break;
-                case "listByMedicalRecord":
-                    handleListByMedicalRecord(request, response);
-                    break;
                 case "new":
                     handleNewInvoice(request, response);
                     break;
@@ -74,11 +75,8 @@ public class InvoiceController extends HttpServlet {
                 case "view":
                     handleViewInvoice(request, response);
                     break;
-                case "delete":
-                    handleDeleteInvoice(request, response);
-                    break;
                 default:
-                    handleListInvoices(request, response);
+                    response.sendRedirect(request.getContextPath() + "/homepage");
                     break;
             }
         } catch (Exception e) {
@@ -106,9 +104,6 @@ public class InvoiceController extends HttpServlet {
                 case "update":
                     handleUpdateInvoice(request, response);
                     break;
-                case "delete":
-                    handleDeleteInvoice(request, response);
-                    break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/doctor/invoices");
                     break;
@@ -121,31 +116,7 @@ public class InvoiceController extends HttpServlet {
     
     // ===== GET HANDLERS =====
     
-    private void handleListInvoices(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        String patientIdStr = request.getParameter("patientId");
-        List<Invoice> invoices;
-        Patient patient = null;
-        
-        if (patientIdStr != null && !patientIdStr.isEmpty()) {
-            try {
-                int patientId = Integer.parseInt(patientIdStr);
-                patient = daoPatient.getPatientById(patientId);
-                invoices = daoInvoice.getInvoicesByPatient(patientId);
-            } catch (NumberFormatException e) {
-                invoices = daoInvoice.getAllInvoices();
-            }
-        } else {
-            invoices = daoInvoice.getAllInvoices();
-        }
-        
-        request.setAttribute("invoices", invoices);
-        request.setAttribute("patient", patient);
-        request.getRequestDispatcher("/jsp/invoice-list.jsp").forward(request, response);
-    }
-    
-    private void handleListByMedicalRecord(HttpServletRequest request, HttpServletResponse response)
+    private void handleMedicalRecordInvoice(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         String medicalRecordId = request.getParameter("medicalRecordId");
@@ -160,13 +131,16 @@ public class InvoiceController extends HttpServlet {
             return;
         }
         
-        Patient patient = daoPatient.getPatientById(medicalRecord.getPatientId());
+        // Get the single invoice for this medical record
         List<Invoice> invoices = daoInvoice.getInvoicesByMedicalRecord(medicalRecordId);
         
-        request.setAttribute("invoices", invoices);
-        request.setAttribute("patient", patient);
-        request.setAttribute("medicalRecord", medicalRecord);
-        request.getRequestDispatcher("/jsp/invoice-list.jsp").forward(request, response);
+        // If invoice exists, show it. If not, create new one
+        if (!invoices.isEmpty()) {
+            Invoice invoice = invoices.get(0);
+            response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=view&invoiceId=" + invoice.getInvoiceId());
+        } else {
+            response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + medicalRecordId);
+        }
     }
     
     private void handleNewInvoice(HttpServletRequest request, HttpServletResponse response)
@@ -308,19 +282,25 @@ public class InvoiceController extends HttpServlet {
             boolean success = daoInvoice.addInvoice(invoice, items);
             
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId + "&success=added");
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?medicalRecordId=" + medicalRecordId + "&success=added");
             } else {
-                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId + "&error=add_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?medicalRecordId=" + medicalRecordId + "&error=add_failed");
             }
             
         } catch (NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Invalid number format in add invoice: {0}", e.getMessage());
             response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=invalid_data");
         } catch (IllegalStateException e) {
-            // Lỗi tồn kho không đủ
-            LOGGER.log(Level.WARNING, "Insufficient stock: {0}", e.getMessage());
-            String redirectMedicalRecordId = request.getParameter("medicalRecordId");
-            response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + redirectMedicalRecordId + "&error=insufficient_stock&message=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+            if (e.getMessage().contains("already exists")) {
+                // Invoice already exists for this medical record
+                String redirectMedicalRecordId = request.getParameter("medicalRecordId");
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?medicalRecordId=" + redirectMedicalRecordId + "&error=invoice_exists");
+            } else {
+                // Other state errors (e.g. insufficient stock)
+                LOGGER.log(Level.WARNING, "Insufficient stock: {0}", e.getMessage());
+                String redirectMedicalRecordId = request.getParameter("medicalRecordId");
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + redirectMedicalRecordId + "&error=insufficient_stock&message=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+            }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error adding invoice: {0}", e.getMessage());
             response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=system_error");
@@ -369,11 +349,9 @@ public class InvoiceController extends HttpServlet {
             boolean success = daoInvoice.updateInvoice(existingInvoice, items);
             
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=listByMedicalRecord&medicalRecordId=" + 
-                                    existingInvoice.getMedicalRecordId() + "&success=updated");
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=view&invoiceId=" + existingInvoice.getInvoiceId() + "&success=updated");
             } else {
-                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=listByMedicalRecord&medicalRecordId=" + 
-                                    existingInvoice.getMedicalRecordId() + "&error=update_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=edit&invoiceId=" + existingInvoice.getInvoiceId() + "&error=update_failed");
             }
             
         } catch (NumberFormatException e) {
@@ -387,36 +365,6 @@ public class InvoiceController extends HttpServlet {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error updating invoice: {0}", e.getMessage());
             response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=system_error");
-        }
-    }
-    
-    private void handleDeleteInvoice(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        String invoiceId = request.getParameter("invoiceId");
-        String medicalRecordId = request.getParameter("medicalRecordId");
-        
-        if (invoiceId == null || invoiceId.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=invalid_invoice");
-            return;
-        }
-        
-        boolean success = daoInvoice.deleteInvoice(invoiceId);
-        
-        if (medicalRecordId != null && !medicalRecordId.isEmpty()) {
-            String redirectUrl = request.getContextPath() + "/doctor/invoices?action=listByMedicalRecord&medicalRecordId=" + medicalRecordId;
-            if (success) {
-                response.sendRedirect(redirectUrl + "&success=deleted");
-            } else {
-                response.sendRedirect(redirectUrl + "&error=delete_failed");
-            }
-        } else {
-            String redirectUrl = request.getContextPath() + "/doctor/invoices";
-            if (success) {
-                response.sendRedirect(redirectUrl + "?success=deleted");
-            } else {
-                response.sendRedirect(redirectUrl + "?error=delete_failed");
-            }
         }
     }
     

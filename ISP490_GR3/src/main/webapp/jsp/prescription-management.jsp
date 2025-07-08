@@ -91,6 +91,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
+                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
+                    </a>
+                </li>
+                <li>
                     <a href="${pageContext.request.contextPath}/admin/services">
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
                     </a>
@@ -106,100 +111,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu đơn khám bệnh
-                    </a>
-                </li>
-                <li>
                     <a href="${pageContext.request.contextPath}/admin/medical-supplies">
                         <i class="bi bi-gear-fill"></i> Quản lý vật tư
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/admin/report">
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.DOCTOR) { %>
-                <!-- Menu cho Bác sĩ -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-check"></i> Lịch khám bệnh
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-file-medical"></i> Hồ sơ bệnh án
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-people"></i> Danh sách bệnh nhân
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-journal-medical"></i> Chỉ định dịch vụ
-                    </a>
-                </li>
-                <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
-                <!-- Menu cho Lễ tân -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
-                    </a>
-                </li>
-               
-                <% } else { %>
-                <!-- Menu cho Bệnh nhân (PATIENT) -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-plus"></i> Đặt lịch hẹn
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-calendar-check"></i> Lịch hẹn của tôi
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-file-medical"></i> Hồ sơ sức khỏe
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-hospital"></i> Dịch vụ
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
                     </a>
                 </li>
                 <% } %>
@@ -306,7 +224,7 @@
                     <% } else if ("medicine_exists".equals(error)) { %>
                         Tên thuốc này đã tồn tại trong hệ thống!
                     <% } else if ("add_failed".equals(error)) { %>
-                        Thêm thất bại!
+                        Thêm thuốc thất bại!
                     <% } else if ("update_failed".equals(error)) { %>
                         Cập nhật thất bại!
                     <% } else if ("delete_failed".equals(error)) { %>
@@ -320,111 +238,104 @@
                 </div>
                 <% } %>
 
-                <!-- Medicines Management Section -->
-                <div class="card">
-                    <div class="card-body">
-                        <!-- Search and Add Medicine Section -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-8">
-                                                <form method="GET" action="${pageContext.request.contextPath}/admin/prescriptions" class="d-flex">
-                                                    <input type="hidden" name="action" value="searchMedicine">
-                                                    <div class="input-group">
-                                                        <span class="input-group-text">
-                                                            <i class="bi bi-search"></i>
-                                                        </span>
-                                                        <input type="text" class="form-control" name="keyword" 
-                                                               placeholder="Tìm kiếm thuốc theo tên..." 
-                                                               value="<%= medicineSearchKeyword != null ? medicineSearchKeyword : "" %>">
-                                                        <button class="btn btn-primary" type="submit">
-                                                            Tìm kiếm
-                                                        </button>
-                                                        <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
-                                                        <a href="${pageContext.request.contextPath}/admin/prescriptions" class="btn btn-outline-secondary">
-                                                            <i class="bi bi-x-circle"></i>
-                                                        </a>
-                                                        <% } %>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
-                                                    <i class="bi bi-plus-circle me-2"></i>Thêm thuốc
+                <!-- Search and Add Medicine Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <form method="GET" action="${pageContext.request.contextPath}/admin/prescriptions" class="d-flex">
+                                            <input type="hidden" name="action" value="searchMedicine">
+                                            <div class="input-group">
+                                                <span class="input-group-text">
+                                                    <i class="bi bi-search"></i>
+                                                </span>
+                                                <input type="text" class="form-control" name="keyword" 
+                                                       placeholder="Tìm kiếm thuốc theo tên..." 
+                                                       value="<%= medicineSearchKeyword != null ? medicineSearchKeyword : "" %>">
+                                                <button class="btn btn-primary" type="submit">
+                                                    Tìm kiếm
                                                 </button>
+                                                <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
+                                                <a href="${pageContext.request.contextPath}/admin/prescriptions" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </a>
+                                                <% } %>
                                             </div>
-                                        </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
+                                            <i class="bi bi-plus-circle me-2"></i>Thêm thuốc
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Medicines Table -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">
-                                            <i class="bi bi-table me-2"></i>Danh sách thuốc
-                                            <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
-                                            <span class="badge bg-primary ms-2">Kết quả tìm kiếm: "<%= medicineSearchKeyword %>"</span>
+                <!-- Medicines Table -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-table me-2"></i>Danh sách thuốc kê về
+                                    <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
+                                    <span class="badge bg-primary ms-2">Kết quả tìm kiếm: "<%= medicineSearchKeyword %>"</span>
+                                    <% } %>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="medicinesTable" class="table table-striped table-hover">
+                                        <thead class="table-primary">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Tên thuốc</th>
+                                                <th>Đơn vị tính</th>
+                                                <th>Đường dùng</th>
+                                                <th>Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% if (medicines != null && !medicines.isEmpty()) {
+                                                for (PrescriptionMedicine medicine : medicines) { %>
+                                                <tr>
+                                                    <td><%= medicine.getPreMedicineId() %></td>
+                                                    <td><%= medicine.getMedicineName() %></td>
+                                                    <td><%= medicine.getUnitOfMeasure() %></td>
+                                                    <td><%= medicine.getAdministrationRoute() %></td>
+                                                    <td>
+                                                        <a href="${pageContext.request.contextPath}/admin/prescriptions?editMedicine=<%= medicine.getPreMedicineId() %>" 
+                                                           class="btn btn-sm btn-primary me-2" title="Chỉnh sửa thông tin thuốc">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </a>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-outline-danger" 
+                                                                data-medicine-id="<%= medicine.getPreMedicineId() %>"
+                                                                data-medicine-name="<%= medicine.getMedicineName() %>"
+                                                                onclick="deleteMedicine(this.getAttribute('data-medicine-id'), this.getAttribute('data-medicine-name'))" 
+                                                                title="Xóa thuốc">
+                                                            <i class="bi bi-trash3"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <% } %>
+                                            <% } else { %>
+                                                <% if (medicineSearchKeyword == null || medicineSearchKeyword.trim().isEmpty()) { %>
+                                                <tr>
+                                                    <td colspan="5" class="text-center">
+                                                        <i class="bi bi-inbox me-2"></i>
+                                                        Chưa có thuốc nào trong hệ thống
+                                                    </td>
+                                                </tr>
+                                                <% } %>
                                             <% } %>
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table id="medicinesTable" class="table table-striped table-hover">
-                                                <thead class="table-primary">
-                                                    <tr>
-                                                        <th>ID</th>
-                                                        <th>Tên thuốc</th>
-                                                        <th>Đơn vị tính</th>
-                                                        <th>Đường dùng</th>
-                                                        <th>Thao tác</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <% if (medicines != null && !medicines.isEmpty()) {
-                                                        for (PrescriptionMedicine medicine : medicines) { %>
-                                                        <tr>
-                                                            <td><%= medicine.getPreMedicineId() %></td>
-                                                            <td><%= medicine.getMedicineName() %></td>
-                                                            <td><%= medicine.getUnitOfMeasure() %></td>
-                                                            <td><%= medicine.getAdministrationRoute() %></td>
-                                                            <td>
-                                                                <a href="${pageContext.request.contextPath}/admin/prescriptions?editMedicine=<%= medicine.getPreMedicineId() %>" 
-                                                                   class="btn btn-sm btn-primary me-2" title="Chỉnh sửa thông tin thuốc">
-                                                                    <i class="bi bi-pencil-square"></i>
-                                                                </a>
-                                                                <button type="button" 
-                                                                        class="btn btn-sm btn-outline-danger" 
-                                                                        data-medicine-id="<%= medicine.getPreMedicineId() %>"
-                                                                        data-medicine-name="<%= medicine.getMedicineName() %>"
-                                                                        onclick="deleteMedicine(this.getAttribute('data-medicine-id'), this.getAttribute('data-medicine-name'))" 
-                                                                        title="Xóa thuốc">
-                                                                    <i class="bi bi-trash3"></i>
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                        <% } %>
-                                                    <% } else { %>
-                                                        <tr>
-                                                            <td colspan="5" class="text-center">
-                                                                <i class="bi bi-inbox me-2"></i>
-                                                                <% if (medicineSearchKeyword != null && !medicineSearchKeyword.trim().isEmpty()) { %>
-                                                                    Không tìm thấy thuốc nào với từ khóa "<%= medicineSearchKeyword %>"
-                                                                <% } else { %>
-                                                                    Chưa có thuốc nào trong hệ thống
-                                                                <% } %>
-                                                            </td>
-                                                        </tr>
-                                                    <% } %>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -435,7 +346,7 @@
 
         <!-- Add Medicine Modal -->
         <div class="modal fade" id="addMedicineModal" tabindex="-1" aria-labelledby="addMedicineModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="addMedicineModalLabel">
@@ -452,23 +363,20 @@
                                 <input type="text" class="form-control" id="addMedicineName" name="medicineName" placeholder="Nhập tên thuốc" required>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addUnitOfMeasure" class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="addUnitOfMeasure" name="unitOfMeasure" placeholder="viên, ml, gói..." required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="addAdministrationRoute" class="form-label">Đường dùng <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="addAdministrationRoute" name="administrationRoute" placeholder="Uống, tiêm, bôi..." required>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="addUnitOfMeasure" class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addUnitOfMeasure" name="unitOfMeasure" placeholder="Nhập đơn vị tính (viên, ml, gói...)" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="addAdministrationRoute" class="form-label">Đường dùng <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addAdministrationRoute" name="administrationRoute" placeholder="Nhập đường dùng (Uống, tiêm, bôi...)" required>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-check-circle me-2"></i>Thêm thuốc
                             </button>
@@ -485,11 +393,11 @@
 
         <!-- Edit Medicine Modal -->
         <div class="modal fade" id="editMedicineModal" tabindex="-1" aria-labelledby="editMedicineModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editMedicineModalLabel">
-                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa thuốc
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin thuốc
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -505,25 +413,22 @@
                                        value="<%= editMedicine.getMedicineName() %>" required>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="editUnitOfMeasure" class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="editUnitOfMeasure" name="unitOfMeasure" 
-                                               value="<%= editMedicine.getUnitOfMeasure() %>" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="editAdministrationRoute" class="form-label">Đường dùng <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="editAdministrationRoute" name="administrationRoute" 
-                                               value="<%= editMedicine.getAdministrationRoute() %>" required>
-                                    </div>
-                                </div>
+                            <div class="mb-3">
+                                <label for="editUnitOfMeasure" class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editUnitOfMeasure" name="unitOfMeasure" 
+                                       value="<%= editMedicine.getUnitOfMeasure() %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editAdministrationRoute" class="form-label">Đường dùng <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editAdministrationRoute" name="administrationRoute" 
+                                       value="<%= editMedicine.getAdministrationRoute() %>" required>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <a href="${pageContext.request.contextPath}/admin/prescriptions" class="btn btn-secondary">Hủy</a>
+                            <a href="${pageContext.request.contextPath}/admin/prescriptions" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </a>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>Cập nhật
                             </button>
@@ -552,7 +457,9 @@
                         </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
                         <form method="POST" action="${pageContext.request.contextPath}/admin/prescriptions/medicines" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" id="deleteMedicineId" name="medicineId">
@@ -606,7 +513,7 @@
                     "searching": false, // Disable built-in search since we have custom search
                     "language": {
                         "lengthMenu": "Hiển thị _MENU_ mục",
-                        "zeroRecords": "", // Don't show message when no data
+                        "zeroRecords": "Không có dữ liệu", // Don't show message when no data
                         "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
                         "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
                         "infoFiltered": "(lọc từ _MAX_ tổng số mục)",

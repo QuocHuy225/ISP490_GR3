@@ -333,8 +333,12 @@
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" form="addSlotForm" class="btn btn-primary">Thêm</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
+                        <button type="submit" form="addSlotForm" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Thêm
+                        </button>
                     </div>
                 </div>
             </div>
@@ -552,8 +556,12 @@
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" form="updateSlotForm" class="btn btn-primary">Cập nhật</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
+                        <button type="submit" form="updateSlotForm" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Cập nhật
+                        </button>
                     </div>
                 </div>
             </div>
@@ -599,8 +607,12 @@
                         Bạn muốn xóa <span id="deleteCount" class="text-primary fw-bold"></span> slot ra khỏi hệ thống?
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="button" class="btn btn-danger" id="confirmDeleteButton">Xóa</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteButton">
+                            <i class="bi bi-trash me-2"></i>Xóa
+                        </button>
                     </div>
                 </div>
             </div>

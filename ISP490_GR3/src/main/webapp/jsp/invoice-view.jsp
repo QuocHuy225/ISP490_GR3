@@ -2,17 +2,19 @@
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="com.mycompany.isp490_gr3.model.Patient" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalRecord" %>
-<%@ page import="com.mycompany.isp490_gr3.model.ActualPrescriptionForm" %>
-<%@ page import="com.mycompany.isp490_gr3.model.ActualPrescriptionMedicine" %>
+<%@ page import="com.mycompany.isp490_gr3.model.Invoice" %>
+<%@ page import="com.mycompany.isp490_gr3.model.InvoiceItem" %>
+<%@ page import="java.util.List" %>
 <%@ page import="java.text.SimpleDateFormat" %>
-<%@ page import="java.util.*" %>
+<%@ page import="java.text.DecimalFormat" %>
+<%@ page import="java.math.BigDecimal" %>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Xem đơn thuốc - Ánh Dương Clinic</title>
+        <title>Chi tiết hóa đơn - Ánh Dương Clinic</title>
         <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <!-- Bootstrap CSS -->
@@ -21,83 +23,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
         <!-- Homepage specific CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
-        <style>
-            .prescription-header {
-                text-align: center;
-                border-bottom: 2px solid #007bff;
-                padding-bottom: 20px;
-                margin-bottom: 30px;
-            }
-            
-            .prescription-section {
-                margin-bottom: 25px;
-                padding: 20px;
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                background-color: #fff;
-            }
-            
-            .prescription-details {
-                background-color: #f8f9fa;
-            }
-            
-            .print-section {
-                page-break-inside: avoid;
-            }
-            
-            .medicine-table {
-                border: 2px solid #007bff;
-            }
-            
-            .medicine-table th {
-                background-color: #007bff;
-                color: white;
-                font-weight: 600;
-                text-align: center;
-                border: 1px solid #0056b3;
-            }
-            
-            .medicine-table td {
-                border: 1px solid #dee2e6;
-                padding: 12px 8px;
-                vertical-align: top;
-            }
-            
-            .medicine-table .medicine-name {
-                font-weight: 600;
-                color: #007bff;
-            }
-            
-            .medicine-table .usage-instructions {
-                font-style: italic;
-                color: #6c757d;
-            }
-            
-            @media print {
-                .no-print {
-                    display: none !important;
-                }
-                
-                body {
-                    font-size: 12pt;
-                    line-height: 1.4;
-                }
-                
-                .prescription-section {
-                    break-inside: avoid;
-                    margin-bottom: 15px;
-                }
-                
-                .medicine-table {
-                    font-size: 11pt;
-                }
-                
-                .medicine-table th,
-                .medicine-table td {
-                    padding: 8px 6px;
-                }
-            }
-        </style>
+        <!-- Invoice specific CSS -->
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/invoice.css">
     </head>
     <body>
         <%
@@ -132,12 +59,13 @@
         }
         
         // Get data from request
-        ActualPrescriptionForm form = (ActualPrescriptionForm) request.getAttribute("form");
         Patient patient = (Patient) request.getAttribute("patient");
-        MedicalRecord record = (MedicalRecord) request.getAttribute("medicalRecord");
+        MedicalRecord medicalRecord = (MedicalRecord) request.getAttribute("medicalRecord");
+        Invoice invoice = (Invoice) request.getAttribute("invoice");
         
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat fullSdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        SimpleDateFormat shortSdf = new SimpleDateFormat("dd/MM/yyyy");
+        DecimalFormat currencyFormat = new DecimalFormat("#,###");
         %>
 
         <!-- Sidebar -->
@@ -159,7 +87,7 @@
                     </a>
                 </li>
                 <li class="active">
-                    <a href="${pageContext.request.contextPath}/doctor/patients">
+                    <a href="${pageContext.request.contextPath}/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
@@ -242,7 +170,7 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/doctor/patients">
+                                    <a href="${pageContext.request.contextPath}/patients">
                                         <i class="bi bi-people me-1"></i>Quản lý bệnh nhân
                                     </a>
                                 </li>
@@ -254,7 +182,7 @@
                                 </li>
                                 <% } %>
                                 <li class="breadcrumb-item active" aria-current="page">
-                                    Chi tiết đơn thuốc
+                                    Chi tiết hóa đơn
                                 </li>
                             </ol>
                         </nav>
@@ -269,136 +197,174 @@
                     </a>
                     
                     <div class="action-buttons">
-                        <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
+                        <a href="${pageContext.request.contextPath}/doctor/invoices?action=edit&invoiceId=<%= invoice.getInvoiceId() %>" 
                            class="btn btn-primary me-2">
                             <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                         </a>
-                        <button type="button" class="btn btn-success" onclick="printPrescription()">
-                            <i class="bi bi-printer me-2"></i>In đơn thuốc
+                        <button type="button" class="btn btn-success" onclick="printInvoice()">
+                            <i class="bi bi-printer me-2"></i>In hóa đơn
                         </button>
                     </div>
                 </div>
 
-                <% if (form != null && patient != null && record != null) { %>
-                <!-- Prescription Header -->
-                <div class="prescription-header">
+                <% if (invoice != null && patient != null && medicalRecord != null) { %>
+                <!-- Invoice Header -->
+                <div class="invoice-header">
                     <h2 class="text-primary mb-3">
                         <span style="color: #007bff;">Ánh Dương</span>
                         <span style="color: #333;">Clinic</span>
                     </h2>
-                    <h4>ĐƠN THUỐC</h4>
+                    <h4>HÓA ĐƠN THANH TOÁN</h4>
                     <p class="mb-1">Địa chỉ: 123 Đường ABC, Quận XYZ, TP.HCM</p>
                     <p class="mb-0">Điện thoại: (028) 1234-5678 | Email: info@anhduongclinic.com</p>
                 </div>
 
-                <!-- Patient & Prescription Info -->
-                <div class="prescription-section prescription-details">
+                <!-- Patient & Invoice Info -->
+                <div class="invoice-section invoice-details">
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="text-primary mb-3"><i class="bi bi-person-fill me-2"></i>Thông tin bệnh nhân</h6>
                             <p class="mb-2"><strong>Mã bệnh nhân:</strong> <%= patient.getPatientCode() %></p>
                             <p class="mb-2"><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
-                            <p class="mb-2"><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? sdf.format(patient.getDob()) : "" %></p>
-                            <p class="mb-2"><strong>Giới tính:</strong> <%= patient.getGender() == 1 ? "Nam" : "Nữ" %></p>
-                            <p class="mb-0"><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
+                            <p class="mb-2"><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? shortSdf.format(patient.getDob()) : "" %></p>
+                            <p class="mb-2"><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
+                            <p class="mb-0"><strong>Địa chỉ:</strong> <%= patient.getAddress() %></p>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="text-primary mb-3"><i class="bi bi-capsule me-2"></i>Thông tin đơn thuốc</h6>
-                            <p class="mb-2"><strong>Mã đơn thuốc:</strong> <%= form.getActualPrescriptionFormId() %></p>
-                            <p class="mb-2"><strong>Tên đơn thuốc:</strong> <%= form.getFormName() %></p>
-                            <p class="mb-2"><strong>Ngày kê đơn:</strong> <%= form.getPrescriptionDate() != null ? fullSdf.format(form.getPrescriptionDate()) : "" %></p>
-                            <p class="mb-2"><strong>Mã hồ sơ:</strong> <%= record.getId() %></p>
-                            <% if (form.getNotes() != null && !form.getNotes().trim().isEmpty()) { %>
-                            <p class="mb-0"><strong>Ghi chú:</strong> <%= form.getNotes() %></p>
+                            <h6 class="text-primary mb-3"><i class="bi bi-receipt me-2"></i>Thông tin hóa đơn</h6>
+                            <p class="mb-2"><strong>Mã hóa đơn:</strong> <%= invoice.getInvoiceId() %></p>
+                            <p class="mb-2"><strong>Mã hồ sơ:</strong> <%= invoice.getMedicalRecordId() %></p>
+                            <p class="mb-2"><strong>Ngày tạo:</strong> <%= invoice.getCreatedAt() != null ? sdf.format(invoice.getCreatedAt()) : "" %></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Items -->
+                <div class="invoice-section invoice-details">
+                    <h6 class="text-primary mb-3"><i class="bi bi-list-ul me-2"></i>Chi tiết dịch vụ</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Tên dịch vụ</th>
+                                    <th>Loại</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% 
+                                int itemIndex = 1;
+                                if (invoice.getInvoiceItems() != null && !invoice.getInvoiceItems().isEmpty()) {
+                                    for (InvoiceItem item : invoice.getInvoiceItems()) { %>
+                                <tr>
+                                    <td><%= itemIndex++ %></td>
+                                    <td><%= item.getItemName() %></td>
+                                    <td>
+                                        <% if ("service".equals(item.getItemType())) { %>
+                                            <span class="badge bg-primary">Dịch vụ</span>
+                                        <% } else if ("supply".equals(item.getItemType())) { %>
+                                            <span class="badge bg-info">Vật tư</span>
+                                        <% } else { %>
+                                            <span class="badge bg-success">Thuốc</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="text-center"><%= item.getQuantity() %></td>
+                                    <td class="text-end"><%= currencyFormat.format(item.getUnitPrice()) %>đ</td>
+                                    <td class="text-end"><%= currencyFormat.format(item.getTotalAmount()) %>đ</td>
+                                </tr>
+                                <% } 
+                                } %>
+                                <!-- Exam Fee Row -->
+                                <tr class="table-warning">
+                                    <td><%= itemIndex %></td>
+                                    <td>Phí khám bệnh</td>
+                                    <td><span class="badge bg-warning text-dark">Khám bệnh</span></td>
+                                    <td class="text-center">1</td>
+                                    <td class="text-end">100,000đ</td>
+                                    <td class="text-end">100,000đ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Total Section -->
+                <div class="invoice-section total-section">
+                    <h6 class="text-primary mb-3"><i class="bi bi-calculator me-2"></i>Tổng cộng</h6>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <% if (invoice.getNotes() != null && !invoice.getNotes().isEmpty()) { %>
+                            <div class="mb-3">
+                                <strong>Ghi chú:</strong><br>
+                                <%= invoice.getNotes() %>
+                            </div>
                             <% } %>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Medicines Table -->
-                <div class="prescription-section">
-                    <h6 class="text-primary mb-3"><i class="bi bi-capsule-pill me-2"></i>Danh sách thuốc</h6>
-                    <% if (form.getMedicines() != null && !form.getMedicines().isEmpty()) { %>
-                        <div class="table-responsive">
-                            <table class="table medicine-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 5%;">STT</th>
-                                        <th style="width: 25%;">Tên thuốc</th>
-                                        <th style="width: 10%;">ĐVT</th>
-                                        <th style="width: 10%;">Đường dùng</th>
-                                        <th style="width: 8%;">Số ngày</th>
-                                        <th style="width: 8%;">Lần/ngày</th>
-                                        <th style="width: 8%;">Tổng SL</th>
-                                        <th style="width: 26%;">Hướng dẫn sử dụng</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% int index = 1; for (ActualPrescriptionMedicine medicine : form.getMedicines()) { %>
-                                        <tr>
-                                            <td class="text-center"><%= index++ %></td>
-                                            <td class="medicine-name"><%= medicine.getMedicineName() %></td>
-                                            <td class="text-center"><%= medicine.getUnitOfMeasure() != null ? medicine.getUnitOfMeasure() : "" %></td>
-                                            <td class="text-center"><%= medicine.getAdministrationRoute() != null ? medicine.getAdministrationRoute() : "" %></td>
-                                            <td class="text-center"><%= medicine.getDaysOfTreatment() != null ? medicine.getDaysOfTreatment() : "" %></td>
-                                            <td class="text-center"><%= medicine.getUnitsPerDay() != null ? medicine.getUnitsPerDay() : "" %></td>
-                                            <td class="text-center"><%= medicine.getTotalQuantity() != null ? medicine.getTotalQuantity() : "" %></td>
-                                            <td class="usage-instructions">
-                                                <%= medicine.getUsageInstructions() != null ? medicine.getUsageInstructions() : "" %>
-                                            </td>
-                                        </tr>
-                                    <% } %>
-                                </tbody>
+                        <div class="col-md-4">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Tổng dịch vụ:</strong></td>
+                                    <td class="text-end"><%= currencyFormat.format(invoice.getTotalServiceAmount()) %>đ</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tổng vật tư & thuốc:</strong></td>
+                                    <td class="text-end"><%= currencyFormat.format(invoice.getTotalSupplyAmount()) %>đ</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phí khám:</strong></td>
+                                    <td class="text-end">100,000đ</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tổng tiền:</strong></td>
+                                    <td class="text-end"><%= currencyFormat.format(invoice.getTotalAmount()) %>đ</td>
+                                </tr>
+                                <% if (invoice.getDiscountAmount() != null && invoice.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) { %>
+                                <tr>
+                                    <td><strong>Giảm giá:</strong></td>
+                                    <td class="text-end text-danger">-<%= currencyFormat.format(invoice.getDiscountAmount()) %>đ</td>
+                                </tr>
+                                <% } %>
+                                <tr class="table-primary">
+                                    <td><strong>THÀNH TIỀN:</strong></td>
+                                    <td class="text-end fw-bold fs-5"><%= currencyFormat.format(invoice.getFinalAmount()) %>đ</td>
+                                </tr>
                             </table>
                         </div>
-                    <% } else { %>
-                        <div class="text-center py-4">
-                            <i class="bi bi-capsule display-4 text-muted"></i>
-                            <p class="text-muted mt-2">Không có thuốc nào trong đơn này.</p>
-                        </div>
-                    <% } %>
-                </div>
-
-                <!-- Additional Notes -->
-                <% if (form.getNotes() != null && !form.getNotes().trim().isEmpty()) { %>
-                <div class="prescription-section">
-                    <h6 class="text-primary mb-3"><i class="bi bi-chat-text me-2"></i>Lưu ý đặc biệt</h6>
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <%= form.getNotes() %>
                     </div>
                 </div>
-                <% } %>
 
                 <!-- Signature Section -->
-                <div class="prescription-section print-section">
+                <div class="invoice-section print-section">
                     <div class="row text-center">
                         <div class="col-md-4">
-                            <p class="mb-5"><strong>Bệnh nhân</strong></p>
-                            <p class="mb-1">________________________</p>
+                            <p class="mb-5"><strong>Người thanh toán</strong></p>
+                            <p>________________________</p>
                             <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
                         </div>
                         <div class="col-md-4">
-                            <p class="mb-5"><strong>Người nhà bệnh nhân</strong></p>
-                            <p class="mb-1">________________________</p>
+                            <p class="mb-5"><strong>Thu ngân</strong></p>
+                            <p>________________________</p>
                             <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
                         </div>
                         <div class="col-md-4">
                             <p class="mb-5"><strong>Bác sĩ điều trị</strong></p>
-                            <p class="mb-1">________________________</p>
+                            <p>________________________</p>
                             <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
                         </div>
                     </div>
                     <div class="text-center mt-4">
                         <p class="mb-1"><em>Ngày <%= new java.text.SimpleDateFormat("dd").format(new java.util.Date()) %> tháng <%= new java.text.SimpleDateFormat("MM").format(new java.util.Date()) %> năm <%= new java.text.SimpleDateFormat("yyyy").format(new java.util.Date()) %></em></p>
-                        <p class="mb-0"><strong>Đơn thuốc này được kê theo quy định của Bộ Y tế</strong></p>
+                        <p class="mb-0"><strong>Cảm ơn quý khách đã sử dụng dịch vụ!</strong></p>
                     </div>
                 </div>
 
                 <% } else { %>
                 <div class="alert alert-danger">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    Không tìm thấy thông tin đơn thuốc!
+                    Không tìm thấy thông tin hóa đơn!
                 </div>
                 <% } %>
             </div>
