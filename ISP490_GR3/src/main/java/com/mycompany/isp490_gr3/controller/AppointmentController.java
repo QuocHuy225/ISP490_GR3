@@ -9,6 +9,7 @@ import com.mycompany.isp490_gr3.dto.AppointmentViewDTO;
 import com.mycompany.isp490_gr3.model.Doctor;
 import com.mycompany.isp490_gr3.model.MedicalService;
 import com.mycompany.isp490_gr3.model.Patient;
+import com.mycompany.isp490_gr3.model.Slot;
 import com.mycompany.isp490_gr3.model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,7 +17,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -24,6 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.logging.Level;
@@ -179,15 +180,22 @@ public class AppointmentController extends HttpServlet {
             case "/appointments":
                 handleSearch(request, response);
                 break;
-            case "/appointments/add":
-//                handleAddAppointment(request, response);
-                break;
+            case "/appointments/add": {
+                try {
+                    handleAddAppointment(request, response);
+                } catch (SQLException ex) {
+                    Logger.getLogger(AppointmentController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            break;
             case "/patient/search":
                 handlePatientSearch(request, response);
                 break;
             default:
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.getWriter().write(gson.toJson(new ResponseJson(false, "Đường dẫn không hợp lệ")));
         }
+        request.getRequestDispatcher("/jsp/manageappointment.jsp").forward(request, response);
     }
 
     private void handleSearch(HttpServletRequest request, HttpServletResponse response)
@@ -273,64 +281,10 @@ public class AppointmentController extends HttpServlet {
 
         request.getRequestDispatcher("/jsp/manageappointment.jsp").forward(request, response);
     }
-//
-//    private void handleAddAppointment(HttpServletRequest request, HttpServletResponse response)
-//            throws ServletException, IOException {
-//        try (Connection conn = YourDataSource.getConnection()) {
-//            conn.setAutoCommit(false);
-//            long appointmentId = Long.parseLong(request.getParameter("appointmentId"));
-//            long patientId = Long.parseLong(request.getParameter("patientId"));
-//
-//            // Kiểm tra lịch hẹn có tồn tại và trống không
-//            String sql = "SELECT patient_id FROM appointments WHERE id = ?";
-//            PreparedStatement stmt = conn.prepareStatement(sql);
-//            stmt.setLong(1, appointmentId);
-//            ResultSet rs = stmt.executeQuery();
-//            if (!rs.next()) {
-//                conn.rollback();
-//                request.getSession().setAttribute("message", "Lịch hẹn không tồn tại.");
-//                request.getSession().setAttribute("messageType", "danger");
-//                response.sendRedirect(request.getContextPath() + "/appointments");
-//                return;
-//            }
-//            if (!rs.wasNull()) {
-//                conn.rollback();
-//                request.getSession().setAttribute("message", "Lịch hẹn đã được gán bệnh nhân.");
-//                request.getSession().setAttribute("messageType", "danger");
-//                response.sendRedirect(request.getContextPath() + "/appointments");
-//                return;
-//            }
-//
-//            // Gán bệnh nhân
-//            sql = "UPDATE appointments SET patient_id = ?, status = 'pending' WHERE id = ?";
-//            stmt = conn.prepareStatement(sql);
-//            stmt.setLong(1, patientId);
-//            stmt.setLong(2, appointmentId);
-//            int rowsAffected = stmt.executeUpdate();
-//            if (rowsAffected > 0) {
-//                conn.commit();
-//                request.getSession().setAttribute("message", "Gán bệnh nhân thành công.");
-//                request.getSession().setAttribute("messageType", "success");
-//            } else {
-//                conn.rollback();
-//                request.getSession().setAttribute("message", "Không thể gán bệnh nhân.");
-//                request.getSession().setAttribute("messageType", "danger");
-//            }
-//        } catch (SQLException e) {
-//            LOGGER.log(Level.SEVERE, "Error assigning patient to appointment", e);
-//            request.getSession().setAttribute("message", "Lỗi khi gán bệnh nhân.");
-//            request.getSession().setAttribute("messageType", "danger");
-//        } catch (NumberFormatException e) {
-//            LOGGER.log(Level.SEVERE, "Invalid input parameters", e);
-//            request.getSession().setAttribute("message", "Dữ liệu không hợp lệ.");
-//            request.getSession().setAttribute("messageType", "danger");
-//        }
-//        response.sendRedirect(request.getContextPath() + "/appointments");
-//    }
 
     private void handlePatientSearch(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         response.setContentType("application/json");
         try (PrintWriter out = response.getWriter()) {
             String code = request.getParameter("code");
@@ -346,4 +300,109 @@ public class AppointmentController extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi khi tìm kiếm bệnh nhân.");
         }
     }
+
+    private void handleAddAppointment(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
+        response.setContentType("application/json");
+        try (PrintWriter out = response.getWriter()) {
+            String action = request.getParameter("action");
+            System.out.println("Received action: " + action);
+
+            // Lấy các tham số appointmentId, patientId, serviceId
+            String appointmentIdStr = request.getParameter("appointmentId");
+            String patientIdStr = request.getParameter("patientId");
+            String serviceIdStr = request.getParameter("servicesId");
+
+            System.out.println("Received parameters: serviceId=" + serviceIdStr + ", appointmentId=" + appointmentIdStr + ", patientId=" + patientIdStr);
+
+            // Kiểm tra nếu thiếu tham số
+            if (appointmentIdStr == null || patientIdStr == null || serviceIdStr == null) {
+                out.write(gson.toJson(new ResponseJson(false, "Thiếu appointmentId hoặc patientId hoặc serviceId")));
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            int appointmentId, patientId, servicesId;
+
+            try {
+                appointmentId = Integer.parseInt(appointmentIdStr);
+                patientId = Integer.parseInt(patientIdStr);
+                servicesId = Integer.parseInt(serviceIdStr);
+            } catch (NumberFormatException e) {
+                out.write(gson.toJson(new ResponseJson(false, "appointmentId, patientId, hoặc serviceId không hợp lệ")));
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            DAOAppointment dao = new DAOAppointment();
+            
+            //Kiểm tra 6 
+
+            //1.Kiểm tra lịch hẹn có tồn tại không
+            if (!dao.exists(appointmentId)) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.write(gson.toJson(new ResponseJson(false, "Lịch hẹn không tồn tại")));
+                return;
+            }
+
+            //2.Lịch đã được gán chưa?
+            if (dao.isAssigned(appointmentId)) {
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                out.write(gson.toJson(new ResponseJson(false, "Lịch đã được gán bệnh nhân")));
+                return;
+            }
+
+            Slot slot = dao.getSlotByAppointmentId(appointmentId);
+
+            
+            //3. Kiểm tra slot chưa bị khóa
+            if (slot.isDeleted()) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.write(gson.toJson(new ResponseJson(false, "Slot đã bị xóa, không thể gán bệnh nhân")));
+                return;
+            }
+            
+            //4.Ktra slot chưa quá thời gian đặt
+            if (slot.getSlotDate().isEqual(LocalDate.now()) && slot.getStartTime().isBefore(LocalTime.now())) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.write(gson.toJson(new ResponseJson(false, "Slot đã quá thời gian")));
+                return;
+            }
+
+            //5.Kiểm tra bệnh nhân có cùng dịch vụ trong ngày không?
+            if (dao.hasServiceInSameDay(patientId, servicesId, slot.getSlotDate())) {
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                out.write(gson.toJson(new ResponseJson(false, "Bệnh nhân đã có dịch vụ này trong ngày")));
+                return;
+            }
+
+            //6.Kiểm tra bệnh nhân chưa vượt quá số lượng lịch hẹn trong ngày
+            int countTodayAppointments = dao.countAppointmentsInDateByPatient(patientId, slot.getSlotDate());
+            if (countTodayAppointments >= 2) {
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                out.write(gson.toJson(new ResponseJson(false, "Bệnh nhân đã đặt tối đa 2 lịch trong ngày")));
+                return;
+            }
+
+            //7. Thực hiện gán
+            boolean success = dao.assignPatient(appointmentId, patientId, servicesId);
+            if (success) {
+                out.write(gson.toJson(new ResponseJson(true, "Gán bệnh nhân thành công")));
+            } else {
+                out.write(gson.toJson(new ResponseJson(false, "Không thể gán bệnh nhân")));
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+        }
+    }
+
+    private static class ResponseJson {
+
+        boolean success;
+        String message;
+
+        ResponseJson(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
+    }
+
 }

@@ -386,6 +386,23 @@
                     <input type="hidden" name="action" value="assignPatient">
                     <input type="hidden" id="appointmentId" name="appointmentId" />
                     <input type="hidden" id="patientId" name="patientId" />
+                    <div class="modal-body px-4 py-3">
+                        <div class="mb-4 border-bottom pb-3"> 
+                            <div class="row g-2">
+                                <div class="col-md-12">
+
+                                    <label for="serviceSelect" class="form-label" >Dịch vụ <span class="text-danger"> *</span></label>
+                                    <select class="form-select" id="serviceSelect" name="servicesId">
+                                        <option value="">--Chọn--</option>
+                                        <c:forEach var="s" items="${serviceList}">
+                                            <option value="${s.servicesId}" <c:if test="${param.servicesId == s.servicesId}">selected</c:if>>${s.serviceName}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
 
                     <div class="modal-body px-4 py-3">
                         <!-- Phần tìm kiếm bệnh nhân -->
@@ -422,9 +439,8 @@
 
                         </div>
 
-                        <!-- Phần danh sách bệnh nhân -->
                         <div class="mt-4">
-                            <h6 class="fw-bold mb-3">Danh sách bệnh nhân</h6>
+                            <h6 class="fw-bold mb-3">Danh sách bệnh nhân <span class="text-danger"> *</span></h6>
                             <div class="table-responsive">
                                 <table class="table table-hover table-bordered" id="patientListTable">
                                     <thead>
@@ -433,7 +449,7 @@
                                             <th>CCCD</th>
                                             <th>Họ tên</th>
                                             <th>Số điện thoại</th>
-                                            <th>Chọn</th>
+                                            <th>Chọn </th>
                                         </tr>
                                     </thead>
                                     <tbody id="patientListBody">
@@ -443,7 +459,12 @@
                             </div>
                         </div>
                     </div>
+                    <div class="modal-body px-4 pt-0">
+                        <div id="assignErrorMsg" class="alert alert-danger d-none" role="alert"></div>
+                    </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="saveAssignmentBtn" disabled>Gán</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                         </button>
@@ -451,6 +472,7 @@
                             <i class="bi bi-check-circle me-2"></i>Lưu
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>
@@ -466,14 +488,13 @@
         %>
         var BASE_URL = "<%= baseURL %>";
         console.log("BASE_URL:", BASE_URL);
-
         document.addEventListener('DOMContentLoaded', function () {
 
 
             const assignButtons = document.querySelectorAll('.btn-assign');
             console.log('Số lượng nút .btn-assign:', assignButtons.length);
             if (assignButtons.length === 0) {
-               
+
                 return;
             }
 
@@ -482,7 +503,6 @@
                     event.preventDefault();
                     const appointmentId = this.dataset.id;
                     console.log('Nhấp vào nút Gán, appointmentId:', appointmentId);
-
                     if (!appointmentId) {
                         console.error('appointmentId không tồn tại trong dataset!');
                         return;
@@ -496,13 +516,17 @@
 
                     document.getElementById('appointmentId').value = appointmentId;
                     console.log('Đã đặt appointmentId vào form:', appointmentId);
-
                     const modal = new bootstrap.Modal(modalEl);
                     modal.show();
                     console.log('Modal đã được hiển thị');
 
-
-
+                    //
+                    const errorBox = document.getElementById('assignErrorMsg');
+                    if (errorBox) {
+                        errorBox.classList.add('d-none');
+                        errorBox.textContent = '';
+                        console.log('Reset lỗi gán bệnh nhân');
+                    }
 
                     // Reset filter trước khi load
                     const filterInputs = ['filterPatientCode', 'filterPatientCCCD', 'filterPatientName', 'filterPatientPhone'];
@@ -516,25 +540,29 @@
                         }
                     });
 
+
                     // Delay 300ms để đảm bảo modal đã render DOM đầy đủ
                     setTimeout(() => {
                         loadPatientList();
                     }, 300);
+
+
+
+
+
+
                 });
             });
 
             // Load danh sách bệnh nhân 
-
             function loadPatientList() {
 
                 console.log('Bắt đầu loadPatientList...');
-
                 const code = document.getElementById('filterPatientCode').value.trim();
                 const cccd = document.getElementById('filterPatientCCCD').value.trim();
                 const name = document.getElementById('filterPatientName').value.trim();
                 const phone = document.getElementById('filterPatientPhone').value.trim();
                 console.log('Tham số lọc:', {code, cccd, name, phone});
-
                 const query = new URLSearchParams({
                     code: code,
                     cccd: cccd,
@@ -542,10 +570,8 @@
                     phone: phone
                 }).toString();
                 console.log('URL query:', query);
-
                 const url = BASE_URL + "/patient/search?" + query;
                 console.log('URL đầy đủ:', url);
-
                 fetch(url, {
                     method: 'GET',
                     headers: {
@@ -564,7 +590,6 @@
                             console.log("DATA NHẬN VỀ:", data);
                             console.log("Array.isArray(data):", Array.isArray(data));
                             console.log("data.length:", data.length);
-
                             console.log('Dữ liệu nhận được từ server:', data);
                             const tbody = document.getElementById('patientListBody');
                             if (!tbody) {
@@ -617,11 +642,140 @@
                             alert("Lỗi khi tải danh sách bệnh nhân!");
                         });
             }
-            
-            
-                   
 
-            // Event listeners for filter inputs and buttons
+
+
+            // Xử lý submit form bằng AJAX
+            const form = document.getElementById('addAppointmentForm');
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    console.log('Submit form gán bệnh nhân');
+                    const serviceId = document.getElementById('serviceSelect').value;
+                    const appointmentId = document.getElementById('appointmentId').value;
+                    const patientId = document.getElementById('patientId').value;
+                    const errorBox = document.getElementById('assignErrorMsg');
+                    // Reset thông báo lỗi cũ (nếu có)
+                    if (errorBox) {
+                        errorBox.classList.add('d-none');
+                        errorBox.textContent = '';
+                    }
+
+                    if (!appointmentId || !patientId || !serviceId) {
+                        if (errorBox) {
+                            errorBox.classList.remove('d-none');
+                            errorBox.textContent = 'Vui lòng chọn đầy đủ bệnh nhân và dịch vụ!';
+                        } else {
+                            alert('Vui lòng chọn đầy đủ bệnh nhân và dịch vụ!');
+                        }
+                        return;
+                    }
+
+                    const url1 = BASE_URL + "/appointments/add";
+                    const params = new URLSearchParams({
+                        action: 'assignPatient',
+                        appointmentId: appointmentId,
+                        patientId: patientId,
+                        servicesId: serviceId
+                    });
+                    fetch(url1, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: params
+                    })
+                            .then(res => {
+                                console.log('Response status:', res.status);
+                                return res.json();
+                            })
+                            .then(data => {
+                                console.log('Phản hồi từ server:', data);
+                                if (data.success) {
+                                    if (errorBox) {
+                                        errorBox.classList.add('d-none');
+                                        errorBox.textContent = '';
+                                    }
+                                    alert('Gán bệnh nhân thành công!');
+                                    const modal = bootstrap.Modal.getInstance(document.getElementById('addAppointmentModal'));
+                                    modal.hide();
+                                    location.reload();
+                                } else {
+                                    if (errorBox) {
+                                        errorBox.classList.remove('d-none');
+                                        errorBox.textContent = data.message || 'Không thể gán bệnh nhân';
+                                    } else {
+                                        alert('Lỗi: ' + (data.message || 'Không thể gán bệnh nhân'));
+                                    }
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Lỗi khi gán bệnh nhân:', err);
+                                if (errorBox) {
+                                    errorBox.classList.remove('d-none');
+                                    errorBox.textContent = 'Lỗi khi gán bệnh nhân: ' + err.message;
+                                } else {
+                                    alert('Lỗi khi gán bệnh nhân: ' + err.message);
+                                }
+                            });
+                });
+            }
+
+
+
+
+            function loadAppointmentList() {
+                console.log('Bắt đầu loadAppointmentList...');
+                // Gửi request để lấy danh sách lịch hẹn từ server (thay URL và tham số cho phù hợp)
+                const url = BASE_URL + "/appointments";
+                console.log('URL đầy đủ:', url);
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                        .then(res => {
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+                            return res.json();
+                        })
+                        .then(data => {
+                            console.log("Danh sách lịch hẹn mới:", data);
+                            const tbody = document.getElementById('appointmentListBody');
+                            if (!tbody) {
+                                console.error('Không tìm thấy tbody #appointmentListBody!');
+                                return;
+                            }
+                            tbody.innerHTML = '';
+                            if (!Array.isArray(data) || data.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Không có lịch hẹn nào.</td></tr>';
+                            } else {
+                                data.forEach(appointment => {
+                                    const row = document.createElement('tr');
+                                    row.innerHTML = `<td>${appointment.id}</td>
+                                 <td>${appointment.serviceName}</td>
+                                 <td>${appointment.patientName}</td>
+                                 <td>${appointment.appointmentTime}</td>
+                                 <td><button class="btn btn-sm btn-info">Chi tiết</button></td>`;
+                                    tbody.appendChild(row);
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Lỗi khi tải danh sách lịch hẹn:', err);
+                            const tbody = document.getElementById('appointmentListBody');
+                            if (tbody) {
+                                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Lỗi: Không thể tải dữ liệu lịch hẹn.</td></tr>';
+                            }
+                            alert("Lỗi khi tải danh sách lịch hẹn!");
+                        });
+            }
+
+
+
+            // Filter input và button
             const filterInputs = ['filterPatientCode', 'filterPatientCCCD', 'filterPatientName', 'filterPatientPhone'];
             filterInputs.forEach(inputId => {
                 const input = document.getElementById(inputId);
@@ -632,8 +786,6 @@
                     console.error(`Không tìm thấy input ${inputId} trong DOM!`);
                 }
             });
-
-
             const saveButton = document.getElementById('saveAssignmentBtn');
             if (saveButton) {
                 saveButton.disabled = true;
@@ -659,15 +811,13 @@
                     console.log('Đã reset form và vô hiệu hóa nút Lưu');
                 });
             });
-        });
-    </script>
-
-
-
-    <script>
+        }
+        );
         window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
         window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
     </script>
+
+
 
 
 
