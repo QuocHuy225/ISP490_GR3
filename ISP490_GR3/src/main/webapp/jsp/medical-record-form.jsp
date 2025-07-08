@@ -120,6 +120,16 @@
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(0,0,0,0.15);
             }
+            .action-btn-view {
+                background: linear-gradient(135deg, #17a2b8, #138496);
+                color: white;
+            }
+            .action-btn-view:hover {
+                background: linear-gradient(135deg, #138496, #117a8b);
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
             @media (max-width: 768px) {
                 .vital-sign-item {
                     flex: 1 1 calc(50% - 1.5rem);
@@ -520,10 +530,18 @@
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" class="action-btn back-btn" title="Quay lại">
-                                <i class="bi bi-arrow-left"></i>
-                                <span class="btn-text">Quay lại</span>
-                            </a>
+                            <div>
+                                <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" class="action-btn back-btn" title="Quay lại">
+                                    <i class="bi bi-arrow-left"></i>
+                                    <span class="btn-text">Quay lại</span>
+                                </a>
+                                <% if (isEdit && medicalRecord != null) { %>
+                                <a href="${pageContext.request.contextPath}/doctor/medical-records?action=view&recordId=<%= medicalRecord.getId() %>" class="action-btn action-btn-view ms-2" title="Xem chi tiết">
+                                    <i class="bi bi-eye"></i>
+                                    <span class="btn-text">Xem chi tiết</span>
+                                </a>
+                                <% } %>
+                            </div>
                             <div>
                                 <% if (isCompleted) { %>
                                 <button type="button" class="action-btn action-btn-update" onclick="saveRecord('completed')" title="Cập nhật">

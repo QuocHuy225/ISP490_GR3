@@ -25,6 +25,72 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
         <!-- Invoice specific CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/invoice.css">
+        <style>
+            .invoice-header {
+                text-align: center;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            
+            .invoice-section {
+                margin-bottom: 25px;
+                padding: 20px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                background-color: #fff;
+            }
+            
+            .invoice-details {
+                background-color: #f8f9fa;
+            }
+            
+            .print-section {
+                page-break-inside: avoid;
+            }
+            
+            .total-section {
+                background-color: #f8f9fa;
+            }
+            
+            @media print {
+                .no-print {
+                    display: none !important;
+                }
+                
+                body {
+                    font-size: 12pt;
+                    line-height: 1.4;
+                }
+                
+                .invoice-section {
+                    break-inside: avoid;
+                    margin-bottom: 15px;
+                    border: 1px solid #000;
+                    padding: 10px;
+                }
+                
+                .invoice-header {
+                    border-bottom: 2px solid #000;
+                    margin-bottom: 20px;
+                }
+                
+                .table {
+                    font-size: 11pt;
+                }
+                
+                .table th,
+                .table td {
+                    padding: 8px 6px;
+                    border: 1px solid #000;
+                }
+                
+                .badge {
+                    background-color: #000 !important;
+                    color: #fff !important;
+                }
+            }
+        </style>
     </head>
     <body>
         <%
@@ -87,7 +153,7 @@
                     </a>
                 </li>
                 <li class="active">
-                    <a href="${pageContext.request.contextPath}/patients">
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
@@ -170,7 +236,7 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item">
-                                    <a href="${pageContext.request.contextPath}/patients">
+                                    <a href="${pageContext.request.contextPath}/doctor/patients">
                                         <i class="bi bi-people me-1"></i>Quản lý bệnh nhân
                                     </a>
                                 </li>
@@ -190,7 +256,7 @@
                 </div>
 
                 <!-- Back Button -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                     <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
                        class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-2"></i>Quay lại
@@ -201,7 +267,7 @@
                            class="btn btn-primary me-2">
                             <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                         </a>
-                        <button type="button" class="btn btn-success" onclick="printInvoice()">
+                        <button type="button" class="btn btn-success" onclick="window.print()">
                             <i class="bi bi-printer me-2"></i>In hóa đơn
                         </button>
                     </div>
