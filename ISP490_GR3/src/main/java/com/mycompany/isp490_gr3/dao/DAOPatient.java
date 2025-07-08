@@ -232,8 +232,8 @@ public class DAOPatient {
         testSearch(daoPatient, null, "Nguyen", null, null);
 
         // Test case 4: Tìm kiếm với số điện thoại (thay "0123" bằng số có trong dữ liệu)
-        System.out.println("\nTest 4: Tìm kiếm với phone = '012'");
-        testSearch(daoPatient, null, null, "012", null);
+        System.out.println("\nTest 4: Tìm kiếm với phone = '09'");
+        testSearch(daoPatient, null, null, "09", null);
 
         // Test case 5: Tìm kiếm với CCCD (thay "123456" bằng CCCD có trong dữ liệu)
         System.out.println("\nTest 5: Tìm kiếm với cccd = '123456'");
