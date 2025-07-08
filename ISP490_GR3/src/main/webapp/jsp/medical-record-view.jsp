@@ -22,6 +22,83 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
         <!-- Medical Record specific CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/medical-record.css">
+        <style>
+            .medical-header {
+                text-align: center;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            
+            .medical-section {
+                margin-bottom: 25px;
+                padding: 20px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                background-color: #fff;
+            }
+            
+            .medical-details {
+                background-color: #f8f9fa;
+            }
+            
+            .vital-signs {
+                background-color: #f0f9ff;
+            }
+            
+            .print-section {
+                page-break-inside: avoid;
+            }
+            
+            @media print {
+                .no-print {
+                    display: none !important;
+                }
+                
+                body {
+                    font-size: 12pt;
+                    line-height: 1.4;
+                }
+                
+                .medical-section {
+                    break-inside: avoid;
+                    margin-bottom: 15px;
+                    border: 1px solid #000;
+                    padding: 10px;
+                }
+                
+                .medical-header {
+                    border-bottom: 2px solid #000;
+                    margin-bottom: 20px;
+                }
+                
+                .vital-signs {
+                    background-color: #f5f5f5 !important;
+                    border: 2px solid #000;
+                }
+                
+                .medical-details {
+                    background-color: #fff !important;
+                }
+                
+                .badge {
+                    background-color: #000 !important;
+                    color: #fff !important;
+                }
+                
+                h6 {
+                    color: #000 !important;
+                }
+                
+                .text-primary {
+                    color: #000 !important;
+                }
+                
+                .text-success {
+                    color: #000 !important;
+                }
+            }
+        </style>
     </head>
     <body>
         <%
@@ -186,31 +263,17 @@
                 </div>
 
                 <!-- Back Button & Actions -->
-                <div class="row mb-4 no-print">
-                    <div class="col-12">
-                        <% if (medicalRecord != null && patient != null) { %>
-                        <div class="d-flex justify-content-start align-items-center mb-3">
-                            <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
-                               class="btn btn-outline-secondary me-3">
-                                <i class="bi bi-arrow-left me-2"></i>Quay lại Hồ sơ bệnh án
-                            </a>
-                            <h4 class="mb-0 text-primary">Chi tiết hồ sơ bệnh án</h4>
-                        </div>
+                <div class="d-flex justify-content-end align-items-center mb-3 no-print">
+                    <div class="action-buttons">
+                        <% if (medicalRecord != null) { %>
+                        <a href="${pageContext.request.contextPath}/doctor/medical-records?action=edit&recordId=<%= medicalRecord.getId() %>" 
+                           class="btn btn-primary me-2">
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
+                        </a>
                         <% } %>
-                        
-                        <div class="d-flex justify-content-end align-items-center">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-info" onclick="window.print()">
-                                    <i class="bi bi-printer me-2"></i>In hồ sơ
-                                </button>
-                                <% if (medicalRecord != null) { %>
-                                <a href="${pageContext.request.contextPath}/doctor/medical-records?action=edit&recordId=<%= medicalRecord.getId() %>" 
-                                   class="btn btn-primary">
-                                    <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
-                                </a>
-                                <% } %>
-                            </div>
-                        </div>
+                        <button type="button" class="btn btn-success" onclick="window.print()">
+                            <i class="bi bi-printer me-2"></i>In hồ sơ
+                        </button>
                     </div>
                 </div>
 

@@ -86,15 +86,24 @@
                 .prescription-section {
                     break-inside: avoid;
                     margin-bottom: 15px;
+                    border: 1px solid #000;
+                    padding: 10px;
+                }
+                
+                .prescription-header {
+                    border-bottom: 2px solid #000;
+                    margin-bottom: 20px;
                 }
                 
                 .medicine-table {
                     font-size: 11pt;
+                    border: 2px solid #000;
                 }
                 
                 .medicine-table th,
                 .medicine-table td {
                     padding: 8px 6px;
+                    border: 1px solid #000;
                 }
             }
         </style>
@@ -262,7 +271,7 @@
                 </div>
 
                 <!-- Back Button -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                     <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
                        class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-2"></i>Quay lại
@@ -273,7 +282,7 @@
                            class="btn btn-primary me-2">
                             <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                         </a>
-                        <button type="button" class="btn btn-success" onclick="printPrescription()">
+                        <button type="button" class="btn btn-success" onclick="window.print()">
                             <i class="bi bi-printer me-2"></i>In đơn thuốc
                         </button>
                     </div>
