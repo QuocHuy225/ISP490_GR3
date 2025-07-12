@@ -201,16 +201,16 @@ public class MedicalRecordController extends HttpServlet {
             boolean success = medicalRecordDAO.addMedicalRecord(record);
             
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
-                                    record.getPatientId() + "&success=added");
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
+                                    record.getId() + "&success=added");
             } else {
-                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=new&patientId=" + 
                                     record.getPatientId() + "&error=add_failed");
             }
         } catch (Exception e) {
             e.printStackTrace();
             String patientId = request.getParameter("patientId");
-            response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
+            response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=new&patientId=" + 
                                 patientId + "&error=system_error");
         }
     }
@@ -243,8 +243,8 @@ public class MedicalRecordController extends HttpServlet {
             if (currentRecord.isCompleted()) {
                 // Check if trying to change status from completed to ongoing
                 if ("ongoing".equals(newStatus)) {
-                    response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
-                                        currentRecord.getPatientId() + "&error=status_change_not_allowed");
+                    response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
+                                        recordId + "&error=status_change_not_allowed");
                     return;
                 }
                 String note = request.getParameter("note");
@@ -263,17 +263,23 @@ public class MedicalRecordController extends HttpServlet {
                 if (currentRecord.isOngoing() && "completed".equals(newStatus)) {
                     successMessage = "status_completed";
                 }
-                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
-                                    currentRecord.getPatientId() + "&success=" + successMessage);
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
+                                    recordId + "&success=" + successMessage);
             } else {
-                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
-                                    currentRecord.getPatientId() + "&error=update_failed");
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
+                                    recordId + "&error=update_failed");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            String patientId = request.getParameter("patientId");
-            response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
-                                patientId + "&error=system_error");
+            String recordIdParam = request.getParameter("recordId");
+            if (recordIdParam != null) {
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
+                                    recordIdParam + "&error=system_error");
+            } else {
+                String patientId = request.getParameter("patientId");
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=new&patientId=" + 
+                                    patientId + "&error=system_error");
+            }
         }
     }
     
