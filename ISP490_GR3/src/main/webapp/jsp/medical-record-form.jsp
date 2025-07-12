@@ -130,6 +130,16 @@
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(0,0,0,0.15);
             }
+            .action-btn-medical-request {
+                background: linear-gradient(135deg, #17a2b8, #138496);
+                color: white;
+            }
+            .action-btn-medical-request:hover {
+                background: linear-gradient(135deg, #138496, #117a8b);
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
             @media (max-width: 768px) {
                 .vital-sign-item {
                     flex: 1 1 calc(50% - 1.5rem);
@@ -355,6 +365,48 @@
                     Không tìm thấy thông tin bệnh nhân! Vui lòng quay lại danh sách bệnh nhân.
                 </div>
                 <% } else { %>
+                
+                <!-- Alert Messages -->
+                <%
+                String success = request.getParameter("success");
+                String error = request.getParameter("error");
+                String message = request.getParameter("message");
+                %>
+
+                <% if (success != null) { %>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <% if ("added".equals(success)) { %>
+                    Hồ sơ bệnh án đã được tạo thành công!
+                    <% } else if ("updated".equals(success)) { %>
+                    Hồ sơ bệnh án đã được cập nhật thành công!
+                    <% } else if ("status_completed".equals(success)) { %>
+                    Hồ sơ bệnh án đã được hoàn thành!
+                    <% } %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <% } %>
+
+                <% if (error != null) { %>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <% if ("medical_record_completed".equals(error)) { %>
+                    Không thể tạo hoặc chỉnh sửa phiếu chỉ định vì hồ sơ bệnh án đã được hoàn thành!
+                    <% } else if ("add_failed".equals(error)) { %>
+                    Tạo hồ sơ bệnh án thất bại!
+                    <% } else if ("update_failed".equals(error)) { %>
+                    Cập nhật hồ sơ bệnh án thất bại!
+                    <% } else if ("system_error".equals(error)) { %>
+                    Có lỗi hệ thống xảy ra!
+                    <% } else { %>
+                    Có lỗi xảy ra. Vui lòng thử lại!
+                    <% } %>
+                    <% if (message != null) { %>
+                    <br><%= message %>
+                    <% } %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <% } %>
                 <div class="medical-form-container">
                     <form id="medicalRecordForm" method="POST" action="${pageContext.request.contextPath}/doctor/medical-records">
                         <input type="hidden" name="action" value="<%= isEdit ? "update" : "add" %>">
@@ -561,6 +613,13 @@
                                     <i class="bi bi-check-all"></i>
                                     <span class="btn-text">Hoàn thành</span>
                                 </button>
+                                <% } %>
+                                <% if (isEdit && medicalRecord != null) { %>
+                                <a href="${pageContext.request.contextPath}/doctor/medical-requests?medicalRecordId=<%= medicalRecord.getId() %>" 
+                                   class="action-btn action-btn-medical-request ms-2" title="Quản lý phiếu chỉ định">
+                                    <i class="bi bi-clipboard-data"></i>
+                                    <span class="btn-text">Phiếu chỉ định</span>
+                                </a>
                                 <% } %>
                             </div>
                         </div>
@@ -831,7 +890,12 @@
                                                 contentType: false,
                                                 success: function (response) {
                                                     console.log('Form submitted successfully:', response);
+<<<<<<< Updated upstream
                                                     window.location.href = '${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>';
+=======
+                                                    // Stay on the current form page by reloading it
+                                                    window.location.reload();
+>>>>>>> Stashed changes
                                                 },
                                                 error: function (xhr, status, error) {
                                                     console.error('AJAX submission failed:', xhr.responseText, status, error);

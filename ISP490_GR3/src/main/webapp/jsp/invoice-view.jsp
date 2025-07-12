@@ -3,6 +3,7 @@
 <%@ page import="com.mycompany.isp490_gr3.model.Patient" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalRecord" %>
 <%@ page import="com.mycompany.isp490_gr3.model.Invoice" %>
+<%@ page import="com.mycompany.isp490_gr3.model.PaymentReceipt" %>
 <%@ page import="com.mycompany.isp490_gr3.model.InvoiceItem" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.text.SimpleDateFormat" %>
@@ -53,6 +54,115 @@
                 background-color: #f8f9fa;
             }
             
+            .payment-receipt {
+                background: white;
+                border: 2px solid #e9ecef;
+                border-radius: 1rem;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .payment-receipt.receipt-1 {
+                border-color: #007bff;
+            }
+            
+            .payment-receipt.receipt-1::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #007bff, #0056b3);
+            }
+            
+            .payment-receipt.receipt-2 {
+                border-color: #28a745;
+            }
+            
+            .payment-receipt.receipt-2::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #28a745, #20c997);
+            }
+            
+            .receipt-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 2px solid #f8f9fa;
+            }
+            
+            .receipt-title {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #2c3e50;
+                display: flex;
+                align-items: center;
+            }
+            
+            .receipt-title i {
+                margin-right: 0.5rem;
+                padding: 0.5rem;
+                border-radius: 0.5rem;
+                color: white;
+            }
+            
+            .receipt-1 .receipt-title i {
+                background: linear-gradient(135deg, #007bff, #0056b3);
+            }
+            
+            .receipt-2 .receipt-title i {
+                background: linear-gradient(135deg, #28a745, #20c997);
+            }
+            
+            .receipt-time {
+                font-size: 0.9rem;
+                color: #6c757d;
+                font-weight: 500;
+            }
+            
+            .receipt-totals {
+                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                border: 1px solid #dee2e6;
+                border-radius: 0.75rem;
+                padding: 1rem;
+                margin-top: 1rem;
+            }
+            
+            .receipt-totals h6 {
+                margin-bottom: 0.75rem;
+                font-weight: 600;
+                color: #495057;
+            }
+            
+            .receipt-totals .row {
+                align-items: center;
+            }
+            
+            .receipt-totals .fw-bold {
+                font-size: 1.1rem;
+            }
+            
+            .receipt-1 .receipt-totals {
+                background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+                border-color: #2196f3;
+            }
+            
+            .receipt-2 .receipt-totals {
+                background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+                border-color: #4caf50;
+            }
+            
             @media print {
                 .no-print {
                     display: none !important;
@@ -63,7 +173,7 @@
                     line-height: 1.4;
                 }
                 
-                .invoice-section {
+                .invoice-section, .payment-receipt {
                     break-inside: avoid;
                     margin-bottom: 15px;
                     border: 1px solid #000;
@@ -88,6 +198,10 @@
                 .badge {
                     background-color: #000 !important;
                     color: #fff !important;
+                }
+                
+                .payment-receipt::before {
+                    display: none;
                 }
             }
         </style>
@@ -141,7 +255,6 @@
             </div>
             <ul class="list-unstyled components">
                 <% if (currentRole == User.Role.DOCTOR) { %>
-                <!-- Menu cho Bác sĩ -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -188,7 +301,7 @@
                     </div>
 
                     <div class="dropdown user-dropdown">
-                        <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
                             <div class="user-profile-icon">
                                 <i class="bi bi-person-fill" style="font-size: 1.5rem;"></i>
                             </div>
@@ -197,32 +310,16 @@
                                 <div class="user-role"><%= userRoleDisplay %></div>
                             </div>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
-                                    <i class="bi bi-person-fill"></i>
-                                    <span>Thông tin cá nhân</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
-                                    <i class="bi bi-key-fill"></i>
-                                    <span>Đổi mật khẩu</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="bi bi-gear-fill"></i>
-                                    <span>Cài đặt</span>
-                                </a>
-                            </li>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
+                                <i class="bi bi-person-fill"></i> Thông tin cá nhân</a></li>
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
+                                <i class="bi bi-key-fill"></i> Đổi mật khẩu</a></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="bi bi-gear-fill"></i> Cài đặt</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/auth/logout">
-                                    <i class="bi bi-box-arrow-right"></i>
-                                    <span>Đăng xuất</span>
-                                </a>
-                            </li>
+                            <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/auth/logout">
+                                <i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
                         </ul>
                     </div>
                 </div>
@@ -247,13 +344,37 @@
                                     </a>
                                 </li>
                                 <% } %>
-                                <li class="breadcrumb-item active" aria-current="page">
-                                    Chi tiết hóa đơn
-                                </li>
+                                <li class="breadcrumb-item active">Chi tiết hóa đơn</li>
                             </ol>
                         </nav>
                     </div>
                 </div>
+
+                <!-- Error/Success Messages -->
+                <% 
+                String errorParam = request.getParameter("error");
+                String successParam = request.getParameter("success");
+                %>
+                
+                <% if ("medical_record_completed".equals(errorParam)) { %>
+                <div class="alert alert-warning alert-dismissible fade show no-print" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Không thể chỉnh sửa!</strong> Hóa đơn không thể chỉnh sửa vì hồ sơ bệnh án đã hoàn thành.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <% } else if ("updated".equals(successParam)) { %>
+                <div class="alert alert-success alert-dismissible fade show no-print" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong>Thành công!</strong> Hóa đơn đã được cập nhật thành công.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <% } else if ("added".equals(successParam)) { %>
+                <div class="alert alert-success alert-dismissible fade show no-print" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong>Thành công!</strong> Hóa đơn đã được tạo thành công.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <% } %>
 
                 <!-- Back Button -->
                 <div class="d-flex justify-content-between align-items-center mb-3 no-print">
@@ -263,10 +384,16 @@
                     </a>
                     
                     <div class="action-buttons">
+                        <% if (medicalRecord != null && !medicalRecord.isCompleted()) { %>
                         <a href="${pageContext.request.contextPath}/doctor/invoices?action=edit&invoiceId=<%= invoice.getInvoiceId() %>" 
                            class="btn btn-primary me-2">
                             <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                         </a>
+                        <% } else if (medicalRecord != null && medicalRecord.isCompleted()) { %>
+                        <span class="btn btn-secondary me-2 disabled" title="Không thể chỉnh sửa hóa đơn khi hồ sơ bệnh án đã hoàn thành">
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
+                        </span>
+                        <% } %>
                         <button type="button" class="btn btn-success" onclick="window.print()">
                             <i class="bi bi-printer me-2"></i>In hóa đơn
                         </button>
@@ -300,14 +427,54 @@
                             <h6 class="text-primary mb-3"><i class="bi bi-receipt me-2"></i>Thông tin hóa đơn</h6>
                             <p class="mb-2"><strong>Mã hóa đơn:</strong> <%= invoice.getInvoiceId() %></p>
                             <p class="mb-2"><strong>Mã hồ sơ:</strong> <%= invoice.getMedicalRecordId() %></p>
-                            <p class="mb-2"><strong>Ngày tạo:</strong> <%= invoice.getCreatedAt() != null ? sdf.format(invoice.getCreatedAt()) : "" %></p>
+                            <p class="mb-0"><strong>Ngày tạo:</strong> <%= invoice.getCreatedAt() != null ? sdf.format(invoice.getCreatedAt()) : "" %></p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Invoice Items -->
-                <div class="invoice-section invoice-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-list-ul me-2"></i>Chi tiết dịch vụ</h6>
+                <!-- Payment Receipt 1 -->
+                <div class="payment-receipt receipt-1">
+                    <div class="receipt-header">
+                        <div class="receipt-title">
+                            <i class="bi bi-receipt"></i>
+                            Phiếu thu 1 (Bắt buộc)
+                        </div>
+                        <div class="receipt-time">
+                            <%= invoice.getCreatedAt() != null ? sdf.format(invoice.getCreatedAt()) : "" %>
+                        </div>
+                    </div>
+                    
+                    <% 
+                    // Filter items for receipt 1
+                    java.util.List<InvoiceItem> receipt1Items = new java.util.ArrayList<>();
+                    if (invoice.getInvoiceItems() != null) {
+                        for (InvoiceItem item : invoice.getInvoiceItems()) {
+                            if (item.getReceiptNumber() == 1) {
+                                receipt1Items.add(item);
+                            }
+                        }
+                    }
+                    %>
+                    
+                    <% 
+                    // Calculate totals for receipt 1
+                    BigDecimal receipt1ServiceTotal = BigDecimal.ZERO;
+                    BigDecimal receipt1SupplyTotal = BigDecimal.ZERO;
+                    BigDecimal receipt1Total = BigDecimal.ZERO;
+                    
+                    if (!receipt1Items.isEmpty()) {
+                        for (InvoiceItem item : receipt1Items) { 
+                            if ("service".equals(item.getItemType())) {
+                                receipt1ServiceTotal = receipt1ServiceTotal.add(item.getTotalAmount());
+                            } else {
+                                receipt1SupplyTotal = receipt1SupplyTotal.add(item.getTotalAmount());
+                            }
+                            receipt1Total = receipt1Total.add(item.getTotalAmount());
+                        }
+                    }
+                    %>
+                    
+                    <% if (!receipt1Items.isEmpty()) { %>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead class="table-light">
@@ -322,11 +489,11 @@
                             </thead>
                             <tbody>
                                 <% 
-                                int itemIndex = 1;
-                                if (invoice.getInvoiceItems() != null && !invoice.getInvoiceItems().isEmpty()) {
-                                    for (InvoiceItem item : invoice.getInvoiceItems()) { %>
+                                int itemIndex1 = 1;
+                                for (InvoiceItem item : receipt1Items) { 
+                                %>
                                 <tr>
-                                    <td><%= itemIndex++ %></td>
+                                    <td><%= itemIndex1++ %></td>
                                     <td><%= item.getItemName() %></td>
                                     <td>
                                         <% if ("service".equals(item.getItemType())) { %>
@@ -341,25 +508,152 @@
                                     <td class="text-end"><%= currencyFormat.format(item.getUnitPrice()) %>đ</td>
                                     <td class="text-end"><%= currencyFormat.format(item.getTotalAmount()) %>đ</td>
                                 </tr>
-                                <% } 
-                                } %>
-                                <!-- Exam Fee Row -->
-                                <tr class="table-warning">
-                                    <td><%= itemIndex %></td>
-                                    <td>Phí khám bệnh</td>
-                                    <td><span class="badge bg-warning text-dark">Khám bệnh</span></td>
-                                    <td class="text-center">1</td>
-                                    <td class="text-end">100,000đ</td>
-                                    <td class="text-end">100,000đ</td>
-                                </tr>
+                                <% } %>
                             </tbody>
                         </table>
                     </div>
+                    <% } else { %>
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox display-4"></i>
+                        <p class="mt-2">Phiếu thu 1 chưa có dịch vụ nào</p>
+                    </div>
+                    <% } %>
+                    
+                    <div class="receipt-totals">
+                        <h6>Tổng cộng phiếu thu 1</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Dịch vụ:</span>
+                                    <span><%= currencyFormat.format(receipt1ServiceTotal) %>đ</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Vật tư & Thuốc:</span>
+                                    <span><%= currencyFormat.format(receipt1SupplyTotal) %>đ</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Tổng phiếu thu 1:</span>
+                                    <span><%= currencyFormat.format(receipt1Total) %>đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Payment Receipt 2 -->
+                <% 
+                // Filter items for receipt 2
+                java.util.List<InvoiceItem> receipt2Items = new java.util.ArrayList<>();
+                if (invoice.getInvoiceItems() != null) {
+                    for (InvoiceItem item : invoice.getInvoiceItems()) {
+                        if (item.getReceiptNumber() == 2) {
+                            receipt2Items.add(item);
+                        }
+                    }
+                }
+                %>
+                
+                <% 
+                // Calculate totals for receipt 2
+                BigDecimal receipt2ServiceTotal = BigDecimal.ZERO;
+                BigDecimal receipt2SupplyTotal = BigDecimal.ZERO;
+                BigDecimal receipt2Total = BigDecimal.ZERO;
+                
+                if (!receipt2Items.isEmpty()) {
+                    for (InvoiceItem item : receipt2Items) { 
+                        if ("service".equals(item.getItemType())) {
+                            receipt2ServiceTotal = receipt2ServiceTotal.add(item.getTotalAmount());
+                        } else {
+                            receipt2SupplyTotal = receipt2SupplyTotal.add(item.getTotalAmount());
+                        }
+                        receipt2Total = receipt2Total.add(item.getTotalAmount());
+                    }
+                }
+                %>
+                
+                <% if (!receipt2Items.isEmpty()) { %>
+                <div class="payment-receipt receipt-2">
+                    <div class="receipt-header">
+                        <div class="receipt-title">
+                            <i class="bi bi-receipt"></i>
+                            Phiếu thu 2 (Tùy chọn)
+                        </div>
+                        <div class="receipt-time">
+                            <%= sdf.format(invoice.getCreatedAt()) %>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Tên dịch vụ</th>
+                                    <th>Loại</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% 
+                                int itemIndex2 = 1;
+                                for (InvoiceItem item : receipt2Items) { 
+                                %>
+                                <tr>
+                                    <td><%= itemIndex2++ %></td>
+                                    <td><%= item.getItemName() %></td>
+                                    <td>
+                                        <% if ("service".equals(item.getItemType())) { %>
+                                            <span class="badge bg-primary">Dịch vụ</span>
+                                        <% } else if ("supply".equals(item.getItemType())) { %>
+                                            <span class="badge bg-info">Vật tư</span>
+                                        <% } else { %>
+                                            <span class="badge bg-success">Thuốc</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="text-center"><%= item.getQuantity() %></td>
+                                    <td class="text-end"><%= currencyFormat.format(item.getUnitPrice()) %>đ</td>
+                                    <td class="text-end"><%= currencyFormat.format(item.getTotalAmount()) %>đ</td>
+                                </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="receipt-totals">
+                        <h6>Tổng cộng phiếu thu 2</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Dịch vụ:</span>
+                                    <span><%= currencyFormat.format(receipt2ServiceTotal) %>đ</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Vật tư & Thuốc:</span>
+                                    <span><%= currencyFormat.format(receipt2SupplyTotal) %>đ</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Tổng phiếu thu 2:</span>
+                                    <span><%= currencyFormat.format(receipt2Total) %>đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
 
                 <!-- Total Section -->
                 <div class="invoice-section total-section">
-                    <h6 class="text-primary mb-3"><i class="bi bi-calculator me-2"></i>Tổng cộng</h6>
+                    <h6 class="text-primary mb-3"><i class="bi bi-calculator me-2"></i>Tổng cộng hóa đơn</h6>
                     <div class="row">
                         <div class="col-md-8">
                             <% if (invoice.getNotes() != null && !invoice.getNotes().isEmpty()) { %>
@@ -378,10 +672,6 @@
                                 <tr>
                                     <td><strong>Tổng vật tư & thuốc:</strong></td>
                                     <td class="text-end"><%= currencyFormat.format(invoice.getTotalSupplyAmount()) %>đ</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Phí khám:</strong></td>
-                                    <td class="text-end">100,000đ</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Tổng tiền:</strong></td>
@@ -436,20 +726,19 @@
             </div>
         </div>
 
-        <!-- Bootstrap Bundle with Popper -->
+        <!-- Scripts -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 // Sidebar toggle
                 const sidebarCollapse = document.getElementById('sidebarCollapse');
                 const sidebar = document.getElementById('sidebar');
                 const content = document.getElementById('content');
 
                 if (sidebarCollapse) {
-                    sidebarCollapse.addEventListener('click', function () {
+                    sidebarCollapse.addEventListener('click', function() {
                         sidebar.classList.toggle('collapsed');
                         content.classList.toggle('expanded');
                     });
@@ -466,7 +755,6 @@
                     }
                 }
 
-                // Initial check
                 checkWidth();
                 window.addEventListener('resize', checkWidth);
             });

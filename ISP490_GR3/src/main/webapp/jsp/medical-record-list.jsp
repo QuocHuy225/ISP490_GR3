@@ -149,7 +149,7 @@
             /* Ensure Action column has enough space */
             #medicalRecordsTable td:nth-child(5) {
                 white-space: nowrap;
-                min-width: 160px; /* Ensure enough space for action buttons */
+                min-width: 200px; /* Ensure enough space for action buttons */
             }
 
             /* Adjust table layout for better spacing */

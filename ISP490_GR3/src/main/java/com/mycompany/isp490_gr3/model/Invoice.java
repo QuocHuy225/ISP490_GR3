@@ -34,6 +34,10 @@ public class Invoice {
     private Doctor doctor;
     private MedicalRecord medicalRecord;
     
+    // Payment Receipts
+    private PaymentReceipt firstReceipt;
+    private PaymentReceipt secondReceipt;
+    
     // Constructors
     public Invoice() {
         this.totalServiceAmount = BigDecimal.ZERO;
@@ -75,13 +79,35 @@ public class Invoice {
             this.totalServiceAmount = serviceTotal;
             this.totalSupplyAmount = supplyTotal.add(medicineTotal);
             
-            // Cộng thêm phí khám cố định 100,000đ
-            BigDecimal examFee = new BigDecimal("100000");
-            this.totalAmount = serviceTotal.add(supplyTotal).add(medicineTotal).add(examFee);
+            // Tính tổng tiền không có phí khám bệnh
+            this.totalAmount = serviceTotal.add(supplyTotal).add(medicineTotal);
             
             // Tính final amount sau khi trừ discount
             this.finalAmount = this.totalAmount.subtract(this.discountAmount != null ? this.discountAmount : BigDecimal.ZERO);
         }
+    }
+    
+    // Methods for Payment Receipts
+    public boolean hasSecondReceipt() {
+        return secondReceipt != null && secondReceipt.getReceiptItems() != null && !secondReceipt.getReceiptItems().isEmpty();
+    }
+    
+    public PaymentReceipt getFirstReceipt() {
+        if (firstReceipt == null) {
+            firstReceipt = new PaymentReceipt();
+            firstReceipt.setReceiptNumber(1);
+            firstReceipt.setInvoiceId(this.invoiceId);
+        }
+        return firstReceipt;
+    }
+    
+    public PaymentReceipt getSecondReceipt() {
+        if (secondReceipt == null) {
+            secondReceipt = new PaymentReceipt();
+            secondReceipt.setReceiptNumber(2);
+            secondReceipt.setInvoiceId(this.invoiceId);
+        }
+        return secondReceipt;
     }
     
     // Getters and Setters
@@ -144,4 +170,7 @@ public class Invoice {
     
     public MedicalRecord getMedicalRecord() { return medicalRecord; }
     public void setMedicalRecord(MedicalRecord medicalRecord) { this.medicalRecord = medicalRecord; }
+    
+    public void setFirstReceipt(PaymentReceipt firstReceipt) { this.firstReceipt = firstReceipt; }
+    public void setSecondReceipt(PaymentReceipt secondReceipt) { this.secondReceipt = secondReceipt; }
 } 

@@ -14,16 +14,21 @@ public class InvoiceItem {
     private BigDecimal totalAmount;
     private Timestamp createdAt;
     
+    // Helper field to determine which table this item belongs to
+    private int receiptNumber; // 1 for invoice_items_one, 2 for invoice_items_two
+    
     // Constructors
     public InvoiceItem() {
         this.quantity = 1;
         this.unitPrice = BigDecimal.ZERO;
         this.totalAmount = BigDecimal.ZERO;
+        this.receiptNumber = 1; // default to receipt 1
     }
     
-    public InvoiceItem(String invoiceId, String itemType, int itemId, String itemName, int quantity, BigDecimal unitPrice) {
+    public InvoiceItem(String invoiceId, int receiptNumber, String itemType, int itemId, String itemName, int quantity, BigDecimal unitPrice) {
         this();
         this.invoiceId = invoiceId;
+        this.receiptNumber = receiptNumber;
         this.itemType = itemType;
         this.itemId = itemId;
         this.itemName = itemName;
@@ -77,12 +82,20 @@ public class InvoiceItem {
         calculateTotalAmount();
     }
     
+    // Helper method to get the table name based on receipt number
+    public String getTableName() {
+        return receiptNumber == 1 ? "invoice_items_one" : "invoice_items_two";
+    }
+    
     // Getters and Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     
     public String getInvoiceId() { return invoiceId; }
     public void setInvoiceId(String invoiceId) { this.invoiceId = invoiceId; }
+    
+    public int getReceiptNumber() { return receiptNumber; }
+    public void setReceiptNumber(int receiptNumber) { this.receiptNumber = receiptNumber; }
     
     public String getItemType() { return itemType; }
     public void setItemType(String itemType) { this.itemType = itemType; }
