@@ -246,8 +246,8 @@ public class MedicalRequestController extends HttpServlet {
             String notes = request.getParameter("notes");
             
             // Validate required fields
-            if (medicalRecordId == null || patientIdStr == null) {
-                response.sendRedirect(request.getContextPath() + "/doctor/medical-requests?error=missing_data");
+            if (medicalRecordId == null || patientIdStr == null || clinicName == null || clinicName.trim().isEmpty() || clinicPhone == null || clinicPhone.trim().isEmpty() || clinicAddress == null || clinicAddress.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-requests?error=missing_fields");
                 return;
             }
             
@@ -320,6 +320,12 @@ public class MedicalRequestController extends HttpServlet {
             MedicalRequest existingRequest = daoMedicalRequest.getRequestById(requestId);
             if (existingRequest == null) {
                 response.sendRedirect(request.getContextPath() + "/doctor/medical-requests?error=request_not_found");
+                return;
+            }
+            
+            // Validate required fields
+            if (clinicName == null || clinicName.trim().isEmpty() || clinicPhone == null || clinicPhone.trim().isEmpty() || clinicAddress == null || clinicAddress.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-requests?action=edit&requestId=" + requestId + "&error=missing_fields");
                 return;
             }
             

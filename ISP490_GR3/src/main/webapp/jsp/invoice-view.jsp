@@ -389,10 +389,6 @@
                            class="btn btn-primary me-2">
                             <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                         </a>
-                        <% } else if (medicalRecord != null && medicalRecord.isCompleted()) { %>
-                        <span class="btn btn-secondary me-2 disabled" title="Không thể chỉnh sửa hóa đơn khi hồ sơ bệnh án đã hoàn thành">
-                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
-                        </span>
                         <% } %>
                         <button type="button" class="btn btn-success" onclick="window.print()">
                             <i class="bi bi-printer me-2"></i>In hóa đơn

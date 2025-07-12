@@ -495,15 +495,15 @@
                                 <div class="col-md-6">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" id="clinicName" name="clinicName" 
-                                               placeholder="Tên cơ sở" value="<%= isEdit && medicalRequest != null ? (medicalRequest.getClinicName() != null ? medicalRequest.getClinicName() : "") : "" %>" <%= isCompleted ? "disabled" : "" %>>
-                                        <label for="clinicName">Tên cơ sở chỉ định</label>
+                                               placeholder="Tên cơ sở" value="<%= isEdit && medicalRequest != null ? (medicalRequest.getClinicName() != null ? medicalRequest.getClinicName() : "") : "" %>" <%= isCompleted ? "disabled" : "required" %>>
+                                        <label for="clinicName">Tên cơ sở chỉ định <span class="text-danger">*</span></label>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" id="clinicPhone" name="clinicPhone" 
-                                               placeholder="Số điện thoại" value="<%= isEdit && medicalRequest != null ? (medicalRequest.getClinicPhone() != null ? medicalRequest.getClinicPhone() : "") : "" %>" <%= isCompleted ? "disabled" : "" %>>
-                                        <label for="clinicPhone">Số điện thoại</label>
+                                               placeholder="Số điện thoại" value="<%= isEdit && medicalRequest != null ? (medicalRequest.getClinicPhone() != null ? medicalRequest.getClinicPhone() : "") : "" %>" <%= isCompleted ? "disabled" : "required" %>>
+                                        <label for="clinicPhone">Số điện thoại <span class="text-danger">*</span></label>
                                     </div>
                                 </div>
                             </div>
@@ -511,8 +511,8 @@
                                 <div class="col-12">
                                     <div class="form-floating">
                                         <textarea class="form-control" id="clinicAddress" name="clinicAddress" 
-                                                  placeholder="Địa chỉ" style="height: 100px;" <%= isCompleted ? "disabled" : "" %>><%= isEdit && medicalRequest != null ? (medicalRequest.getClinicAddress() != null ? medicalRequest.getClinicAddress() : "") : "" %></textarea>
-                                        <label for="clinicAddress">Địa chỉ cơ sở</label>
+                                                  placeholder="Địa chỉ" style="height: 100px;" <%= isCompleted ? "disabled" : "required" %>><%= isEdit && medicalRequest != null ? (medicalRequest.getClinicAddress() != null ? medicalRequest.getClinicAddress() : "") : "" %></textarea>
+                                        <label for="clinicAddress">Địa chỉ cơ sở <span class="text-danger">*</span></label>
                                     </div>
                                 </div>
                             </div>
@@ -604,13 +604,32 @@
                 // Form validation
                 document.getElementById('medicalRequestForm').addEventListener('submit', function (e) {
                     if (medicalRecordCompleted) {
-                        // Prevent form submission if medical record is completed
                         e.preventDefault();
                         alert('Không thể lưu thay đổi vì hồ sơ bệnh án đã được hoàn thành!');
                         return false;
                     } else {
+                        const clinicName = document.getElementById('clinicName').value.trim();
+                        const clinicPhone = document.getElementById('clinicPhone').value.trim();
+                        const clinicAddress = document.getElementById('clinicAddress').value.trim();
                         const instructionContent = document.getElementById('instructionContent').value.trim();
-
+                        if (!clinicName) {
+                            e.preventDefault();
+                            alert('Vui lòng nhập tên cơ sở chỉ định!');
+                            document.getElementById('clinicName').focus();
+                            return false;
+                        }
+                        if (!clinicPhone) {
+                            e.preventDefault();
+                            alert('Vui lòng nhập số điện thoại cơ sở chỉ định!');
+                            document.getElementById('clinicPhone').focus();
+                            return false;
+                        }
+                        if (!clinicAddress) {
+                            e.preventDefault();
+                            alert('Vui lòng nhập địa chỉ cơ sở chỉ định!');
+                            document.getElementById('clinicAddress').focus();
+                            return false;
+                        }
                         if (!instructionContent) {
                             e.preventDefault();
                             alert('Vui lòng nhập nội dung chỉ định!');
