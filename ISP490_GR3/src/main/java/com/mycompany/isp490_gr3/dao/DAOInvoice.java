@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 /**
  * DAO for handling Invoice-related database operations.
+ * Updated to work with two separate invoice_items tables: invoice_items_one and invoice_items_two
  */
 public class DAOInvoice {
 
@@ -67,7 +68,7 @@ public class DAOInvoice {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Invoice invoice = extractInvoice(rs);
-                    // Load invoice items
+                    // Load invoice items from both tables
                     invoice.setInvoiceItems(getInvoiceItems(invoiceId));
                     return invoice;
                 }
@@ -98,6 +99,7 @@ public class DAOInvoice {
             if (items != null && !items.isEmpty()) {
                 String stockError = validateStockAvailability(items);
                 if (stockError != null) {
+                    LOGGER.log(Level.WARNING, "Stock validation failed: {0}", stockError);
                     throw new IllegalStateException(stockError);
                 }
             }
@@ -130,9 +132,9 @@ public class DAOInvoice {
                 ps.executeUpdate();
             }
 
-            // Insert invoice items và trừ kho
+            // Insert invoice items vào hai bảng riêng biệt và trừ kho
             if (items != null && !items.isEmpty()) {
-                addInvoiceItems(conn, invoiceId, items);
+                addInvoiceItemsToTwoTables(conn, invoiceId, items);
                 if (!updateWarehouseStock(items, false)) {
                     throw new SQLException("Failed to update warehouse stock");
                 }
@@ -141,7 +143,7 @@ public class DAOInvoice {
             conn.commit();
             return true;
 
-        } catch (SQLException | IllegalStateException e) {
+        } catch (SQLException e) {
             if (conn != null) {
                 try {
                     conn.rollback();
@@ -149,7 +151,33 @@ public class DAOInvoice {
                     LOGGER.log(Level.SEVERE, "Error rolling back transaction: {0}", ex.getMessage());
                 }
             }
-            LOGGER.log(Level.SEVERE, "Error adding invoice: {0}", e.getMessage());
+            
+            LOGGER.log(Level.SEVERE, "SQL Error adding invoice: {0}", e.getMessage());
+            
+            // Re-throw specific database errors for better handling
+            if (e.getMessage().contains("doesn't exist") || e.getMessage().contains("Table")) {
+                throw new IllegalStateException("Database tables are not up to date. Please run the database update script.", e);
+            }
+            
+            return false;
+        } catch (IllegalStateException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Error rolling back transaction: {0}", ex.getMessage());
+                }
+            }
+            throw e; // Re-throw to be handled by controller
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Error rolling back transaction: {0}", ex.getMessage());
+                }
+            }
+            LOGGER.log(Level.SEVERE, "Unexpected error adding invoice: {0}", e.getMessage());
             return false;
         } finally {
             if (conn != null) {
@@ -211,10 +239,10 @@ public class DAOInvoice {
                 }
             }
 
-            // Delete existing items and insert new ones
-            deleteInvoiceItems(conn, invoice.getInvoiceId());
+            // Delete existing items from both tables and insert new ones
+            deleteInvoiceItemsFromBothTables(conn, invoice.getInvoiceId());
             if (items != null && !items.isEmpty()) {
-                addInvoiceItems(conn, invoice.getInvoiceId(), items);
+                addInvoiceItemsToTwoTables(conn, invoice.getInvoiceId(), items);
                 // Trừ kho cho items mới
                 if (!updateWarehouseStock(items, false)) {
                     throw new SQLException("Failed to update warehouse stock for new items");
@@ -250,45 +278,147 @@ public class DAOInvoice {
     
     public List<InvoiceItem> getInvoiceItems(String invoiceId) {
         List<InvoiceItem> items = new ArrayList<>();
-        String sql = "SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY id";
+        
+        // Get items from invoice_items_one table (receipt 1)
+        String sql1 = "SELECT * FROM invoice_items_one WHERE invoice_id = ? ORDER BY id";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql1)) {
+            ps.setString(1, invoiceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    InvoiceItem item = extractInvoiceItemFromTable(rs, 1);
+                    items.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error getting invoice items from table one: {0}", e.getMessage());
+        }
+        
+        // Get items from invoice_items_two table (receipt 2)
+        String sql2 = "SELECT * FROM invoice_items_two WHERE invoice_id = ? ORDER BY id";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql2)) {
+            ps.setString(1, invoiceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    InvoiceItem item = extractInvoiceItemFromTable(rs, 2);
+                    items.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error getting invoice items from table two: {0}", e.getMessage());
+        }
 
+        return items;
+    }
+    
+    public List<InvoiceItem> getInvoiceItemsByReceipt(String invoiceId, int receiptNumber) {
+        List<InvoiceItem> items = new ArrayList<>();
+        String tableName = receiptNumber == 1 ? "invoice_items_one" : "invoice_items_two";
+        String sql = "SELECT * FROM " + tableName + " WHERE invoice_id = ? ORDER BY id";
+        
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, invoiceId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    items.add(extractInvoiceItem(rs));
+                    InvoiceItem item = extractInvoiceItemFromTable(rs, receiptNumber);
+                    items.add(item);
                 }
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error getting invoice items: {0}", e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error getting invoice items from table {0}: {1}", 
+                      new Object[]{tableName, e.getMessage()});
         }
-
+        
         return items;
     }
 
-    private void addInvoiceItems(Connection conn, String invoiceId, List<InvoiceItem> items) throws SQLException {
-        String sql = "INSERT INTO invoice_items (invoice_id, item_type, item_id, item_name, quantity, unit_price, total_amount) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (InvoiceItem item : items) {
-                ps.setString(1, invoiceId);
-                ps.setString(2, item.getItemType());
-                ps.setInt(3, item.getItemId());
-                ps.setString(4, item.getItemName());
-                ps.setInt(5, item.getQuantity());
-                ps.setBigDecimal(6, item.getUnitPrice());
-                ps.setBigDecimal(7, item.getTotalAmount());
-                ps.addBatch();
+    private void addInvoiceItemsToTwoTables(Connection conn, String invoiceId, List<InvoiceItem> items) throws SQLException {
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+        
+        // Separate items by receipt number
+        List<InvoiceItem> receipt1Items = new ArrayList<>();
+        List<InvoiceItem> receipt2Items = new ArrayList<>();
+        
+        for (InvoiceItem item : items) {
+            if (item.getReceiptNumber() == 1) {
+                receipt1Items.add(item);
+            } else if (item.getReceiptNumber() == 2) {
+                receipt2Items.add(item);
             }
-            ps.executeBatch();
+        }
+        
+        // Insert items into invoice_items_one table
+        if (!receipt1Items.isEmpty()) {
+            try {
+                String sql1 = "INSERT INTO invoice_items_one (invoice_id, item_type, item_id, item_name, quantity, unit_price, total_amount) " +
+                             "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                try (PreparedStatement ps = conn.prepareStatement(sql1)) {
+                    for (InvoiceItem item : receipt1Items) {
+                        ps.setString(1, invoiceId);
+                        ps.setString(2, item.getItemType());
+                        ps.setInt(3, item.getItemId());
+                        ps.setString(4, item.getItemName());
+                        ps.setInt(5, item.getQuantity());
+                        ps.setBigDecimal(6, item.getUnitPrice());
+                        ps.setBigDecimal(7, item.getTotalAmount());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, "Error inserting into invoice_items_one: {0}", e.getMessage());
+                // Check if table exists and provide helpful error message
+                if (e.getMessage().contains("doesn't exist") || e.getMessage().contains("Table") || e.getMessage().contains("not found")) {
+                    throw new SQLException("Table 'invoice_items_one' does not exist. Please run the database update script first.", e);
+                }
+                throw e;
+            }
+        }
+        
+        // Insert items into invoice_items_two table
+        if (!receipt2Items.isEmpty()) {
+            try {
+                String sql2 = "INSERT INTO invoice_items_two (invoice_id, item_type, item_id, item_name, quantity, unit_price, total_amount) " +
+                             "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                try (PreparedStatement ps = conn.prepareStatement(sql2)) {
+                    for (InvoiceItem item : receipt2Items) {
+                        ps.setString(1, invoiceId);
+                        ps.setString(2, item.getItemType());
+                        ps.setInt(3, item.getItemId());
+                        ps.setString(4, item.getItemName());
+                        ps.setInt(5, item.getQuantity());
+                        ps.setBigDecimal(6, item.getUnitPrice());
+                        ps.setBigDecimal(7, item.getTotalAmount());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, "Error inserting into invoice_items_two: {0}", e.getMessage());
+                // Check if table exists and provide helpful error message
+                if (e.getMessage().contains("doesn't exist") || e.getMessage().contains("Table") || e.getMessage().contains("not found")) {
+                    throw new SQLException("Table 'invoice_items_two' does not exist. Please run the database update script first.", e);
+                }
+                throw e;
+            }
         }
     }
 
-    private void deleteInvoiceItems(Connection conn, String invoiceId) throws SQLException {
-        String sql = "DELETE FROM invoice_items WHERE invoice_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    private void deleteInvoiceItemsFromBothTables(Connection conn, String invoiceId) throws SQLException {
+        // Delete from invoice_items_one
+        String sql1 = "DELETE FROM invoice_items_one WHERE invoice_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql1)) {
+            ps.setString(1, invoiceId);
+            ps.executeUpdate();
+        }
+        
+        // Delete from invoice_items_two
+        String sql2 = "DELETE FROM invoice_items_two WHERE invoice_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql2)) {
             ps.setString(1, invoiceId);
             ps.executeUpdate();
         }
@@ -405,10 +535,11 @@ public class DAOInvoice {
         return invoice;
     }
 
-    private InvoiceItem extractInvoiceItem(ResultSet rs) throws SQLException {
+    private InvoiceItem extractInvoiceItemFromTable(ResultSet rs, int receiptNumber) throws SQLException {
         InvoiceItem item = new InvoiceItem();
         item.setId(rs.getInt("id"));
         item.setInvoiceId(rs.getString("invoice_id"));
+        item.setReceiptNumber(receiptNumber);
         item.setItemType(rs.getString("item_type"));
         item.setItemId(rs.getInt("item_id"));
         item.setItemName(rs.getString("item_name"));
