@@ -191,6 +191,17 @@ public class InvoiceController extends HttpServlet {
         }
         
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(invoice.getMedicalRecordId());
+        if (medicalRecord == null) {
+            response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=record_not_found");
+            return;
+        }
+        
+        // Check if medical record is completed - don't allow editing if completed
+        if (medicalRecord.isCompleted()) {
+            response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=view&invoiceId=" + invoiceId + "&error=medical_record_completed");
+            return;
+        }
+        
         Patient patient = daoPatient.getPatientById(invoice.getPatientId());
         
         // Load reference data
@@ -252,7 +263,9 @@ public class InvoiceController extends HttpServlet {
             
             // Validate required fields
             if (medicalRecordId == null || patientIdStr == null) {
-                response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=missing_data");
+                LOGGER.log(Level.WARNING, "Missing required fields - medicalRecordId: {0}, patientId: {1}", 
+                          new Object[]{medicalRecordId, patientIdStr});
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + medicalRecordId + "&error=missing_data");
                 return;
             }
             
@@ -282,28 +295,41 @@ public class InvoiceController extends HttpServlet {
             boolean success = daoInvoice.addInvoice(invoice, items);
             
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/doctor/invoices?medicalRecordId=" + medicalRecordId + "&success=added");
+                String invoiceId = invoice.getInvoiceId();
+                // Redirect trực tiếp đến view invoice sau khi tạo thành công
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=view&invoiceId=" + invoiceId + "&success=added");
             } else {
-                response.sendRedirect(request.getContextPath() + "/doctor/invoices?medicalRecordId=" + medicalRecordId + "&error=add_failed");
+                LOGGER.log(Level.SEVERE, "Failed to create invoice for medical record: {0}", medicalRecordId);
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + medicalRecordId + "&error=add_failed");
             }
             
         } catch (NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Invalid number format in add invoice: {0}", e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=invalid_data");
+            String redirectMedicalRecordId = request.getParameter("medicalRecordId");
+            response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + redirectMedicalRecordId + "&error=invalid_data");
         } catch (IllegalStateException e) {
+            String redirectMedicalRecordId = request.getParameter("medicalRecordId");
             if (e.getMessage().contains("already exists")) {
-                // Invoice already exists for this medical record
-                String redirectMedicalRecordId = request.getParameter("medicalRecordId");
-                response.sendRedirect(request.getContextPath() + "/doctor/invoices?medicalRecordId=" + redirectMedicalRecordId + "&error=invoice_exists");
+                // Invoice already exists for this medical record - redirect to view existing invoice
+                List<Invoice> existingInvoices = daoInvoice.getInvoicesByMedicalRecord(redirectMedicalRecordId);
+                if (!existingInvoices.isEmpty()) {
+                    Invoice existingInvoice = existingInvoices.get(0);
+                    response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=view&invoiceId=" + existingInvoice.getInvoiceId() + "&error=invoice_exists");
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + redirectMedicalRecordId + "&error=invoice_exists");
+                }
+            } else if (e.getMessage().contains("Database tables are not up to date")) {
+                LOGGER.log(Level.SEVERE, "Database tables missing for medical record: {0}", redirectMedicalRecordId);
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + redirectMedicalRecordId + "&error=database_update_needed&message=" + java.net.URLEncoder.encode("Cần chạy script cập nhật database. Vui lòng liên hệ admin.", "UTF-8"));
             } else {
                 // Other state errors (e.g. insufficient stock)
                 LOGGER.log(Level.WARNING, "Insufficient stock: {0}", e.getMessage());
-                String redirectMedicalRecordId = request.getParameter("medicalRecordId");
                 response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + redirectMedicalRecordId + "&error=insufficient_stock&message=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error adding invoice: {0}", e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=system_error");
+            LOGGER.log(Level.SEVERE, "Unexpected error adding invoice: {0}", e.getMessage());
+            String redirectMedicalRecordId = request.getParameter("medicalRecordId");
+            response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=new&medicalRecordId=" + redirectMedicalRecordId + "&error=system_error");
         }
     }
     
@@ -330,6 +356,13 @@ public class InvoiceController extends HttpServlet {
                 return;
             }
             
+            // Check if medical record is completed - don't allow updating if completed
+            MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(existingInvoice.getMedicalRecordId());
+            if (medicalRecord != null && medicalRecord.isCompleted()) {
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=view&invoiceId=" + invoiceId + "&error=medical_record_completed");
+                return;
+            }
+            
             BigDecimal discountAmount = (discountAmountStr != null && !discountAmountStr.isEmpty()) ? 
                                        new BigDecimal(discountAmountStr) : BigDecimal.ZERO;
             
@@ -349,6 +382,7 @@ public class InvoiceController extends HttpServlet {
             boolean success = daoInvoice.updateInvoice(existingInvoice, items);
             
             if (success) {
+                // Redirect đến view invoice sau khi update thành công
                 response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=view&invoiceId=" + existingInvoice.getInvoiceId() + "&success=updated");
             } else {
                 response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=edit&invoiceId=" + existingInvoice.getInvoiceId() + "&error=update_failed");
@@ -356,7 +390,8 @@ public class InvoiceController extends HttpServlet {
             
         } catch (NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Invalid number format in update invoice: {0}", e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=invalid_data");
+            String redirectInvoiceId = request.getParameter("invoiceId");
+            response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=edit&invoiceId=" + redirectInvoiceId + "&error=invalid_data");
         } catch (IllegalStateException e) {
             // Lỗi tồn kho không đủ
             LOGGER.log(Level.WARNING, "Insufficient stock for update: {0}", e.getMessage());
@@ -364,7 +399,12 @@ public class InvoiceController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=edit&invoiceId=" + redirectInvoiceId + "&error=insufficient_stock&message=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error updating invoice: {0}", e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=system_error");
+            String redirectInvoiceId = request.getParameter("invoiceId");
+            if (redirectInvoiceId != null && !redirectInvoiceId.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?action=edit&invoiceId=" + redirectInvoiceId + "&error=system_error");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/doctor/invoices?error=system_error");
+            }
         }
     }
     
@@ -373,82 +413,58 @@ public class InvoiceController extends HttpServlet {
     private List<InvoiceItem> parseInvoiceItems(HttpServletRequest request) {
         List<InvoiceItem> items = new ArrayList<>();
         
-        // Parse services
-        String[] serviceIds = request.getParameterValues("serviceId");
-        String[] serviceQuantities = request.getParameterValues("serviceQuantity");
-        if (serviceIds != null && serviceQuantities != null) {
-            for (int i = 0; i < serviceIds.length; i++) {
-                if (serviceIds[i] != null && !serviceIds[i].isEmpty() && 
-                    serviceQuantities[i] != null && !serviceQuantities[i].isEmpty()) {
-                    try {
-                        int serviceId = Integer.parseInt(serviceIds[i]);
-                        int quantity = Integer.parseInt(serviceQuantities[i]);
-                        String serviceName = request.getParameter("serviceName_" + serviceId);
-                        String servicePriceStr = request.getParameter("servicePrice_" + serviceId);
-                        
-                        if (serviceName != null && servicePriceStr != null) {
-                            BigDecimal price = new BigDecimal(servicePriceStr);
-                            InvoiceItem item = new InvoiceItem(null, "service", serviceId, serviceName, quantity, price);
-                            items.add(item);
-                        }
-                    } catch (NumberFormatException e) {
-                        LOGGER.log(Level.WARNING, "Invalid service data: {0}", e.getMessage());
-                    }
-                }
-            }
-        }
+        // Parse Receipt 1 items
+        parseReceiptItems(request, "receipt1", items);
         
-        // Parse supplies
-        String[] supplyIds = request.getParameterValues("supplyId");
-        String[] supplyQuantities = request.getParameterValues("supplyQuantity");
-        if (supplyIds != null && supplyQuantities != null) {
-            for (int i = 0; i < supplyIds.length; i++) {
-                if (supplyIds[i] != null && !supplyIds[i].isEmpty() && 
-                    supplyQuantities[i] != null && !supplyQuantities[i].isEmpty()) {
-                    try {
-                        int supplyId = Integer.parseInt(supplyIds[i]);
-                        int quantity = Integer.parseInt(supplyQuantities[i]);
-                        String supplyName = request.getParameter("supplyName_" + supplyId);
-                        String supplyPriceStr = request.getParameter("supplyPrice_" + supplyId);
-                        
-                        if (supplyName != null && supplyPriceStr != null) {
-                            BigDecimal price = new BigDecimal(supplyPriceStr);
-                            InvoiceItem item = new InvoiceItem(null, "supply", supplyId, supplyName, quantity, price);
-                            items.add(item);
-                        }
-                    } catch (NumberFormatException e) {
-                        LOGGER.log(Level.WARNING, "Invalid supply data: {0}", e.getMessage());
-                    }
-                }
-            }
-        }
-        
-        // Parse medicines
-        String[] medicineIds = request.getParameterValues("medicineId");
-        String[] medicineQuantities = request.getParameterValues("medicineQuantity");
-        if (medicineIds != null && medicineQuantities != null) {
-            for (int i = 0; i < medicineIds.length; i++) {
-                if (medicineIds[i] != null && !medicineIds[i].isEmpty() && 
-                    medicineQuantities[i] != null && !medicineQuantities[i].isEmpty()) {
-                    try {
-                        int medicineId = Integer.parseInt(medicineIds[i]);
-                        int quantity = Integer.parseInt(medicineQuantities[i]);
-                        String medicineName = request.getParameter("medicineName_" + medicineId);
-                        String medicinePriceStr = request.getParameter("medicinePrice_" + medicineId);
-                        
-                        if (medicineName != null && medicinePriceStr != null) {
-                            BigDecimal price = new BigDecimal(medicinePriceStr);
-                            InvoiceItem item = new InvoiceItem(null, "medicine", medicineId, medicineName, quantity, price);
-                            items.add(item);
-                        }
-                    } catch (NumberFormatException e) {
-                        LOGGER.log(Level.WARNING, "Invalid medicine data: {0}", e.getMessage());
-                    }
-                }
-            }
+        // Parse Receipt 2 items (if enabled)
+        String enableSecondReceipt = request.getParameter("enableSecondReceipt");
+        if ("true".equals(enableSecondReceipt)) {
+            parseReceiptItems(request, "receipt2", items);
         }
         
         return items;
+    }
+    
+    private void parseReceiptItems(HttpServletRequest request, String receiptId, List<InvoiceItem> items) {
+        // Parse services for this receipt
+        parseItemsForType(request, receiptId, "service", items);
+        
+        // Parse supplies for this receipt
+        parseItemsForType(request, receiptId, "supply", items);
+        
+        // Parse medicines for this receipt
+        parseItemsForType(request, receiptId, "medicine", items);
+    }
+    
+    private void parseItemsForType(HttpServletRequest request, String receiptId, String itemType, List<InvoiceItem> items) {
+        // Get all parameters that match the pattern: receipt1_serviceId, receipt1_serviceQuantity, etc.
+        String[] itemIds = request.getParameterValues(receiptId + "_" + itemType + "Id");
+        String[] quantities = request.getParameterValues(receiptId + "_" + itemType + "Quantity");
+        
+        if (itemIds != null && quantities != null) {
+            for (int i = 0; i < itemIds.length; i++) {
+                if (i < quantities.length && itemIds[i] != null && !itemIds[i].isEmpty() && 
+                    quantities[i] != null && !quantities[i].isEmpty()) {
+                    try {
+                        int itemId = Integer.parseInt(itemIds[i]);
+                        int quantity = Integer.parseInt(quantities[i]);
+                        
+                        // Get item name and price from hidden fields
+                        String itemName = request.getParameter(receiptId + "_" + itemType + "Name_" + itemId);
+                        String itemPriceStr = request.getParameter(receiptId + "_" + itemType + "Price_" + itemId);
+                        
+                        if (itemName != null && itemPriceStr != null) {
+                            BigDecimal price = new BigDecimal(itemPriceStr);
+                            int receiptNumber = "receipt1".equals(receiptId) ? 1 : 2;
+                            InvoiceItem item = new InvoiceItem(null, receiptNumber, itemType, itemId, itemName, quantity, price);
+                            items.add(item);
+                        }
+                    } catch (NumberFormatException e) {
+                        // Skip invalid item data - user will see validation on frontend
+                    }
+                }
+            }
+        }
     }
     
     /**
