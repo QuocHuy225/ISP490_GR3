@@ -3,6 +3,7 @@
 <%@ page import="com.mycompany.isp490_gr3.model.Patient" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalRecord" %>
 <%@ page import="com.mycompany.isp490_gr3.model.Invoice" %>
+<%@ page import="com.mycompany.isp490_gr3.model.PaymentReceipt" %>
 <%@ page import="com.mycompany.isp490_gr3.model.InvoiceItem" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalService" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalSupply" %>
@@ -28,18 +29,10 @@
         <!-- Invoice specific CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/invoice.css">
         <style>
-            /* Enhanced Invoice Form Styling */
-            .invoice-form-container {
-                background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-                border-radius: 1rem;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-                padding: 2rem;
-                margin-bottom: 2rem;
-            }
-
-            .invoice-section {
+            /* Payment Receipt Styling */
+            .payment-receipt {
                 background: white;
-                border: none;
+                border: 2px solid #e9ecef;
                 border-radius: 1rem;
                 padding: 2rem;
                 margin-bottom: 2rem;
@@ -49,7 +42,11 @@
                 overflow: hidden;
             }
 
-            .invoice-section::before {
+            .payment-receipt.receipt-1 {
+                border-color: #007bff;
+            }
+            
+            .payment-receipt.receipt-1::before {
                 content: '';
                 position: absolute;
                 top: 0;
@@ -59,254 +56,226 @@
                 background: linear-gradient(90deg, #007bff, #0056b3);
             }
 
-            .invoice-section:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            .payment-receipt.receipt-2 {
+                border-color: #28a745;
             }
-
-            .invoice-section h6 {
-                color: #2c3e50;
-                font-weight: 700;
-                font-size: 1.1rem;
-                margin-bottom: 1.5rem;
-                display: flex;
-                align-items: center;
-                padding-bottom: 0.75rem;
-                border-bottom: 1px solid #e9ecef;
-            }
-
-            .invoice-section h6 i {
-                background: linear-gradient(135deg, #007bff, #0056b3);
-                color: white;
-                padding: 0.5rem;
-                border-radius: 0.5rem;
-                margin-right: 0.75rem;
-                font-size: 1rem;
-            }
-
-            /* Service Section - Blue Theme */
-            .invoice-section:nth-child(1)::before {
-                background: linear-gradient(90deg, #007bff, #0056b3);
-            }
-            .invoice-section:nth-child(1) h6 i {
-                background: linear-gradient(135deg, #007bff, #0056b3);
-            }
-
-            /* Supply Section - Green Theme */
-            .invoice-section:nth-child(2)::before {
+            
+            .payment-receipt.receipt-2::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
                 background: linear-gradient(90deg, #28a745, #20c997);
             }
-            .invoice-section:nth-child(2) h6 i {
+            
+            .payment-receipt.disabled {
+                opacity: 0.6;
+
+                /* Tạm khóa thao tác bên trong, ngoại trừ phần toggle */
+            }
+
+            /* Ngăn mọi thao tác bên trong khi disabled */
+            .payment-receipt.disabled * {
+                pointer-events: none;
+            }
+
+            /* Nhưng vẫn cho phép click vào checkbox bật/tắt */
+            .payment-receipt.disabled .receipt-toggle *,
+            .payment-receipt.disabled .receipt-header {
+                pointer-events: auto;
+            }
+            
+            .receipt-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 2px solid #f8f9fa;
+            }
+            
+            .receipt-title {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #2c3e50;
+                display: flex;
+                align-items: center;
+            }
+
+            .receipt-title i {
+                margin-right: 0.5rem;
+                padding: 0.5rem;
+                border-radius: 0.5rem;
+                color: white;
+            }
+            
+            .receipt-1 .receipt-title i {
+                background: linear-gradient(135deg, #007bff, #0056b3);
+            }
+
+            .receipt-2 .receipt-title i {
                 background: linear-gradient(135deg, #28a745, #20c997);
             }
 
-            /* Medicine Section - Purple Theme */
-            .invoice-section:nth-child(3)::before {
-                background: linear-gradient(90deg, #6f42c1, #e83e8c);
+            .receipt-toggle {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
             }
-            .invoice-section:nth-child(3) h6 i {
-                background: linear-gradient(135deg, #6f42c1, #e83e8c);
+            
+            .receipt-toggle input[type="checkbox"] {
+                width: 1.2rem;
+                height: 1.2rem;
+                cursor: pointer;
             }
-
-            /* Enhanced Item Rows */
-            .item-row {
+            
+            .receipt-toggle label {
+                font-weight: 500;
+                color: #6c757d;
+                cursor: pointer;
+            }
+            
+            .receipt-sections {
+                display: grid;
+                gap: 1.5rem;
+            }
+            
+            .receipt-section {
                 background: #f8f9fa;
-                border: 2px solid #e9ecef;
+                border: 1px solid #e9ecef;
                 border-radius: 0.75rem;
                 padding: 1.5rem;
-                margin-bottom: 1rem;
                 transition: all 0.3s ease;
-                position: relative;
-                overflow: hidden;
             }
-
-            .item-row::before {
-                content: '';
-                position: absolute;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                width: 4px;
-                background: linear-gradient(180deg, #007bff, #0056b3);
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            .item-row:hover {
+            
+            .receipt-section:hover {
                 background: white;
-                border-color: #007bff;
-                box-shadow: 0 4px 15px rgba(0,123,255,0.15);
-                transform: translateX(5px);
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }
-
-            .item-row:hover::before {
-                opacity: 1;
+            
+            .receipt-section h6 {
+                margin-bottom: 1rem;
+                font-weight: 600;
+                color: #495057;
+                display: flex;
+                align-items: center;
             }
-
-            /* Enhanced Form Controls */
-            .item-row .form-select,
-            .item-row .form-control {
-                border: 2px solid #e9ecef;
-                border-radius: 0.5rem;
-                padding: 0.75rem 1rem;
-                font-weight: 500;
-                transition: all 0.3s ease;
+            
+            .receipt-section h6 i {
+                margin-right: 0.5rem;
+                color: #007bff;
             }
-
-            .item-row .form-select:focus,
-            .item-row .form-control:focus {
-                border-color: #007bff;
-                box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
-                background-color: #f8f9ff;
+            
+            .receipt-2 .receipt-section h6 i {
+                color: #28a745;
             }
-
-            /* Column Headers */
+            
             .item-headers {
-                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                background: #ffffff;
+                border: 1px solid #dee2e6;
                 border-radius: 0.5rem;
                 padding: 1rem;
                 margin-bottom: 1rem;
                 font-weight: 600;
                 color: #495057;
-                border: 1px solid #dee2e6;
             }
-
-            /* Enhanced Buttons */
+            
+            .item-row {
+                background: white;
+                border: 1px solid #e9ecef;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 0.75rem;
+                transition: all 0.3s ease;
+            }
+            
+            .item-row:hover {
+                border-color: #007bff;
+                box-shadow: 0 2px 8px rgba(0,123,255,0.15);
+            }
+            
+            .receipt-2 .item-row:hover {
+                border-color: #28a745;
+                box-shadow: 0 2px 8px rgba(40,167,69,0.15);
+            }
+            
             .btn-add-item {
                 background: linear-gradient(135deg, #007bff, #0056b3);
                 border: none;
                 color: white;
                 padding: 0.75rem 1.5rem;
-                border-radius: 0.75rem;
-                font-weight: 600;
+                border-radius: 0.5rem;
+                font-weight: 500;
                 transition: all 0.3s ease;
-                box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
             }
 
             .btn-add-item:hover {
                 background: linear-gradient(135deg, #0056b3, #004085);
                 transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+                box-shadow: 0 4px 12px rgba(0,123,255,0.3);
                 color: white;
             }
 
-            .btn-add-item i {
-                margin-right: 0.5rem;
+            .receipt-2 .btn-add-item {
+                background: linear-gradient(135deg, #28a745, #20c997);
             }
-
-            /* Delete Button Enhancement */
+            
+            .receipt-2 .btn-add-item:hover {
+                background: linear-gradient(135deg, #20c997, #1e7e34);
+                box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+                color: white;
+            }
+            
             .btn-delete-item {
-                background: linear-gradient(135deg, #dc3545, #c82333);
+                background: #dc3545;
                 border: none;
                 color: white;
                 padding: 0.5rem;
-                border-radius: 0.5rem;
-                transition: all 0.3s ease;
-                width: 40px;
-                height: 40px;
+                border-radius: 0.25rem;
+                width: 35px;
+                height: 35px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                transition: all 0.3s ease;
             }
 
             .btn-delete-item:hover {
-                background: linear-gradient(135deg, #c82333, #bd2130);
-                transform: scale(1.1);
-                box-shadow: 0 4px 15px rgba(220,53,69,0.4);
+                background: #c82333;
+                transform: scale(1.05);
             }
-
-            /* Price Display Enhancement */
-            .price-display {
-                background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-                border: 2px solid #2196f3;
-                color: #0d47a1;
-                font-weight: 700;
-                text-align: center;
+            
+            .receipt-totals {
+                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                border: 1px solid #dee2e6;
+                border-radius: 0.75rem;
+                padding: 1.5rem;
+                margin-top: 1.5rem;
             }
-
-            .total-display {
-                background: linear-gradient(135deg, #fff3e0, #ffcc02);
-                border: 2px solid #ff9800;
-                color: #e65100;
-                font-weight: 700;
-                text-align: center;
-            }
-
-            /* Special Sections */
-            .exam-fee-row {
-                background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-                border: 2px solid #ff9800;
-                border-radius: 1rem;
-            }
-
-            .exam-fee-row::before {
-                background: linear-gradient(90deg, #ff9800, #f57c00);
-            }
-
-            .exam-fee-row h6 i {
-                background: linear-gradient(135deg, #ff9800, #f57c00);
+            
+            .receipt-totals h6 {
+                margin-bottom: 1rem;
+                font-weight: 600;
+                color: #495057;
             }
 
             .total-section {
                 background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
                 border: 2px solid #4caf50;
                 border-radius: 1rem;
+                padding: 2rem;
+                margin-top: 2rem;
             }
-
-            .total-section::before {
-                background: linear-gradient(90deg, #4caf50, #388e3c);
-            }
-
-            .total-section h6 i {
-                background: linear-gradient(135deg, #4caf50, #388e3c);
-            }
-
-            /* Responsive Improvements */
-            @media (max-width: 768px) {
-                .invoice-form-container {
-                    padding: 1rem;
-                }
-                
-                .invoice-section {
-                    padding: 1.5rem;
-                }
-                
-                .item-row {
-                    padding: 1rem;
-                }
-                
-                .invoice-section h6 {
-                    font-size: 1rem;
-                }
-            }
-
-            /* Animation Enhancements */
-            .item-row.adding {
-                animation: slideInFromLeft 0.5s ease-out;
-            }
-
-            @keyframes slideInFromLeft {
-                from {
-                    opacity: 0;
-                    transform: translateX(-30px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-
-            /* Enhanced breadcrumb styling */
-            .breadcrumb {
-                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-                border-radius: 0.75rem;
-                padding: 1rem 1.5rem;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            }
-
-            .breadcrumb-item + .breadcrumb-item::before {
-                color: #007bff;
-                font-weight: bold;
+            
+            .total-section h6 {
+                color: #2e7d32;
+                font-weight: 700;
+                margin-bottom: 1.5rem;
             }
         </style>
     </head>
@@ -365,7 +334,6 @@
             </div>
             <ul class="list-unstyled components">
                 <% if (currentRole == User.Role.DOCTOR) { %>
-                <!-- Menu cho Bác sĩ -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -412,7 +380,7 @@
                     </div>
 
                     <div class="dropdown user-dropdown">
-                        <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
                             <div class="user-profile-icon">
                                 <i class="bi bi-person-fill" style="font-size: 1.5rem;"></i>
                             </div>
@@ -421,32 +389,16 @@
                                 <div class="user-role"><%= userRoleDisplay %></div>
                             </div>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
-                                    <i class="bi bi-person-fill"></i>
-                                    <span>Thông tin cá nhân</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
-                                    <i class="bi bi-key-fill"></i>
-                                    <span>Đổi mật khẩu</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="bi bi-gear-fill"></i>
-                                    <span>Cài đặt</span>
-                                </a>
-                            </li>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
+                                <i class="bi bi-person-fill"></i> Thông tin cá nhân</a></li>
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
+                                <i class="bi bi-key-fill"></i> Đổi mật khẩu</a></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="bi bi-gear-fill"></i> Cài đặt</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/auth/logout">
-                                    <i class="bi bi-box-arrow-right"></i>
-                                    <span>Đăng xuất</span>
-                                </a>
-                            </li>
+                            <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/auth/logout">
+                                <i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
                         </ul>
                     </div>
                 </div>
@@ -471,17 +423,70 @@
                                     </a>
                                 </li>
                                 <% } %>
-                                <li class="breadcrumb-item active" aria-current="page">
+                                <li class="breadcrumb-item active">
                                     <%= isEdit ? "Chỉnh sửa hóa đơn" : "Tạo hóa đơn mới" %>
                                 </li>
                             </ol>
                         </nav>
                         
+                        <!-- Alert Messages -->
+                        <%
+                        String success = request.getParameter("success");
+                        String error = request.getParameter("error");
+                        String errorMessage = request.getParameter("message");
+                        %>
+                        <% if (success != null) { %>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <% if ("added".equals(success)) { %>
+                            Tạo hóa đơn thành công!
+                            <% } else if ("updated".equals(success)) { %>
+                            Cập nhật hóa đơn thành công!
+                            <% } %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <% } %>
+
+                        <% if (error != null) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <% if ("add_failed".equals(error)) { %>
+                            <strong>Tạo hóa đơn thất bại!</strong> Vui lòng thử lại.
+                            <% } else if ("update_failed".equals(error)) { %>
+                            <strong>Cập nhật hóa đơn thất bại!</strong> Vui lòng thử lại.
+                            <% } else if ("insufficient_stock".equals(error)) { %>
+                            <strong>Không đủ tồn kho!</strong><br>
+                            <% if (errorMessage != null) { %>
+                            <%= errorMessage %>
+                            <% } else { %>
+                            Vui lòng kiểm tra lại số lượng vật tư/thuốc.
+                            <% } %>
+                            <% } else if ("database_update_needed".equals(error)) { %>
+                            <strong>Cần cập nhật hệ thống!</strong><br>
+                            <% if (errorMessage != null) { %>
+                            <%= errorMessage %>
+                            <% } else { %>
+                            Hệ thống cần được cập nhật. Vui lòng liên hệ quản trị viên.
+                            <% } %>
+                            <% } else if ("missing_data".equals(error)) { %>
+                            <strong>Thiếu thông tin!</strong> Vui lòng điền đầy đủ thông tin bắt buộc.
+                            <% } else if ("invalid_data".equals(error)) { %>
+                            <strong>Dữ liệu không hợp lệ!</strong> Vui lòng kiểm tra lại thông tin nhập.
+                            <% } else if ("system_error".equals(error)) { %>
+                            <strong>Lỗi hệ thống!</strong> Vui lòng thử lại sau hoặc liên hệ quản trị viên.
+                            <% } else { %>
+                            Có lỗi xảy ra. Vui lòng thử lại!
+                            <% } %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <% } %>
+                        
                         <% if (patient != null && medicalRecord != null) { %>
                         <div class="card bg-light">
                             <div class="card-body">
                                 <h4 class="text-primary mb-3">
-                                    <i class="bi bi-<%= isEdit ? "pencil-square" : "plus-circle" %> me-2"></i><%= isEdit ? "Chỉnh sửa hóa đơn" : "Tạo hóa đơn mới" %>
+                                    <i class="bi bi-<%= isEdit ? "pencil-square" : "plus-circle" %> me-2"></i>
+                                    <%= isEdit ? "Chỉnh sửa hóa đơn" : "Tạo hóa đơn mới" %>
                                 </h4>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -503,60 +508,6 @@
                     </div>
                 </div>
 
-                <!-- Alert Messages -->
-                <%
-                    String error = request.getParameter("error");
-                    String success = request.getParameter("success");
-                    String message = request.getParameter("message");
-                %>
-                
-                <% if (success != null) { %>
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="bi bi-check-circle-fill me-2"></i>
-                            <% if ("added".equals(success)) { %>
-                                Tạo hóa đơn thành công!
-                            <% } else if ("updated".equals(success)) { %>
-                                Cập nhật hóa đơn thành công!
-                            <% } else { %>
-                                Thao tác thành công!
-                            <% } %>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    </div>
-                </div>
-                <% } %>
-                
-                <% if (error != null) { %>
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <% if ("insufficient_stock".equals(error)) { %>
-                                <strong>Không đủ tồn kho!</strong><br>
-                                <% if (message != null) { %>
-                                    <%= java.net.URLDecoder.decode(message, "UTF-8") %>
-                                <% } else { %>
-                                    Số lượng vật tư hoặc thuốc trong kho không đủ để thực hiện giao dịch.
-                                <% } %>
-                            <% } else if ("add_failed".equals(error)) { %>
-                                Không thể tạo hóa đơn. Vui lòng thử lại!
-                            <% } else if ("update_failed".equals(error)) { %>
-                                Không thể cập nhật hóa đơn. Vui lòng thử lại!
-                            <% } else if ("invalid_data".equals(error)) { %>
-                                Dữ liệu không hợp lệ. Vui lòng kiểm tra lại!
-                            <% } else if ("system_error".equals(error)) { %>
-                                Lỗi hệ thống. Vui lòng liên hệ quản trị viên!
-                            <% } else { %>
-                                Có lỗi xảy ra. Vui lòng thử lại!
-                            <% } %>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    </div>
-                </div>
-                <% } %>
-
                 <!-- Invoice Form -->
                 <div class="invoice-form-container">
                 <form method="POST" action="${pageContext.request.contextPath}/doctor/invoices" id="invoiceForm">
@@ -567,13 +518,22 @@
                     <input type="hidden" name="invoiceId" value="<%= invoice.getInvoiceId() %>">
                     <% } %>
                     
-                    <div class="row">
-                        <div class="col-12">
-                            <!-- Services Section -->
-                            <div class="invoice-section">
-                                <h6><i class="bi bi-file-medical me-2"></i>Dịch vụ y tế</h6>
-                                
-                                <!-- Column Headers -->
+                        <!-- Phiếu thu 1 - Bắt buộc -->
+                        <div class="payment-receipt receipt-1" id="receipt1">
+                            <div class="receipt-header">
+                                <div class="receipt-title">
+                                    <i class="bi bi-receipt"></i>
+                                    Phiếu thu 1 (Bắt buộc)
+                                </div>
+                                <div class="receipt-toggle">
+                                    <small class="text-muted">Phiếu thu này là bắt buộc</small>
+                                </div>
+                            </div>
+                            
+                            <div class="receipt-sections">
+                                <!-- Services for Receipt 1 -->
+                                <div class="receipt-section">
+                                    <h6><i class="bi bi-file-medical"></i>Dịch vụ y tế</h6>
                                 <div class="item-headers">
                                     <div class="row">
                                         <div class="col-md-5">Tên dịch vụ</div>
@@ -582,44 +542,122 @@
                                         <div class="col-md-2 text-center">Thành tiền</div>
                                         <div class="col-md-1 text-center">Xóa</div>
                                     </div>
+                                    </div>
+                                    <div id="receipt1_servicesContainer"></div>
+                                    <button type="button" class="btn btn-add-item" onclick="addItemRow('receipt1', 'service')">
+                                        <i class="bi bi-plus-circle"></i>Thêm dịch vụ
+                                    </button>
                                 </div>
                                 
-                                <div id="servicesContainer">
-                                    <!-- Service items will be added here -->
+                                <!-- Supplies for Receipt 1 -->
+                                <div class="receipt-section">
+                                    <h6><i class="bi bi-gear"></i>Vật tư y tế</h6>
+                                    <div class="item-headers">
+                                        <div class="row">
+                                            <div class="col-md-5">Tên vật tư</div>
+                                            <div class="col-md-2 text-center">Số lượng</div>
+                                            <div class="col-md-2 text-center">Đơn giá</div>
+                                            <div class="col-md-2 text-center">Thành tiền</div>
+                                            <div class="col-md-1 text-center">Xóa</div>
                                 </div>
-                                <button type="button" class="btn btn-add-item" onclick="addServiceRow()">
-                                    <i class="bi bi-plus-circle"></i> Thêm dịch vụ
+                                    </div>
+                                    <div id="receipt1_suppliesContainer"></div>
+                                    <button type="button" class="btn btn-add-item" onclick="addItemRow('receipt1', 'supply')">
+                                        <i class="bi bi-plus-circle"></i>Thêm vật tư
                                 </button>
                             </div>
                             
-                            <!-- Supplies Section -->
-                            <div class="invoice-section">
-                                <h6><i class="bi bi-gear me-2"></i>Vật tư y tế</h6>
-                                
-                                <!-- Column Headers -->
+                                <!-- Medicines for Receipt 1 -->
+                                <div class="receipt-section">
+                                    <h6><i class="bi bi-capsule"></i>Thuốc</h6>
+                                    <div class="item-headers">
+                                        <div class="row">
+                                            <div class="col-md-5">Tên thuốc</div>
+                                            <div class="col-md-2 text-center">Số lượng</div>
+                                            <div class="col-md-2 text-center">Đơn giá</div>
+                                            <div class="col-md-2 text-center">Thành tiền</div>
+                                            <div class="col-md-1 text-center">Xóa</div>
+                                        </div>
+                                    </div>
+                                    <div id="receipt1_medicinesContainer"></div>
+                                    <button type="button" class="btn btn-add-item" onclick="addItemRow('receipt1', 'medicine')">
+                                        <i class="bi bi-plus-circle"></i>Thêm thuốc
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="receipt-totals">
+                                <h6>Tổng cộng phiếu thu 1</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Dịch vụ</label>
+                                        <input type="text" class="form-control" id="receipt1_totalServices" readonly>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Vật tư & Thuốc</label>
+                                        <input type="text" class="form-control" id="receipt1_totalSupplies" readonly>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Tổng phiếu thu 1</label>
+                                        <input type="text" class="form-control fw-bold" id="receipt1_total" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phiếu thu 2 - Tùy chọn -->
+                        <div class="payment-receipt receipt-2" id="receipt2">
+                            <div class="receipt-header">
+                                <div class="receipt-title">
+                                    <i class="bi bi-receipt"></i>
+                                    Phiếu thu 2 (Tùy chọn)
+                                </div>
+                                <div class="receipt-toggle">
+                                    <input type="checkbox" id="enableSecondReceipt" name="enableSecondReceipt" value="true" onchange="toggleSecondReceipt()">
+                                    <label for="enableSecondReceipt">Sử dụng phiếu thu 2</label>
+                                </div>
+                            </div>
+                            
+                            <div class="receipt-sections" id="receipt2_sections">
+                                <!-- Services for Receipt 2 -->
+                                <div class="receipt-section">
+                                    <h6><i class="bi bi-file-medical"></i>Dịch vụ y tế</h6>
                                 <div class="item-headers">
                                     <div class="row">
-                                        <div class="col-md-5">Tên vật tư</div>
+                                            <div class="col-md-5">Tên dịch vụ</div>
                                         <div class="col-md-2 text-center">Số lượng</div>
                                         <div class="col-md-2 text-center">Đơn giá</div>
                                         <div class="col-md-2 text-center">Thành tiền</div>
                                         <div class="col-md-1 text-center">Xóa</div>
                                     </div>
+                                    </div>
+                                    <div id="receipt2_servicesContainer"></div>
+                                    <button type="button" class="btn btn-add-item" onclick="addItemRow('receipt2', 'service')">
+                                        <i class="bi bi-plus-circle"></i>Thêm dịch vụ
+                                    </button>
                                 </div>
                                 
-                                <div id="suppliesContainer">
-                                    <!-- Supply items will be added here -->
+                                <!-- Supplies for Receipt 2 -->
+                                <div class="receipt-section">
+                                    <h6><i class="bi bi-gear"></i>Vật tư y tế</h6>
+                                    <div class="item-headers">
+                                        <div class="row">
+                                            <div class="col-md-5">Tên vật tư</div>
+                                            <div class="col-md-2 text-center">Số lượng</div>
+                                            <div class="col-md-2 text-center">Đơn giá</div>
+                                            <div class="col-md-2 text-center">Thành tiền</div>
+                                            <div class="col-md-1 text-center">Xóa</div>
                                 </div>
-                                <button type="button" class="btn btn-add-item" onclick="addSupplyRow()">
-                                    <i class="bi bi-plus-circle"></i> Thêm vật tư
+                                    </div>
+                                    <div id="receipt2_suppliesContainer"></div>
+                                    <button type="button" class="btn btn-add-item" onclick="addItemRow('receipt2', 'supply')">
+                                        <i class="bi bi-plus-circle"></i>Thêm vật tư
                                 </button>
                             </div>
                             
-                            <!-- Medicines Section -->
-                            <div class="invoice-section">
-                                <h6><i class="bi bi-capsule me-2"></i>Thuốc</h6>
-                                
-                                <!-- Column Headers -->
+                                <!-- Medicines for Receipt 2 -->
+                                <div class="receipt-section">
+                                    <h6><i class="bi bi-capsule"></i>Thuốc</h6>
                                 <div class="item-headers">
                                     <div class="row">
                                         <div class="col-md-5">Tên thuốc</div>
@@ -627,35 +665,37 @@
                                         <div class="col-md-2 text-center">Đơn giá</div>
                                         <div class="col-md-2 text-center">Thành tiền</div>
                                         <div class="col-md-1 text-center">Xóa</div>
+                                        </div>
+                                    </div>
+                                    <div id="receipt2_medicinesContainer"></div>
+                                    <button type="button" class="btn btn-add-item" onclick="addItemRow('receipt2', 'medicine')">
+                                        <i class="bi bi-plus-circle"></i>Thêm thuốc
+                                    </button>
                                     </div>
                                 </div>
                                 
-                                <div id="medicinesContainer">
-                                    <!-- Medicine items will be added here -->
-                                </div>
-                                <button type="button" class="btn btn-add-item" onclick="addMedicineRow()">
-                                    <i class="bi bi-plus-circle"></i> Thêm thuốc
-                                </button>
-                            </div>
-                            
-                            <!-- Exam Fee Section -->
-                            <div class="invoice-section exam-fee-row">
-                                <h6><i class="bi bi-stethoscope me-2"></i>Phí khám bệnh</h6>
+                            <div class="receipt-totals">
+                                <h6>Tổng cộng phiếu thu 2</h6>
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Phí khám cố định</label>
-                                        <input type="text" class="form-control" value="100,000đ" readonly>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Dịch vụ</label>
+                                        <input type="text" class="form-control" id="receipt2_totalServices" readonly>
+                                </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Vật tư & Thuốc</label>
+                                        <input type="text" class="form-control" id="receipt2_totalSupplies" readonly>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Ghi chú</label>
-                                        <input type="text" class="form-control" value="Phí khám bệnh cơ bản" readonly>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Tổng phiếu thu 2</label>
+                                        <input type="text" class="form-control fw-bold" id="receipt2_total" readonly>
                                     </div>
                                 </div>
                             </div>
+                            </div>
                             
-                            <!-- Total Section -->
-                            <div class="invoice-section total-section">
-                                <h6><i class="bi bi-calculator me-2"></i>Tổng cộng</h6>
+                        <!-- Tổng cộng hóa đơn -->
+                        <div class="total-section">
+                            <h6><i class="bi bi-calculator me-2"></i>Tổng cộng hóa đơn</h6>
                                 <div class="row">
                                     <div class="col-md-3">
                                         <label class="form-label">Tổng dịch vụ</label>
@@ -665,63 +705,56 @@
                                         <label class="form-label">Tổng vật tư & thuốc</label>
                                         <input type="text" class="form-control" id="totalSupplies" readonly>
                                     </div>
-                                    <div class="col-md-3">
+                                <div class="col-md-2">
                                         <label class="form-label">Giảm giá</label>
                                         <input type="number" class="form-control" id="discountAmount" name="discountAmount" 
                                                value="<%= isEdit && invoice != null && invoice.getDiscountAmount() != null ? invoice.getDiscountAmount().toString() : "0" %>" 
                                                min="0" onchange="calculateTotal()">
                                     </div>
-                                    <div class="col-md-3">
+                                <div class="col-md-4">
                                         <label class="form-label fw-bold">Thành tiền</label>
-                                        <input type="text" class="form-control fw-bold text-primary" id="finalAmount" readonly>
-                                    </div>
+                                    <input type="text" class="form-control fw-bold text-primary fs-5" id="finalAmount" readonly>
                                 </div>
                             </div>
                             
-                            <!-- Payment Info Section -->
-                            <div class="invoice-section">
-                                <h6><i class="bi bi-credit-card me-2"></i>Ghi chú</h6>
-                                <div class="row">
-                                    <div class="col-md-4">
+                            <div class="row mt-3">
+                                <div class="col-md-12">
                                         <label class="form-label">Ghi chú</label>
-                                        <textarea class="form-control" name="notes" rows="1"><%= isEdit && invoice != null && invoice.getNotes() != null ? invoice.getNotes() : "" %></textarea>
+                                    <textarea class="form-control" name="notes" rows="2" placeholder="Ghi chú thêm về hóa đơn..."><%= isEdit && invoice != null && invoice.getNotes() != null ? invoice.getNotes() : "" %></textarea>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Form Buttons -->
-                            <div class="form-buttons mt-4">
-                                <button type="submit" class="btn btn-primary me-2">
+                        <div class="form-buttons mt-4 text-center">
+                            <button type="submit" class="btn btn-primary btn-lg me-3">
                                     <i class="bi bi-check-circle me-2"></i>
-                                    <%= "add".equals(action) ? "Tạo hóa đơn" : "Cập nhật" %>
+                                <%= isEdit ? "Cập nhật hóa đơn" : "Tạo hóa đơn" %>
                                 </button>
-                                <% if ("add".equals(action)) { %>
-                                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= medicalRecord.getPatientId() %>" 
-                                       class="btn btn-secondary">
+                            <% if (isEdit && invoice != null) { %>
+                                <a href="${pageContext.request.contextPath}/doctor/invoices?action=view&invoiceId=<%= invoice.getInvoiceId() %>" 
+                                   class="btn btn-secondary btn-lg">
                                         <i class="bi bi-x-circle me-2"></i>Hủy
                                     </a>
                                 <% } else { %>
-                                    <a href="${pageContext.request.contextPath}/doctor/invoices?action=view&invoiceId=<%= invoice.getInvoiceId() %>" 
-                                       class="btn btn-secondary">
+                                <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient != null ? patient.getId() : "" %>" 
+                                   class="btn btn-secondary btn-lg">
                                         <i class="bi bi-x-circle me-2"></i>Hủy
                                     </a>
                                 <% } %>
-                            </div>
-                        </div>
                     </div>
                 </form>
                 </div>
             </div>
         </div>
 
-        <!-- Bootstrap Bundle with Popper -->
+        <!-- Scripts -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="${pageContext.request.contextPath}/js/invoice-existing-items.js"></script>
         
-        <!-- Data for JavaScript -->
         <script>
-            // Convert server data to JavaScript objects
+            // Data for JavaScript
             const servicesData = [
                 <% if (services != null) { 
                    for (int i = 0; i < services.size(); i++) { 
@@ -763,37 +796,66 @@
                 } %>
             ];
             
-            <% if (isEdit && invoice != null && invoice.getInvoiceItems() != null) { %>
-            const existingItems = [
-                <% for (int i = 0; i < invoice.getInvoiceItems().size(); i++) { 
-                   InvoiceItem item = invoice.getInvoiceItems().get(i); %>
-                {
-                    type: '<%= item.getItemType() %>',
-                    id: <%= item.getItemId() %>,
-                    name: '<%= item.getItemName().replace("'", "\\'") %>',
-                    quantity: <%= item.getQuantity() %>,
-                    price: <%= item.getUnitPrice() %>
-                }<%= i < invoice.getInvoiceItems().size() - 1 ? "," : "" %>
-                <% } %>
-            ];
-            <% } else { %>
-            const existingItems = [];
-            <% } %>
-        </script>
-        
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Sidebar toggle
+            // Existing items for edit mode
+            const existingFirstReceiptItems = [];
+            const existingSecondReceiptItems = [];
+            <% if (isEdit && invoice != null && invoice.getInvoiceItems() != null) {
+                  for (InvoiceItem item : invoice.getInvoiceItems()) {
+                      if (item.getReceiptNumber() == 1) { %>
+            existingFirstReceiptItems.push({
+                type: '<%= item.getItemType() %>',
+                id: <%= item.getItemId() %>,
+                name: '<%= item.getItemName().replace("'", "\\'") %>',
+                quantity: <%= item.getQuantity() %>,
+                price: <%= item.getUnitPrice() %>
+            });
+            <% } else if (item.getReceiptNumber() == 2) { %>
+            existingSecondReceiptItems.push({
+                type: '<%= item.getItemType() %>',
+                id: <%= item.getItemId() %>,
+                name: '<%= item.getItemName().replace("'", "\\'") %>',
+                quantity: <%= item.getQuantity() %>,
+                price: <%= item.getUnitPrice() %>
+            });
+            <% }
+                  }
+               } %>
+            const hasSecondReceipt = existingSecondReceiptItems.length > 0;
+            
+            let itemCounters = {
+                receipt1: { service: 0, supply: 0, medicine: 0 },
+                receipt2: { service: 0, supply: 0, medicine: 0 }
+            };
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize sidebar
+                initializeSidebar();
+                
+                // Initialize second receipt
+                if (hasSecondReceipt) {
+                    document.getElementById('enableSecondReceipt').checked = true;
+                    toggleSecondReceipt();
+                } else {
+                    toggleSecondReceipt();
+                }
+                
+                // Load existing items
+                loadExistingItems();
+                
+                // Calculate totals
+                calculateTotal();
+            });
+            
+            function initializeSidebar() {
                 const sidebarCollapse = document.getElementById('sidebarCollapse');
                 const sidebar = document.getElementById('sidebar');
                 const content = document.getElementById('content');
 
-                sidebarCollapse.addEventListener('click', function () {
+                sidebarCollapse.addEventListener('click', function() {
                     sidebar.classList.toggle('collapsed');
                     content.classList.toggle('expanded');
                 });
 
-                // Responsive sidebar
                 function checkWidth() {
                     if (window.innerWidth <= 768) {
                         sidebar.classList.add('collapsed');
@@ -804,118 +866,94 @@
                     }
                 }
 
-                // Initial check
                 checkWidth();
                 window.addEventListener('resize', checkWidth);
+            }
+            
+            function toggleSecondReceipt() {
+                const checkbox = document.getElementById('enableSecondReceipt');
+                const receipt2 = document.getElementById('receipt2');
+                const receipt2Sections = document.getElementById('receipt2_sections');
                 
-                // Load existing items if editing
-                loadExistingItems();
+                if (checkbox.checked) {
+                    receipt2.classList.remove('disabled');
+                    receipt2Sections.style.display = 'block';
+                } else {
+                    receipt2.classList.add('disabled');
+                    receipt2Sections.style.display = 'none';
+                    
+                    // Clear all items in receipt 2
+                    clearReceiptItems('receipt2');
+                }
                 
-                // Calculate initial total
                 calculateTotal();
-            });
-
-            let serviceRowIndex = 0;
-            let supplyRowIndex = 0;
-            let medicineRowIndex = 0;
-
-            function addServiceRow(serviceId = '', quantity = 1) {
-                const container = document.getElementById('servicesContainer');
-                const rowId = 'service_' + serviceRowIndex++;
-                
-                const row = document.createElement('div');
-                row.className = 'item-row';
-                row.id = rowId;
-                
-                var serviceOptions = '';
-                for (var i = 0; i < servicesData.length; i++) {
-                    var service = servicesData[i];
-                    var selected = (serviceId == service.id) ? 'selected' : '';
-                    serviceOptions += '<option value="' + service.id + '" ' + selected + ' data-price="' + service.price + '">' + service.name + '</option>';
-                }
-                
-                row.innerHTML = 
-                    '<div class="row align-items-center">' +
-                        '<div class="col-md-5">' +
-                            '<select class="form-select" name="serviceId" onchange="updateServicePrice(this, \'' + rowId + '\')" required>' +
-                                '<option value="">-- Chọn dịch vụ --</option>' +
-                                serviceOptions +
-                            '</select>' +
-                            '<input type="hidden" name="serviceName_' + serviceId + '" id="serviceName_' + rowId + '">' +
-                            '<input type="hidden" name="servicePrice_' + serviceId + '" id="servicePrice_' + rowId + '">' +
-                        '</div>' +
-                        '<div class="col-md-2">' +
-                            '<input type="number" class="form-control" name="serviceQuantity" value="' + quantity + '" min="1" ' +
-                                   'onchange="calculateRowTotal(\'' + rowId + '\')" required>' +
-                        '</div>' +
-                        '<div class="col-md-2">' +
-                            '<input type="text" class="form-control price-display" id="serviceUnitPrice_' + rowId + '" readonly>' +
-                        '</div>' +
-                        '<div class="col-md-2">' +
-                            '<input type="text" class="form-control total-display" id="serviceTotal_' + rowId + '" readonly>' +
-                        '</div>' +
-                        '<div class="col-md-1 text-center">' +
-                            '<button type="button" class="btn btn-delete-item" onclick="removeRow(\'' + rowId + '\')" title="Xóa dịch vụ">' +
-                                '<i class="bi bi-trash"></i>' +
-                            '</button>' +
-                        '</div>' +
-                    '</div>';
-                
-                row.classList.add('adding');
-                container.appendChild(row);
-                
-                // Trigger price update if serviceId is provided
-                if (serviceId) {
-                    const select = row.querySelector('select[name="serviceId"]');
-                    updateServicePrice(select, rowId);
-                }
-                
-                // Remove animation class after animation completes
-                setTimeout(() => {
-                    row.classList.remove('adding');
-                }, 500);
             }
-
-            function addSupplyRow(supplyId = '', quantity = 1) {
-                const container = document.getElementById('suppliesContainer');
-                const rowId = 'supply_' + supplyRowIndex++;
+            
+            function clearReceiptItems(receiptId) {
+                ['service', 'supply', 'medicine'].forEach(itemType => {
+                    const container = document.getElementById(receiptId + '_' + getContainerSuffix(itemType) + 'Container');
+                    if (container) {
+                        container.innerHTML = '';
+                    }
+                });
+            }
+            
+            function addItemRow(receiptId, itemType, itemId = '', quantity = 1) {
+                const container = document.getElementById(receiptId + '_' + getContainerSuffix(itemType) + 'Container');
+                const counter = itemCounters[receiptId][itemType]++;
+                const rowId = receiptId + '_' + itemType + '_' + counter;
                 
                 const row = document.createElement('div');
                 row.className = 'item-row';
                 row.id = rowId;
                 
-                var supplyOptions = '';
-                for (var i = 0; i < suppliesData.length; i++) {
-                    var supply = suppliesData[i];
-                    var selected = (supplyId == supply.id) ? 'selected' : '';
-                    var stockInfo = supply.stock ? ' (Còn: ' + supply.stock + ')' : ' (Hết hàng)';
-                    var stockClass = supply.stock > 0 ? '' : ' class="text-danger"';
-                    supplyOptions += '<option value="' + supply.id + '" ' + selected + ' data-price="' + supply.price + '" data-stock="' + supply.stock + '"' + stockClass + '>' + supply.name + stockInfo + '</option>';
+                let itemOptions = '';
+                let itemsData = [];
+                
+                if (itemType === 'service') {
+                    itemsData = servicesData;
+                } else if (itemType === 'supply') {
+                    itemsData = suppliesData;
+                } else if (itemType === 'medicine') {
+                    itemsData = medicinesData;
+                }
+                
+                for (let i = 0; i < itemsData.length; i++) {
+                    const item = itemsData[i];
+                    const selected = (itemId == item.id) ? 'selected' : '';
+                    const stockInfo = item.stock ? (item.stock > 0 ? ' (Còn: ' + item.stock + ')' : ' (Hết hàng)') : '';
+                    const stockClass = item.stock > 0 ? '' : ' class="text-danger"';
+                    
+                    itemOptions += '<option value="' + item.id + '" ' + selected + 
+                                  ' data-price="' + item.price + '"' + 
+                                  (item.stock !== undefined ? ' data-stock="' + item.stock + '"' : '') + 
+                                  stockClass + '>' + item.name + stockInfo + '</option>';
                 }
                 
                 row.innerHTML = 
                     '<div class="row align-items-center">' +
                         '<div class="col-md-5">' +
-                            '<select class="form-select" name="supplyId" onchange="updateSupplyPrice(this, \'' + rowId + '\')" required>' +
-                                '<option value="">-- Chọn vật tư --</option>' +
-                                supplyOptions +
+                            '<select class="form-select" name="' + receiptId + '_' + itemType + 'Id" ' +
+                                   'onchange="updateItemPrice(\'' + rowId + '\', \'' + itemType + '\')" required>' +
+                                '<option value="">-- Chọn ' + getItemTypeLabel(itemType) + ' --</option>' +
+                                itemOptions +
                             '</select>' +
-                            '<input type="hidden" name="supplyName_' + supplyId + '" id="supplyName_' + rowId + '">' +
-                            '<input type="hidden" name="supplyPrice_' + supplyId + '" id="supplyPrice_' + rowId + '">' +
+                            '<input type="hidden" name="' + receiptId + '_' + itemType + 'Name_' + itemId + '" id="' + rowId + '_name">' +
+                            '<input type="hidden" name="' + receiptId + '_' + itemType + 'Price_' + itemId + '" id="' + rowId + '_price">' +
                         '</div>' +
                         '<div class="col-md-2">' +
-                            '<input type="number" class="form-control" name="supplyQuantity" value="' + quantity + '" min="1" ' +
-                                   'onchange="validateSupplyStock(\'' + rowId + '\')" required>' +
-                            '<small class="text-info" id="supplyStock_' + rowId + '"></small>' +
+                            '<input type="number" class="form-control" name="' + receiptId + '_' + itemType + 'Quantity" ' +
+                                   'value="' + quantity + '" min="1" onchange="calculateRowTotal(\'' + rowId + '\', \'' + itemType + '\')" required>' +
+                            '<small class="text-info" id="' + rowId + '_stock"></small>' +
                         '</div>' +
                         '<div class="col-md-2">' +
-                            '<input type="text" class="form-control price-display" id="supplyUnitPrice_' + rowId + '" readonly>' +
+                            '<input type="text" class="form-control" id="' + rowId + '_unitPrice" readonly>' +
                         '</div>' +
                         '<div class="col-md-2">' +
-                            '<input type="text" class="form-control total-display" id="supplyTotal_' + rowId + '" readonly>' +
+                            '<input type="text" class="form-control" id="' + rowId + '_total" readonly>' +
                         '</div>' +
                         '<div class="col-md-1 text-center">' +
-                            '<button type="button" class="btn btn-delete-item" onclick="removeRow(\'' + rowId + '\')" title="Xóa vật tư">' +
+                            '<button type="button" class="btn btn-delete-item" onclick="removeRow(\'' + rowId + '\')">' +
                                 '<i class="bi bi-trash"></i>' +
                             '</button>' +
                         '</div>' +
@@ -923,104 +961,33 @@
                 
                 container.appendChild(row);
                 
-                // Trigger price update if supplyId is provided
-                if (supplyId) {
-                    const select = row.querySelector('select[name="supplyId"]');
-                    updateSupplyPrice(select, rowId);
+                // Update price if itemId is provided
+                if (itemId) {
+                    const select = row.querySelector('select');
+                    updateItemPrice(rowId, itemType, select);
                 }
             }
-
-            function addMedicineRow(medicineId = '', quantity = 1) {
-                const container = document.getElementById('medicinesContainer');
-                const rowId = 'medicine_' + medicineRowIndex++;
-                
-                const row = document.createElement('div');
-                row.className = 'item-row';
-                row.id = rowId;
-                
-                var medicineOptions = '';
-                for (var i = 0; i < medicinesData.length; i++) {
-                    var medicine = medicinesData[i];
-                    var selected = (medicineId == medicine.id) ? 'selected' : '';
-                    var stockInfo = medicine.stock ? ' (Còn: ' + medicine.stock + ')' : ' (Hết hàng)';
-                    var stockClass = medicine.stock > 0 ? '' : ' class="text-danger"';
-                    medicineOptions += '<option value="' + medicine.id + '" ' + selected + ' data-price="' + medicine.price + '" data-stock="' + medicine.stock + '"' + stockClass + '>' + medicine.name + stockInfo + '</option>';
-                }
-                
-                row.innerHTML = 
-                    '<div class="row align-items-center">' +
-                        '<div class="col-md-5">' +
-                            '<select class="form-select" name="medicineId" onchange="updateMedicinePrice(this, \'' + rowId + '\')" required>' +
-                                '<option value="">-- Chọn thuốc --</option>' +
-                                medicineOptions +
-                            '</select>' +
-                            '<input type="hidden" name="medicineName_' + medicineId + '" id="medicineName_' + rowId + '">' +
-                            '<input type="hidden" name="medicinePrice_' + medicineId + '" id="medicinePrice_' + rowId + '">' +
-                        '</div>' +
-                        '<div class="col-md-2">' +
-                            '<input type="number" class="form-control" name="medicineQuantity" value="' + quantity + '" min="1" ' +
-                                   'onchange="validateMedicineStock(\'' + rowId + '\')" required>' +
-                            '<small class="text-info" id="medicineStock_' + rowId + '"></small>' +
-                        '</div>' +
-                        '<div class="col-md-2">' +
-                            '<input type="text" class="form-control price-display" id="medicineUnitPrice_' + rowId + '" readonly>' +
-                        '</div>' +
-                        '<div class="col-md-2">' +
-                            '<input type="text" class="form-control total-display" id="medicineTotal_' + rowId + '" readonly>' +
-                        '</div>' +
-                        '<div class="col-md-1 text-center">' +
-                            '<button type="button" class="btn btn-delete-item" onclick="removeRow(\'' + rowId + '\')" title="Xóa thuốc">' +
-                                '<i class="bi bi-trash"></i>' +
-                            '</button>' +
-                        '</div>' +
-                    '</div>';
-                
-                container.appendChild(row);
-                
-                // Trigger price update if medicineId is provided
-                if (medicineId) {
-                    const select = row.querySelector('select[name="medicineId"]');
-                    updateMedicinePrice(select, rowId);
-                }
-            }
-
-            function updateServicePrice(select, rowId) {
+            
+            function updateItemPrice(rowId, itemType, selectElement = null) {
+                const select = selectElement || document.querySelector('#' + rowId + ' select');
                 const selectedOption = select.options[select.selectedIndex];
+                
                 if (selectedOption.value) {
                     const price = parseFloat(selectedOption.dataset.price);
                     const name = selectedOption.text;
-                    const serviceId = selectedOption.value;
+                    const itemId = selectedOption.value;
                     
-                    document.getElementById('serviceUnitPrice_' + rowId).value = formatCurrency(price);
-                    document.getElementById('serviceName_' + rowId).value = name;
-                    document.getElementById('serviceName_' + rowId).name = 'serviceName_' + serviceId;
-                    document.getElementById('servicePrice_' + rowId).value = price;
-                    document.getElementById('servicePrice_' + rowId).name = 'servicePrice_' + serviceId;
+                    document.getElementById(rowId + '_unitPrice').value = formatCurrency(price);
+                    document.getElementById(rowId + '_name').value = name;
+                    document.getElementById(rowId + '_name').name = rowId.split('_')[0] + '_' + itemType + 'Name_' + itemId;
+                    document.getElementById(rowId + '_price').value = price;
+                    document.getElementById(rowId + '_price').name = rowId.split('_')[0] + '_' + itemType + 'Price_' + itemId;
                     
-                    calculateRowTotal(rowId);
-                } else {
-                    document.getElementById('serviceUnitPrice_' + rowId).value = '';
-                    document.getElementById('serviceTotal_' + rowId).value = '';
-                    calculateTotal();
-                }
-            }
-
-            function updateSupplyPrice(select, rowId) {
-                const selectedOption = select.options[select.selectedIndex];
-                if (selectedOption.value) {
-                    const price = parseFloat(selectedOption.dataset.price);
+                    // Handle stock display for supplies and medicines
+                    if (itemType === 'supply' || itemType === 'medicine') {
                     const stock = parseInt(selectedOption.dataset.stock);
-                    const name = selectedOption.text;
-                    const supplyId = selectedOption.value;
-                    
-                    document.getElementById('supplyUnitPrice_' + rowId).value = formatCurrency(price);
-                    document.getElementById('supplyName_' + rowId).value = name;
-                    document.getElementById('supplyName_' + rowId).name = 'supplyName_' + supplyId;
-                    document.getElementById('supplyPrice_' + rowId).value = price;
-                    document.getElementById('supplyPrice_' + rowId).name = 'supplyPrice_' + supplyId;
-                    
-                    // Hiển thị thông tin tồn kho
-                    const stockDisplay = document.getElementById('supplyStock_' + rowId);
+                        const stockDisplay = document.getElementById(rowId + '_stock');
+                        
                     if (stockDisplay) {
                         if (stock > 0) {
                             stockDisplay.textContent = 'Tồn kho: ' + stock;
@@ -1029,51 +996,14 @@
                             stockDisplay.textContent = 'Hết hàng';
                             stockDisplay.className = 'text-danger';
                         }
-                    }
-                    
-                    validateSupplyStock(rowId);
-                } else {
-                    document.getElementById('supplyUnitPrice_' + rowId).value = '';
-                    document.getElementById('supplyTotal_' + rowId).value = '';
-                    const stockDisplay = document.getElementById('supplyStock_' + rowId);
-                    if (stockDisplay) {
-                        stockDisplay.textContent = '';
-                    }
-                    calculateTotal();
-                }
-            }
-
-            function updateMedicinePrice(select, rowId) {
-                const selectedOption = select.options[select.selectedIndex];
-                if (selectedOption.value) {
-                    const price = parseFloat(selectedOption.dataset.price);
-                    const stock = parseInt(selectedOption.dataset.stock);
-                    const name = selectedOption.text;
-                    const medicineId = selectedOption.value;
-                    
-                    document.getElementById('medicineUnitPrice_' + rowId).value = formatCurrency(price);
-                    document.getElementById('medicineName_' + rowId).value = name;
-                    document.getElementById('medicineName_' + rowId).name = 'medicineName_' + medicineId;
-                    document.getElementById('medicinePrice_' + rowId).value = price;
-                    document.getElementById('medicinePrice_' + rowId).name = 'medicinePrice_' + medicineId;
-                    
-                    // Hiển thị thông tin tồn kho
-                    const stockDisplay = document.getElementById('medicineStock_' + rowId);
-                    if (stockDisplay) {
-                        if (stock > 0) {
-                            stockDisplay.textContent = 'Tồn kho: ' + stock;
-                            stockDisplay.className = 'text-info';
-                        } else {
-                            stockDisplay.textContent = 'Hết hàng';
-                            stockDisplay.className = 'text-danger';
                         }
                     }
                     
-                    validateMedicineStock(rowId);
-                } else {
-                    document.getElementById('medicineUnitPrice_' + rowId).value = '';
-                    document.getElementById('medicineTotal_' + rowId).value = '';
-                    const stockDisplay = document.getElementById('medicineStock_' + rowId);
+                    calculateRowTotal(rowId, itemType);
+                        } else {
+                    document.getElementById(rowId + '_unitPrice').value = '';
+                    document.getElementById(rowId + '_total').value = '';
+                    const stockDisplay = document.getElementById(rowId + '_stock');
                     if (stockDisplay) {
                         stockDisplay.textContent = '';
                     }
@@ -1081,11 +1011,11 @@
                 }
             }
 
-            function calculateRowTotal(rowId) {
+            function calculateRowTotal(rowId, itemType) {
                 const row = document.getElementById(rowId);
                 const quantityInput = row.querySelector('input[name$="Quantity"]');
-                const unitPriceInput = row.querySelector('input[id$="UnitPrice_' + rowId + '"]');
-                const totalInput = row.querySelector('input[id$="Total_' + rowId + '"]');
+                const unitPriceInput = document.getElementById(rowId + '_unitPrice');
+                const totalInput = document.getElementById(rowId + '_total');
                 
                 if (quantityInput && unitPriceInput && totalInput) {
                     const quantity = parseInt(quantityInput.value) || 0;
@@ -1093,9 +1023,43 @@
                     const total = quantity * unitPrice;
                     
                     totalInput.value = formatCurrency(total);
-                }
                 
-                calculateTotal();
+                    // Validate stock for supplies and medicines
+                    if (itemType === 'supply' || itemType === 'medicine') {
+                        validateStock(rowId, itemType);
+                    }
+            }
+
+                    calculateTotal();
+            }
+            
+            function validateStock(rowId, itemType) {
+                const row = document.getElementById(rowId);
+                const select = row.querySelector('select');
+                const quantityInput = row.querySelector('input[name$="Quantity"]');
+                const stockDisplay = document.getElementById(rowId + '_stock');
+                
+                if (select && quantityInput && stockDisplay) {
+                    const selectedOption = select.options[select.selectedIndex];
+                    if (selectedOption.value) {
+                        const stock = parseInt(selectedOption.dataset.stock);
+                        const requestedQuantity = parseInt(quantityInput.value) || 0;
+                        
+                        if (requestedQuantity > stock) {
+                            stockDisplay.textContent = 'KHÔNG ĐỦ! Tồn kho: ' + stock + ', Yêu cầu: ' + requestedQuantity;
+                            stockDisplay.className = 'text-danger fw-bold';
+                            quantityInput.classList.add('is-invalid');
+                        } else if (requestedQuantity > 0) {
+                            stockDisplay.textContent = 'OK - Tồn kho: ' + stock + ', Dùng: ' + requestedQuantity;
+                            stockDisplay.className = 'text-success';
+                            quantityInput.classList.remove('is-invalid');
+                        } else {
+                            stockDisplay.textContent = 'Tồn kho: ' + stock;
+                            stockDisplay.className = 'text-info';
+                            quantityInput.classList.remove('is-invalid');
+                        }
+                    }
+                }
             }
 
             function removeRow(rowId) {
@@ -1105,117 +1069,90 @@
                     calculateTotal();
                 }
             }
-
+            
             function calculateTotal() {
-                let totalServices = 0;
-                let totalSupplies = 0;
+                // Calculate receipt 1 totals
+                const receipt1ServiceTotal = calculateReceiptTotal('receipt1', 'service');
+                const receipt1SupplyTotal = calculateReceiptTotal('receipt1', 'supply');
+                const receipt1MedicineTotal = calculateReceiptTotal('receipt1', 'medicine');
+                const receipt1Total = receipt1ServiceTotal + receipt1SupplyTotal + receipt1MedicineTotal;
                 
-                // Calculate services total
-                document.querySelectorAll('input[id^="serviceTotal_"]').forEach(input => {
-                    const value = parseFloat(input.value.replace(/[,.đ\s]/g, '')) || 0;
-                    totalServices += value;
-                });
+                document.getElementById('receipt1_totalServices').value = formatCurrency(receipt1ServiceTotal);
+                document.getElementById('receipt1_totalSupplies').value = formatCurrency(receipt1SupplyTotal + receipt1MedicineTotal);
+                document.getElementById('receipt1_total').value = formatCurrency(receipt1Total);
                 
-                // Calculate supplies total
-                document.querySelectorAll('input[id^="supplyTotal_"]').forEach(input => {
-                    const value = parseFloat(input.value.replace(/[,.đ\s]/g, '')) || 0;
-                    totalSupplies += value;
-                });
+                // Calculate receipt 2 totals (if enabled)
+                let receipt2ServiceTotal = 0;
+                let receipt2SupplyTotal = 0;
+                let receipt2MedicineTotal = 0;
+                let receipt2Total = 0;
                 
-                // Calculate medicines total
-                document.querySelectorAll('input[id^="medicineTotal_"]').forEach(input => {
-                    const value = parseFloat(input.value.replace(/[,.đ\s]/g, '')) || 0;
-                    totalSupplies += value;
-                });
+                if (document.getElementById('enableSecondReceipt').checked) {
+                    receipt2ServiceTotal = calculateReceiptTotal('receipt2', 'service');
+                    receipt2SupplyTotal = calculateReceiptTotal('receipt2', 'supply');
+                    receipt2MedicineTotal = calculateReceiptTotal('receipt2', 'medicine');
+                    receipt2Total = receipt2ServiceTotal + receipt2SupplyTotal + receipt2MedicineTotal;
+                }
                 
-                // Add exam fee (100,000)
-                const examFee = 100000;
+                document.getElementById('receipt2_totalServices').value = formatCurrency(receipt2ServiceTotal);
+                document.getElementById('receipt2_totalSupplies').value = formatCurrency(receipt2SupplyTotal + receipt2MedicineTotal);
+                document.getElementById('receipt2_total').value = formatCurrency(receipt2Total);
+                
+                // Calculate grand totals
+                const totalServices = receipt1ServiceTotal + receipt2ServiceTotal;
+                const totalSupplies = receipt1SupplyTotal + receipt1MedicineTotal + receipt2SupplyTotal + receipt2MedicineTotal;
                 const discount = parseFloat(document.getElementById('discountAmount').value) || 0;
-                const finalAmount = totalServices + totalSupplies + examFee - discount;
+                const finalAmount = totalServices + totalSupplies - discount;
                 
-                // Update display
                 document.getElementById('totalServices').value = formatCurrency(totalServices);
                 document.getElementById('totalSupplies').value = formatCurrency(totalSupplies);
                 document.getElementById('finalAmount').value = formatCurrency(finalAmount);
             }
-
+            
+            function calculateReceiptTotal(receiptId, itemType) {
+                let total = 0;
+                const containers = document.querySelectorAll('#' + receiptId + '_' + getContainerSuffix(itemType) + 'Container .item-row');
+                
+                containers.forEach(row => {
+                    const totalInput = row.querySelector('input[id$="_total"]');
+                    if (totalInput) {
+                        const value = parseFloat(totalInput.value.replace(/[,.đ\s]/g, '')) || 0;
+                        total += value;
+                    }
+                });
+                
+                return total;
+            }
+            
             function formatCurrency(amount) {
                 return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
             }
-
+            
+            function getItemTypeLabel(itemType) {
+                switch (itemType) {
+                    case 'service': return 'dịch vụ';
+                    case 'supply': return 'vật tư';
+                    case 'medicine': return 'thuốc';
+                    default: return '';
+                }
+            }
+            
+            function getContainerSuffix(itemType) {
+                return itemType === 'supply' ? 'supplies' : itemType + 's';
+            }
+            
             function loadExistingItems() {
-                existingItems.forEach(item => {
-                    if (item.type === 'service') {
-                        addServiceRow(item.id, item.quantity);
-                    } else if (item.type === 'supply') {
-                        addSupplyRow(item.id, item.quantity);
-                    } else if (item.type === 'medicine') {
-                        addMedicineRow(item.id, item.quantity);
-                    }
+                // Load existing items for receipt 1
+                existingFirstReceiptItems.forEach(item => {
+                    addItemRow('receipt1', item.type, item.id, item.quantity);
                 });
-            }
-
-            // Validation functions for stock checking
-            function validateSupplyStock(rowId) {
-                const row = document.getElementById(rowId);
-                const select = row.querySelector('select[name="supplyId"]');
-                const quantityInput = row.querySelector('input[name="supplyQuantity"]');
-                const stockDisplay = document.getElementById('supplyStock_' + rowId);
                 
-                if (select && quantityInput && stockDisplay) {
-                    const selectedOption = select.options[select.selectedIndex];
-                    if (selectedOption.value) {
-                        const stock = parseInt(selectedOption.dataset.stock);
-                        const requestedQuantity = parseInt(quantityInput.value) || 0;
-                        
-                        if (requestedQuantity > stock) {
-                            stockDisplay.textContent = 'KHÔNG ĐỦ! Tồn kho: ' + stock + ', Yêu cầu: ' + requestedQuantity;
-                            stockDisplay.className = 'text-danger fw-bold';
-                            quantityInput.classList.add('is-invalid');
-                        } else if (requestedQuantity > 0) {
-                            stockDisplay.textContent = 'OK - Tồn kho: ' + stock + ', Dùng: ' + requestedQuantity;
-                            stockDisplay.className = 'text-success';
-                            quantityInput.classList.remove('is-invalid');
-                        } else {
-                            stockDisplay.textContent = 'Tồn kho: ' + stock;
-                            stockDisplay.className = 'text-info';
-                            quantityInput.classList.remove('is-invalid');
-                        }
-                    }
+                // Load existing items for receipt 2 (if any)
+                if (existingSecondReceiptItems.length > 0) {
+                    existingSecondReceiptItems.forEach(item => {
+                        addItemRow('receipt2', item.type, item.id, item.quantity);
+                    });
                 }
-                
-                calculateRowTotal(rowId);
-            }
-
-            function validateMedicineStock(rowId) {
-                const row = document.getElementById(rowId);
-                const select = row.querySelector('select[name="medicineId"]');
-                const quantityInput = row.querySelector('input[name="medicineQuantity"]');
-                const stockDisplay = document.getElementById('medicineStock_' + rowId);
-                
-                if (select && quantityInput && stockDisplay) {
-                    const selectedOption = select.options[select.selectedIndex];
-                    if (selectedOption.value) {
-                        const stock = parseInt(selectedOption.dataset.stock);
-                        const requestedQuantity = parseInt(quantityInput.value) || 0;
-                        
-                        if (requestedQuantity > stock) {
-                            stockDisplay.textContent = 'KHÔNG ĐỦ! Tồn kho: ' + stock + ', Yêu cầu: ' + requestedQuantity;
-                            stockDisplay.className = 'text-danger fw-bold';
-                            quantityInput.classList.add('is-invalid');
-                        } else if (requestedQuantity > 0) {
-                            stockDisplay.textContent = 'OK - Tồn kho: ' + stock + ', Dùng: ' + requestedQuantity;
-                            stockDisplay.className = 'text-success';
-                            quantityInput.classList.remove('is-invalid');
-                        } else {
-                            stockDisplay.textContent = 'Tồn kho: ' + stock;
-                            stockDisplay.className = 'text-info';
-                            quantityInput.classList.remove('is-invalid');
-                        }
-                    }
-                }
-                
-                calculateRowTotal(rowId);
             }
         </script>
     </body>
