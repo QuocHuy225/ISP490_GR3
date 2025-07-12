@@ -834,52 +834,32 @@
 
                                         window.saveRecord = function (status) {
                                             const form = document.getElementById('medicalRecordForm');
+                                            document.getElementById('status').value = status;
+                                            // Nếu hoàn thành thì submit form truyền thống để nhận redirect từ backend
+                                            if (status === 'completed') {
+                                                form.submit();
+                                                return;
+                                            }
+                                            // Các trường hợp khác (lưu nháp, cập nhật) vẫn dùng AJAX như cũ
                                             const formData = new FormData(form);
-
                                             // Log form data for debugging
                                             console.log('Form data before processing:', Object.fromEntries(formData));
-
-                                            // For completed records, only include note, action, patientId, recordId, and status
-                                            if (<%= isCompleted %>) {
-                                                const note = formData.get('note');
-                                                const action = formData.get('action');
-                                                const patientId = formData.get('patientId');
-                                                const recordId = formData.get('recordId');
-                                                formData.forEach((value, key) => {
-                                                    if (!['note', 'action', 'patientId', 'recordId', 'status'].includes(key)) {
-                                                        formData.delete(key);
-                                                    }
-                                                });
-                                                formData.set('note', note);
-                                                formData.set('action', action);
-                                                formData.set('patientId', patientId);
-                                                if (recordId)
-                                                    formData.set('recordId', recordId);
-                                            }
-
-                                            // Set status
-                                            formData.set('status', status);
-                                            document.getElementById('status').value = status;
-
-                                            // Log final form data
-                                            console.log('Form data sent to server:', Object.fromEntries(formData));
-
                                             // Validate only for ongoing records
                                             if (!<%= isCompleted %> && !validateForm()) {
                                                 return;
                                             }
-
-                                            // AJAX submission without confirmation
                                             $.ajax({
                                                 url: form.action,
                                                 type: form.method,
                                                 data: formData,
                                                 processData: false,
                                                 contentType: false,
-                                                success: function (response) {
-                                                    console.log('Form submitted successfully:', response);
-                                                    // Stay on the current form page by reloading it
-                                                    window.location.reload();
+                                                success: function (data, textStatus, jqXHR) {
+                                                    if (jqXHR && jqXHR.responseURL && jqXHR.responseURL.indexOf('action=list') !== -1) {
+                                                        window.location.href = jqXHR.responseURL;
+                                                    } else {
+                                                        window.location.reload();
+                                                    }
                                                 },
                                                 error: function (xhr, status, error) {
                                                     console.error('AJAX submission failed:', xhr.responseText, status, error);
