@@ -208,6 +208,13 @@
                 padding: 0.5rem 1.5rem;
                 font-size: 1rem;
             }
+
+            /* Căn giữa thông báo không có dữ liệu trong bảng DataTables */
+            .dataTables_empty {
+                text-align: center !important;
+                vertical-align: middle !important;
+                height: 80px;
+            }
         </style>
     </head>
     <body>

@@ -201,8 +201,14 @@ public class MedicalRecordController extends HttpServlet {
             boolean success = medicalRecordDAO.addMedicalRecord(record);
             
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
-                                    record.getId() + "&success=added");
+                if ("completed".equals(record.getStatus())) {
+                    // Nếu tạo mới và hoàn thành, chuyển về list luôn
+                    response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + 
+                        record.getPatientId() + "&success=status_completed");
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
+                        record.getId() + "&success=added");
+                }
             } else {
                 response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=new&patientId=" + 
                                     record.getPatientId() + "&error=add_failed");
@@ -262,6 +268,9 @@ public class MedicalRecordController extends HttpServlet {
                 // Check if this was a status change from ongoing to completed
                 if (currentRecord.isOngoing() && "completed".equals(newStatus)) {
                     successMessage = "status_completed";
+                    // Redirect to list after completion
+                    response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=list&patientId=" + currentRecord.getPatientId() + "&success=" + successMessage);
+                    return;
                 }
                 response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
                                     recordId + "&success=" + successMessage);
