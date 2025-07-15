@@ -34,6 +34,8 @@
         <url-pattern>/appointments</url-pattern>
         <url-pattern>/appointments/add</url-pattern>
         <url-pattern>/patient/search</url-pattern>
+        <url-pattern>/appointments/remove-patient</url-pattern>
+        
     </servlet-mapping>
 
     <servlet>
@@ -56,7 +58,8 @@
     <servlet-mapping>
         <servlet-name>CheckinController</servlet-name>
         <url-pattern>/checkin</url-pattern>
-        <!-- Đây là URL bạn sẽ truy cập -->
+        <url-pattern>/checkin/confirm</url-pattern>
+        
     </servlet-mapping>
     
     
@@ -107,6 +110,17 @@
         <servlet-name>AppointmentScheduleController</servlet-name>
         <url-pattern>/api/patient/*</url-pattern>      
     </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>QueueController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.QueueController</servlet-class>
+    </servlet>
+    <servlet-mapping>   
+        <servlet-name>QueueController</servlet-name>
+        <url-pattern>/queue</url-pattern> 
+         <url-pattern>/api/queue</url-pattern>      
+    </servlet-mapping>
+    
     
     <servlet>
         <servlet-name>PatientAppointmentPageController</servlet-name>
