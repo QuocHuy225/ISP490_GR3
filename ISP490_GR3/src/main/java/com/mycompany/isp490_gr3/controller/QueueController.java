@@ -35,7 +35,7 @@ public class QueueController extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(QueueController.class.getName());
 
-    private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response)
+    private boolean checkRoleAccess(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
@@ -43,7 +43,7 @@ public class QueueController extends HttpServlet {
             return false;
         }
         User currentUser = (User) session.getAttribute("user");
-        if (currentUser.getRole() != User.Role.RECEPTIONIST) {
+        if (currentUser.getRole() != User.Role.RECEPTIONIST && currentUser.getRole() != User.Role.DOCTOR) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này.");
             return false;
         }
@@ -67,7 +67,7 @@ public class QueueController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        if (!checkReceptionistAccess(request, response)) {
+        if (!checkRoleAccess(request, response)) {
             return;
         }
 
