@@ -1,4 +1,3 @@
-
 package com.mycompany.isp490_gr3.controller;
 
 import com.google.gson.Gson;
@@ -51,17 +50,16 @@ public class SlotController extends HttpServlet {
 
         String path = request.getServletPath();
 
-        if ("/slot/filterSlotDate".equals(path)) {
-            // Xử lý endpoint /slot/filterSlotDate
-            handleFilterSlotDate(request, response);
-            return;
-        }
-
         // Xử lý /slot
         if (!checkReceptionistAccess(request, response)) {
             return;
         }
 
+        if ("/slot/filterSlotDate".equals(path)) {
+            // Xử lý endpoint /slot/filterSlotDate
+            handleFilterSlotDate(request, response);
+            return;
+        }
         // Lọc (doctorId, slotDate truyền null)
         String doctorIdStr = request.getParameter("doctorId");
         String slotDateStr = request.getParameter("slotDate");
@@ -141,9 +139,8 @@ public class SlotController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-
         String doctorIdRaw = request.getParameter("doctorId");
-        
+
         System.out.println("doctorId nhận được từ FE: " + doctorIdRaw);
         if (doctorIdRaw == null || doctorIdRaw.trim().isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

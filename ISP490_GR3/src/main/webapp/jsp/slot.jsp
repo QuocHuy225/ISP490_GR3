@@ -42,13 +42,37 @@
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
-                <li><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
-                <li><a href="${pageContext.request.contextPath}/appointments"><i class="bi bi-calendar-check"></i> Quản lý đặt lịch</a></li>
-                <li><a href="${pageContext.request.contextPath}/checkin"><i class="bi bi-calendar-check"></i> Quản lý check-in</a></li>
-                <li><a href="${pageContext.request.contextPath}/#"><i class="bi bi-calendar-check"></i> Quản lý hàng đợi</a></li>
-                <li><a href="${pageContext.request.contextPath}/#"><i class="bi bi-speedometer2"></i> Quản lý bệnh nhân</a></li>
-                <li><a href="${pageContext.request.contextPath}/#"><i class="bi bi-speedometer2"></i> Quản lý lịch bác sĩ</a></li>
-            </ul>
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-house-door-fill"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/appointments">
+                        <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
+                    </a>
+                </li>
+
+                <li>
+                    <a href="${pageContext.request.contextPath}/queue">
+                        <i class="bi bi-people-fill"></i> Quản lý hàng đợi
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/patients">
+                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
+                        <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
+                    </a>
+                </li> 
+                <li>
+                    <a href="${pageContext.request.contextPath}/receptionist/report">
+                        <i class="bi bi-speedometer2"></i> Báo cáo thống kê
+                    </a>
+                </li> </ul>
         </nav>
 
         <div id="content">
@@ -109,6 +133,9 @@
                     <a class="nav-link" href="${pageContext.request.contextPath}/appointments">Lịch hẹn</a>
                 </li>
                 <li class="nav-item flex-fill text-center">
+                    <a class="nav-link " href="${pageContext.request.contextPath}/checkin">Check-in</a>
+                </li>
+                <li class="nav-item flex-fill text-center">
                     <a class="nav-link active" href="${pageContext.request.contextPath}/slot">Slot</a>
                 </li>
             </ul>
@@ -128,6 +155,7 @@
                     session.removeAttribute("messageType");
                 }
             %>
+
 
             <!-- Form tìm kiếm -->
             <form id="searchForm" action="${pageContext.request.contextPath}/slot" method="post"
