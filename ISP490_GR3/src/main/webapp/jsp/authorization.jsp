@@ -320,6 +320,49 @@
                     margin-bottom: 1rem;
                 }
             }
+
+            /* Create User Modal Styles */
+            .modal-lg {
+                max-width: 800px;
+            }
+
+            .form-label {
+                color: #2B3674;
+                font-weight: 600;
+            }
+
+            .form-control:focus,
+            .form-select:focus {
+                border-color: #0360D9;
+                box-shadow: 0 0 0 0.2rem rgba(3, 96, 217, 0.25);
+            }
+
+            .form-control.is-valid,
+            .form-select.is-valid {
+                border-color: #28a745;
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+                background-repeat: no-repeat;
+                background-position: right calc(0.375em + 0.1875rem) center;
+                background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+            }
+
+            .form-control.is-invalid,
+            .form-select.is-invalid {
+                border-color: #dc3545;
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 2.4 2.4m0-2.4L5.8 7'/%3e%3c/svg%3e");
+                background-repeat: no-repeat;
+                background-position: right calc(0.375em + 0.1875rem) center;
+                background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+            }
+
+            .form-text {
+                font-size: 0.875rem;
+                color: #6c757d;
+            }
+
+            .text-danger {
+                color: #dc3545 !important;
+            }
         </style>
     </head>
     <body>
@@ -528,6 +571,12 @@
                                 <i class="bi bi-x-circle"></i>
                                 Xóa bộ lọc
                             </button>
+                            <% if (!isShowingDeleted) { %>
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                                <i class="bi bi-person-plus"></i>
+                                Tạo tài khoản mới
+                            </button>
+                            <% } %>
                             <% if (isShowingDeleted) { %>
                             <a href="${pageContext.request.contextPath}/admin/authorization" class="btn btn-light btn-sm">
                                 <i class="bi bi-people"></i>
@@ -1032,6 +1081,101 @@
             </div>
         </div>
 
+        <!-- Create New User Modal -->
+        <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createUserModalLabel">
+                            <i class="bi bi-person-plus me-2 text-success"></i>
+                            Tạo tài khoản mới
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" action="${pageContext.request.contextPath}/admin/authorization/create" id="createUserForm">
+                        <div class="modal-body">
+                            <div class="alert alert-info d-flex align-items-center" role="alert">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <div>
+                                    <strong>Lưu ý:</strong> Tài khoản mới sẽ được tạo với email đã xác thực sẵn và có thể đăng nhập ngay lập tức.
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <!-- Full Name -->
+                                <div class="col-md-6">
+                                    <label for="fullName" class="form-label fw-semibold">
+                                        <i class="bi bi-person me-1"></i>Họ và tên <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="fullName" name="fullName" required>
+                                </div>
+                                
+                                <!-- Email -->
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label fw-semibold">
+                                        <i class="bi bi-envelope me-1"></i>Email <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           placeholder="example@gmail.com" required>
+                                    <div class="form-text">Chỉ chấp nhận email Gmail</div>
+                                </div>
+                                
+                                <!-- Phone -->
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label fw-semibold">
+                                        <i class="bi bi-telephone me-1"></i>Số điện thoại
+                                    </label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           placeholder="0123456789">
+                                </div>
+                                
+                                <!-- Role -->
+                                <div class="col-md-6">
+                                    <label for="role" class="form-label fw-semibold">
+                                        <i class="bi bi-person-badge me-1"></i>Quyền hạn <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="">-- Chọn quyền --</option>
+                                        <option value="doctor">Bác sĩ</option>
+                                        <option value="receptionist">Lễ tân</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Password -->
+                                <div class="col-md-6">
+                                    <label for="password" class="form-label fw-semibold">
+                                        <i class="bi bi-lock me-1"></i>Mật khẩu <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           minlength="6" required>
+                                    <div class="form-text">Tối thiểu 6 ký tự</div>
+                                </div>
+                                
+                                <!-- Confirm Password -->
+                                <div class="col-md-6">
+                                    <label for="confirmPassword" class="form-label fw-semibold">
+                                        <i class="bi bi-lock-fill me-1"></i>Xác nhận mật khẩu <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+                                           minlength="6" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Hủy bỏ
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Tạo tài khoản
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
@@ -1239,6 +1383,112 @@
                                                             // Auto-submit after 1 second of no typing
                                                             document.getElementById('filterForm').submit();
                                                         }, 1000);
+                                                    });
+
+                                                    // Create User Modal functionality
+                                                    const createUserModal = document.getElementById('createUserModal');
+                                                    const createUserForm = document.getElementById('createUserForm');
+
+                                                    // Reset form when modal is closed
+                                                    createUserModal.addEventListener('hidden.bs.modal', function () {
+                                                        createUserForm.reset();
+                                                        // Clear validation states
+                                                        const inputs = createUserForm.querySelectorAll('.form-control, .form-select');
+                                                        inputs.forEach(input => {
+                                                            input.classList.remove('is-valid', 'is-invalid');
+                                                        });
+                                                    });
+
+                                                    // Form validation for create user
+                                                    createUserForm.addEventListener('submit', function (e) {
+                                                        const password = document.getElementById('password').value;
+                                                        const confirmPassword = document.getElementById('confirmPassword').value;
+                                                        const email = document.getElementById('email').value;
+
+                                                        // Clear previous validation states
+                                                        const inputs = createUserForm.querySelectorAll('.form-control, .form-select');
+                                                        inputs.forEach(input => {
+                                                            input.classList.remove('is-valid', 'is-invalid');
+                                                        });
+
+                                                        let isValid = true;
+
+                                                        // Validate email format
+                                                        if (!email.toLowerCase().endsWith('@gmail.com')) {
+                                                            document.getElementById('email').classList.add('is-invalid');
+                                                            isValid = false;
+                                                        } else {
+                                                            document.getElementById('email').classList.add('is-valid');
+                                                        }
+
+                                                        // Validate password match
+                                                        if (password !== confirmPassword) {
+                                                            document.getElementById('confirmPassword').classList.add('is-invalid');
+                                                            isValid = false;
+                                                        } else if (password.length >= 6) {
+                                                            document.getElementById('password').classList.add('is-valid');
+                                                            document.getElementById('confirmPassword').classList.add('is-valid');
+                                                        } else {
+                                                            document.getElementById('password').classList.add('is-invalid');
+                                                            isValid = false;
+                                                        }
+
+                                                        // Validate required fields
+                                                        const requiredFields = ['fullName', 'email', 'password', 'confirmPassword', 'role'];
+                                                        requiredFields.forEach(fieldId => {
+                                                            const field = document.getElementById(fieldId);
+                                                            if (!field.value.trim()) {
+                                                                field.classList.add('is-invalid');
+                                                                isValid = false;
+                                                            } else {
+                                                                field.classList.add('is-valid');
+                                                            }
+                                                        });
+
+                                                        if (!isValid) {
+                                                            e.preventDefault();
+                                                            // Show error message
+                                                            const alertDiv = document.createElement('div');
+                                                            alertDiv.className = 'alert alert-danger mt-3';
+                                                            alertDiv.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>Vui lòng kiểm tra lại thông tin đã nhập.';
+                                                            
+                                                            const existingAlert = createUserForm.querySelector('.alert-danger');
+                                                            if (existingAlert) {
+                                                                existingAlert.remove();
+                                                            }
+                                                            createUserForm.querySelector('.modal-body').appendChild(alertDiv);
+                                                        }
+                                                    });
+
+                                                    // Real-time password validation
+                                                    document.getElementById('confirmPassword').addEventListener('input', function () {
+                                                        const password = document.getElementById('password').value;
+                                                        const confirmPassword = this.value;
+                                                        
+                                                        if (confirmPassword && password !== confirmPassword) {
+                                                            this.classList.add('is-invalid');
+                                                            this.classList.remove('is-valid');
+                                                        } else if (confirmPassword && password === confirmPassword) {
+                                                            this.classList.add('is-valid');
+                                                            this.classList.remove('is-invalid');
+                                                        } else {
+                                                            this.classList.remove('is-valid', 'is-invalid');
+                                                        }
+                                                    });
+
+                                                    // Real-time email validation
+                                                    document.getElementById('email').addEventListener('input', function () {
+                                                        const email = this.value;
+                                                        
+                                                        if (email && !email.toLowerCase().endsWith('@gmail.com')) {
+                                                            this.classList.add('is-invalid');
+                                                            this.classList.remove('is-valid');
+                                                        } else if (email && email.toLowerCase().endsWith('@gmail.com')) {
+                                                            this.classList.add('is-valid');
+                                                            this.classList.remove('is-invalid');
+                                                        } else {
+                                                            this.classList.remove('is-valid', 'is-invalid');
+                                                        }
                                                     });
                                                 });
         </script>

@@ -39,7 +39,8 @@ import java.util.List;
     "/admin/authorization/view",
     "/admin/authorization/update",
     "/admin/authorization/delete",
-    "/admin/authorization/restore"
+    "/admin/authorization/restore",
+    "/admin/authorization/create"
 })
 public class AuthorizationController extends HttpServlet {
     
@@ -97,6 +98,9 @@ public class AuthorizationController extends HttpServlet {
                 break;
             case "/admin/authorization/restore":
                 restoreUser(request, response, currentUser);
+                break;
+            case "/admin/authorization/create":
+                createNewUser(request, response, currentUser);
                 break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -307,6 +311,101 @@ public class AuthorizationController extends HttpServlet {
         }
         
         showAuthorizationPage(request, response, true);
+    }
+    
+    /**
+     * Create new user with pre-verified email
+     */
+    private void createNewUser(HttpServletRequest request, HttpServletResponse response, User currentUser)
+            throws ServletException, IOException {
+        
+        // Get form parameters
+        String fullName = request.getParameter("fullName");
+        String email = request.getParameter("email");
+        String password = request.getParameter("password");
+        String confirmPassword = request.getParameter("confirmPassword");
+        String phone = request.getParameter("phone");
+        String roleStr = request.getParameter("role");
+        
+        // Validate required fields
+        if (fullName == null || fullName.trim().isEmpty() ||
+            email == null || email.trim().isEmpty() ||
+            password == null || password.trim().isEmpty() ||
+            confirmPassword == null || confirmPassword.trim().isEmpty() ||
+            roleStr == null || roleStr.trim().isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng điền đầy đủ thông tin bắt buộc.");
+            showAuthorizationPage(request, response, false);
+            return;
+        }
+        
+        // Validate email format
+        if (!email.trim().toLowerCase().endsWith("@gmail.com")) {
+            request.setAttribute("errorMessage", "Vui lòng sử dụng email Gmail.");
+            showAuthorizationPage(request, response, false);
+            return;
+        }
+        
+        // Validate password match
+        if (!password.equals(confirmPassword)) {
+            request.setAttribute("errorMessage", "Mật khẩu xác nhận không khớp.");
+            showAuthorizationPage(request, response, false);
+            return;
+        }
+        
+        // Validate password length
+        if (password.length() < 6) {
+            request.setAttribute("errorMessage", "Mật khẩu phải có ít nhất 6 ký tự.");
+            showAuthorizationPage(request, response, false);
+            return;
+        }
+        
+        // Validate role
+        User.Role role;
+        switch (roleStr.toLowerCase()) {
+            case "doctor":
+                role = User.Role.DOCTOR;
+                break;
+            case "receptionist":
+                role = User.Role.RECEPTIONIST;
+                break;
+            default:
+                request.setAttribute("errorMessage", "Quyền hạn không hợp lệ. Chỉ có thể tạo tài khoản Doctor hoặc Receptionist.");
+                showAuthorizationPage(request, response, false);
+                return;
+        }
+        
+        try {
+            // Create new user object
+            User newUser = new User();
+            newUser.setFullName(fullName.trim());
+            newUser.setEmail(email.trim());
+            newUser.setPassword(password);
+            newUser.setPhone(phone != null ? phone.trim() : null);
+            newUser.setRole(role);
+            
+            // Create user with pre-verified email
+            boolean success = daoUser.createVerifiedUser(newUser, currentUser.getId());
+            
+            if (success) {
+                request.setAttribute("successMessage", 
+                    String.format("Đã tạo tài khoản %s cho %s thành công. Email đã được xác thực sẵn.", 
+                    role.getValue(), fullName.trim()));
+                
+                // Log the action
+                System.out.println(String.format("Admin %s created new %s account: %s (%s)", 
+                    currentUser.getEmail(), role.getValue(), newUser.getEmail(), newUser.getFullName()));
+            } else {
+                request.setAttribute("errorMessage", "Không thể tạo tài khoản. Email có thể đã tồn tại.");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error creating new user: " + e.getMessage());
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Lỗi hệ thống: Không thể tạo tài khoản.");
+        }
+        
+        // Redirect to authorization page
+        showAuthorizationPage(request, response, false);
     }
     
     /**
