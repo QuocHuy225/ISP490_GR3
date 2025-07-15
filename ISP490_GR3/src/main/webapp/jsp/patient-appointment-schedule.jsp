@@ -7,7 +7,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Lịch Hẹn Của Bạn - Phòng Khám</title>
         <%-- Bootstrap CSS --%>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
         <%-- Bootstrap Icons --%>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <%-- Font Awesome (nếu vẫn cần các icon FA cụ thể) --%>
@@ -21,38 +21,35 @@
     </head>
     <body>
         <%
-            // Get user role for access control
-            Object userRole = session.getAttribute("userRole");
-            User.Role currentRole = null;
-            
-            if (userRole != null) {
-                if (userRole instanceof User.Role) {
-                    currentRole = (User.Role) userRole;
-                } else {
-                    // Try to parse from string
-                    try {
-                        currentRole = User.Role.valueOf(userRole.toString().toUpperCase());
-                    } catch (Exception e) {
-                        // Fallback to parsing from display value
-                        currentRole = User.Role.fromString(userRole.toString());
-                    }
-                }
-            }
-            
-            // Default to PATIENT if no role found
-            if (currentRole == null) {
-                currentRole = User.Role.PATIENT;
-            }
-            
-            // Get user information
+            // Get user information from session
             Object userObj = session.getAttribute("user");
-            String userName = "User";
-            String userRoleDisplay = "Patient";
+            com.mycompany.isp490_gr3.model.User currentUser = null;
+
+            // Check if user object exists in session
             if (userObj instanceof User) {
-                User user = (User) userObj;
-                userName = user.getFullName() != null ? user.getFullName() : user.getEmail();
-                userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
+                currentUser = (com.mycompany.isp490_gr3.model.User) userObj;
             }
+
+            // --- Bắt đầu xử lý đăng nhập mới ---
+            // Nếu người dùng chưa đăng nhập (currentUser là null), chuyển hướng về trang đăng nhập
+            if (currentUser == null) {
+                String loginPage = request.getContextPath() + "/auth/login"; // Giả sử trang đăng nhập của bạn là /auth/login
+                response.sendRedirect(loginPage);
+                return; // Dừng xử lý JSP để chuyển hướng
+            }
+            // --- Kết thúc xử lý đăng nhập mới ---
+
+            // Nếu đã đăng nhập, tiếp tục lấy thông tin người dùng
+            String userName = currentUser.getFullName() != null ? currentUser.getFullName() : currentUser.getEmail();
+            
+            // Get user role for access control (chỉ cần lấy nếu currentUser đã xác định)
+            User.Role currentRole = currentUser.getRole();
+            String userRoleDisplay = currentRole != null ? currentRole.getValue() : "Patient";
+
+            // Không còn cần patientAccountIdentifier ở đây nữa, vì backend sẽ tự lấy từ session
+            
+            // Debugging: In giá trị cuối cùng của patientAccountIdentifier ra console server
+            // System.out.println("PATIENT_ACCOUNT_ID_FROM_JSP (final value): " + patientAccountIdentifier); 
         %>
 
         <nav id="sidebar">
@@ -85,7 +82,7 @@
                         <i class="bi bi-chat-dots"></i> Liên hệ bác sĩ
                     </a>
                 </li>
-                
+
             </ul>
         </nav>
 
@@ -217,100 +214,112 @@
                 <div id="successMessageModal" class="modal">
                     <div class="modal-content small-modal-content">
                         <span class="close-button" id="closeSuccessModalBtn">&times;</span>
-                        <h3><i class="fas fa-check-circle text-success"></i> Thành công!</h3>
+                        <h3 id="successMessageTitle"><i class="fas fa-check-circle text-success"></i> <span>Thông báo</span></h3>
+
                         <p id="successMessageText" style="font-size: 1.1em; text-align: center;"></p>
                         <div class="modal-actions justify-content-center">
                             <button class="btn btn-primary" id="okSuccessModalBtn">OK</button>
                         </div>
                     </div>
-                </div>               
+                </div>
+                <%-- MODAL THÔNG BÁO THẤT BẠI --%>
+                <div id="errorMessageModal" class="modal">
+                    <div class="modal-content small-modal-content">
+                        <span class="close-button" id="closeErrorModalBtn">&times;</span>
+                        <h3><i class="fas fa-times-circle text-danger"></i> Thất bại!</h3>
+                        <p id="errorMessageText" style="font-size: 1.1em; text-align: center;"></p>
+                        <div class="modal-actions justify-content-center">
+                            <button class="btn btn-secondary" id="okErrorModalBtn">OK</button>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <%-- MODAL ĐẶT LỊCH HẸN MỚI (đã di chuyển ra ngoài .container nhưng vẫn trong #content) --%>
+            <div id="newAppointmentModal" class="modal">
+                <div class="modal-content large-modal-content">
+                    <span class="close-button" id="closeNewAppointmentModalBtn">&times;</span>
+                    <h3><i class="fas fa-plus-circle"></i> Đặt Lịch Hẹn Mới</h3>
+                    <form id="newAppointmentForm">
+                        <div class="form-group">
+                            <label for="newDoctorName">Chọn Bác sĩ:</label>
+                            <select id="newDoctorName" name="doctorId" required>
+                                <option value="">-- Chọn bác sĩ --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="newService">Dịch vụ:</label>
+                            <select id="newService" name="serviceId" required>
+                                <option value="">-- Chọn dịch vụ --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="newAppointmentDate">Ngày hẹn:</label>
+                            <input type="date" id="newAppointmentDate" name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newAppointmentTime">Giờ hẹn:</label>
+                            <select id="newAppointmentTime" name="time" required>
+                                <option value="">-- Chọn giờ hẹn --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="newNotes">Ghi chú (tùy chọn):</label>
+                            <textarea id="newNotes" name="notes" rows="3"></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="submit" class="btn btn-primary" id="submitNewAppointmentBtn"><i class="bi bi-check-circle"></i> Đặt Lịch</button>
+                            <button type="button" class="btn btn-secondary" id="cancelNewAppointmentBtn"><i class="bi bi-x-circle"></i> Hủy</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-        <div id="newAppointmentModal" class="modal">
-            <div class="modal-content large-modal-content">
-                <span class="close-button" id="closeNewAppointmentModalBtn">&times;</span>
-                <h3><i class="fas fa-plus-circle"></i> Đặt Lịch Hẹn Mới</h3>
-                <form id="newAppointmentForm">
-                    <div class="form-group">
-                        <label for="newDoctorName">Chọn Bác sĩ:</label>
-                        <select id="newDoctorName" name="doctorName" required>
-                            <option value="">-- Chọn bác sĩ --</option>
-                            <option value="Dr. Nguyễn Văn A">Dr. Nguyễn Văn A</option>
-                            <option value="Dr. Trần Thị B">Dr. Trần Thị B</option>
-                            <option value="Dr. Lê Văn C">Dr. Lê Văn C</option>
-                            <option value="Dr. Phạm Thị D">Dr. Phạm Thị D</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="newService">Dịch vụ:</label>
-                        <select id="newService" name="service" required>
-                            <option value="">-- Chọn dịch vụ --</option>
-                            <option value="Khám tổng quát">Khám tổng quát</option>
-                            <option value="Tư vấn dinh dưỡng">Tư vấn dinh dưỡng</option>
-                            <option value="Siêu âm">Siêu âm</option>
-                            <option value="Khám răng">Khám răng</option>
-                            <option value="Tái khám">Tái khám</option>
-                            <option value="Xét nghiệm máu">Xét nghiệm máu</option>
-                            <option value="Kiểm tra huyết áp">Kiểm tra huyết áp</option>
-                            <option value="Tiêm phòng">Tiêm phòng</option>
-                            <option value="Tư vấn tâm lý">Tư vấn tâm lý</option>
-                            <option value="Kiểm tra sức khỏe định kỳ">Kiểm tra sức khỏe định kỳ</option>
-                            <option value="Khám chuyên khoa">Khám chuyên khoa</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="newAppointmentDate">Ngày hẹn:</label>
-                        <input type="date" id="newAppointmentDate" name="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="newAppointmentTime">Giờ hẹn:</label>
-                        <select id="newAppointmentTime" name="time" required>
-                            <option value="">-- Chọn giờ hẹn --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="newNotes">Ghi chú (tùy chọn):</label>
-                        <textarea id="newNotes" name="notes" rows="3"></textarea>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="submit" class="btn btn-primary" id="submitNewAppointmentBtn"><i class="bi bi-check-circle"></i> Đặt Lịch</button>
-                        <button type="button" class="btn btn-secondary" id="cancelNewAppointmentBtn"><i class="bi bi-x-circle"></i> Hủy</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+
         <%-- Bootstrap Bundle with Popper --%>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+        <%-- Truyền API_BASE_URL từ JSP vào JavaScript --%>
+        <script>
+            // Không còn truyền PATIENT_ACCOUNT_ID_FROM_JSP nữa
+            const API_BASE_URL_FROM_JSP = "<%= request.getContextPath() %>/api/patient";
+        </script>
         <%-- Đường dẫn JS của bạn --%>
         <script src="${pageContext.request.contextPath}/js/patient-appointment-schedule.js"></script>
-         <script>
+
+        <script>
             document.addEventListener('DOMContentLoaded', function () {
                 // Sidebar toggle
                 const sidebarCollapse = document.getElementById('sidebarCollapse');
                 const sidebar = document.getElementById('sidebar');
                 const content = document.getElementById('content');
 
-                sidebarCollapse.addEventListener('click', function () {
-                    sidebar.classList.toggle('collapsed');
-                    content.classList.toggle('expanded');
-                });
+                if (sidebarCollapse && sidebar && content) { // Kiểm tra null trước khi thêm event listener
+                    sidebarCollapse.addEventListener('click', function () {
+                        sidebar.classList.toggle('collapsed');
+                        content.classList.toggle('expanded');
+                    });
 
-                // Responsive sidebar
-                function checkWidth() {
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.add('collapsed');
-                        content.classList.add('expanded');
-                    } else {
-                        sidebar.classList.remove('collapsed');
-                        content.classList.remove('expanded');
+                    // Responsive sidebar
+                    function checkWidth() {
+                        if (window.innerWidth <= 768) {
+                            sidebar.classList.add('collapsed');
+                            content.classList.add('expanded');
+                        } else {
+                            sidebar.classList.remove('collapsed');
+                            content.classList.remove('expanded');
+                        }
                     }
+
+                    // Initial check
+                    checkWidth();
+
+                    // Listen for window resize
+                    window.addEventListener('resize', checkWidth);
+                } else {
+                    console.error("Sidebar elements not found. Sidebar functionality might be impaired.");
                 }
-
-                // Initial check
-                checkWidth();
-
-                // Listen for window resize
-                window.addEventListener('resize', checkWidth);
             });
         </script>
     </body>
