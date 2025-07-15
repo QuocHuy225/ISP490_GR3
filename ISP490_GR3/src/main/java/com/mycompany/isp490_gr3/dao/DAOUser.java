@@ -147,6 +147,48 @@ public class DAOUser {
     }
     
     /**
+     * Create a new user with pre-verified email (for admin creation)
+     * @param user User object to create
+     * @param createdBy ID of admin who created the user
+     * @return true if creation successful, false otherwise
+     */
+    public boolean createVerifiedUser(User user, String createdBy) {
+        // Check if email already exists
+        if (isEmailExists(user.getEmail())) {
+            System.out.println("Email already exists: " + user.getEmail());
+            return false;
+        }
+        
+        String sql = "INSERT INTO user (id, fullname, email, password, phone, role, created_At, is_email_verified, updated_By) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            // Generate unique ID
+            String userId = generateUserId();
+            
+            ps.setString(1, userId);
+            ps.setString(2, user.getFullName());
+            ps.setString(3, user.getEmail());
+            ps.setString(4, hashPassword(user.getPassword()));
+            ps.setString(5, user.getPhone());
+            ps.setString(6, user.getRole().getValue());
+            ps.setTimestamp(7, new Timestamp(System.currentTimeMillis()));
+            ps.setBoolean(8, true); // Pre-verified
+            ps.setString(9, createdBy);
+            
+            int result = ps.executeUpdate();
+            return result > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error creating verified user: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
      * Verify user email with verification code
      * @param email User's email
      * @param verificationCode Verification code entered by user
