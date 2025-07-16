@@ -333,7 +333,7 @@ public class PatientController extends HttpServlet {
         }
         
         // Allow Doctor to access
-        if (currentUser.getRole() != User.Role.DOCTOR) {
+        if (currentUser.getRole() != User.Role.DOCTOR && currentUser.getRole() != User.Role.RECEPTIONIST) {
             response.sendRedirect(request.getContextPath() + "/homepage");
             return false;
         }
