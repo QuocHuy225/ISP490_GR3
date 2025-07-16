@@ -89,6 +89,11 @@
                 margin-bottom: 1rem;
                 border-left: 4px solid #007bff;
             }
+            
+            /* Modal specific styles */
+            .modal-lg {
+                max-width: 800px;
+            }
         </style>
     </head>
     <body>
@@ -136,6 +141,10 @@
         String searchKeyword = (String) request.getAttribute("searchKeyword");
         Integer totalTemplates = (Integer) request.getAttribute("totalTemplates");
         if (totalTemplates == null) totalTemplates = 0;
+        
+        // Get edit data for modal
+        MedicalExamTemplate editTemplate = (MedicalExamTemplate) request.getAttribute("editTemplate");
+        boolean isEdit = editTemplate != null;
         
         // Get messages
         String successMessage = (String) request.getAttribute("successMessage");
@@ -306,7 +315,7 @@
                                                     Tìm kiếm
                                                 </button>
                                                 <% if (searchKeyword != null && !searchKeyword.trim().isEmpty()) { %>
-                                                <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/list" class="btn btn-outline-secondary">
+                                                <a href="${pageContext.request.contextPath}/admin/medical-exam-templates" class="btn btn-outline-secondary">
                                                     <i class="bi bi-x-circle"></i>
                                                 </a>
                                                 <% } %>
@@ -314,9 +323,9 @@
                                         </form>
                                     </div>
                                     <div class="col-md-4">
-                                        <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/add" class="btn btn-success w-100">
+                                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addTemplateModal">
                                             <i class="bi bi-plus-circle me-2"></i>Thêm mẫu đơn khám bệnh
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -360,18 +369,18 @@
                                                         <%= tmpl.getCreatedAt() != null ? new SimpleDateFormat("dd/MM/yyyy").format(tmpl.getCreatedAt()) : "" %>
                                                     </small>
                                                     <div class="d-flex gap-2">
-                                                        <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/edit?id=<%= tmpl.getId() %>" 
+                                                        <a href="${pageContext.request.contextPath}/admin/medical-exam-templates?edit=<%= tmpl.getId() %>" 
                                                            class="btn btn-sm btn-primary me-2" title="Chỉnh sửa mẫu đơn">
                                                             <i class="bi bi-pencil-square"></i>
                                                         </a>
-                                                                                                <button type="button" 
-                                                class="btn btn-sm btn-outline-danger" 
-                                                data-template-id="<%= tmpl.getId() %>"
-                                                data-template-name="<%= tmpl.getName() %>"
-                                                onclick="deleteTemplate(this.getAttribute('data-template-id'), this.getAttribute('data-template-name'))" 
-                                                title="Xóa mẫu đơn">
-                                            <i class="bi bi-trash3"></i>
-                                        </button>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-outline-danger" 
+                                                                data-template-id="<%= tmpl.getId() %>"
+                                                                data-template-name="<%= tmpl.getName() %>"
+                                                                onclick="deleteTemplate(this.getAttribute('data-template-id'), this.getAttribute('data-template-name'))" 
+                                                                title="Xóa mẫu đơn">
+                                                            <i class="bi bi-trash3"></i>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -384,9 +393,9 @@
                                     <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
                                     <h5 class="text-muted mt-3">Không có mẫu đơn nào</h5>
                                     <p class="text-muted">Hãy thêm mẫu đơn đầu tiên của bạn</p>
-                                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/add" class="btn btn-primary btn-custom">
+                                    <button type="button" class="btn btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#addTemplateModal">
                                         <i class="bi bi-plus-circle me-2"></i>Thêm mẫu đơn khám bệnh
-                                    </a>
+                                    </button>
                                 </div>
                                 <% } %>
                             </div>
@@ -394,65 +403,116 @@
                     </div>
                 </div>
 
-                <% } else if (("add".equals(action)) || ("edit".equals(action) && template != null)) { %>
-                <!-- Add/Edit Form -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-header bg-primary text-white">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-<%= "add".equals(action) ? "plus-circle" : "pencil" %> me-2"></i>
-                                    <%= "add".equals(action) ? "Thêm mẫu đơn mới" : "Chỉnh sửa mẫu đơn" %>
-                                </h5>
-                            </div>
-                            <div class="card-body p-4">
-                                <form method="POST" action="${pageContext.request.contextPath}/admin/medical-exam-templates/<%= "add".equals(action) ? "add" : "update" %>">
-                                    <% if ("edit".equals(action) && template != null) { %>
-                                    <input type="hidden" name="id" value="<%= template.getId() %>">
-                                    <% } %>
-                                    
-                                    <div class="row">
-                                        <div class="col-12 mb-4">
-                                            <label for="name" class="form-label">Tên mẫu đơn <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="name" name="name" required
-                                                   value="<%= template != null ? template.getName() : (request.getAttribute("name") != null ? request.getAttribute("name") : "") %>">
-                                        </div>
-                                        
-                                        <div class="col-12 mb-4">
-                                            <label for="physicalExam" class="form-label">Khám lâm sàng</label>
-                                            <textarea class="form-control" id="physicalExam" name="physicalExam" rows="4"
-                                                      placeholder="Nhập thông tin khám lâm sàng..."><%= template != null ? (template.getPhysicalExam() != null ? template.getPhysicalExam() : "") : (request.getAttribute("physicalExam") != null ? request.getAttribute("physicalExam") : "") %></textarea>
-                                        </div>
-                                        
-                                        <div class="col-12 mb-4">
-                                            <label for="clinicalInfo" class="form-label">Thông tin lâm sàng</label>
-                                            <textarea class="form-control" id="clinicalInfo" name="clinicalInfo" rows="4"
-                                                      placeholder="Nhập thông tin lâm sàng..."><%= template != null ? (template.getClinicalInfo() != null ? template.getClinicalInfo() : "") : (request.getAttribute("clinicalInfo") != null ? request.getAttribute("clinicalInfo") : "") %></textarea>
-                                        </div>
-                                        
-                                        <div class="col-12 mb-4">
-                                            <label for="finalDiagnosis" class="form-label">Chẩn đoán cuối cùng</label>
-                                            <textarea class="form-control" id="finalDiagnosis" name="finalDiagnosis" rows="4"
-                                                      placeholder="Nhập chẩn đoán cuối cùng..."><%= template != null ? (template.getFinalDiagnosis() != null ? template.getFinalDiagnosis() : "") : (request.getAttribute("finalDiagnosis") != null ? request.getAttribute("finalDiagnosis") : "") %></textarea>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a href="${pageContext.request.contextPath}/admin/medical-exam-templates/list" 
-                                           class="btn btn-secondary btn-custom">
-                                            <i class="bi bi-x-circle me-2"></i>Hủy
-                                        </a>
-                                        <button type="submit" class="btn btn-primary btn-custom">
-                                            <i class="bi bi-<%= "add".equals(action) ? "plus" : "check" %>-circle me-2"></i>
-                                            <%= "add".equals(action) ? "Thêm mẫu đơn" : "Cập nhật" %>
-                                        </button>
-                                    </div>
-                                </form>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Add Template Modal -->
+        <div class="modal fade" id="addTemplateModal" tabindex="-1" aria-labelledby="addTemplateModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addTemplateModalLabel">
+                            <i class="bi bi-plus-circle me-2"></i>Thêm mẫu đơn mới
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/medical-exam-templates/add">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="addTemplateName" class="form-label">Tên mẫu đơn <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="addTemplateName" name="name" placeholder="Nhập tên mẫu đơn" required>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="addPhysicalExam" class="form-label">Khám lâm sàng</label>
+                                    <textarea class="form-control" id="addPhysicalExam" name="physicalExam" rows="4"
+                                              placeholder="Nhập thông tin khám lâm sàng..."></textarea>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="addClinicalInfo" class="form-label">Thông tin lâm sàng</label>
+                                    <textarea class="form-control" id="addClinicalInfo" name="clinicalInfo" rows="4"
+                                              placeholder="Nhập thông tin lâm sàng..."></textarea>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="addFinalDiagnosis" class="form-label">Chẩn đoán cuối cùng</label>
+                                    <textarea class="form-control" id="addFinalDiagnosis" name="finalDiagnosis" rows="4"
+                                              placeholder="Nhập chẩn đoán cuối cùng..."></textarea>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Thêm mẫu đơn
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <% } %>
+            </div>
+        </div>
+
+        <!-- Edit Template Modal -->
+        <div class="modal fade" id="editTemplateModal" tabindex="-1" aria-labelledby="editTemplateModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editTemplateModalLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa mẫu đơn
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/medical-exam-templates/update">
+                        <div class="modal-body">
+                            <input type="hidden" id="editTemplateId" name="id" value="<%= isEdit ? editTemplate.getId() : "" %>">
+                            
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="editTemplateName" class="form-label">Tên mẫu đơn <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="editTemplateName" name="name" 
+                                           placeholder="Nhập tên mẫu đơn" value="<%= isEdit ? editTemplate.getName() : "" %>" required>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="editPhysicalExam" class="form-label">Khám lâm sàng</label>
+                                    <textarea class="form-control" id="editPhysicalExam" name="physicalExam" rows="4"
+                                              placeholder="Nhập thông tin khám lâm sàng..."><%= isEdit ? editTemplate.getPhysicalExam() : "" %></textarea>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="editClinicalInfo" class="form-label">Thông tin lâm sàng</label>
+                                    <textarea class="form-control" id="editClinicalInfo" name="clinicalInfo" rows="4"
+                                              placeholder="Nhập thông tin lâm sàng..."><%= isEdit ? editTemplate.getClinicalInfo() : "" %></textarea>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="editFinalDiagnosis" class="form-label">Chẩn đoán cuối cùng</label>
+                                    <textarea class="form-control" id="editFinalDiagnosis" name="finalDiagnosis" rows="4"
+                                              placeholder="Nhập chẩn đoán cuối cùng..."><%= isEdit ? editTemplate.getFinalDiagnosis() : "" %></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <% if (isEdit) { %>
+                            <a href="${pageContext.request.contextPath}/admin/medical-exam-templates" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </a>
+                            <% } else { %>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                            </button>
+                            <% } %>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Cập nhật
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -527,6 +587,17 @@
                 document.getElementById('deleteTemplateName').textContent = templateName;
                 new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
             }
+
+
         </script>
+
+        <% if (isEdit) { %>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new bootstrap.Modal(document.getElementById('editTemplateModal')).show();
+        });
+        </script>
+        <% } %>
+        
     </body>
 </html> 
