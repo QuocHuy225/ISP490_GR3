@@ -387,8 +387,6 @@
                                 <label for="addStockQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" min="1" placeholder="Nhập số lượng" required>
                             </div>
-                            
-
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">

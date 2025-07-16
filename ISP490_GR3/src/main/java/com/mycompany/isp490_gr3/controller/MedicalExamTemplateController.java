@@ -143,6 +143,20 @@ public class MedicalExamTemplateController extends HttpServlet {
     private void showTemplateList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // Check if edit parameter is present
+        String editParam = request.getParameter("edit");
+        if (editParam != null && !editParam.trim().isEmpty()) {
+            try {
+                int editId = Integer.parseInt(editParam);
+                MedicalExamTemplate editTemplate = daoTemplate.getTemplateById(editId);
+                if (editTemplate != null) {
+                    request.setAttribute("editTemplate", editTemplate);
+                }
+            } catch (NumberFormatException e) {
+                // Invalid edit ID, ignore
+            }
+        }
+        
         List<MedicalExamTemplate> templates = daoTemplate.getAllTemplates();
         request.setAttribute("templates", templates);
         request.setAttribute("totalTemplates", templates.size());
@@ -199,16 +213,25 @@ public class MedicalExamTemplateController extends HttpServlet {
             throws ServletException, IOException {
         
         String keyword = request.getParameter("keyword");
-        List<MedicalExamTemplate> templates;
+        if (keyword == null) keyword = "";
         
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            templates = daoTemplate.searchTemplatesByName(keyword.trim());
-            request.setAttribute("searchKeyword", keyword.trim());
-        } else {
-            templates = daoTemplate.getAllTemplates();
+        // Check if edit parameter is present
+        String editParam = request.getParameter("edit");
+        if (editParam != null && !editParam.trim().isEmpty()) {
+            try {
+                int editId = Integer.parseInt(editParam);
+                MedicalExamTemplate editTemplate = daoTemplate.getTemplateById(editId);
+                if (editTemplate != null) {
+                    request.setAttribute("editTemplate", editTemplate);
+                }
+            } catch (NumberFormatException e) {
+                // Invalid edit ID, ignore
+            }
         }
         
+        List<MedicalExamTemplate> templates = daoTemplate.searchTemplatesByName(keyword);
         request.setAttribute("templates", templates);
+        request.setAttribute("searchKeyword", keyword);
         request.setAttribute("totalTemplates", templates.size());
         
         request.getRequestDispatcher("/jsp/medical-exam-templates.jsp").forward(request, response);
