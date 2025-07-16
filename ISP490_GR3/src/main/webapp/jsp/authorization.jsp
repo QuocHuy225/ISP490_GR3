@@ -563,7 +563,7 @@
                             <% if (isShowingDeleted) { %>
                             Tài khoản đã xóa
                             <% } else { %>
-                            Quản lý Phân quyền
+                            Quản lý Tài khoản
                             <% } %>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
@@ -596,7 +596,7 @@
                             <% if (isShowingDeleted) { %>
                             Danh sách các tài khoản đã bị xóa
                             <% } else { %>
-                            Quản lý và phân quyền cho tất cả người dùng trong hệ thống
+                            Quản lý và xem thông tin tất cả người dùng trong hệ thống
                             <% } %>
                         </p>
 
@@ -810,7 +810,7 @@
                             <% if (isShowingDeleted) { %>
                             Danh sách tài khoản đã xóa
                             <% } else { %>
-                            Danh sách người dùng và phân quyền
+                            Danh sách người dùng
                             <% } %>
                         </div>
                     </div>
@@ -826,9 +826,6 @@
                                     <th>Người dùng</th>
                                     <th>Quyền hiện tại</th>
                                     <th><%= isShowingDeleted ? "Ngày xóa" : "Ngày tạo" %></th>
-                                        <% if (!isShowingDeleted) { %>
-                                    <th>Thay đổi quyền</th>
-                                        <% } %>
                                     <th>Hành động</th>
                                 </tr>
                             </thead>
@@ -870,30 +867,6 @@
                                         <%= user.getCreatedAt() != null ? dateFormat.format(user.getCreatedAt()) : "N/A" %>
                                         <% } %>
                                     </td>
-                                    <% if (!isShowingDeleted) { %>
-                                    <td>
-                                        <% if (isAdmin || isSelf) { %>
-                                        <select class="form-select role-select" disabled>
-                                            <option>Không thể thay đổi</option>
-                                        </select>
-                                        <% } else { %>
-                                        <form method="post" action="${pageContext.request.contextPath}/admin/authorization/update" style="display: inline;">
-                                            <input type="hidden" name="userId" value="<%= user.getId() %>">
-                                            <select name="newRole" class="form-select role-select" required>
-                                                <option value="">-- Chọn quyền --</option>
-                                                <option value="doctor" <%= user.getRole() == User.Role.DOCTOR ? "selected" : "" %>>
-                                                    Bác sĩ
-                                                </option>
-                                                <option value="receptionist" <%= user.getRole() == User.Role.RECEPTIONIST ? "selected" : "" %>>
-                                                    Lễ tân
-                                                </option>
-                                                <option value="patient" <%= user.getRole() == User.Role.PATIENT ? "selected" : "" %>>
-                                                    Bệnh nhân
-                                                </option>
-                                            </select>
-                                            <% } %>
-                                    </td>
-                                    <% } %>
                                     <td>
                                         <% if (isShowingDeleted) { %>
                                         <!-- Restore button for deleted users -->
@@ -901,29 +874,24 @@
                                             <input type="hidden" name="userId" value="<%= user.getId() %>">
                                             <button type="button" class="btn btn-success btn-sm" onclick="showRestoreConfirmation('<%= user.getFullName() != null ? user.getFullName() : user.getEmail() %>', '<%= user.getId() %>')">
                                                 <i class="bi bi-arrow-clockwise"></i>
-                                                Khôi phục
+                                                Khôi Phục
                                             </button>
                                         </form>
                                         <% } else { %>
-                                        <!-- Update and Delete buttons for active users -->
-                                        <% if (isAdmin || isSelf) { %>
-                                        <button class="btn update-btn" disabled>
-                                            <i class="bi bi-lock"></i>
-                                            Không thể cập nhật
-                                        </button>
-                                        <% } else { %>
-                                        <button type="submit" class="btn update-btn">
-                                            <i class="bi bi-arrow-repeat"></i>
-                                            Cập nhật
-                                        </button>
-                                        </form>
-                                        <!-- Delete button -->
-                                        <form method="post" action="${pageContext.request.contextPath}/admin/authorization/delete" style="display: inline; margin-left: 5px;">
+                                        <!-- Delete button for active users -->
+                                        <% if (!isAdmin && !isSelf) { %>
+                                        <form method="post" action="${pageContext.request.contextPath}/admin/authorization/delete" style="display: inline;">
                                             <input type="hidden" name="userId" value="<%= user.getId() %>">
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation('<%= user.getFullName() != null ? user.getFullName() : user.getEmail() %>', '<%= user.getId() %>')" title="Xóa người dùng">
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmation('<%= user.getFullName() != null ? user.getFullName() : user.getEmail() %>', '<%= user.getId() %>')">
                                                 <i class="bi bi-trash3"></i>
+                                                Xóa
                                             </button>
                                         </form>
+                                        <% } else { %>
+                                        <span class="text-muted">
+                                            <i class="bi bi-lock"></i>
+                                            Không thể xóa
+                                        </span>
                                         <% } %>
                                         <% } %>
                                     </td>
@@ -943,51 +911,7 @@
             </div>
         </div>
 
-        <!-- Role Change Confirmation Modal -->
-        <div class="modal fade" id="roleChangeModal" tabindex="-1" aria-labelledby="roleChangeModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="roleChangeModalLabel">
-                            <i class="bi bi-shield-exclamation me-2 text-warning"></i>
-                            Xác nhận thay đổi quyền
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="d-flex align-items-start">
-                            <div class="flex-shrink-0">
-                                <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                    <i class="bi bi-question-circle-fill text-warning" style="font-size: 2rem;"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <h6 class="mb-2">Bạn có chắc chắn muốn thực hiện thay đổi này?</h6>
-                                <p class="mb-3" id="roleChangeMessage">
-                                    <!-- Message will be populated by JavaScript -->
-                                </p>
-                                <div class="alert alert-info d-flex align-items-center" role="alert">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    <div>
-                                        <strong>Lưu ý:</strong> Thay đổi quyền sẽ có hiệu lực ngay lập tức và có thể ảnh hưởng đến quyền truy cập của người dùng.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i>
-                            Hủy bỏ
-                        </button>
-                        <button type="button" class="btn btn-warning" id="confirmRoleChange">
-                            <i class="bi bi-check-circle me-1"></i>
-                            Xác nhận thay đổi
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Delete Account Confirmation Modal -->
         <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
@@ -1221,53 +1145,7 @@
                                                         }, 10);
                                                     });
 
-                                                    // Add confirmation dialog for role updates
-                                                    const updateForms = document.querySelectorAll('form[action*="authorization/update"]');
-                                                    updateForms.forEach(form => {
-                                                        form.addEventListener('submit', function (e) {
-                                                            const userId = form.querySelector('input[name="userId"]').value;
-                                                            const newRole = form.querySelector('select[name="newRole"]').value;
-                                                            const userName = form.closest('tr').querySelector('.user-name').textContent.trim();
 
-                                                            if (!newRole) {
-                                                                e.preventDefault();
-                                                                alert('Vui lòng chọn quyền hạn mới.');
-                                                                return;
-                                                            }
-
-                                                            const roleNames = {
-                                                                'doctor': 'Bác sĩ',
-                                                                'receptionist': 'Lễ tân',
-                                                                'patient': 'Bệnh nhân'
-                                                            };
-
-                                                            const roleName = roleNames[newRole] || 'quyền mới';
-
-                                                            // Prevent default submission
-                                                            e.preventDefault();
-                                                            
-                                                            // Show custom confirmation modal
-                                                            showRoleChangeConfirmation(userName, roleName, form);
-                                                        });
-                                                    });
-
-                                                    // Role change confirmation modal function
-                                                    window.showRoleChangeConfirmation = function(userName, roleName, form) {
-                                                        const modalMessage = document.getElementById('roleChangeMessage');
-                                                        modalMessage.innerHTML = `
-                                                            Quyền của <strong class="text-primary">${userName}</strong> sẽ được thay đổi thành <strong class="text-warning">${roleName}</strong>.
-                                                        `;
-                                                        
-                                                        const modal = new bootstrap.Modal(document.getElementById('roleChangeModal'));
-                                                        modal.show();
-                                                        
-                                                        // Handle confirm button click
-                                                        const confirmBtn = document.getElementById('confirmRoleChange');
-                                                        confirmBtn.onclick = function() {
-                                                            modal.hide();
-                                                            form.submit();
-                                                        };
-                                                    };
 
                                                     // Delete account confirmation modal function
                                                     window.showDeleteConfirmation = function(userName, userId) {
