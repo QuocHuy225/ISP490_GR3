@@ -19,7 +19,6 @@ import java.util.List;
  * URL patterns: 
  * - /admin/authorization (xem danh sách)
  * - /admin/authorization/view (xem chi tiết)
- * - /admin/authorization/update (cập nhật quyền)
  * - /admin/authorization/delete (xóa người dùng)
  * - /admin/authorization/restore (khôi phục người dùng)
  * 
@@ -27,7 +26,6 @@ import java.util.List;
  * JSP tương ứng: authorization.jsp
  * 
  * Các chức năng chính:
- * - Quản lý quyền người dùng (Admin, Doctor, Receptionist, Patient)
  * - Xem danh sách người dùng với lọc/tìm kiếm
  * - Xóa/khôi phục người dùng (soft delete)
  * - Thống kê số lượng người dùng theo role
@@ -37,7 +35,6 @@ import java.util.List;
 @WebServlet(name = "AuthorizationController", urlPatterns = {
     "/admin/authorization",
     "/admin/authorization/view",
-    "/admin/authorization/update",
     "/admin/authorization/delete",
     "/admin/authorization/restore",
     "/admin/authorization/create"
@@ -90,9 +87,6 @@ public class AuthorizationController extends HttpServlet {
         String pathInfo = request.getServletPath();
         
         switch (pathInfo) {
-            case "/admin/authorization/update":
-                updateUserRole(request, response, currentUser);
-                break;
             case "/admin/authorization/delete":
                 deleteUser(request, response, currentUser);
                 break;
@@ -149,88 +143,7 @@ public class AuthorizationController extends HttpServlet {
         }
     }
     
-    /**
-     * Update user role
-     */
-    private void updateUserRole(HttpServletRequest request, HttpServletResponse response, User currentUser)
-            throws ServletException, IOException {
-        
-        String userId = request.getParameter("userId");
-        String newRoleStr = request.getParameter("newRole");
-        
-        // Validate parameters
-        if (userId == null || userId.trim().isEmpty() || 
-            newRoleStr == null || newRoleStr.trim().isEmpty()) {
-            request.setAttribute("errorMessage", "Thông tin không hợp lệ.");
-            showAuthorizationPage(request, response, false);
-            return;
-        }
-        
-        try {
-            // Parse new role
-            User.Role newRole;
-            switch (newRoleStr.toLowerCase()) {
-                case "doctor":
-                    newRole = User.Role.DOCTOR;
-                    break;
-                case "receptionist":
-                    newRole = User.Role.RECEPTIONIST;
-                    break;
-                case "patient":
-                    newRole = User.Role.PATIENT;
-                    break;
-                default:
-                    request.setAttribute("errorMessage", "Quyền hạn không hợp lệ.");
-                    showAuthorizationPage(request, response, false);
-                    return;
-            }
-            
-            // Get target user to validate
-            User targetUser = daoUser.getUserById(userId);
-            if (targetUser == null) {
-                request.setAttribute("errorMessage", "Không tìm thấy người dùng.");
-                showAuthorizationPage(request, response, false);
-                return;
-            }
-            
-            // Prevent updating admin users
-            if (targetUser.getRole() == User.Role.ADMIN) {
-                request.setAttribute("errorMessage", "Không thể thay đổi quyền hạn của tài khoản Admin.");
-                showAuthorizationPage(request, response, false);
-                return;
-            }
-            
-            // Prevent self-update
-            if (targetUser.getId().equals(currentUser.getId())) {
-                request.setAttribute("errorMessage", "Bạn không thể thay đổi quyền hạn của chính mình.");
-                showAuthorizationPage(request, response, false);
-                return;
-            }
-            
-            // Update user role
-            boolean success = daoUser.updateUserRole(userId, newRole, currentUser.getId());
-            
-            if (success) {
-                request.setAttribute("successMessage", 
-                    String.format("Đã cập nhật quyền hạn cho %s thành %s.", 
-                    targetUser.getFullName(), newRole.getValue()));
-                
-                // Log the action
-                System.out.println(String.format("Admin %s updated role for user %s (%s) to %s", 
-                    currentUser.getEmail(), targetUser.getEmail(), targetUser.getId(), newRole.getValue()));
-            } else {
-                request.setAttribute("errorMessage", "Không thể cập nhật quyền hạn. Vui lòng thử lại.");
-            }
-            
-        } catch (Exception e) {
-            System.err.println("Error updating user role: " + e.getMessage());
-            e.printStackTrace();
-            request.setAttribute("errorMessage", "Lỗi hệ thống: Không thể cập nhật quyền hạn.");
-        }
-        
-        // Redirect to authorization page
-        showAuthorizationPage(request, response, false);
-    }
+
     
     /**
      * Delete/Disable user (soft delete)

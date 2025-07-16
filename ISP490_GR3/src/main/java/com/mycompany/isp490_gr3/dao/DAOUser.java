@@ -596,53 +596,7 @@ public class DAOUser {
         return users;
     }
     
-    /**
-     * Update user role
-     * @param userId User ID
-     * @param newRole New role for the user
-     * @param updatedBy Who is making the update
-     * @return true if role update successful, false otherwise
-     */
-    public boolean updateUserRole(String userId, User.Role newRole, String updatedBy) {
-        // Check if user exists and is not deleted
-        User user = getUserById(userId);
-        if (user == null) {
-            System.out.println("User not found: " + userId);
-            return false;
-        }
-        
-        // Prevent updating admin role
-        if (user.getRole() == User.Role.ADMIN) {
-            System.out.println("Cannot update role for admin user: " + userId);
-            return false;
-        }
-        
-        // Prevent setting role to admin
-        if (newRole == User.Role.ADMIN) {
-            System.out.println("Cannot set role to admin: " + userId);
-            return false;
-        }
-        
-        String sql = "UPDATE user SET Role = ?, Updated_By = ?, Updated_At = ? WHERE id = ? AND IsDeleted = FALSE";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, newRole.getValue());
-            ps.setString(2, updatedBy);
-            ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
-            ps.setString(4, userId);
-            
-            int result = ps.executeUpdate();
-            return result > 0;
-            
-        } catch (SQLException e) {
-            System.err.println("Error updating user role: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
-        return false;
-    }
+
     
     /**
      * Get users by specific role

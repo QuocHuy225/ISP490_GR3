@@ -874,7 +874,7 @@
                                             <input type="hidden" name="userId" value="<%= user.getId() %>">
                                             <button type="button" class="btn btn-success btn-sm" onclick="showRestoreConfirmation('<%= user.getFullName() != null ? user.getFullName() : user.getEmail() %>', '<%= user.getId() %>')">
                                                 <i class="bi bi-arrow-clockwise"></i>
-                                                Khôi Phục
+                                                Khôi phục
                                             </button>
                                         </form>
                                         <% } else { %>
