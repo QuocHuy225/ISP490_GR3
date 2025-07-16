@@ -548,12 +548,14 @@
                                                     <td><%= patient.getAddress() %></td>
                                                     <td>
                                                         <div class="action-buttons-group">
+                                                            <% if (currentRole == User.Role.DOCTOR) { %>
                                                             <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%=patient.getId()%>" 
                                                                class="action-btn action-btn-view" 
                                                                title="Xem hồ sơ bệnh án">
                                                                 <i class="bi bi-file-medical"></i>
                                                                 <span class="btn-text">Hồ sơ</span>
                                                             </a>
+                                                            <% } %>   
                                                             
                                                             <a href="${pageContext.request.contextPath}/doctor/patients?action=get&id=<%=patient.getId()%>"
                                                                     class="action-btn action-btn-edit" 
