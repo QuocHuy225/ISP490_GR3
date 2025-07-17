@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -168,6 +169,8 @@ public class QueueController extends HttpServlet {
         String appointmentCode = request.getParameter("appointmentCode");
         String patientCode = request.getParameter("patientCode");
 
+        LOGGER.log(Level.INFO, "Received API request - doctorIdParam: {0}, slotDateStr: {1}, appointmentCode: {2}, patientCode: {3}, page: {4}, offset: {5}", new Object[]{doctorIdParam, slotDateStr, appointmentCode, patientCode, pageParam, offset});
+
         // Lấy thời gian hiện tại
         LocalTime currentTime = LocalTime.now(); // Ví dụ: 13:30
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -184,26 +187,57 @@ public class QueueController extends HttpServlet {
             totalRecords = dao.countTodayQueueViewDTOs(doctorId, slotDate);
         }
 
+        if (queueList == null) {
+            queueList = new ArrayList<>(); // Đảm bảo không null
+            LOGGER.warning("queueList is null, initialized as empty list");
+        }
         // Sắp xếp queueList theo thời gian khám gần nhất và ưu tiên cao
-        queueList.sort(Comparator
-                .comparing((QueueViewDTO item) -> {
-                    // Lấy thời gian bắt đầu của slotTimeRange (e.g., "13:00-13:15" -> 13:00)
-                    String[] timeRange = item.getSlotTimeRange().split("-");
-                    LocalTime slotStartTime = LocalTime.parse(timeRange[0], timeFormatter);
-                    // Tính khoảng cách tuyệt đối từ slotStartTime đến currentTime
-                    long minutesDiff = Math.abs(slotStartTime.toSecondOfDay() - currentTime.toSecondOfDay()) / 60;
-                    return minutesDiff;
-                })
-                .thenComparing(QueueViewDTO::getPriority, Comparator.reverseOrder()) // Ưu tiên cao (1) trước
-        );
 
-        // Đánh dấu isBeforeCurrentTime
-        for (QueueViewDTO item : queueList) {
-            String[] timeRange = item.getSlotTimeRange().split("-");
-            LocalTime slotStartTime = LocalTime.parse(timeRange[0], timeFormatter);
-            item.setBeforeCurrentTime(slotStartTime.isBefore(currentTime));
+        try {
+            queueList.sort(Comparator
+                    .comparing((QueueViewDTO item) -> {
+                        if (item == null || item.getSlotTimeRange() == null || !item.getSlotTimeRange().contains("-")) {
+                            LOGGER.warning("Invalid or null slotTimeRange for item: " + (item != null ? item.getAppointmentCode() : "null"));
+                            return Long.MAX_VALUE; // Đẩy ra cuối nếu dữ liệu không hợp lệ
+                        }
+                        String[] timeRange = item.getSlotTimeRange().trim().split("-");
+                        if (timeRange.length < 2 || timeRange[0].trim().isEmpty()) {
+                            LOGGER.warning("Invalid timeRange format for item: " + item.getAppointmentCode());
+                            return Long.MAX_VALUE;
+                        }
+                        LocalTime slotStartTime = LocalTime.parse(timeRange[0].trim(), timeFormatter);
+                        long minutesDiff = Math.abs(slotStartTime.toSecondOfDay() - currentTime.toSecondOfDay()) / 60;
+                        return minutesDiff;
+                    })
+                    .thenComparing(QueueViewDTO::getPriority, Comparator.reverseOrder())
+            );
+            LOGGER.info("Sorting completed successfully for " + queueList.size() + " items");
+        } catch (Exception e) {
+            LOGGER.severe("Error during sorting: " + e.getMessage());
+            // Sắp xếp lại theo priority nếu lỗi
+            queueList.sort(Comparator.comparing(QueueViewDTO::getPriority, Comparator.reverseOrder()));
         }
 
+        // Xử lý vòng lặp với try-catch
+        try {
+            for (QueueViewDTO item : queueList) {
+                if (item == null) {
+                    LOGGER.warning("Null item encountered in queueList");
+                    continue; // Bỏ qua phần tử null
+                }
+                String[] timeRange = item.getSlotTimeRange() != null ? item.getSlotTimeRange().trim().split("-") : new String[0];
+                if (timeRange.length < 1 || timeRange[0].trim().isEmpty()) {
+                    LOGGER.warning("Invalid timeRange for item: " + item.getAppointmentCode());
+                    item.setBeforeCurrentTime(false);
+                } else {
+                    LocalTime slotStartTime = LocalTime.parse(timeRange[0].trim(), timeFormatter);
+                    item.setBeforeCurrentTime(slotStartTime.isBefore(currentTime));
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.severe("Error in setting beforeCurrentTime: " + e.getMessage());
+        }
+        
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("queueList", queueList);
         responseData.put("totalRecords", totalRecords);
