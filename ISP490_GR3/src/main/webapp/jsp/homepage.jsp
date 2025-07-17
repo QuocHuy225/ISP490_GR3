@@ -102,7 +102,7 @@
                 </li>
                 <% } else if (currentRole == User.Role.DOCTOR) { %>
                 <!-- Menu cho Bác sĩ -->
-                <li>
+                <li class="active">
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
                     </a>
@@ -124,7 +124,7 @@
                 </li>
                 <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
                 <!-- Menu cho Lễ tân -->
-                <li>
+                <li class="active">
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-house-door-fill"></i> Trang chủ
                     </a>
@@ -158,7 +158,7 @@
 
                 <% } else { %>
                 <!-- Menu cho Bệnh nhân (PATIENT) -->
-                <li>
+                <li class="active">
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
                     </a>

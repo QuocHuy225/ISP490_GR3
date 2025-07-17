@@ -47,6 +47,29 @@
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
+                <% if (userRole == User.Role.DOCTOR) { %>
+                <!-- Menu cho Bác sĩ -->
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="${pageContext.request.contextPath}/queue">
+                        <i class="bi bi-calendar-check"></i> Lịch khám bệnh
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
+                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/doctor/report">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
+                    </a>
+                </li>
+                <% } else if (userRole == User.Role.RECEPTIONIST) { %>
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-house-door-fill"></i> Trang chủ
@@ -78,6 +101,7 @@
                         <i class="bi bi-speedometer2"></i> Báo cáo thống kê
                     </a>
                 </li>
+                <% } %>
             </ul>
         </nav>
 
