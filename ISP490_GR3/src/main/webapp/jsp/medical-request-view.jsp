@@ -22,45 +22,162 @@
         <style>
             .medical-request-header {
                 text-align: center;
-                border-bottom: 2px solid #17a2b8;
                 padding-bottom: 20px;
                 margin-bottom: 30px;
             }
-            
+
             .medical-request-section {
                 margin-bottom: 25px;
                 padding: 20px;
-                border: 1px solid #e0e0e0;
                 border-radius: 8px;
                 background-color: #fff;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             }
-            
+
             .medical-request-details {
-                background-color: #f8f9fa;
+                border: 1px solid #007bff;
+                position: relative;
+                overflow: hidden;
             }
-            
-            .print-section {
-                page-break-inside: avoid;
+
+            .medical-request-details::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
             }
-            
-            .instruction-section {
-                background-color: #f8f9fa;
-                border-left: 4px solid #17a2b8;
-                padding: 20px;
-                margin: 20px 0;
-            }
-            
-            .instruction-content {
-                background-color: #ffffff;
-                border: 1px solid #dee2e6;
+
+            .patient-info-card {
+                border: none;
                 border-radius: 8px;
-                padding: 15px;
-                margin-bottom: 15px;
-                min-height: 100px;
-                white-space: pre-wrap;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                margin-bottom: 1rem;
             }
-            
-            /* Action Button Styles */
+
+            .patient-info-card .card-header {
+                background: none;
+                border-bottom: none;
+                padding: 12px;
+            }
+
+            .patient-info-card .card-header h5 {
+                font-weight: 600;
+                font-size: 1rem;
+                margin: 0;
+                color: #007bff;
+            }
+
+            .patient-info-card .card-body {
+                padding: 15px;
+            }
+
+            .patient-info-card p {
+                margin-bottom: 10px;
+                padding: 5px 5px 5px 20px;
+                border-bottom: 1px solid #e9ecef;
+                font-size: 1rem;
+                color: #444;
+            }
+
+            .patient-info-card p:last-child {
+                margin-bottom: 0;
+                border-bottom: none;
+            }
+
+            .patient-info-card strong {
+                min-width: 150px;
+                display: inline-block;
+                color: #333;
+            }
+
+            .instruction-section {
+                background: white;
+                border: 1px solid #007bff;
+                border-radius: 1rem;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                position: relative;
+                overflow: hidden;
+            }
+
+            .instruction-section::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+            }
+
+            .instruction-content {
+                border-radius: 8px;
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+
+            .receipt-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 2px solid #f8f9fa;
+            }
+
+            .receipt-title {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #2c3e50;
+                display: flex;
+                align-items: center;
+            }
+
+            .receipt-title i {
+                font-size: 1.25rem;
+                margin-right: 0.5rem;
+                padding: 0.3rem;
+                border-radius: 0.4rem;
+                color: white;
+                background: linear-gradient(135deg, #007bff, #0056b3);
+                display: inline-flex;
+                justify-content: center;
+                align-items: center;
+                line-height: 1;
+            }
+
+            .receipt-time {
+                font-size: 0.9rem;
+                color: #6c757d;
+                font-weight: 500;
+            }
+
+            .signature-section .signature-line {
+                border-bottom: 2px solid #343a40;
+                width: 180px;
+                height: 2px;
+                margin: 0 auto;
+            }
+
+            .two-column-container {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            .left-column {
+                flex: 0 0 25%;
+                max-width: 25%;
+                padding-right: 15px;
+            }
+
+            .right-column {
+                flex: 0 0 75%;
+                max-width: 75%;
+                padding-left: 15px;
+            }
+
             .action-btn {
                 display: inline-flex;
                 align-items: center;
@@ -77,98 +194,127 @@
                 min-width: 120px;
                 justify-content: center;
             }
-            
+
             .action-btn:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(0,0,0,0.15);
                 text-decoration: none;
             }
-            
+
             .action-btn i {
                 font-size: 16px;
             }
-            
+
             .btn-text {
                 font-size: 15px;
                 white-space: nowrap;
             }
-            
+
             .action-btn-update {
                 background: linear-gradient(135deg, #007bff, #0056b3);
                 color: white;
             }
-            
+
             .action-btn-update:hover {
                 background: linear-gradient(135deg, #0056b3, #004085);
                 color: white;
             }
-            
+
             .action-btn-success {
                 background: linear-gradient(135deg, #28a745, #218838);
                 color: white;
             }
-            
+
             .action-btn-success:hover {
                 background: linear-gradient(135deg, #218838, #1e7e34);
                 color: white;
             }
-            
+
             .back-btn {
                 background: linear-gradient(135deg, #adb5bd, #868e96);
                 color: white;
             }
-            
+
             .back-btn:hover {
                 background: linear-gradient(135deg, #868e96, #6c757d);
                 color: white;
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(0,0,0,0.15);
             }
-            
+
             @media (max-width: 768px) {
+                .left-column, .right-column {
+                    flex: 0 0 100%;
+                    max-width: 100%;
+                    padding-right: 0;
+                    padding-left: 0;
+                }
+
                 .action-btn {
                     padding: 0.6rem 1.2rem;
                     min-width: 100px;
                 }
+
                 .btn-text {
                     display: none;
                 }
+
                 .action-btn i {
                     font-size: 18px;
                 }
             }
-            
+
             @media print {
                 .no-print {
                     display: none !important;
                 }
-                
+
                 body {
                     font-size: 12pt;
                     line-height: 1.4;
                 }
-                
+
                 .medical-request-section {
                     break-inside: avoid;
                     margin-bottom: 15px;
                     border: 1px solid #000;
                     padding: 10px;
                 }
-                
+
                 .medical-request-header {
                     border-bottom: 2px solid #000;
                     margin-bottom: 20px;
                 }
-                
-                .instruction-section {
-                    border-left: 4px solid #000;
-                    background-color: #f8f8f8;
+
+                .medical-request-details {
+                    background: #fff !important;
+                    border: 1px solid #000;
                 }
-                
+
+                .medical-request-details::before {
+                    display: none;
+                }
+
+                .instruction-section {
+                    border: 1px solid #000;
+                    background: #fff;
+                }
+
+                .instruction-section::before {
+                    display: none;
+                }
+
                 .instruction-content {
                     border: 1px solid #000;
-                    background-color: #fff;
-                    padding: 10px;
+                    background: #fff;
+                }
+
+                .patient-info-card {
+                    border: 1px solid #000;
+                }
+
+                .text-primary {
+                    color: #000 !important;
                 }
             }
         </style>
@@ -224,7 +370,6 @@
             </div>
             <ul class="list-unstyled components">
                 <% if (currentRole == User.Role.DOCTOR) { %>
-                <!-- Menu cho Bác sĩ -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -406,103 +551,135 @@
                     <p class="mb-0">Điện thoại: (028) 1234-5678 | Email: info@anhduongclinic.com</p>
                 </div>
 
-                <!-- Patient & Medical Request Info -->
-                <div class="medical-request-section medical-request-details">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-primary mb-3"><i class="bi bi-person-fill me-2"></i>Thông tin bệnh nhân</h6>
-                            <p class="mb-2"><strong>Mã bệnh nhân:</strong> <%= patient.getPatientCode() %></p>
-                            <p class="mb-2"><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
-                            <p class="mb-2"><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? shortSdf.format(patient.getDob()) : "" %></p>
-                            <p class="mb-2"><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
-                            <p class="mb-0"><strong>Địa chỉ:</strong> <%= patient.getAddress() %></p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-primary mb-3"><i class="bi bi-clipboard-data me-2"></i>Thông tin phiếu chỉ định</h6>
-                            <p class="mb-2"><strong>Mã phiếu chỉ định:</strong> <%= medicalRequest.getId() %></p>
-                            <p class="mb-2"><strong>Mã hồ sơ:</strong> <%= medicalRequest.getMedicalRecordId() %></p>
-                            <p class="mb-2"><strong>Ngày tạo:</strong> <%= medicalRequest.getCreatedAt() != null ? sdf.format(medicalRequest.getCreatedAt()) : "" %></p>
-                            <p class="mb-0"><strong>Người tạo:</strong> <%= medicalRequest.getCreatedBy() != null ? medicalRequest.getCreatedBy() : "" %></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Clinic Information -->
-                <% if (medicalRequest.getClinicName() != null || medicalRequest.getClinicPhone() != null || medicalRequest.getClinicAddress() != null) { %>
-                <div class="medical-request-section medical-request-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-building me-2"></i>Thông tin cơ sở chỉ định</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <% if (medicalRequest.getClinicName() != null && !medicalRequest.getClinicName().isEmpty()) { %>
-                            <p class="mb-2"><strong>Tên cơ sở:</strong> <%= medicalRequest.getClinicName() %></p>
-                            <% } %>
-                            <% if (medicalRequest.getClinicPhone() != null && !medicalRequest.getClinicPhone().isEmpty()) { %>
-                            <p class="mb-2"><strong>Điện thoại:</strong> <%= medicalRequest.getClinicPhone() %></p>
-                            <% } %>
-                        </div>
-                        <div class="col-md-6">
-                            <% if (medicalRequest.getClinicAddress() != null && !medicalRequest.getClinicAddress().isEmpty()) { %>
-                            <p class="mb-2"><strong>Địa chỉ:</strong> <%= medicalRequest.getClinicAddress() %></p>
-                            <% } %>
+                <!-- Two-Column Layout -->
+                <div class="row two-column-container">
+                    <!-- Left Column: Patient & Request Info -->
+                    <div class="col-md-3 left-column">
+                        <div class="card medical-card patient-info-card">
+                            <div class="card-header">
+                                <h4 class="text-primary mb-3">
+                                    <i class="bi bi-person-fill me-2"></i>Thông tin bệnh nhân
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Mã bệnh nhân:</strong> <%= patient.getPatientCode() %></p>
+                                <p><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
+                                <p><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? shortSdf.format(patient.getDob()) : "" %></p>
+                                <p><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
+                                <p><strong>Địa chỉ:</strong> <%= patient.getAddress() %></p>
+                            </div>
+                            <div class="card-header">
+                                <h4 class="text-primary mb-3">
+                                    <i class="bi bi-clipboard-data me-2"></i>Thông tin phiếu chỉ định
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Mã phiếu chỉ định:</strong> <%= medicalRequest.getId() %></p>
+                                <p><strong>Mã hồ sơ:</strong> <%= medicalRequest.getMedicalRecordId() %></p>
+                                <p><strong>Ngày tạo:</strong> <%= medicalRequest.getCreatedAt() != null ? sdf.format(medicalRequest.getCreatedAt()) : "" %></p>
+                                <p><strong>Người tạo:</strong> <%= medicalRequest.getCreatedBy() != null ? medicalRequest.getCreatedBy() : "" %></p>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <% } %>
 
-                <!-- Instruction Content -->
-                <div class="instruction-section">
-                    <h6 class="text-primary mb-3"><i class="bi bi-clipboard-data me-2"></i>Nội dung chỉ định</h6>
-                    <div class="instruction-content">
-                        <% if (medicalRequest.getInstructionContent() != null && !medicalRequest.getInstructionContent().isEmpty()) { %>
-                        <%= medicalRequest.getInstructionContent() %>
-                        <% } else { %>
-                        <em class="text-muted">Chưa có nội dung chỉ định</em>
+                    <!-- Right Column: Request Details -->
+                    <div class="col-md-9 right-column">
+                        <!-- Clinic Information -->
+                        <% if (medicalRequest.getClinicName() != null || medicalRequest.getClinicPhone() != null || medicalRequest.getClinicAddress() != null) { %>
+                        <div class="medical-request-section medical-request-details">
+                            <div class="receipt-header">
+                                <div class="receipt-title">
+                                    <i class="bi bi-building"></i>
+                                    Thông tin cơ sở chỉ định
+                                </div>
+                            </div>
+                            <div class="row">
+                                    <% if (medicalRequest.getClinicName() != null && !medicalRequest.getClinicName().isEmpty()) { %>
+                                    <p class="mb-2"><strong>Tên cơ sở:</strong> <%= medicalRequest.getClinicName() %></p>
+                                    <% } %>
+                                    <% if (medicalRequest.getClinicPhone() != null && !medicalRequest.getClinicPhone().isEmpty()) { %>
+                                    <p class="mb-2"><strong>Điện thoại:</strong> <%= medicalRequest.getClinicPhone() %></p>
+                                    <% } %>
+                                    <% if (medicalRequest.getClinicAddress() != null && !medicalRequest.getClinicAddress().isEmpty()) { %>
+                                    <p class="mb-2"><strong>Địa chỉ:</strong> <%= medicalRequest.getClinicAddress() %></p>
+                                    <% } %>
+                            </div>
+                        </div>
                         <% } %>
-                    </div>
-                </div>
 
-                <!-- Instruction Requirements -->
-                <% if (medicalRequest.getInstructionRequirements() != null && !medicalRequest.getInstructionRequirements().isEmpty()) { %>
-                <div class="instruction-section">
-                    <h6 class="text-primary mb-3"><i class="bi bi-list-check me-2"></i>Yêu cầu chỉ định</h6>
-                    <div class="instruction-content">
-                        <%= medicalRequest.getInstructionRequirements() %>
-                    </div>
-                </div>
-                <% } %>
+                        <!-- Instruction Content -->
+                        <div class="instruction-section">
+                            <div class="receipt-header">
+                                <div class="receipt-title">
+                                    <i class="bi bi-clipboard-data"></i>
+                                    Nội dung chỉ định
+                                </div>
+                            </div>
+                            <div class="instruction-content">
+                                <% if (medicalRequest.getInstructionContent() != null && !medicalRequest.getInstructionContent().isEmpty()) { %>
+                                <%= medicalRequest.getInstructionContent() %>
+                                <% } else { %>
+                                <em class="text-muted">Chưa có nội dung chỉ định</em>
+                                <% } %>
+                            </div>
+                        </div>
 
-                <!-- Notes -->
-                <% if (medicalRequest.getNotes() != null && !medicalRequest.getNotes().isEmpty()) { %>
-                <div class="medical-request-section medical-request-details">
-                    <h6 class="text-primary mb-3"><i class="bi bi-chat-dots me-2"></i>Ghi chú</h6>
-                    <div class="instruction-content">
-                        <%= medicalRequest.getNotes() %>
-                    </div>
-                </div>
-                <% } %>
+                        <!-- Instruction Requirements -->
+                        <% if (medicalRequest.getInstructionRequirements() != null && !medicalRequest.getInstructionRequirements().isEmpty()) { %>
+                        <div class="instruction-section">
+                            <div class="receipt-header">
+                                <div class="receipt-title">
+                                    <i class="bi bi-list-check"></i>
+                                    Yêu cầu chỉ định
+                                </div>
+                            </div>
+                            <div class="instruction-content">
+                                <%= medicalRequest.getInstructionRequirements() %>
+                            </div>
+                        </div>
+                        <% } %>
 
-                <!-- Signature Section -->
-                <div class="medical-request-section print-section">
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <p class="mb-5"><strong>Bệnh nhân</strong></p>
-                            <p>________________________</p>
-                            <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
+                        <!-- Notes -->
+                        <% if (medicalRequest.getNotes() != null && !medicalRequest.getNotes().isEmpty()) { %>
+                        <div class="instruction-section">
+                            <div class="receipt-header">
+                                <div class="receipt-title">
+                                    <i class="bi bi-chat-dots"></i>
+                                    Ghi chú
+                                </div>
+                            </div>
+                            <div class="instruction-content">
+                                <%= medicalRequest.getNotes() %>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <p class="mb-5"><strong>Người nhận</strong></p>
-                            <p>________________________</p>
-                            <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
+                        <% } %>
+
+                        <!-- Signature Section -->
+                        <div class="medical-request-section print-section">
+                            <div class="signature-section">
+                                <div class="row text-center g-4">
+                                    <div class="col-md-4">
+                                        <p class="mb-4 fw-bold">Bệnh nhân</p>
+                                        <p class="signature-line mx-auto"></p>
+                                        <p class="mb-0 text-muted"><em>(Ký và ghi rõ họ tên)</em></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-4 fw-bold">Người nhận</p>
+                                        <p class="signature-line mx-auto"></p>
+                                        <p class="mb-0 text-muted"><em>(Ký và ghi rõ họ tên)</em></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-4 fw-bold">Bác sĩ chỉ định</p>
+                                        <p class="signature-line mx-auto"></p>
+                                        <p class="mb-0 text-muted"><em>(Ký và ghi rõ họ tên)</em></p>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-5">
+                                    <p class="mb-1 text-muted"><em>Ngày <%= new java.text.SimpleDateFormat("dd").format(new java.util.Date()) %> tháng <%= new java.text.SimpleDateFormat("MM").format(new java.util.Date()) %> năm <%= new java.text.SimpleDateFormat("yyyy").format(new java.util.Date()) %></em></p>
+                                    <p class="mb-0 fw-bold text-primary">Cảm ơn quý khách đã sử dụng dịch vụ!</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <p class="mb-5"><strong>Bác sĩ chỉ định</strong></p>
-                            <p>________________________</p>
-                            <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
-                        </div>
-                    </div>
-                    <div class="text-center mt-4">
-                        <p class="mb-1"><em>Ngày <%= new java.text.SimpleDateFormat("dd").format(new java.util.Date()) %> tháng <%= new java.text.SimpleDateFormat("MM").format(new java.util.Date()) %> năm <%= new java.text.SimpleDateFormat("yyyy").format(new java.util.Date()) %></em></p>
-                        <p class="mb-0"><strong>Cảm ơn quý khách đã sử dụng dịch vụ!</strong></p>
                     </div>
                 </div>
 
@@ -530,4 +707,4 @@
             });
         </script>
     </body>
-</html> 
+</html>
