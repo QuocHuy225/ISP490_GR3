@@ -1,8 +1,8 @@
 package com.mycompany.isp490_gr3.dto;
 
 public class QueueViewDTO {
-  
-   private int queueId;
+
+    private int queueId;
     private int appointmentId;
     private String appointmentCode;
     private String slotDate;
@@ -14,7 +14,8 @@ public class QueueViewDTO {
     private String status;
     private int priority;
     private String checkinTime;
-    private String doctorName; 
+    private String doctorName;
+    private boolean isBeforeCurrentTime;
 
     public QueueViewDTO() {
     }
@@ -138,5 +139,14 @@ public class QueueViewDTO {
     public void setDoctorName(String doctorName) {
         this.doctorName = doctorName;
     }
-    
+
+   
+    public boolean isBeforeCurrentTime() {
+        return isBeforeCurrentTime;
+    }
+
+    public void setBeforeCurrentTime(boolean isBeforeCurrentTime) {
+        this.isBeforeCurrentTime = isBeforeCurrentTime;
+    }
+
 }

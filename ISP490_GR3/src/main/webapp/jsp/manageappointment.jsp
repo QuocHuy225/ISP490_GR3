@@ -312,7 +312,7 @@
                                                 </a>
                                             </c:when>
                                             <c:otherwise>
-                                                <a href="#" class="btn btn-sm btn-outline-warning btn-remove-patient" title="Bỏ gán bệnh nhân vào lịch hẹn" data-bs-toggle="modal" data-bs-target="#confirmRemovePatientModal" data-id="${appointment.id}" data-code="${appointment.appointmentCode}">
+                                                <a href="#" class="btn btn-sm btn-outline-warning btn-remove-patient" title="Bỏ gán bệnh nhân khỏi lịch hẹn" data-bs-toggle="modal" data-bs-target="#confirmRemovePatientModal" data-id="${appointment.id}" data-code="${appointment.appointmentCode}">
                                                     <i class="bi bi-person-x"> Bỏ gán </i>
                                                 </a>
                                             </c:otherwise>
@@ -502,7 +502,7 @@
 
         <%-- Modal gán bệnh nhân --%>
         <div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
                 <div class="modal-content shadow-lg rounded-4">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold" id="addAppointmentModalLabel">Gán bệnh nhân vào lịch hẹn</h5>
@@ -512,12 +512,12 @@
                         <input type="hidden" name="action" value="assignPatient">
                         <input type="hidden" id="appointmentId" name="appointmentId" />
                         <input type="hidden" id="patientId" name="patientId" />
+
                         <div class="modal-body px-4 py-3">
                             <div class="mb-4 border-bottom pb-3"> 
                                 <div class="row g-2">
                                     <div class="col-md-12">
-
-                                        <label for="serviceSelect" class="form-label" >Dịch vụ <span class="text-danger"> *</span></label>
+                                        <label for="serviceSelect" class="form-label">Dịch vụ <span class="text-danger"> *</span></label>
                                         <select class="form-select" id="serviceSelect" name="servicesId">
                                             <option value="">--Chọn--</option>
                                             <c:forEach var="s" items="${serviceList}">
@@ -526,16 +526,14 @@
                                         </select>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
 
-                        <div class="modal-body px-4 py-3">
+                        <div class="modal-body px-4 pt-0">
                             <!-- Phần tìm kiếm bệnh nhân -->
                             <div class="mb-4 border-bottom pb-3">
                                 <h6 class="fw-bold mb-3">Tìm kiếm bệnh nhân</h6>
                                 <div class="row g-2">
-                                    <!-- 2 cột trên -->
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="filterPatientCode" class="form-label">Mã bệnh nhân</label>
@@ -548,7 +546,6 @@
                                             <input type="text" class="form-control" id="filterPatientCCCD" placeholder="Nhập CCCD">
                                         </div>
                                     </div>
-                                    <!-- 2 cột dưới -->
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="filterPatientName" class="form-label">Họ tên</label>
@@ -562,7 +559,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
 
                             <div class="mt-4">
@@ -585,15 +581,15 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="modal-body px-4 pt-0">
                             <div id="assignErrorMsg" class="alert alert-danger d-none" role="alert"></div>
                         </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                             <button type="submit" class="btn btn-primary" id="saveAssignmentBtn" disabled>Gán</button>
-
                         </div>
-
                     </form>
                 </div>
             </div>

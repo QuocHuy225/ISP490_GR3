@@ -59,26 +59,21 @@
         <servlet-name>CheckinController</servlet-name>
         <url-pattern>/checkin</url-pattern>
         <url-pattern>/checkin/confirm</url-pattern>
-        
     </servlet-mapping>
     
-    
+    <servlet>
+        <servlet-name>SlotController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.SlotController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot/add</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot/delete</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot/filterSlotDate</url-pattern>
+        <url-pattern>/slot/patients</url-pattern>
     </servlet-mapping>
+    
     
     
     <servlet>
@@ -118,7 +113,7 @@
     <servlet-mapping>   
         <servlet-name>QueueController</servlet-name>
         <url-pattern>/queue</url-pattern> 
-         <url-pattern>/api/queue</url-pattern>      
+        <url-pattern>/api/queue</url-pattern>      
     </servlet-mapping>
     
     

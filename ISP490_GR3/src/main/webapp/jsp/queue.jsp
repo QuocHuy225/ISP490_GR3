@@ -203,7 +203,7 @@
                                 <th>Mã lịch hẹn</th>
                                 <th>Ngày khám</th>
                                 <th>Giờ khám</th>
-                                <th>Mã BN</th>
+                                <th>Mã bệnh nhân</th>
                                 <th>Họ tên</th>
                                 <th>Điện thoại</th>
                                 <th>Dịch vụ</th>
@@ -241,142 +241,148 @@
                     String baseURL = scheme + "://" + serverName + ":" + serverPort + contextPath;
                 %>
 
-               document.addEventListener("DOMContentLoaded", function () {
-                   const BASE_URL = "<%= baseURL %>";
-                   console.log("BASE_URL:", BASE_URL);
-                   const searchForm = document.getElementById("searchForm");
-                   const resetFilterButton = document.getElementById("resetFilterButton");
-                   const tableBody = document.getElementById("queueTableBody");
-                   const paginationInfo = document.getElementById("paginationInfo");
+                document.addEventListener("DOMContentLoaded", function () {
+                    const BASE_URL = "<%= baseURL %>";
+                    console.log("BASE_URL:", BASE_URL);
+                    const searchForm = document.getElementById("searchForm");
+                    const resetFilterButton = document.getElementById("resetFilterButton");
+                    const tableBody = document.getElementById("queueTableBody");
+                    const paginationInfo = document.getElementById("paginationInfo");
 
-                   if (!tableBody) {
-                       console.error("Không tìm thấy queueTableBody trong DOM!");
-                       return;
-                   }
+                    if (!tableBody) {
+                        console.error("Không tìm thấy queueTableBody trong DOM!");
+                        return;
+                    }
 
-                   // Load initial queue
-                   loadQueue();
+                    // Load initial queue
+                    loadQueue();
 
-                   // Search form submit with AJAX
-                   searchForm.addEventListener("submit", function (e) {
-                       e.preventDefault();
-                       loadQueue();
-                   });
+                    // Search form submit with AJAX
+                    searchForm.addEventListener("submit", function (e) {
+                        e.preventDefault();
+                        loadQueue();
+                    });
 
-                   // Reset filter with AJAX
-                   resetFilterButton.addEventListener("click", function () {
-                       const form = document.getElementById("searchForm");
-                       form.reset();
-                       document.getElementById("doctorId").value = "";
-                       document.getElementById("slotDate").value = "";
-                       const actionURL = form.getAttribute("action");
-                       const formData = new FormData();
-                       formData.append("action", "search");
+                    // Reset filter with AJAX
+                    resetFilterButton.addEventListener("click", function () {
+                        const form = document.getElementById("searchForm");
+                        form.reset();
+                        document.getElementById("doctorId").value = "";
+                        document.getElementById("slotDate").value = "";
+                        const actionURL = form.getAttribute("action");
+                        const formData = new FormData();
+                        formData.append("action", "search");
 
-                       fetch(actionURL, {
-                           method: "POST",
-                           body: formData
-                       }).then(() => {
-                           loadQueue();
-                       }).catch(err => {
-                           console.error('Lỗi khi reset filter at ' + new Date().toLocaleString() + ':', err);
-                           alert("Lỗi khi đặt lại bộ lọc: " + err.message);
-                       });
-                   });
+                        fetch(actionURL, {
+                            method: "POST",
+                            body: formData
+                        }).then(() => {
+                            loadQueue();
+                        }).catch(err => {
+                            console.error('Lỗi khi reset filter at ' + new Date().toLocaleString() + ':', err);
+                            alert("Lỗi khi đặt lại bộ lọc: " + err.message);
+                        });
+                    });
 
-                   // Load danh sách hàng đợi
-                   function loadQueue() {
-                       const doctorId = document.getElementById('doctorId').value.trim();
-                       const slotDate = document.getElementById('slotDate').value.trim();
-                       const query = new URLSearchParams({
-                           doctorId: doctorId,
-                           slotDate: slotDate
-                       }).toString();
-                       const url = BASE_URL + "/api/queue?" + query;
+                    // Load danh sách hàng đợi
+                    function loadQueue() {
+                        const doctorId = document.getElementById('doctorId').value.trim();
+                        const slotDate = document.getElementById('slotDate').value.trim();
+                        const query = new URLSearchParams({
+                            doctorId: doctorId,
+                            slotDate: slotDate
+                        }).toString();
+                        const url = BASE_URL + "/api/queue?" + query;
 
-                       console.log("Gửi yêu cầu AJAX đến:", url);
-                       tableBody.innerHTML = '<tr><td colspan="12" class="text-center"><div class="spinner">Đang tải...</div></td></tr>';
+                        tableBody.innerHTML = '<tr><td colspan="12" class="text-center"><div class="spinner">Đang tải...</div></td></tr>';
 
-                       fetch(url, {
-                           method: 'GET',
-                           headers: {
-                               'Content-Type': 'application/json'
-                           }
-                       })
-                               .then(res => {
-                                   console.log('Response status at ' + new Date().toLocaleString() + ':', res.status);
-                                   if (res.status === 404) {
-                                       throw new Error("404 Not Found: Endpoint /api/queue không tồn tại hoặc không được ánh xạ đúng!");
-                                   }
-                                   if (res.status === 403) {
-                                       throw new Error("403 Forbidden: Bạn không có quyền truy cập hoặc session hết hạn!");
-                                   }
-                                   if (!res.ok) {
-                                       throw new Error(`HTTP error! status: ${res.status} - URL: ${url}`);
-                                   }
-                                   return res.json();
-                               })
-                               .then(data => {
-                                   console.log("DỮ LIỆU JSON TRẢ VỀ:", JSON.stringify(data, null, 2));
-                                   console.log("searchPerformed:", data.searchPerformed || false);
-                                   console.log("hasResults:", data.hasResults || false);
-                                   console.log("queueList length:", data.queueList ? data.queueList.length : 0);
-                                   console.log("totalRecords:", data.totalRecords || 0);
+                        fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                                .then(res => {
+                                    console.log('Response status at ' + new Date().toLocaleString() + ':', res.status);
+                                    if (res.status === 404) {
+                                        throw new Error("404 Not Found: Endpoint /api/queue không tồn tại hoặc không được ánh xạ đúng!");
+                                    }
+                                    if (res.status === 403) {
+                                        throw new Error("403 Forbidden: Bạn không có quyền truy cập hoặc session hết hạn!");
+                                    }
+                                    if (!res.ok) {
+                                        throw new Error(`HTTP error! status: ${res.status} - URL: ${url}`);
+                                    }
+                                    return res.json();
+                                })
+                                .then(data => {
+                                    // Cập nhật pagination info
+                                    paginationInfo.innerHTML = 'Hiển thị ' + (data.queueList ? data.queueList.length : 0) + ' / ' + (data.totalRecords || 0) + ' kết quả';
 
-                                   // Cập nhật pagination info
-                                   paginationInfo.innerHTML = 'Hiển thị ' + (data.queueList ? data.queueList.length : 0) + ' / ' + (data.totalRecords || 0) + ' kết quả';
+                                    tableBody.innerHTML = '';
+                                    if (!data.queueList || data.queueList.length === 0) {
+                                        console.log("Không có dữ liệu trong queueList");
+                                        tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Không có hàng đợi nào được tìm thấy.</td></tr>';
+                                    } else {
+                                        console.log("Bắt đầu render queueList với", data.queueList.length, "bản ghi");
+                                        let addedSeparator = false; // Khai báo biến addedSeparator
+                                        data.queueList.forEach((q, index) => {
+                                            try {
+                                                // Thêm viền ngăn cách khi chuyển từ trước sang sau thời gian hiện tại
+                                                if (!addedSeparator && !q.isBeforeCurrentTime && index > 0) {
+                                                    const separatorRow = document.createElement('tr');
+                                                    separatorRow.classList.add('separator');
+                                                    separatorRow.innerHTML = `<td colspan="12" style="border-top: 3px solid #007bff; text-align: center; font-weight: bold;">Thời gian hiện tại: ${data.currentTime}</td>`;
+                                                    tableBody.appendChild(separatorRow);
+                                                    addedSeparator = true;
+                                                }
 
-                                   tableBody.innerHTML = '';
-                                   if (!data.queueList || data.queueList.length === 0) {
-                                       console.log("Không có dữ liệu trong queueList");
-                                       tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Không có hàng đợi nào được tìm thấy.</td></tr>';
-                                   } else {
-                                       console.log("Bắt đầu render queueList với", data.queueList.length, "bản ghi");
-                                       data.queueList.forEach((q, index) => {
-                                           try {
-                                               console.log("Render hàng", index + 1, ":", JSON.stringify(q));
-                                               const row = document.createElement('tr');
+                                                // Tạo hàng cho lịch hẹn
+                                                const row = document.createElement('tr');
+                                                // Làm nổi bật hàng ưu tiên cao
+                                                if (q.priority === 1) {
+                                                    row.classList.add('priority-high');
+                                                }
                                                row.innerHTML = '<td>' + (index + 1) + '</td>' +
-                                                       '<td>' + (q.appointmentCode || '-') + '</td>' +
-                                                       '<td>' + (q.slotDate || '-') + '</td>' +
-                                                       '<td>' + (q.slotTimeRange || '-') + '</td>' +
-                                                       '<td>' + (q.patientCode || '-') + '</td>' +
-                                                       '<td>' + (q.patientName || '-') + '</td>' +
-                                                       '<td>' + (q.patientPhone || '-') + '</td>' +
-                                                       '<td>' + (q.serviceName || '-') + '</td>' +
-                                                       '<td>' + (q.priority === 1 ? '<span class="badge bg-danger">Cao</span>' : '<span class="badge bg-secondary">Trung bình</span>') + '</td>' +
-                                                       '<td>' + (q.checkinTime || '-') + '</td>' +
-                                                       '<td>' + (q.doctorName || '-') + '</td>' +
-                                                       '<td>' +
-                                                       (q.status === 'waiting' ? '<span class="badge bg-warning text-dark">Đang chờ</span>' :
-                                                               q.status === 'in_progress' ? '<span class="badge bg-info text-dark">Đang khám</span>' :
-                                                               q.status === 'completed' ? '<span class="badge bg-success">Hoàn thành</span>' :
-                                                               q.status === 'skipped' ? '<span class="badge bg-secondary">Bỏ qua</span>' :
-                                                               q.status === 'rejected' ? '<span class="badge bg-danger">Từ chối</span>' : '-') +
-                                                       '</td>';
-                                               tableBody.appendChild(row);
-                                           } catch (error) {
-                                               console.error('Lỗi khi render hàng ' + (index + 1) + ':', error);
-                                           }
-                                       });
-                                       console.log("Hoàn tất render queueList");
-                                   }
-                               })
-                               .catch(err => {
-                                   console.error('Lỗi khi tải danh sách hàng đợi at ' + new Date().toLocaleString() + ':', err);
-                                   tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Lỗi: Không thể tải dữ liệu. URL: ' + url + '</td></tr>';
-                               })
-                               .finally(() => {
-                                   if (tableBody.querySelector('.spinner')) {
-                                       tableBody.innerHTML = '';
-                                   }
-                               });
-                   }
-
-                   // Các biến từ Controller
-                   window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
-                   window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
-               });
+                                                        '<td>' + (q.appointmentCode || '-') + '</td>' +
+                                                        '<td>' + (q.slotDate || '-') + '</td>' +
+                                                        '<td>' + (q.slotTimeRange || '-') + '</td>' +
+                                                        '<td>' + (q.patientCode || '-') + '</td>' +
+                                                        '<td>' + (q.patientName || '-') + '</td>' +
+                                                        '<td>' + (q.patientPhone || '-') + '</td>' +
+                                                        '<td>' + (q.serviceName || '-') + '</td>' +
+                                                        '<td>' + (q.priority === 1 ? '<span class="badge bg-danger">Cao</span>' : '<span class="badge bg-secondary">Trung bình</span>') + '</td>' +
+                                                        '<td>' + (q.checkinTime || '-') + '</td>' +
+                                                        '<td>' + (q.doctorName || '-') + '</td>' +
+                                                        '<td>' +
+                                                        (q.status === 'waiting' ? '<span class="badge bg-warning text-dark">Đang chờ</span>' :
+                                                                q.status === 'in_progress' ? '<span class="badge bg-info text-dark">Đang khám</span>' :
+                                                                q.status === 'completed' ? '<span class="badge bg-success">Hoàn thành</span>' :
+                                                                q.status === 'skipped' ? '<span class="badge bg-secondary">Bỏ qua</span>' :
+                                                                q.status === 'rejected' ? '<span class="badge bg-danger">Từ chối</span>' : '-') +
+                                                        '</td>';
+                                                tableBody.appendChild(row);
+                                            } catch (error) {
+                                                console.error('Lỗi khi render hàng ' + (index + 1) + ':', error);
+                                            }
+                                        });
+                                        console.log("Hoàn tất render queueList");
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error('Lỗi khi tải danh sách hàng đợi at ' + new Date().toLocaleString() + ':', err);
+                                    tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Lỗi: Không thể tải dữ liệu. URL: ' + url + '</td></tr>';
+                                })
+                                .finally(() => {
+                                    if (tableBody.querySelector('.spinner')) {
+                                        tableBody.innerHTML = '';
+                                    }
+                                });
+                    }
+                    // Các biến từ Controller
+                    window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
+                    window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
+                });
             </script>
 
             <%!

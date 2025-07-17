@@ -50,7 +50,8 @@ public class DAOQueue {
                 + "WHERE q.is_deleted = FALSE "
                 + "AND a.is_deleted = FALSE "
                 + "AND s.is_deleted = FALSE "
-                + "AND a.checkin_time IS NOT NULL ";
+                + "AND a.checkin_time IS NOT NULL "
+                + "AND q.status IN ('waiting', 'in_progress') ";
 
         if (doctorId > 0) {
             sql += "AND q.doctor_id = ? ";
@@ -75,8 +76,12 @@ public class DAOQueue {
             ps.setInt(paramIndex++, offset);
 
             String debugSql = sql;
-            if (doctorId > 0) debugSql = debugSql.replaceFirst("\\?", String.valueOf(doctorId));
-            if (slotDate != null) debugSql = debugSql.replaceFirst("\\?", slotDate.toString());
+            if (doctorId > 0) {
+                debugSql = debugSql.replaceFirst("\\?", String.valueOf(doctorId));
+            }
+            if (slotDate != null) {
+                debugSql = debugSql.replaceFirst("\\?", slotDate.toString());
+            }
             debugSql = debugSql.replaceFirst("\\?", String.valueOf(limit));
             debugSql = debugSql.replaceFirst("\\?", String.valueOf(offset));
             LOGGER.info("Executing SQL: " + debugSql);
@@ -116,7 +121,8 @@ public class DAOQueue {
                 + "WHERE q.is_deleted = FALSE "
                 + "AND a.is_deleted = FALSE "
                 + "AND s.is_deleted = FALSE "
-                + "AND a.checkin_time IS NOT NULL ";
+                + "AND a.checkin_time IS NOT NULL "
+                + "AND q.status IN ('waiting', 'in_progress') ";;
 
         if (doctorId > 0) {
             sql += "AND q.doctor_id = ? ";
@@ -136,8 +142,12 @@ public class DAOQueue {
                 ps.setDate(paramIndex++, java.sql.Date.valueOf(slotDate));
             }
             String debugSql = sql;
-            if (doctorId > 0) debugSql = debugSql.replaceFirst("\\?", String.valueOf(doctorId));
-            if (slotDate != null) debugSql = debugSql.replaceFirst("\\?", slotDate.toString());
+            if (doctorId > 0) {
+                debugSql = debugSql.replaceFirst("\\?", String.valueOf(doctorId));
+            }
+            if (slotDate != null) {
+                debugSql = debugSql.replaceFirst("\\?", slotDate.toString());
+            }
             LOGGER.info("Executing count SQL: " + debugSql);
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -179,7 +189,8 @@ public class DAOQueue {
                 + "WHERE q.is_deleted = FALSE "
                 + "AND a.is_deleted = FALSE "
                 + "AND s.is_deleted = FALSE "
-                + "AND a.checkin_time IS NOT NULL ");
+                + "AND a.checkin_time IS NOT NULL "
+                + "AND q.status IN ('waiting', 'in_progress') ");
 
         List<Object> params = new ArrayList<>();
         if (slotDate != null) {
@@ -254,7 +265,8 @@ public class DAOQueue {
                 + "WHERE q.is_deleted = FALSE "
                 + "AND a.is_deleted = FALSE "
                 + "AND s.is_deleted = FALSE "
-                + "AND a.checkin_time IS NOT NULL ");
+                + "AND a.checkin_time IS NOT NULL "
+                + "AND q.status IN ('waiting', 'in_progress') ");
 
         List<Object> params = new ArrayList<>();
         if (slotDate != null) {
