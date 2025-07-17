@@ -547,4 +547,71 @@ public class DAOSlot {
             LOGGER.log(Level.SEVERE, "Lỗi khi in slot và appointment: " + e.getMessage(), e);
         }
     }
+    
+    // Lấy danh sách bệnh nhân theo slotId
+    public List<PatientDTO> getPatientsBySlotId(int slotId) {
+        List<PatientDTO> patients = new ArrayList<>();
+        String sql = "SELECT p.patient_code, p.cccd, p.full_name, p.phone " +
+                     "FROM appointment a " +
+                     "JOIN patients p ON a.patient_id = p.id " +
+                     "WHERE a.slot_id = ? AND a.is_deleted = FALSE AND p.is_deleted = FALSE " +
+                     "AND a.status != 'cancelled'";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, slotId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                PatientDTO patient = new PatientDTO();
+                patient.setPatientCode(rs.getString("patient_code"));
+                patient.setCccd(rs.getString("cccd"));
+                patient.setFullName(rs.getString("full_name"));
+                patient.setPhone(rs.getString("phone"));
+                patients.add(patient);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách bệnh nhân cho slotId " + slotId + ": " + e.getMessage(), e);
+        }
+        return patients;
+    }
+
+    // DTO nội bộ để ánh xạ thông tin bệnh nhân
+    public static class PatientDTO {
+        private String patientCode;
+        private String cccd;
+        private String fullName;
+        private String phone;
+
+        public String getPatientCode() {
+            return patientCode;
+        }
+
+        public void setPatientCode(String patientCode) {
+            this.patientCode = patientCode;
+        }
+
+        public String getCccd() {
+            return cccd;
+        }
+
+        public void setCccd(String cccd) {
+            this.cccd = cccd;
+        }
+
+        public String getFullName() {
+            return fullName;
+        }
+
+        public void setFullName(String fullName) {
+            this.fullName = fullName;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public void setPhone(String phone) {
+            this.phone = phone;
+        }
+    }
 }

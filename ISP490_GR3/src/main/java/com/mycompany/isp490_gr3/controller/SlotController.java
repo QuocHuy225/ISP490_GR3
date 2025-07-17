@@ -19,10 +19,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@WebServlet(name = "SlotController", urlPatterns = {"/slot", "/slot/add", "/slot/delete", "/slot/filterSlotDate"})
+@WebServlet(name = "SlotController", urlPatterns = {"/slot", "/slot/add", "/slot/delete", "/slot/filterSlotDate", "/slot/patients"})
 public class SlotController extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(SlotController.class.getName());
+    private final Gson gson = new Gson();
 
     // Kiểm tra quyền RECEPTIONIST
     private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response)
@@ -58,6 +59,9 @@ public class SlotController extends HttpServlet {
         if ("/slot/filterSlotDate".equals(path)) {
             // Xử lý endpoint /slot/filterSlotDate
             handleFilterSlotDate(request, response);
+            return;
+        } else if ("/slot/patients".equals(path)) {
+            handleGetPatientsBySlot(request, response);
             return;
         }
         // Lọc (doctorId, slotDate truyền null)
@@ -343,61 +347,127 @@ public class SlotController extends HttpServlet {
         response.sendRedirect(redirectUrl);
     }
 
-    private void handleDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
+    private void handleDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession();
         String action = request.getParameter("action");
-        System.out.println(">> action = " + action);
+        LOGGER.info("Handling delete action: " + action);
 
-        DAOSlot dao = new DAOSlot();
+        DAOSlot daoSlot = new DAOSlot();
+        String doctorIdStr = request.getParameter("doctorId");
+        String slotDateStr = request.getParameter("slotDate");
+        String pageParam = request.getParameter("page");
 
-        String redirectUrl = request.getContextPath() + "/slot";
+        Integer doctorId = null;
+        if (doctorIdStr != null && !doctorIdStr.trim().isEmpty()) {
+            try {
+                doctorId = Integer.parseInt(doctorIdStr.trim());
+            } catch (NumberFormatException e) {
+                LOGGER.warning("Invalid doctorId format: " + doctorIdStr);
+            }
+        }
+
+        LocalDate slotDate = null;
+        if (slotDateStr != null && !slotDateStr.trim().isEmpty()) {
+            try {
+                slotDate = LocalDate.parse(slotDateStr);
+            } catch (DateTimeParseException e) {
+                LOGGER.warning("Invalid slotDate format: " + slotDateStr);
+            }
+        }
+
+        int currentPage = 1;
+        if (pageParam != null) {
+            try {
+                currentPage = Integer.parseInt(pageParam);
+            } catch (NumberFormatException e) {
+                currentPage = 1;
+            }
+        }
+
+        String redirectUrl = request.getContextPath() + "/slot?doctorId=" + (doctorIdStr != null ? doctorIdStr : "")
+                + "&slotDate=" + (slotDateStr != null ? slotDateStr : "")
+                + "&page=" + currentPage;
         String message = null;
         String messageType = "info";
 
         try {
             if ("deleteSingle".equals(action)) {
                 String slotId = request.getParameter("slotId");
+                LOGGER.info("Received slotId for single delete: " + slotId);
+
                 if (slotId == null || slotId.isEmpty()) {
                     message = "Thiếu ID slot để xóa.";
                     messageType = "danger";
-                } else if (!dao.slotExists(slotId)) {
+                } else if (!daoSlot.slotExists(slotId)) {
                     message = "Slot không tồn tại.";
                     messageType = "danger";
-                } else if (dao.isSlotBooked(slotId)) {
+                } else if (daoSlot.isSlotBooked(slotId)) {
                     message = "Không thể xóa slot vì đã được đặt.";
                     messageType = "warning";
                 } else {
-                    dao.deleteSlot(slotId);
+                    daoSlot.deleteSlot(slotId);
+                    LOGGER.info("Successfully deleted slotId: " + slotId);
                     message = "Xóa slot thành công.";
                     messageType = "success";
                 }
 
             } else if ("deleteMultiple".equals(action)) {
                 String[] slotIds = request.getParameterValues("slotIds");
+                LOGGER.info("Received slotIds for multiple delete: " + (slotIds != null ? String.join(", ", slotIds) : "null"));
+
                 if (slotIds == null || slotIds.length == 0) {
                     message = "Không có slot nào được chọn để xóa.";
                     messageType = "warning";
                 } else {
-                    boolean canDeleteAll = true;
+                    List<String> deletableSlots = new ArrayList<>();
+                    List<String> skippedSlots = new ArrayList<>();
+
                     for (String id : slotIds) {
-                        if (!dao.slotExists(id)) {
-                            message = "Slot ID " + id + " không tồn tại.";
-                            messageType = "danger";
-                            canDeleteAll = false;
-                            break;
-                        } else if (dao.isSlotBooked(id)) {
-                            message = "Slot ID " + id + " đã được đặt, không thể xóa.";
-                            messageType = "warning";
-                            canDeleteAll = false;
-                            break;
+                        LOGGER.info("Checking slotId: " + id);
+                        if (!daoSlot.slotExists(id)) {
+                            LOGGER.info("SlotId " + id + " does not exist.");
+                            skippedSlots.add(id);
+                        } else if (daoSlot.isSlotBooked(id)) {
+                            LOGGER.info("SlotId " + id + " is booked.");
+                            skippedSlots.add(id);
+                        } else {
+                            LOGGER.info("SlotId " + id + " is deletable.");
+                            deletableSlots.add(id);
                         }
                     }
 
-                    if (canDeleteAll) {
-                        int deletedCount = dao.deleteMultipleSlots(slotIds);
+                    int deletedCount = 0;
+                    if (!deletableSlots.isEmpty()) {
+                        LOGGER.info("Attempting to delete slots: " + String.join(", ", deletableSlots));
+                        deletedCount = daoSlot.deleteMultipleSlots(deletableSlots.toArray(new String[0]));
+                        LOGGER.info("Deleted " + deletedCount + " slots.");
+                    } else {
+                        LOGGER.info("No deletable slots found.");
+                    }
+
+                    // Tính lại tổng số slot và điều chỉnh trang
+                    int totalRecords = daoSlot.countFilteredSlotViewDTOs(doctorId, slotDate);
+                    int totalPages = (int) Math.ceil((double) totalRecords / 10);
+                    if (currentPage > totalPages && totalPages > 0) {
+                        currentPage = totalPages;
+                        redirectUrl = request.getContextPath() + "/slot?doctorId=" + (doctorIdStr != null ? doctorIdStr : "")
+                                + "&slotDate=" + (slotDateStr != null ? slotDateStr : "")
+                                + "&page=" + currentPage;
+                    }
+
+                    if (deletedCount > 0) {
                         message = "Đã xóa " + deletedCount + " slot thành công.";
+                        if (!skippedSlots.isEmpty()) {
+                            message += " " + skippedSlots.size() + " slot đã được đặt và không thể xóa (ID: " + String.join(", ", skippedSlots) + ").";
+                        }
                         messageType = "success";
+                    } else if (!skippedSlots.isEmpty()) {
+                        message = "Không có slot nào được xóa. " + skippedSlots.size() + " slot đã được đặt (ID: " + String.join(", ", skippedSlots) + ").";
+                        messageType = "warning";
+                    } else {
+                        message = "Không có slot nào được chọn để xóa.";
+                        messageType = "warning";
                     }
                 }
 
@@ -414,6 +484,55 @@ public class SlotController extends HttpServlet {
 
         session.setAttribute("message", message);
         session.setAttribute("messageType", messageType);
+        LOGGER.info("Redirecting to: " + redirectUrl + " with message: " + message);
         response.sendRedirect(redirectUrl);
+    }
+
+    // Xử lý endpoint /slot/patients
+    private void handleGetPatientsBySlot(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        String slotIdRaw = request.getParameter("slotId");
+        System.out.println("slotId nhận được từ FE: " + slotIdRaw);
+
+        if (slotIdRaw == null || slotIdRaw.trim().isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(new ResponseJson(false, "Missing slotId parameter.")));
+            return;
+        }
+
+        try {
+            int slotId = Integer.parseInt(slotIdRaw);
+            DAOSlot daoSlot = new DAOSlot();
+            if (!daoSlot.slotExists(String.valueOf(slotId))) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write(gson.toJson(new ResponseJson(false, "Slot không tồn tại hoặc đã bị xóa.")));
+                return;
+            }
+            List<DAOSlot.PatientDTO> patients = daoSlot.getPatientsBySlotId(slotId);
+            String json = gson.toJson(patients);
+            System.out.println("JSON response: " + json);
+            response.getWriter().write(json);
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(new ResponseJson(false, "Invalid slotId format.")));
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách bệnh nhân: " + e.getMessage(), e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson(new ResponseJson(false, "Lỗi server khi lấy danh sách bệnh nhân.")));
+        }
+    }
+
+    private static class ResponseJson {
+
+        boolean success;
+        String message;
+
+        ResponseJson(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
     }
 }

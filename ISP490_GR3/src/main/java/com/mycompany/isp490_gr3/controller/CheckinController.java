@@ -22,8 +22,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -189,7 +192,7 @@ public class CheckinController extends HttpServlet {
         String doctorIdStr = request.getParameter("doctorId");
         String servicesIdStr = request.getParameter("servicesId");
         String status = request.getParameter("status");
-        String slotDateStr = request.getParameter("slotDate");
+       
 
         Integer doctorId = null;
         if (doctorIdStr != null && !doctorIdStr.trim().isEmpty()) {
@@ -206,15 +209,6 @@ public class CheckinController extends HttpServlet {
                 servicesId = Integer.parseInt(servicesIdStr.trim());
             } catch (NumberFormatException e) {
                 LOGGER.warning("Invalid servicesId format: " + servicesIdStr);
-            }
-        }
-
-        LocalDate slotDate = null;
-        if (slotDateStr != null && !slotDateStr.trim().isEmpty()) {
-            try {
-                slotDate = LocalDate.parse(slotDateStr);
-            } catch (DateTimeParseException e) {
-                LOGGER.warning("Invalid slotDate format: " + slotDateStr);
             }
         }
 
@@ -235,8 +229,7 @@ public class CheckinController extends HttpServlet {
         List<AppointmentViewDTO> currentPageAppointments;
         int totalRecords;
 
-       
-        if (appointmentCode == null && patientCode == null && doctorId == null && servicesId == null && status == null && slotDate == null) {
+        if (appointmentCode == null && patientCode == null && doctorId == null && servicesId == null && status == null) {
             currentPageAppointments = daoAppointment.getTodayCheckinAppointments(offset, recordsPerPage);
             totalRecords = daoAppointment.countTodayCheckinAppointments();
         } else {
@@ -261,7 +254,6 @@ public class CheckinController extends HttpServlet {
         request.setAttribute("doctorId", doctorIdStr != null ? doctorIdStr : "");
         request.setAttribute("servicesId", servicesIdStr != null ? servicesIdStr : "");
         request.setAttribute("status", status != null ? status : "");
-        request.setAttribute("slotDate", slotDate != null ? slotDate.toString() : "");
         request.setAttribute("searchPerformed", true);
         request.setAttribute("hasResults", !currentPageAppointments.isEmpty());
         request.setAttribute("currentPage", currentPage);
@@ -276,8 +268,7 @@ public class CheckinController extends HttpServlet {
 
     private void handleCheckin(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        System.out.println(">>> ĐÃ GỌI HANDLE CHECKIN <<<");
-
+       
         HttpSession session = request.getSession();
 
         try {
@@ -308,16 +299,35 @@ public class CheckinController extends HttpServlet {
 
             DAOAppointment daoAppointment = new DAOAppointment();
             Slot slot = daoAppointment.getSlotByAppointmentId(appointmentId);
-
             
+            //Không checkin đối với slot quá hạn
             if (slot.getSlotDate().isEqual(LocalDate.now()) && LocalTime.now().isAfter(slot.getEndTime())) {
-               session.setAttribute("message", "Quá thời gian check-in");
+                session.setAttribute("message", "Quá thời gian check-in");
                 session.setAttribute("messageType", "danger");
                 response.sendRedirect(request.getContextPath() + "/checkin");
-                return; 
+                return;
             }
-         
-
+            
+            // Lấy thời gian hiện tại với múi giờ Việt Nam (+7)
+        ZoneId zoneId = ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalDateTime now = LocalDateTime.now(zoneId);
+        LocalTime currentTime = now.toLocalTime();
+        LocalDate currentDate = now.toLocalDate();
+        LocalTime startTime = slot.getStartTime();
+        LocalTime endTime = slot.getEndTime();
+            // Kiểm tra check-in sớm
+        long minutesEarly = ChronoUnit.MINUTES.between(currentTime, startTime); // Thời gian sớm (phút)
+        if (minutesEarly > 30) { // Sớm quá 30 phút
+            session.setAttribute("message", "Không hỗ trợ check-in cho bệnh nhân đến quá sớm");
+            session.setAttribute("messageType", "warning");
+            response.sendRedirect(request.getContextPath() + "/checkin");
+            return;
+        } else if (minutesEarly > 0 && minutesEarly <= 30) { // Sớm từ 0 đến 30 phút
+            session.setAttribute("message", "Tiếp tục check-in sớm?");
+            session.setAttribute("messageType", "warning");
+        }
+            
+          
             boolean success = daoAppointment.checkinAppointment(appointmentId, priority, description);
 
             if (success) {

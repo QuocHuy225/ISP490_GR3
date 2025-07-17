@@ -19,8 +19,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +111,6 @@ public class QueueController extends HttpServlet {
         // Lấy danh sách bác sĩ
         DAODoctor daoDoctor = new DAODoctor();
         List<Doctor> doctors = daoDoctor.findAllDoctors();
-        
 
         // Lấy danh sách hàng đợi
         DAOQueue dao = new DAOQueue();
@@ -166,6 +168,10 @@ public class QueueController extends HttpServlet {
         String appointmentCode = request.getParameter("appointmentCode");
         String patientCode = request.getParameter("patientCode");
 
+        // Lấy thời gian hiện tại
+        LocalTime currentTime = LocalTime.now(); // Ví dụ: 13:30
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
         DAOQueue dao = new DAOQueue();
         List<QueueViewDTO> queueList;
         int totalRecords;
@@ -176,6 +182,26 @@ public class QueueController extends HttpServlet {
         } else {
             queueList = dao.getTodayQueueViewDTOs(doctorId, slotDate, offset, limit);
             totalRecords = dao.countTodayQueueViewDTOs(doctorId, slotDate);
+        }
+
+        // Sắp xếp queueList theo thời gian khám gần nhất và ưu tiên cao
+        queueList.sort(Comparator
+                .comparing((QueueViewDTO item) -> {
+                    // Lấy thời gian bắt đầu của slotTimeRange (e.g., "13:00-13:15" -> 13:00)
+                    String[] timeRange = item.getSlotTimeRange().split("-");
+                    LocalTime slotStartTime = LocalTime.parse(timeRange[0], timeFormatter);
+                    // Tính khoảng cách tuyệt đối từ slotStartTime đến currentTime
+                    long minutesDiff = Math.abs(slotStartTime.toSecondOfDay() - currentTime.toSecondOfDay()) / 60;
+                    return minutesDiff;
+                })
+                .thenComparing(QueueViewDTO::getPriority, Comparator.reverseOrder()) // Ưu tiên cao (1) trước
+        );
+
+        // Đánh dấu isBeforeCurrentTime
+        for (QueueViewDTO item : queueList) {
+            String[] timeRange = item.getSlotTimeRange().split("-");
+            LocalTime slotStartTime = LocalTime.parse(timeRange[0], timeFormatter);
+            item.setBeforeCurrentTime(slotStartTime.isBefore(currentTime));
         }
 
         Map<String, Object> responseData = new HashMap<>();

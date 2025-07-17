@@ -333,8 +333,7 @@ public class AppointmentController extends HttpServlet {
             String patientIdStr = request.getParameter("patientId");
             String serviceIdStr = request.getParameter("servicesId");
 
-            System.out.println("Received parameters: serviceId=" + serviceIdStr + ", appointmentId=" + appointmentIdStr + ", patientId=" + patientIdStr);
-
+           
             // Kiểm tra nếu thiếu tham số
             if (appointmentIdStr == null || patientIdStr == null || serviceIdStr == null) {
                 out.write(gson.toJson(new ResponseJson(false, "Thiếu appointmentId hoặc patientId hoặc serviceId")));
@@ -356,7 +355,7 @@ public class AppointmentController extends HttpServlet {
 
             DAOAppointment dao = new DAOAppointment();
 
-            //Kiểm tra 6 
+     
             //1.Kiểm tra lịch hẹn có tồn tại không
             if (!dao.exists(appointmentId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

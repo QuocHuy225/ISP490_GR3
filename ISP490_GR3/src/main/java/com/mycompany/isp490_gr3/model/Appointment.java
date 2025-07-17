@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter; // Added for formatting LocalDateTime
 public class Appointment {
 
     private int id;
-    private String appointmentCode; // Will be derived from 'id' or a separate DB field if added
+    private String appointmentCode; 
 
     private int patientId;
     private int slotId;
