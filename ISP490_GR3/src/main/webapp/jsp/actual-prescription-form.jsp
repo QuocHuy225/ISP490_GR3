@@ -571,19 +571,19 @@
                         </div>
                         <div class="col-md-1">
                             <label class="form-label">Số ngày</label>
-                            <input type="number" class="form-control" name="daysOfTreatment" placeholder="7" min="0">
+                            <input type="number" class="form-control" name="daysOfTreatment" placeholder="0" min="0">
                         </div>
                         <div class="col-md-1">
                             <label class="form-label">Lần/ngày</label>
-                            <input type="number" class="form-control" name="unitsPerDay" placeholder="3" min="0">
+                            <input type="number" class="form-control" name="unitsPerDay" placeholder="0" min="0">
                         </div>
                         <div class="col-md-1">
                             <label class="form-label">Tổng SL</label>
-                            <input type="number" class="form-control" name="totalQuantity" placeholder="21" min="0">
+                            <input type="number" class="form-control" name="totalQuantity" placeholder="0" min="0">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">HDSD</label>
-                            <input type="text" class="form-control" name="usageInstructions" placeholder="Hướng dẫn...">
+                            <input type="text" class="form-control" name="usageInstructions" placeholder="Hướng dẫn sử dụng">
                         </div>
                     </div>`;
                 container.appendChild(row);
