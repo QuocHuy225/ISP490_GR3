@@ -76,6 +76,26 @@
                 max-height: 400px;
                 overflow-y: auto;
             }
+            /* Đảm bảo thông báo lỗi không làm nhảy row */
+            .medicine-row .invalid-feedback {
+                position: absolute;
+                left: 0;
+                top: 100%;
+                font-size: 0.85em;
+                color: #dc3545;
+                z-index: 2;
+                white-space: nowrap;
+                padding-left: 2px;
+                background: transparent;
+                margin-top: 2px;
+            }
+            .medicine-row .form-control.is-invalid {
+                border-color: #dc3545;
+                box-shadow: 0 0 0 0.1rem rgba(220,53,69,.25);
+            }
+            .medicine-row .col-md-2, .medicine-row .col-md-1, .medicine-row .col-md-3 {
+                position: relative;
+            }
         </style>
     </head>
     <body>
@@ -301,7 +321,7 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label"><i class="bi bi-tag me-2"></i>Tên đơn thuốc <span class="text-danger">*</span></label>
+                                                <label class="form-label"><i class="bi bi-tag me-2"></i>Tên đơn thuốc <span class="text-danger" >*</span></label>
                                                 <input type="text" class="form-control" name="formName" 
                                                        value="<%= form != null ? form.getFormName() : "" %>" 
                                                        placeholder="Nhập tên đơn thuốc" required>
@@ -338,41 +358,34 @@
                                                     <button type="button" class="remove-medicine-btn" onclick="removeMedicineRow(this)">
                                                         <i class="bi bi-x"></i>
                                                     </button>
-                                                    <div class="row g-3">
-                                                        <div class="col-md-6">
+                                                    <div class="row g-2 align-items-end">
+                                                        <div class="col-md-2">
                                                             <label class="form-label">Tên thuốc <span class="text-danger">*</span></label>
-                                                            <input type="text" class="form-control" name="medicineName" 
-                                                                   value="<%= m.getMedicineName() %>" placeholder="Nhập tên thuốc" required>
+                                                            <input type="text" class="form-control" name="medicineName" value="<%= m.getMedicineName() %>" placeholder="Nhập tên thuốc" required>
                                                         </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label">Đơn vị tính</label>
-                                                            <input type="text" class="form-control" name="unitOfMeasure" 
-                                                                   value="<%= m.getUnitOfMeasure() != null ? m.getUnitOfMeasure() : "" %>" placeholder="Viên, ml, gói...">
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">ĐVT</label>
+                                                            <input type="text" class="form-control" name="unitOfMeasure" value="<%= m.getUnitOfMeasure() != null ? m.getUnitOfMeasure() : "" %>" placeholder="Viên, ml...">
                                                         </div>
-                                                        <div class="col-md-3">
+                                                        <div class="col-md-2">
                                                             <label class="form-label">Đường dùng</label>
-                                                            <input type="text" class="form-control" name="administrationRoute" 
-                                                                   value="<%= m.getAdministrationRoute() != null ? m.getAdministrationRoute() : "" %>" placeholder="Uống, tiêm...">
+                                                            <input type="text" class="form-control" name="administrationRoute" value="<%= m.getAdministrationRoute() != null ? m.getAdministrationRoute() : "" %>" placeholder="Uống, tiêm...">
                                                         </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Số ngày dùng</label>
-                                                            <input type="number" class="form-control" name="daysOfTreatment" 
-                                                                   value="<%= m.getDaysOfTreatment() != null ? m.getDaysOfTreatment() : "" %>" placeholder="7">
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">Số ngày</label>
+                                                            <input type="number" class="form-control" name="daysOfTreatment" value="<%= m.getDaysOfTreatment() != null ? m.getDaysOfTreatment() : "" %>" placeholder="0" min="0">
                                                         </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Số lần/ngày</label>
-                                                            <input type="number" class="form-control" name="unitsPerDay" 
-                                                                   value="<%= m.getUnitsPerDay() != null ? m.getUnitsPerDay() : "" %>" placeholder="3">
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">Lần/ngày</label>
+                                                            <input type="number" class="form-control" name="unitsPerDay" value="<%= m.getUnitsPerDay() != null ? m.getUnitsPerDay() : "" %>" placeholder="0" min="0">
                                                         </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Tổng số lượng</label>
-                                                            <input type="number" class="form-control" name="totalQuantity" 
-                                                                   value="<%= m.getTotalQuantity() != null ? m.getTotalQuantity() : "" %>" placeholder="21">
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">Tổng SL</label>
+                                                            <input type="number" class="form-control" name="totalQuantity" value="<%= m.getTotalQuantity() != null ? m.getTotalQuantity() : "" %>" placeholder="0" min="0">
                                                         </div>
-                                                        <div class="col-12">
-                                                            <label class="form-label">Hướng dẫn sử dụng</label>
-                                                            <textarea class="form-control" name="usageInstructions" rows="2" 
-                                                                      placeholder="Uống sau ăn, ngày 3 lần, mỗi lần 1 viên..."><%= m.getUsageInstructions() != null ? m.getUsageInstructions() : "" %></textarea>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">HDSD</label>
+                                                            <input type="text" class="form-control" name="usageInstructions" value="<%= m.getUsageInstructions() != null ? m.getUsageInstructions() : "" %>" placeholder="Hướng dẫn sử dụng">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -382,35 +395,34 @@
                                                     <button type="button" class="remove-medicine-btn" onclick="removeMedicineRow(this)">
                                                         <i class="bi bi-x"></i>
                                                     </button>
-                                                    <div class="row g-3">
-                                                        <div class="col-md-6">
+                                                    <div class="row g-2 align-items-end">
+                                                        <div class="col-md-2">
                                                             <label class="form-label">Tên thuốc <span class="text-danger">*</span></label>
                                                             <input type="text" class="form-control" name="medicineName" placeholder="Nhập tên thuốc" required>
                                                         </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label">Đơn vị tính</label>
-                                                            <input type="text" class="form-control" name="unitOfMeasure" placeholder="Viên, ml, gói...">
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">ĐVT</label>
+                                                            <input type="text" class="form-control" name="unitOfMeasure" placeholder="Viên, ml...">
                                                         </div>
-                                                        <div class="col-md-3">
+                                                        <div class="col-md-2">
                                                             <label class="form-label">Đường dùng</label>
                                                             <input type="text" class="form-control" name="administrationRoute" placeholder="Uống, tiêm...">
                                                         </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Số ngày dùng</label>
-                                                            <input type="number" class="form-control" name="daysOfTreatment" placeholder="7">
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">Số ngày</label>
+                                                            <input type="number" class="form-control" name="daysOfTreatment" placeholder="0" min="0">
                                                         </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Số lần/ngày</label>
-                                                            <input type="number" class="form-control" name="unitsPerDay" placeholder="3">
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">Lần/ngày</label>
+                                                            <input type="number" class="form-control" name="unitsPerDay" placeholder="0" min="0">
                                                         </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Tổng số lượng</label>
-                                                            <input type="number" class="form-control" name="totalQuantity" placeholder="21">
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">Tổng SL</label>
+                                                            <input type="number" class="form-control" name="totalQuantity" placeholder="0" min="0">
                                                         </div>
-                                                        <div class="col-12">
-                                                            <label class="form-label">Hướng dẫn sử dụng</label>
-                                                            <textarea class="form-control" name="usageInstructions" rows="2" 
-                                                                      placeholder="Uống sau ăn, ngày 3 lần, mỗi lần 1 viên..."></textarea>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">HDSD</label>
+                                                            <input type="text" class="form-control" name="usageInstructions" placeholder="Hướng dẫn sử dụng">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -419,22 +431,22 @@
                                     </div>
 
                                     <!-- Form Buttons -->
-                                    <div class="form-buttons mt-4">
-                                        <button type="submit" class="btn btn-primary me-2">
-                                            <i class="bi bi-check-circle me-2"></i>
-                                            <%= "add".equals(action) ? "Tạo đơn thuốc" : "Cập nhật" %>
-                                        </button>
+                                    <div class="form-buttons mt-4 d-flex justify-content-end">
                                         <% if ("add".equals(action)) { %>
                                             <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= medicalRecord.getPatientId() %>" 
-                                               class="btn btn-secondary">
+                                               class="btn btn-secondary me-2">
                                                 <i class="bi bi-x-circle me-2"></i>Hủy
                                             </a>
                                         <% } else { %>
                                             <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=view&formId=<%= form.getActualPrescriptionFormId() %>" 
-                                               class="btn btn-secondary">
+                                               class="btn btn-secondary me-2">
                                                 <i class="bi bi-x-circle me-2"></i>Hủy
                                             </a>
                                         <% } %>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            <%= "add".equals(action) ? "Tạo đơn thuốc" : "Cập nhật" %>
+                                        </button>
                                     </div>
                                 </form>
                             </div>
@@ -544,35 +556,34 @@
                     <button type="button" class="remove-medicine-btn" onclick="removeMedicineRow(this)">
                         <i class="bi bi-x"></i>
                     </button>
-                    <div class="row g-3">
-                        <div class="col-md-6">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-2">
                             <label class="form-label">Tên thuốc <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="medicineName" placeholder="Nhập tên thuốc" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Đơn vị tính</label>
-                            <input type="text" class="form-control" name="unitOfMeasure" placeholder="Viên, ml, gói...">
+                        <div class="col-md-1">
+                            <label class="form-label">ĐVT</label>
+                            <input type="text" class="form-control" name="unitOfMeasure" placeholder="Viên, ml...">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Đường dùng</label>
                             <input type="text" class="form-control" name="administrationRoute" placeholder="Uống, tiêm...">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Số ngày dùng</label>
-                            <input type="number" class="form-control" name="daysOfTreatment" placeholder="7">
+                        <div class="col-md-1">
+                            <label class="form-label">Số ngày</label>
+                            <input type="number" class="form-control" name="daysOfTreatment" placeholder="7" min="0">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Số lần/ngày</label>
-                            <input type="number" class="form-control" name="unitsPerDay" placeholder="3">
+                        <div class="col-md-1">
+                            <label class="form-label">Lần/ngày</label>
+                            <input type="number" class="form-control" name="unitsPerDay" placeholder="3" min="0">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tổng số lượng</label>
-                            <input type="number" class="form-control" name="totalQuantity" placeholder="21">
+                        <div class="col-md-1">
+                            <label class="form-label">Tổng SL</label>
+                            <input type="number" class="form-control" name="totalQuantity" placeholder="21" min="0">
                         </div>
-                        <div class="col-12">
-                            <label class="form-label">Hướng dẫn sử dụng</label>
-                            <textarea class="form-control" name="usageInstructions" rows="2" 
-                                      placeholder="Uống sau ăn, ngày 3 lần, mỗi lần 1 viên..."></textarea>
+                        <div class="col-md-3">
+                            <label class="form-label">HDSD</label>
+                            <input type="text" class="form-control" name="usageInstructions" placeholder="Hướng dẫn...">
                         </div>
                     </div>`;
                 container.appendChild(row);
@@ -621,6 +632,79 @@
                     lastRow.querySelector('input[name="totalQuantity"]').value = total;
                 }
             }
+
+            document.addEventListener('input', function(e) {
+                if (e.target.matches('input[name="daysOfTreatment"], input[name="unitsPerDay"], input[name="totalQuantity"]')) {
+                    if (e.target.value && parseInt(e.target.value) < 0) {
+                        e.target.value = 0;
+                    }
+                }
+            });
+
+            // Thêm kiểm tra required phía client cho tên đơn thuốc và ít nhất một tên thuốc
+            $(function() {
+                $('#prescriptionForm').on('submit', function(e) {
+                    let valid = true;
+                    // Xóa thông báo lỗi cũ
+                    $('.invalid-feedback').remove();
+                    $('.is-invalid').removeClass('is-invalid');
+
+                    // Kiểm tra tên đơn thuốc
+                    const formNameInput = $(this).find('input[name="formName"]');
+                    const formName = formNameInput.val().trim();
+                    if (!formName) {
+                        if (formNameInput.next('.invalid-feedback').length === 0) {
+                            formNameInput.addClass('is-invalid').after('<div class="invalid-feedback">Vui lòng nhập tên đơn thuốc!</div>');
+                        }
+                        formNameInput.focus();
+                        valid = false;
+                    }
+
+                    // Kiểm tra ít nhất một tên thuốc
+                    let hasMedicine = false;
+                    let firstEmptyMedicine = null;
+                    let medicineNames = [];
+                    let duplicateFound = false;
+                    $(this).find('input[name="medicineName"]').each(function() {
+                        const val = $(this).val().trim();
+                        if (val) {
+                            hasMedicine = true;
+                            if (medicineNames.includes(val.toLowerCase())) {
+                                // Trùng tên thuốc
+                                if ($(this).next('.invalid-feedback').length === 0) {
+                                    $(this).addClass('is-invalid').after('<div class="invalid-feedback">Tên thuốc không được trùng nhau!</div>');
+                                }
+                                $(this).focus();
+                                valid = false;
+                                duplicateFound = true;
+                            } else {
+                                medicineNames.push(val.toLowerCase());
+                            }
+                        } else if (!firstEmptyMedicine) {
+                            firstEmptyMedicine = $(this);
+                        }
+                    });
+                    if (!hasMedicine && firstEmptyMedicine) {
+                        if (firstEmptyMedicine.next('.invalid-feedback').length === 0) {
+                            firstEmptyMedicine.addClass('is-invalid').after('<div class="invalid-feedback">Vui lòng nhập tên thuốc!</div>');
+                            firstEmptyMedicine.focus();
+                        }
+                        valid = false;
+                    }
+                    if (!valid) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+
+                // Xóa thông báo khi người dùng nhập lại
+                $(document).on('input', 'input[name="formName"], input[name="medicineName"]', function() {
+                    if ($(this).val().trim()) {
+                        $(this).removeClass('is-invalid');
+                        $(this).next('.invalid-feedback').remove();
+                    }
+                });
+            });
         </script>
     </body>
 </html> 
