@@ -1,4 +1,3 @@
-```html
 <%-- 
     Document   : queue
     Created on : Jul 14, 2025, 10:46:13 AM
@@ -193,7 +192,7 @@
 
             <div class="appointment-list-section animate-fade-in">
                 <div class="appointment-list-header">
-                    <h5>Danh sách hàng đợi hôm nay (${totalRecords} kết quả)</h5>
+                    <h5 id="queueHeader">Danh sách hàng đợi hôm nay (<span id="totalRecordsDisplay">0</span> kết quả)</h5>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered table-appointments">
@@ -286,17 +285,24 @@
 
                     // Load danh sách hàng đợi
                     function loadQueue() {
-                        const doctorId = document.getElementById('doctorId').value.trim();
-                        const slotDate = document.getElementById('slotDate').value.trim();
-                        console.log("doctorId", doctorId);
-                        console.log("slotDate", slotDate);
-                         
+                        const doctorIdElement = document.getElementById('doctorId');
+                        const slotDateElement = document.getElementById('slotDate');
+                        if (!doctorIdElement || !slotDateElement) {
+                            console.error("Không tìm thấy phần tử doctorId hoặc slotDate trong DOM!");
+                            return;
+                        }
+
+                        const doctorId = doctorIdElement.value.trim();
+                        const slotDate = slotDateElement.value.trim();
+                        console.log("doctorId value:", doctorId);
+                        console.log("slotDate value:", slotDate);
+
                         const query = new URLSearchParams({
                             doctorId: doctorId,
                             slotDate: slotDate
                         }).toString();
                         const url = BASE_URL + "/api/queue?" + query;
-                        console.log("url", url);
+                        console.log("Generated URL:", url);
 
                         tableBody.innerHTML = '<tr><td colspan="12" class="text-center"><div class="spinner">Đang tải...</div></td></tr>';
 
@@ -320,20 +326,23 @@
                                     return res.json();
                                 })
                                 .then(data => {
-                                    // Cập nhật pagination info
+                                    console.log("Received data:", JSON.stringify(data, null, 2));
+                                    const totalRecordsDisplay = document.getElementById('totalRecordsDisplay');
+                                    totalRecordsDisplay.textContent = data.totalRecords || 0;
                                     paginationInfo.innerHTML = 'Hiển thị ' + (data.queueList ? data.queueList.length : 0) + ' / ' + (data.totalRecords || 0) + ' kết quả';
 
                                     tableBody.innerHTML = '';
                                     if (!data.queueList || data.queueList.length === 0) {
-                                        console.log("Không có dữ liệu trong queueList");
+                                        console.log("Không có dữ liệu trong queueList hoặc queueList không tồn tại. Data:", JSON.stringify(data));
                                         tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Không có hàng đợi nào được tìm thấy.</td></tr>';
                                     } else {
                                         console.log("Bắt đầu render queueList với", data.queueList.length, "bản ghi");
-                                        let addedSeparator = false; // Khai báo biến addedSeparator
+                                        let addedSeparator = false;
                                         data.queueList.forEach((q, index) => {
                                             try {
-                                                // Thêm viền ngăn cách khi chuyển từ trước sang sau thời gian hiện tại
-                                                if (!addedSeparator && !q.isBeforeCurrentTime && index > 0) {
+                                                console.log("Rendering item", index + 1, ":", q);
+                                                // Thêm viền ngăn cách khi gặp phần tử đầu tiên sau currentTime
+                                                if (!addedSeparator && !q.isBeforeCurrentTime) {
                                                     const separatorRow = document.createElement('tr');
                                                     separatorRow.classList.add('separator');
                                                     separatorRow.innerHTML = `<td colspan="12" style="border-top: 3px solid #007bff; text-align: center; font-weight: bold;">Thời gian hiện tại: ${data.currentTime}</td>`;
@@ -341,13 +350,16 @@
                                                     addedSeparator = true;
                                                 }
 
-                                                // Tạo hàng cho lịch hẹn
                                                 const row = document.createElement('tr');
-                                                // Làm nổi bật hàng ưu tiên cao
                                                 if (q.priority === 1) {
-                                                    row.classList.add('priority-high');
+                                                    row.classList.add('priority-high'); // Ưu tiên cao gần viền
                                                 }
-                                               row.innerHTML = '<td>' + (index + 1) + '</td>' +
+                                                if (q.isBeforeCurrentTime) {
+                                                    row.classList.add('before-current');
+                                                } else {
+                                                    row.classList.add('after-current');
+                                                }
+                                                row.innerHTML = '<td>' + (index + 1) + '</td>' +
                                                         '<td>' + (q.appointmentCode || '-') + '</td>' +
                                                         '<td>' + (q.slotDate || '-') + '</td>' +
                                                         '<td>' + (q.slotTimeRange || '-') + '</td>' +
@@ -367,7 +379,7 @@
                                                         '</td>';
                                                 tableBody.appendChild(row);
                                             } catch (error) {
-                                                console.error('Lỗi khi render hàng ' + (index + 1) + ':', error);
+                                                console.error('Lỗi khi render hàng ' + (index + 1) + ':', error, q);
                                             }
                                         });
                                         console.log("Hoàn tất render queueList");

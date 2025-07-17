@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -169,36 +170,45 @@ public class QueueController extends HttpServlet {
         String appointmentCode = request.getParameter("appointmentCode");
         String patientCode = request.getParameter("patientCode");
 
-        LOGGER.log(Level.INFO, "Received API request - doctorIdParam: {0}, slotDateStr: {1}, appointmentCode: {2}, patientCode: {3}, page: {4}, offset: {5}", new Object[]{doctorIdParam, slotDateStr, appointmentCode, patientCode, pageParam, offset});
+        LOGGER.info("Received API request - doctorIdParam: " + doctorIdParam + ", slotDateStr: " + slotDateStr
+                + ", appointmentCode: " + appointmentCode + ", patientCode: " + patientCode
+                + ", page: " + pageParam + ", offset: " + offset);
 
-        // Lấy thời gian hiện tại
-        LocalTime currentTime = LocalTime.now(); // Ví dụ: 13:30
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalTime currentTime = LocalTime.now(vietnamZone);
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
         DAOQueue dao = new DAOQueue();
-        List<QueueViewDTO> queueList;
-        int totalRecords;
+        List<QueueViewDTO> queueList = null;
+        int totalRecords = 0;
 
-        if (appointmentCode != null || patientCode != null || doctorId > 0 || slotDate != null) {
-            queueList = dao.searchQueueViewDTOs(appointmentCode, patientCode, doctorId, slotDate, offset, limit);
-            totalRecords = dao.countSearchQueueViewDTOs(appointmentCode, patientCode, doctorId, slotDate);
-        } else {
-            queueList = dao.getTodayQueueViewDTOs(doctorId, slotDate, offset, limit);
-            totalRecords = dao.countTodayQueueViewDTOs(doctorId, slotDate);
+        try {
+            if (appointmentCode != null || patientCode != null || doctorId > 0 || slotDate != null) {
+                queueList = dao.searchQueueViewDTOs(appointmentCode, patientCode, doctorId, slotDate, offset, limit);
+                totalRecords = dao.countSearchQueueViewDTOs(appointmentCode, patientCode, doctorId, slotDate);
+                LOGGER.info("Fetched " + (queueList != null ? queueList.size() : 0) + " records from search with total: " + totalRecords);
+            } else {
+                queueList = dao.getTodayQueueViewDTOs(doctorId, slotDate, offset, limit);
+                totalRecords = dao.countTodayQueueViewDTOs(doctorId, slotDate);
+                LOGGER.info("Fetched " + (queueList != null ? queueList.size() : 0) + " records from today with total: " + totalRecords);
+            }
+        } catch (Exception e) {
+            LOGGER.severe("Error fetching queue list: " + e.getMessage());
+            queueList = new ArrayList<>();
         }
 
         if (queueList == null) {
-            queueList = new ArrayList<>(); // Đảm bảo không null
+            queueList = new ArrayList<>();
             LOGGER.warning("queueList is null, initialized as empty list");
         }
-        // Sắp xếp queueList theo thời gian khám gần nhất và ưu tiên cao
 
+        // Sắp xếp mới: Ưu tiên lịch hẹn tại currentTime, sau đó ưu tiên cao gần viền
         try {
             queueList.sort(Comparator
                     .comparing((QueueViewDTO item) -> {
                         if (item == null || item.getSlotTimeRange() == null || !item.getSlotTimeRange().contains("-")) {
                             LOGGER.warning("Invalid or null slotTimeRange for item: " + (item != null ? item.getAppointmentCode() : "null"));
-                            return Long.MAX_VALUE; // Đẩy ra cuối nếu dữ liệu không hợp lệ
+                            return Long.MAX_VALUE;
                         }
                         String[] timeRange = item.getSlotTimeRange().trim().split("-");
                         if (timeRange.length < 2 || timeRange[0].trim().isEmpty()) {
@@ -206,41 +216,49 @@ public class QueueController extends HttpServlet {
                             return Long.MAX_VALUE;
                         }
                         LocalTime slotStartTime = LocalTime.parse(timeRange[0].trim(), timeFormatter);
-                        long minutesDiff = Math.abs(slotStartTime.toSecondOfDay() - currentTime.toSecondOfDay()) / 60;
-                        return minutesDiff;
+                        long minutesDiff = slotStartTime.toSecondOfDay() - currentTime.toSecondOfDay(); // Không dùng abs, ưu tiên 0 phút
+                        return minutesDiff; // Lịch hẹn tại currentTime (0) lên đầu
                     })
-                    .thenComparing(QueueViewDTO::getPriority, Comparator.reverseOrder())
+                    .thenComparing(QueueViewDTO::getPriority, Comparator.reverseOrder()) // Ưu tiên cao sau
+                    .thenComparing(QueueViewDTO::getSlotTimeRange, Comparator.naturalOrder()) // Sắp xếp tăng dần theo giờ
             );
             LOGGER.info("Sorting completed successfully for " + queueList.size() + " items");
         } catch (Exception e) {
             LOGGER.severe("Error during sorting: " + e.getMessage());
-            // Sắp xếp lại theo priority nếu lỗi
             queueList.sort(Comparator.comparing(QueueViewDTO::getPriority, Comparator.reverseOrder()));
         }
 
-        // Xử lý vòng lặp với try-catch
+        // Xử lý trước current time
         try {
             for (QueueViewDTO item : queueList) {
                 if (item == null) {
                     LOGGER.warning("Null item encountered in queueList");
-                    continue; // Bỏ qua phần tử null
+                    continue;
                 }
-                String[] timeRange = item.getSlotTimeRange() != null ? item.getSlotTimeRange().trim().split("-") : new String[0];
-                if (timeRange.length < 1 || timeRange[0].trim().isEmpty()) {
-                    LOGGER.warning("Invalid timeRange for item: " + item.getAppointmentCode());
+                String slotTimeRange = item.getSlotTimeRange();
+                if (slotTimeRange == null || !slotTimeRange.contains("-")) {
+                    LOGGER.warning("Invalid slotTimeRange for item: " + item.getAppointmentCode());
                     item.setBeforeCurrentTime(false);
                 } else {
-                    LocalTime slotStartTime = LocalTime.parse(timeRange[0].trim(), timeFormatter);
-                    item.setBeforeCurrentTime(slotStartTime.isBefore(currentTime));
+                    String[] timeRange = slotTimeRange.trim().split("-");
+                    if (timeRange.length > 0 && !timeRange[0].trim().isEmpty()) {
+                        LocalTime slotStartTime = LocalTime.parse(timeRange[0].trim(), timeFormatter);
+                        item.setBeforeCurrentTime(slotStartTime.isBefore(currentTime));
+                        LOGGER.info("Item " + item.getAppointmentCode() + " - slotStartTime: " + slotStartTime + ", isBeforeCurrentTime: " + item.isBeforeCurrentTime());
+                    } else {
+                        LOGGER.warning("Empty timeRange[0] for item: " + item.getAppointmentCode());
+                        item.setBeforeCurrentTime(false);
+                    }
                 }
             }
         } catch (Exception e) {
-            LOGGER.severe("Error in setting beforeCurrentTime: " + e.getMessage());
+            LOGGER.severe("Error setting beforeCurrentTime: " + e.getMessage());
         }
-        
+
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("queueList", queueList);
         responseData.put("totalRecords", totalRecords);
+        responseData.put("currentTime", currentTime.format(timeFormatter));
 
         String json = new Gson().toJson(responseData);
         response.getWriter().print(json);

@@ -499,8 +499,7 @@
         </script>
 
         <script src="${pageContext.request.contextPath}/js/appointment.js"></script>
-
-        <%-- Modal gán bệnh nhân --%>
+        <!-- Modal gán bệnh nhân -->
         <div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-xl">
                 <div class="modal-content shadow-lg rounded-4">
@@ -563,21 +562,24 @@
 
                             <div class="mt-4">
                                 <h6 class="fw-bold mb-3">Danh sách bệnh nhân <span class="text-danger"> *</span></h6>
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-bordered" id="patientListTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Mã bệnh nhân</th>
-                                                <th>CCCD</th>
-                                                <th>Họ tên</th>
-                                                <th>Số điện thoại</th>
-                                                <th>Chọn </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="patientListBody">
-                                            <!-- Dữ liệu sẽ được tải từ API -->
-                                        </tbody>
-                                    </table>
+                                <!-- Wrapper với scroll -->
+                                <div class="patient-list-wrapper" style="max-height: 300px; overflow-y: auto;">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-bordered" id="patientListTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Mã bệnh nhân</th>
+                                                    <th>CCCD</th>
+                                                    <th>Họ tên</th>
+                                                    <th>Số điện thoại</th>
+                                                    <th>Chọn</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="patientListBody">
+                                                <!-- Dữ liệu sẽ được tải từ API -->
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -594,7 +596,18 @@
                 </div>
             </div>
         </div>
+        <style>
+            .patient-list-wrapper {
+                max-height: 300px; /* Có thể điều chỉnh theo nhu cầu */
+                overflow-y: auto;
+                border: 1px solid #dee2e6; /* Thêm viền để phân biệt */
+                border-radius: 4px;
+            }
 
+            .patient-list-wrapper table {
+                margin-bottom: 0; /* Loại bỏ margin mặc định của table */
+            }
+        </style>
         <script>
             <%
              String scheme = request.getScheme();             // http or https
