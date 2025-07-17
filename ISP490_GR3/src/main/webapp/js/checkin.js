@@ -1,3 +1,9 @@
+/* 
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/JavaScript.js to edit this template
+ */
+
+
 document.addEventListener('DOMContentLoaded', function () {
     // Javascript cho sidebar toggle
     const sidebarToggle = document.getElementById('sidebarCollapse');
@@ -82,7 +88,8 @@ document.addEventListener('DOMContentLoaded', function () {
         resetFilterButton.addEventListener('click', function (event) {
             event.preventDefault(); // Ngăn chặn hành vi mặc định của HTML.
             // Điều hướng đến URL cơ sở để reset tất cả các tham số
-            window.location.href = './appointments';
+            window.location.href = `${window.location.origin}${window.location.pathname}`;
+
         });
     }
 

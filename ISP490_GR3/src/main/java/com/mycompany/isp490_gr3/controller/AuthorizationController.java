@@ -19,7 +19,6 @@ import java.util.List;
  * URL patterns: 
  * - /admin/authorization (xem danh sách)
  * - /admin/authorization/view (xem chi tiết)
- * - /admin/authorization/update (cập nhật quyền)
  * - /admin/authorization/delete (xóa người dùng)
  * - /admin/authorization/restore (khôi phục người dùng)
  * 
@@ -27,7 +26,6 @@ import java.util.List;
  * JSP tương ứng: authorization.jsp
  * 
  * Các chức năng chính:
- * - Quản lý quyền người dùng (Admin, Doctor, Receptionist, Patient)
  * - Xem danh sách người dùng với lọc/tìm kiếm
  * - Xóa/khôi phục người dùng (soft delete)
  * - Thống kê số lượng người dùng theo role
@@ -37,9 +35,9 @@ import java.util.List;
 @WebServlet(name = "AuthorizationController", urlPatterns = {
     "/admin/authorization",
     "/admin/authorization/view",
-    "/admin/authorization/update",
     "/admin/authorization/delete",
-    "/admin/authorization/restore"
+    "/admin/authorization/restore",
+    "/admin/authorization/create"
 })
 public class AuthorizationController extends HttpServlet {
     
@@ -89,14 +87,14 @@ public class AuthorizationController extends HttpServlet {
         String pathInfo = request.getServletPath();
         
         switch (pathInfo) {
-            case "/admin/authorization/update":
-                updateUserRole(request, response, currentUser);
-                break;
             case "/admin/authorization/delete":
                 deleteUser(request, response, currentUser);
                 break;
             case "/admin/authorization/restore":
                 restoreUser(request, response, currentUser);
+                break;
+            case "/admin/authorization/create":
+                createNewUser(request, response, currentUser);
                 break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -145,88 +143,7 @@ public class AuthorizationController extends HttpServlet {
         }
     }
     
-    /**
-     * Update user role
-     */
-    private void updateUserRole(HttpServletRequest request, HttpServletResponse response, User currentUser)
-            throws ServletException, IOException {
-        
-        String userId = request.getParameter("userId");
-        String newRoleStr = request.getParameter("newRole");
-        
-        // Validate parameters
-        if (userId == null || userId.trim().isEmpty() || 
-            newRoleStr == null || newRoleStr.trim().isEmpty()) {
-            request.setAttribute("errorMessage", "Thông tin không hợp lệ.");
-            showAuthorizationPage(request, response, false);
-            return;
-        }
-        
-        try {
-            // Parse new role
-            User.Role newRole;
-            switch (newRoleStr.toLowerCase()) {
-                case "doctor":
-                    newRole = User.Role.DOCTOR;
-                    break;
-                case "receptionist":
-                    newRole = User.Role.RECEPTIONIST;
-                    break;
-                case "patient":
-                    newRole = User.Role.PATIENT;
-                    break;
-                default:
-                    request.setAttribute("errorMessage", "Quyền hạn không hợp lệ.");
-                    showAuthorizationPage(request, response, false);
-                    return;
-            }
-            
-            // Get target user to validate
-            User targetUser = daoUser.getUserById(userId);
-            if (targetUser == null) {
-                request.setAttribute("errorMessage", "Không tìm thấy người dùng.");
-                showAuthorizationPage(request, response, false);
-                return;
-            }
-            
-            // Prevent updating admin users
-            if (targetUser.getRole() == User.Role.ADMIN) {
-                request.setAttribute("errorMessage", "Không thể thay đổi quyền hạn của tài khoản Admin.");
-                showAuthorizationPage(request, response, false);
-                return;
-            }
-            
-            // Prevent self-update
-            if (targetUser.getId().equals(currentUser.getId())) {
-                request.setAttribute("errorMessage", "Bạn không thể thay đổi quyền hạn của chính mình.");
-                showAuthorizationPage(request, response, false);
-                return;
-            }
-            
-            // Update user role
-            boolean success = daoUser.updateUserRole(userId, newRole, currentUser.getId());
-            
-            if (success) {
-                request.setAttribute("successMessage", 
-                    String.format("Đã cập nhật quyền hạn cho %s thành %s.", 
-                    targetUser.getFullName(), newRole.getValue()));
-                
-                // Log the action
-                System.out.println(String.format("Admin %s updated role for user %s (%s) to %s", 
-                    currentUser.getEmail(), targetUser.getEmail(), targetUser.getId(), newRole.getValue()));
-            } else {
-                request.setAttribute("errorMessage", "Không thể cập nhật quyền hạn. Vui lòng thử lại.");
-            }
-            
-        } catch (Exception e) {
-            System.err.println("Error updating user role: " + e.getMessage());
-            e.printStackTrace();
-            request.setAttribute("errorMessage", "Lỗi hệ thống: Không thể cập nhật quyền hạn.");
-        }
-        
-        // Redirect to authorization page
-        showAuthorizationPage(request, response, false);
-    }
+
     
     /**
      * Delete/Disable user (soft delete)
@@ -307,6 +224,101 @@ public class AuthorizationController extends HttpServlet {
         }
         
         showAuthorizationPage(request, response, true);
+    }
+    
+    /**
+     * Create new user with pre-verified email
+     */
+    private void createNewUser(HttpServletRequest request, HttpServletResponse response, User currentUser)
+            throws ServletException, IOException {
+        
+        // Get form parameters
+        String fullName = request.getParameter("fullName");
+        String email = request.getParameter("email");
+        String password = request.getParameter("password");
+        String confirmPassword = request.getParameter("confirmPassword");
+        String phone = request.getParameter("phone");
+        String roleStr = request.getParameter("role");
+        
+        // Validate required fields
+        if (fullName == null || fullName.trim().isEmpty() ||
+            email == null || email.trim().isEmpty() ||
+            password == null || password.trim().isEmpty() ||
+            confirmPassword == null || confirmPassword.trim().isEmpty() ||
+            roleStr == null || roleStr.trim().isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng điền đầy đủ thông tin bắt buộc.");
+            showAuthorizationPage(request, response, false);
+            return;
+        }
+        
+        // Validate email format
+        if (!email.trim().toLowerCase().endsWith("@gmail.com")) {
+            request.setAttribute("errorMessage", "Vui lòng sử dụng email Gmail.");
+            showAuthorizationPage(request, response, false);
+            return;
+        }
+        
+        // Validate password match
+        if (!password.equals(confirmPassword)) {
+            request.setAttribute("errorMessage", "Mật khẩu xác nhận không khớp.");
+            showAuthorizationPage(request, response, false);
+            return;
+        }
+        
+        // Validate password length
+        if (password.length() < 6) {
+            request.setAttribute("errorMessage", "Mật khẩu phải có ít nhất 6 ký tự.");
+            showAuthorizationPage(request, response, false);
+            return;
+        }
+        
+        // Validate role
+        User.Role role;
+        switch (roleStr.toLowerCase()) {
+            case "doctor":
+                role = User.Role.DOCTOR;
+                break;
+            case "receptionist":
+                role = User.Role.RECEPTIONIST;
+                break;
+            default:
+                request.setAttribute("errorMessage", "Quyền hạn không hợp lệ. Chỉ có thể tạo tài khoản Doctor hoặc Receptionist.");
+                showAuthorizationPage(request, response, false);
+                return;
+        }
+        
+        try {
+            // Create new user object
+            User newUser = new User();
+            newUser.setFullName(fullName.trim());
+            newUser.setEmail(email.trim());
+            newUser.setPassword(password);
+            newUser.setPhone(phone != null ? phone.trim() : null);
+            newUser.setRole(role);
+            
+            // Create user with pre-verified email
+            boolean success = daoUser.createVerifiedUser(newUser, currentUser.getId());
+            
+            if (success) {
+                request.setAttribute("successMessage", 
+                    String.format("Đã tạo tài khoản %s cho %s thành công. Email đã được xác thực sẵn.", 
+                    role.getValue(), fullName.trim()));
+                
+                // Log the action
+                System.out.println(String.format("Admin %s created new %s account: %s (%s)", 
+                    currentUser.getEmail(), role.getValue(), newUser.getEmail(), newUser.getFullName()));
+            } else {
+                request.setAttribute("errorMessage", "Không thể tạo tài khoản. Email có thể đã tồn tại.");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error creating new user: " + e.getMessage());
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Lỗi hệ thống: Không thể tạo tài khoản.");
+        }
+        
+        // Redirect to authorization page
+        showAuthorizationPage(request, response, false);
     }
     
     /**

@@ -17,7 +17,6 @@ public class DAOSlot {
 
     private static final Logger LOGGER = Logger.getLogger(DAOSlot.class.getName());
 
-    
     // Lấy danh sách slot của ngày hiện tại với phân trang
     public List<SlotViewDTO> getTodaySlotViewDTOs(int offset, int limit) {
         String sql = "SELECT s.id, s.slot_date, s.start_time, s.end_time, s.max_patients, d.full_name AS doctor_name, "
@@ -412,7 +411,7 @@ public class DAOSlot {
     }
 
     // Test các chức năng
-  public static void main(String[] args) {
+    public static void main(String[] args) {
         DAOSlot dao = new DAOSlot();
         try {
             // Test 0: Kiểm tra slot cho bác sĩ
@@ -524,28 +523,95 @@ public class DAOSlot {
                 ResultSet rs = ps.executeQuery();
                 System.out.println("Slots trong bảng slot:");
                 while (rs.next()) {
-                    System.out.println("Slot ID: " + rs.getInt("id") + ", Date: " + rs.getDate("slot_date") + ", Time: " +
-                            rs.getTime("start_time") + " - " + rs.getTime("end_time") + ", Max Patients: " + rs.getInt("max_patients") +
-                            ", Is Deleted: " + rs.getBoolean("is_deleted"));
+                    System.out.println("Slot ID: " + rs.getInt("id") + ", Date: " + rs.getDate("slot_date") + ", Time: "
+                            + rs.getTime("start_time") + " - " + rs.getTime("end_time") + ", Max Patients: " + rs.getInt("max_patients")
+                            + ", Is Deleted: " + rs.getBoolean("is_deleted"));
                 }
             }
 
             // In appointment
-            String apptSql = "SELECT id, slot_id, appointment_code, status, patient_id FROM appointment WHERE slot_id IN " +
-                    "(SELECT id FROM slot WHERE doctor_id = ? AND slot_date = ? AND is_deleted = FALSE) AND is_deleted = FALSE";
+            String apptSql = "SELECT id, slot_id, appointment_code, status, patient_id FROM appointment WHERE slot_id IN "
+                    + "(SELECT id FROM slot WHERE doctor_id = ? AND slot_date = ? AND is_deleted = FALSE) AND is_deleted = FALSE";
             try (PreparedStatement ps = conn.prepareStatement(apptSql)) {
                 ps.setInt(1, doctorId);
                 ps.setDate(2, Date.valueOf(date));
                 ResultSet rs = ps.executeQuery();
                 System.out.println("Appointments trong bảng appointment:");
                 while (rs.next()) {
-                    System.out.println("Appointment ID: " + rs.getInt("id") + ", Slot ID: " + rs.getInt("slot_id") +
-                            ", Code: " + rs.getString("appointment_code") + ", Status: " + rs.getString("status") +
-                            ", Patient ID: " + (rs.getObject("patient_id") == null ? "NULL" : rs.getInt("patient_id")));
+                    System.out.println("Appointment ID: " + rs.getInt("id") + ", Slot ID: " + rs.getInt("slot_id")
+                            + ", Code: " + rs.getString("appointment_code") + ", Status: " + rs.getString("status")
+                            + ", Patient ID: " + (rs.getObject("patient_id") == null ? "NULL" : rs.getInt("patient_id")));
                 }
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi in slot và appointment: " + e.getMessage(), e);
+        }
+    }
+    
+    // Lấy danh sách bệnh nhân theo slotId
+    public List<PatientDTO> getPatientsBySlotId(int slotId) {
+        List<PatientDTO> patients = new ArrayList<>();
+        String sql = "SELECT p.patient_code, p.cccd, p.full_name, p.phone " +
+                     "FROM appointment a " +
+                     "JOIN patients p ON a.patient_id = p.id " +
+                     "WHERE a.slot_id = ? AND a.is_deleted = FALSE AND p.is_deleted = FALSE " +
+                     "AND a.status != 'cancelled'";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, slotId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                PatientDTO patient = new PatientDTO();
+                patient.setPatientCode(rs.getString("patient_code"));
+                patient.setCccd(rs.getString("cccd"));
+                patient.setFullName(rs.getString("full_name"));
+                patient.setPhone(rs.getString("phone"));
+                patients.add(patient);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách bệnh nhân cho slotId " + slotId + ": " + e.getMessage(), e);
+        }
+        return patients;
+    }
+
+    // DTO nội bộ để ánh xạ thông tin bệnh nhân
+    public static class PatientDTO {
+        private String patientCode;
+        private String cccd;
+        private String fullName;
+        private String phone;
+
+        public String getPatientCode() {
+            return patientCode;
+        }
+
+        public void setPatientCode(String patientCode) {
+            this.patientCode = patientCode;
+        }
+
+        public String getCccd() {
+            return cccd;
+        }
+
+        public void setCccd(String cccd) {
+            this.cccd = cccd;
+        }
+
+        public String getFullName() {
+            return fullName;
+        }
+
+        public void setFullName(String fullName) {
+            this.fullName = fullName;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public void setPhone(String phone) {
+            this.phone = phone;
         }
     }
 }

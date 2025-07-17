@@ -287,6 +287,40 @@
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
                     </a>
                 </li>
+                <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
+                <!-- Menu cho Lễ tân -->
+                <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-house-door-fill"></i> Trang chủ
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/appointments">
+                        <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
+                    </a>
+                </li>
+              
+                <li>
+                    <a href="${pageContext.request.contextPath}/queue">
+                        <i class="bi bi-people-fill"></i> Quản lý hàng đợi
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
+                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
+                        <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
+                    </a>
+                </li> 
+                <li>
+                    <a href="${pageContext.request.contextPath}/receptionist/report">
+                        <i class="bi bi-speedometer2"></i> Báo cáo thống kê
+                    </a>
+                </li>
+
                 <% } %>
             </ul>
         </nav>
@@ -514,12 +548,14 @@
                                                     <td><%= patient.getAddress() %></td>
                                                     <td>
                                                         <div class="action-buttons-group">
+                                                            <% if (currentRole == User.Role.DOCTOR) { %>
                                                             <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%=patient.getId()%>" 
                                                                class="action-btn action-btn-view" 
                                                                title="Xem hồ sơ bệnh án">
                                                                 <i class="bi bi-file-medical"></i>
                                                                 <span class="btn-text">Hồ sơ</span>
                                                             </a>
+                                                            <% } %>   
                                                             
                                                             <a href="${pageContext.request.contextPath}/doctor/patients?action=get&id=<%=patient.getId()%>"
                                                                     class="action-btn action-btn-edit" 

@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
             content.classList.toggle('expanded');
         });
     } else {
-        console.log("Một hoặc nhiều phần tử không tồn tại:", { sidebarToggle, sidebar, content, topNavbar });
+        console.log("Một hoặc nhiều phần tử không tồn tại:", {sidebarToggle, sidebar, content, topNavbar});
     }
 
     const RESPONSIVE_BREAKPOINT = 768;

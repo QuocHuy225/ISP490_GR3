@@ -594,7 +594,7 @@ public class DAOAppointment {
 
     public boolean unassignPatient(int appointmentId) throws SQLException {
         String updateAppointmentSql = "UPDATE appointment SET patient_id = NULL, services_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_deleted = FALSE";
-        String softDeleteQueueSql = "UPDATE queue SET is_deleted = TRUE, deleted_at = CURRENT_TIMESTAMP WHERE appointment_id = ? AND is_deleted = FALSE";
+        String softDeleteQueueSql = "UPDATE queue SET is_deleted = TRUE WHERE appointment_id = ? AND is_deleted = FALSE";
 
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
@@ -607,7 +607,6 @@ public class DAOAppointment {
                     return false;
                 }
             }
-
             // Xóa mềm hàng đợi tương ứng
             try (PreparedStatement ps = conn.prepareStatement(softDeleteQueueSql)) {
                 ps.setInt(1, appointmentId);
@@ -622,24 +621,258 @@ public class DAOAppointment {
         }
     }
 
-    public static void main(String[] args) {
-        DAOAppointment dao = new DAOAppointment();
+    //Checkin
+    public List<AppointmentViewDTO> getTodayCheckinAppointments(int offset, int limit) {
+        String sql = "SELECT "
+                + "a.id, a.appointment_code, "
+                + "DATE_FORMAT(s.slot_date, '%Y-%m-%d') AS slot_date, "
+                + "CONCAT(TIME_FORMAT(s.start_time, '%H:%i'), ' - ', TIME_FORMAT(s.end_time, '%H:%i')) AS slot_time_range, "
+                + "p.patient_code, p.full_name AS patient_name, p.phone AS patient_phone, "
+                + "d.full_name AS doctor_name, "
+                + "ms.service_name, "
+                + "a.status, a.payment_status, "
+                + "s.max_patients, "
+                + "(SELECT COUNT(*) FROM appointment ap WHERE ap.slot_id = s.id AND ap.patient_id IS NOT NULL AND ap.status != 'cancelled') AS booked_patients, "
+                + "q.priority "
+                + "FROM appointment a "
+                + "LEFT JOIN patients p ON a.patient_id = p.id "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "JOIN doctors d ON s.doctor_id = d.id "
+                + "LEFT JOIN medical_services ms ON a.services_id = ms.services_id "
+                + "LEFT JOIN queue q ON q.appointment_id = a.id AND q.is_deleted = FALSE "
+                + "WHERE a.is_deleted = FALSE "
+                + "AND s.is_deleted = FALSE "
+                + "AND DATE(s.slot_date) = CURDATE() "
+                + "AND a.patient_id IS NOT NULL "
+                + "AND a.status = 'pending' "
+                + "ORDER BY s.slot_date DESC, s.start_time ASC "
+                + "LIMIT ? OFFSET ?";
 
-        int appointmentId = 7; // ID lịch hẹn đã tồn tại trong DB
-        int patientId = 2;     // ID bệnh nhân đã tồn tại
-        int servicesId = 3;    // ID dịch vụ hợp lệ
-
-        try {
-            boolean result = dao.assignPatient(appointmentId, patientId, servicesId);
-            if (result) {
-                System.out.println("✅ Gán bệnh nhân thành công vào lịch hẹn.");
-            } else {
-                System.out.println("❌ Gán bệnh nhân thất bại. Có thể lịch hẹn không tồn tại hoặc đã bị xoá.");
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                return extractAppointmentViewDTOs(rs);
             }
         } catch (SQLException e) {
-            System.out.println("💥 Lỗi khi thực hiện gán bệnh nhân: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách check-in hôm nay: " + e.getMessage(), e);
+            return new ArrayList<>();
+        }
+    }
+
+    public int countTodayCheckinAppointments() {
+        String sql = "SELECT COUNT(*) FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "WHERE a.is_deleted = FALSE "
+                + "AND s.is_deleted = FALSE "
+                + "AND DATE(s.slot_date) = CURDATE() "
+                + "AND a.patient_id IS NOT NULL "
+                + "AND a.status = 'pending'";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi đếm check-in hôm nay: " + e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    //Search checkin
+    public List<AppointmentViewDTO> searchCheckinAppointments(String appointmentCode, String patientCode,
+            Integer doctorId, Integer servicesId, int offset, int limit) {
+
+        List<AppointmentViewDTO> result = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT a.id, a.appointment_code, "
+                + "DATE_FORMAT(s.slot_date, '%Y-%m-%d') AS slot_date, "
+                + "CONCAT(TIME_FORMAT(s.start_time, '%H:%i'), ' - ', TIME_FORMAT(s.end_time, '%H:%i')) AS slot_time_range, "
+                + "p.patient_code, p.full_name AS patient_name, p.phone AS patient_phone, "
+                + "d.full_name AS doctor_name, "
+                + "ms.service_name, a.status, a.payment_status, "
+                + "s.max_patients, "
+                + "(SELECT COUNT(*) FROM appointment ap WHERE ap.slot_id = s.id AND ap.patient_id IS NOT NULL AND ap.status != 'cancelled') AS booked_patients, "
+                + "q.priority "
+                + "FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "JOIN doctors d ON s.doctor_id = d.id "
+                + "LEFT JOIN patients p ON a.patient_id = p.id "
+                + "LEFT JOIN medical_services ms ON a.services_id = ms.services_id "
+                + "LEFT JOIN queue q ON q.appointment_id = a.id AND q.is_deleted = FALSE "
+                + "WHERE a.is_deleted = FALSE AND s.is_deleted = FALSE "
+                + "AND a.patient_id IS NOT NULL "
+                + "AND a.status = 'pending' "
+                + "AND DATE(s.slot_date) = CURDATE() ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (appointmentCode != null && !appointmentCode.isBlank()) {
+            sql.append("AND a.appointment_code LIKE ? ");
+            params.add("%" + appointmentCode.trim() + "%");
+        }
+
+        if (patientCode != null && !patientCode.isBlank()) {
+            sql.append("AND p.patient_code LIKE ? ");
+            params.add("%" + patientCode.trim() + "%");
+        }
+
+        if (doctorId != null) {
+            sql.append("AND d.id = ? ");
+            params.add(doctorId);
+        }
+
+        if (servicesId != null) {
+            sql.append("AND ms.services_id = ? ");
+            params.add(servicesId);
+        }
+
+        sql.append("ORDER BY s.start_time ASC ");
+        sql.append("LIMIT ? OFFSET ? ");
+        params.add(limit);
+        params.add(offset);
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return extractAppointmentViewDTOs(rs);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi tìm kiếm lịch check-in: " + e.getMessage(), e);
+            return result;
+        }
+    }
+
+    public int countCheckinAppointments(String appointmentCode, String patientCode,
+            Integer doctorId, Integer servicesId) {
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "JOIN doctors d ON s.doctor_id = d.id "
+                + "LEFT JOIN patients p ON a.patient_id = p.id "
+                + "LEFT JOIN medical_services ms ON a.services_id = ms.services_id "
+                + "LEFT JOIN queue q ON q.appointment_id = a.id AND q.is_deleted = FALSE "
+                + "WHERE a.is_deleted = FALSE AND s.is_deleted = FALSE "
+                + "AND a.patient_id IS NOT NULL "
+                + "AND a.status = 'pending' "
+                + "AND DATE(s.slot_date) = CURDATE() ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (appointmentCode != null && !appointmentCode.isBlank()) {
+            sql.append("AND a.appointment_code LIKE ? ");
+            params.add("%" + appointmentCode.trim() + "%");
+        }
+
+        if (patientCode != null && !patientCode.isBlank()) {
+            sql.append("AND p.patient_code LIKE ? ");
+            params.add("%" + patientCode.trim() + "%");
+        }
+
+        if (doctorId != null) {
+            sql.append("AND d.id = ? ");
+            params.add(doctorId);
+        }
+
+        if (servicesId != null) {
+            sql.append("AND ms.services_id = ? ");
+            params.add(servicesId);
+        }
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi đếm lịch check-in: " + e.getMessage(), e);
+        }
+
+        return 0;
+    }
+
+    public boolean checkinAppointment(int appointmentId, int priority, String description) {
+        if (priority != 0 && priority != 1) {
+            throw new IllegalArgumentException("Priority must be 0 (Trung bình) hoặc 1 (Cao).");
+        }
+
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+
+            // Update appointment
+            try (PreparedStatement stmt1 = conn.prepareStatement(
+                    "UPDATE appointment SET checkin_time = CURRENT_TIMESTAMP, status = 'confirmed' WHERE id = ?")) {
+                stmt1.setInt(1, appointmentId);
+                stmt1.executeUpdate();
+            }
+
+            // Update queue
+            try (PreparedStatement stmt2 = conn.prepareStatement(
+                    "UPDATE queue SET priority = ?, description = ?, status = 'waiting', updated_at = CURRENT_TIMESTAMP "
+                    + "WHERE appointment_id = ? AND is_deleted = FALSE")) {
+                stmt2.setInt(1, priority);
+                stmt2.setString(2, description);
+                stmt2.setInt(3, appointmentId);
+                stmt2.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public void updateNoShowAppointments() {
+        String updateAppointmentSql = "UPDATE appointment "
+                + "SET status = 'no_show' "
+                + "WHERE status = 'pending' "
+                + "AND checkin_time IS NULL "
+                + "AND slot_id IN ( "
+                + "    SELECT id FROM slot "
+                + "    WHERE (slot_date < CURDATE()) "
+                + "       OR (slot_date = CURDATE() AND end_time < CURTIME()) "
+                + ")";
+
+        String updateQueueSql = "UPDATE queue "
+                + "SET status = 'skipped' "
+                + "WHERE status = 'waiting' "
+                + "AND is_deleted = FALSE "
+                + "AND appointment_id IN ( "
+                + "    SELECT id FROM appointment WHERE status = 'no_show' "
+                + ")";
+
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+            try (
+                    PreparedStatement ps1 = conn.prepareStatement(updateAppointmentSql); PreparedStatement ps2 = conn.prepareStatement(updateQueueSql)) {
+                int updatedAppointments = ps1.executeUpdate();
+                int updatedQueues = ps2.executeUpdate();
+                conn.commit();
+
+                System.out.println("Đã cập nhật " + updatedAppointments + " appointment → no_show");
+                System.out.println("Đã cập nhật " + updatedQueues + " queue → skipped");
+
+            } catch (SQLException e) {
+                conn.rollback();
+                System.err.println("Lỗi khi cập nhật trạng thái no_show/skipped:");
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+
+   
 
 }

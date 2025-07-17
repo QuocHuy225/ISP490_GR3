@@ -254,48 +254,61 @@ header p {
     border-color: #007bff;
 }
 
+
 /* ==========================================================================
-   Modal (Popup chi tiết lịch hẹn)
+   Modal (Popup chi tiết lịch hẹn) - Cập nhật cho căn giữa và transition
    ========================================================================== */
 .modal {
-    display: none; /* Mặc định ẩn */
-    position: fixed; /* Cố định trên màn hình */
-    z-index: 2000; /* Nằm trên tất cả các yếu tố khác (ví dụ: sidebar có z-index 1000) */
+    display: none;
+    position: fixed;
+    z-index: 2000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto; /* Cho phép cuộn nếu nội dung dài */
-    background-color: rgba(0,0,0,0.6); /* Nền overlay màu đen trong suốt */
-    /* Dòng 'display: flex;' ở đây đã được xóa khỏi định nghĩa ban đầu của .modal.
-        Nó sẽ chỉ được thêm vào bằng JavaScript khi modal cần hiển thị. */
-    align-items: center; /* Căn giữa theo chiều dọc */
-    justify-content: center; /* Căn giữa theo chiều ngang */
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+}
+/* ============================================================
+   ƯU TIÊN Z-INDEX CHO MODAL THÔNG BÁO (THÀNH CÔNG/THẤT BẠI)
+   ============================================================ */
+#successMessageModal,
+#errorMessageModal {
+    z-index: 3000 !important;
+}
+
+#newAppointmentModal {
+    z-index: 2000;
+}
+
+.modal.show-modal {
+    opacity: 1;
+    visibility: visible;
+    display: flex;
 }
 
 .modal-content {
     background-color: #fefefe;
-    margin: auto; /* Cũng có thể giúp căn giữa */
     padding: 30px;
     border: 1px solid #888;
-    width: 80%; /* Chiều rộng tương đối */
-    max-width: 600px; /* Chiều rộng tối đa */
+    width: 80%;
+    max-width: 600px;
     border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Bóng đổ cho modal */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     position: relative;
-    animation: fadeIn 0.3s ease-out; /* Hiệu ứng hiện ra */
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
 }
 
-/* Hiệu ứng fadeIn cho modal */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.modal.show-modal .modal-content {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .close-button {
@@ -306,9 +319,8 @@ header p {
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
-    line-height: 1; /* Để căn chỉnh dấu x tốt hơn */
+    line-height: 1;
 }
-
 .close-button:hover,
 .close-button:focus {
     color: #000;
@@ -336,16 +348,17 @@ header p {
     padding-top: 20px;
     border-top: 1px solid #eee;
     display: flex;
-    justify-content: flex-end; /* Căn các nút sang phải */
-    gap: 10px; /* Khoảng cách giữa các nút */
+    justify-content: flex-end;
+    gap: 10px;
 }
 
-/* ==========================================================================
-   Style cho modal xác nhận & thông báo nhỏ hơn
-   ========================================================================== */
+/* ========================================================================== */
+/* Modal xác nhận & modal thông báo nhỏ hơn                                 */
+/* ========================================================================== */
 .small-modal-content {
-    max-width: 450px; /* Giảm chiều rộng tối đa */
+    max-width: 450px;
     padding: 25px;
+    text-align: center;
 }
 
 .small-modal-content h3 {
@@ -361,37 +374,101 @@ header p {
 
 .small-modal-content #confirmAppointmentIdDisplay {
     font-weight: bold;
-    color: #dc3545; /* Màu đỏ cho ID lịch hẹn đang hủy */
+    color: #dc3545;
 }
 
 .small-modal-content .modal-actions {
     margin-top: 20px;
     padding-top: 15px;
     border-top: 1px solid #eee;
-    justify-content: center; /* Căn giữa các nút trong modal nhỏ */
+    justify-content: center;
 }
 
 .small-modal-content .modal-actions .btn {
-    min-width: 120px; /* Đảm bảo các nút có độ rộng tương đồng */
+    min-width: 120px;
 }
 
-/* Tùy chỉnh cho thông báo thành công */
 #successMessageModal h3 {
-    color: #28a745; /* Màu xanh lá cây cho tiêu đề thành công */
+    color: #28a745;
 }
 #successMessageText {
     color: #333;
     font-weight: 500;
 }
 #successMessageModal .modal-actions .btn {
-    min-width: 80px; /* Nút OK nhỏ hơn chút */
+    min-width: 80px;
 }
 
+/* ========================================================================== */
+/* Modal đặt lịch hẹn mới (modal lớn)                                       */
+/* ========================================================================== */
+.large-modal-content {
+    max-width: 700px;
+    width: 90%;
+}
 
-/* ==========================================================================
-   Tùy chỉnh Responsive (ví dụ đơn giản)
-   ========================================================================== */
+/* Form Group Styling */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 1em;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="date"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+#newAppointmentModal h3 i {
+    margin-right: 10px;
+    color: #007bff;
+}
+
+#newAppointmentModal .modal-actions {
+    justify-content: center;
+    gap: 15px;
+}
+
+/* ========================================================================== */
+/* Responsive for modal layout                                               */
+/* ========================================================================== */
 @media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .small-modal-content {
+        max-width: 90%;
+    }
+
     .container {
         padding: 20px;
         margin: 10px auto;
@@ -406,17 +483,8 @@ header p {
         font-size: 1em;
         margin: 0 5px;
     }
-
-    .modal-content {
-        width: 95%;
-        padding: 20px;
-    }
-
-    /* Responsive cho modal xác nhận */
-    .small-modal-content {
-        max-width: 90%;
-    }
 }
+
 /* ==========================================================================
    New Appointment Modal Specific Styles
    ========================================================================== */

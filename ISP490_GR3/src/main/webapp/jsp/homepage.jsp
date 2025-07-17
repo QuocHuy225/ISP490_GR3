@@ -108,7 +108,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/queue">
                         <i class="bi bi-calendar-check"></i> Lịch khám bệnh
                     </a>
                 </li>
@@ -134,27 +134,23 @@
                         <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
                     </a>
                 </li>
-                 <li>
-                    <a href="${pageContext.request.contextPath}/checkin">
-                        <i class="bi bi-person-check-fill"></i> Quản lý check-in
-                    </a>
-                </li>
+              
                 <li>
-                    <a href="${pageContext.request.contextPath}/#">
+                    <a href="${pageContext.request.contextPath}/queue">
                         <i class="bi bi-people-fill"></i> Quản lý hàng đợi
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/patients">
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
-               <li>
+                <li>
                     <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
                         <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
                     </a>
                 </li> 
-                 <li>
+                <li>
                     <a href="${pageContext.request.contextPath}/receptionist/report">
                         <i class="bi bi-speedometer2"></i> Báo cáo thống kê
                     </a>
@@ -199,7 +195,7 @@
                     <button type="button" id="sidebarCollapse" class="btn btn-primary">
                         <i class="bi bi-list"></i>
                     </button>
-                    
+
                     <div style="margin-left: 60px; margin-top: 10px">
                         <h3>
                             <span style="color: #007bff;">Ánh Dương</span>
@@ -462,7 +458,7 @@
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        
+
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 // Sidebar toggle

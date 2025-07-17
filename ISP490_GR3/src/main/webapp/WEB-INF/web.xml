@@ -34,6 +34,8 @@
         <url-pattern>/appointments</url-pattern>
         <url-pattern>/appointments/add</url-pattern>
         <url-pattern>/patient/search</url-pattern>
+        <url-pattern>/appointments/remove-patient</url-pattern>
+        
     </servlet-mapping>
 
     <servlet>
@@ -56,26 +58,22 @@
     <servlet-mapping>
         <servlet-name>CheckinController</servlet-name>
         <url-pattern>/checkin</url-pattern>
-        <!-- Đây là URL bạn sẽ truy cập -->
+        <url-pattern>/checkin/confirm</url-pattern>
     </servlet-mapping>
     
-    
+    <servlet>
+        <servlet-name>SlotController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.SlotController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot/add</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot/delete</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>SlotController</servlet-name>
         <url-pattern>/slot/filterSlotDate</url-pattern>
+        <url-pattern>/slot/patients</url-pattern>
     </servlet-mapping>
+    
     
     
     <servlet>
@@ -107,6 +105,17 @@
         <servlet-name>AppointmentScheduleController</servlet-name>
         <url-pattern>/api/patient/*</url-pattern>      
     </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>QueueController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.QueueController</servlet-class>
+    </servlet>
+    <servlet-mapping>   
+        <servlet-name>QueueController</servlet-name>
+        <url-pattern>/queue</url-pattern> 
+        <url-pattern>/api/queue</url-pattern>      
+    </servlet-mapping>
+    
     
     <servlet>
         <servlet-name>PatientAppointmentPageController</servlet-name>

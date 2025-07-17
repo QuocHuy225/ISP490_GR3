@@ -4,13 +4,14 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class Slot {
+
     private int id;
     private int doctorId;
     private String doctorName;           // Dùng để hiển thị (join với bảng doctor)
     private LocalDate slotDate;
     private LocalTime startTime;
     private LocalTime endTime;
-    private String duration;             
+    private String duration;
     private int maxPatients;
     private int bookedPatients;          // Đã đặt (JOIN từ bảng appointment)
     private boolean isAvailable;
@@ -23,7 +24,7 @@ public class Slot {
     }
 
     public Slot(int id, int doctorId, LocalDate slotDate, LocalTime startTime, LocalTime endTime,
-                String duration, int maxPatients, boolean isAvailable, boolean isDeleted) {
+            String duration, int maxPatients, boolean isAvailable, boolean isDeleted) {
         this.id = id;
         this.doctorId = doctorId;
         this.slotDate = slotDate;
@@ -143,20 +144,20 @@ public class Slot {
     // Optional: override toString() for debug
     @Override
     public String toString() {
-        return "Slot{" +
-                "id=" + id +
-                ", doctorId=" + doctorId +
-                ", doctorName='" + doctorName + '\'' +
-                ", slotDate=" + slotDate +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", duration='" + duration + '\'' +
-                ", maxPatients=" + maxPatients +
-                ", bookedPatients=" + bookedPatients +
-                ", isAvailable=" + isAvailable +
-                ", isDeleted=" + isDeleted +
-                ", slotCode='" + slotCode + '\'' +
-                ", status='" + status + '\'' +
-                '}';
+        return "Slot{"
+                + "id=" + id
+                + ", doctorId=" + doctorId
+                + ", doctorName='" + doctorName + '\''
+                + ", slotDate=" + slotDate
+                + ", startTime=" + startTime
+                + ", endTime=" + endTime
+                + ", duration='" + duration + '\''
+                + ", maxPatients=" + maxPatients
+                + ", bookedPatients=" + bookedPatients
+                + ", isAvailable=" + isAvailable
+                + ", isDeleted=" + isDeleted
+                + ", slotCode='" + slotCode + '\''
+                + ", status='" + status + '\''
+                + '}';
     }
 }
