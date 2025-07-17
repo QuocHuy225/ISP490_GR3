@@ -288,11 +288,15 @@
                     function loadQueue() {
                         const doctorId = document.getElementById('doctorId').value.trim();
                         const slotDate = document.getElementById('slotDate').value.trim();
+                        console.log("doctorId", doctorId);
+                        console.log("slotDate", slotDate);
+                         
                         const query = new URLSearchParams({
                             doctorId: doctorId,
                             slotDate: slotDate
                         }).toString();
                         const url = BASE_URL + "/api/queue?" + query;
+                        console.log("url", url);
 
                         tableBody.innerHTML = '<tr><td colspan="12" class="text-center"><div class="spinner">Đang tải...</div></td></tr>';
 
