@@ -20,9 +20,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const appointmentForm = document.getElementById('newAppointmentForm');
     const doctorSelect = document.getElementById('newDoctorName');
     const serviceSelect = document.getElementById('newService');
-    const appointmentDateInput = document.getElementById('newAppointmentDate');
+    const appointmentDateInput = document.getElementById('newAppointmentDate'); // ĐÂY SẼ LÀ SELECT TAG TRONG HTML
     const appointmentTimeSelect = document.getElementById('newAppointmentTime');
     const notesInput = document.getElementById('newNotes');
+    // Thêm tham chiếu đến thẻ small để hiển thị thông báo
+    const timeSlotMessage = document.getElementById('timeSlotMessage');
+
 
     const confirmCancelBtn = document.getElementById('confirmCancelBtn');
     const confirmAppointmentIdDisplay = document.getElementById('confirmAppointmentIdDisplay');
@@ -43,6 +46,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Lấy API_BASE_URL từ biến đã được JSP truyền vào
     const API_BASE_URL = typeof API_BASE_URL_FROM_JSP !== 'undefined' ? API_BASE_URL_FROM_JSP : '/api/patient';
+    // Lấy userAccountId từ biến đã được JSP truyền vào (Cần đảm bảo biến này có trong JSP của bạn)
+    const USER_ACCOUNT_ID_FROM_JSP = typeof USER_ACCOUNT_ID_FROM_JSP_VAR !== 'undefined' ? USER_ACCOUNT_ID_FROM_JSP_VAR : null;
+
 
     let allAppointmentsData = [];
     let doctorsData = [];
@@ -132,7 +138,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function fetchAppointments() {
-        return fetchData(`${API_BASE_URL}/appointments`, 'Lỗi khi tải danh sách lịch hẹn.');
+        // Sử dụng USER_ACCOUNT_ID_FROM_JSP để lấy lịch hẹn của bệnh nhân hiện tại
+        if (!USER_ACCOUNT_ID_FROM_JSP) {
+            console.error("USER_ACCOUNT_ID_FROM_JSP không khả dụng. Không thể tải lịch hẹn.");
+            return [];
+        }
+        return fetchData(`${API_BASE_URL}/appointments/patient/${USER_ACCOUNT_ID_FROM_JSP}`, 'Lỗi khi tải danh sách lịch hẹn.');
     }
 
     async function fetchDoctors() {
@@ -143,9 +154,34 @@ document.addEventListener('DOMContentLoaded', function () {
         return fetchData(`${API_BASE_URL}/services`, 'Lỗi khi tải danh sách dịch vụ.');
     }
 
+    // Hàm này được sử dụng để lấy các slot trống cho một bác sĩ và một ngày cụ thể.
     async function fetchAvailableSlots(doctorId, date) {
-        return fetchData(`${API_BASE_URL}/slots/available?doctorId=${doctorId}&date=${date}`, 'Lỗi khi tải khung giờ trống.');
+        if (!doctorId || !date) return [];
+        const url = `${API_BASE_URL}/slots/available?doctorId=${doctorId}&date=${date}`;
+        return fetchData(url, 'Lỗi khi tải khung giờ trống.');
     }
+
+    // MỚI: Hàm để lấy các ngày làm việc của bác sĩ từ API backend
+    async function fetchWorkingDaysForDoctor(doctorId) {
+        if (!doctorId) return [];
+        const url = `${API_BASE_URL}/doctors/${doctorId}/available-dates`;
+        const dates = await fetchData(url, `Lỗi khi tải các ngày làm việc cho bác sĩ ${doctorId}.`);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Đặt giờ về 0 để so sánh chỉ ngày
+
+        // Lọc và sắp xếp các ngày từ hôm nay trở đi
+        const filteredAndSortedDates = dates
+            .filter(dateString => {
+                const checkDate = new Date(dateString);
+                checkDate.setHours(0, 0, 0, 0);
+                return checkDate >= today;
+            })
+            .sort((a, b) => new Date(a) - new Date(b)); // Sắp xếp tăng dần
+
+        return filteredAndSortedDates;
+    }
+
 
     // --- Render Functions ---
     function renderAppointments(appointments, container, isUpcoming = true) {
@@ -180,17 +216,17 @@ document.addEventListener('DOMContentLoaded', function () {
             const displayNotes = appt.notes || 'Không có';
 
             appointmentElement.innerHTML = `
-                    <div class="card-body">
-                        <h5 class="card-title">${appt.serviceName || 'Dịch vụ không xác định'}</h5>
-                        <p class="card-text">
-                            <strong>Bác sĩ:</strong> ${appt.doctorName}<br>
-                            <strong>Thời gian:</strong> ${formatDateForDisplay(appt.slotDate)} lúc ${formatTimeForDisplay(appt.slotTimeRange)}<br>
-                            <strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appt.status)}">${mapStatusToVietnamese(appt.status)}</span>
-                            ${isUpcoming ? `<br><strong>Mã lịch hẹn:</strong> ${displayAppointmentCode}` : ''}
-                        </p>
-                        ${isUpcoming && (appt.status === 'pending' || appt.status === 'confirmed') ? `<button class="btn btn-danger btn-sm cancel-btn" data-id="${appt.id}">Hủy hẹn</button>` : ''}
-                    </div>
-                `;
+                        <div class="card-body">
+                            <h5 class="card-title">${appt.serviceName || 'Dịch vụ không xác định'}</h5>
+                            <p class="card-text">
+                                <strong>Bác sĩ:</strong> ${appt.doctorName}<br>
+                                <strong>Thời gian:</strong> ${formatDateForDisplay(appt.slotDate)} lúc ${formatTimeForDisplay(appt.slotTimeRange)}<br>
+                                <strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appt.status)}">${mapStatusToVietnamese(appt.status)}</span>
+                                ${isUpcoming ? `<br><strong>Mã lịch hẹn:</strong> ${displayAppointmentCode}` : ''}
+                            </p>
+                            ${isUpcoming && (appt.status === 'pending' || appt.status === 'confirmed') ? `<button class="btn btn-danger btn-sm cancel-btn" data-id="${appt.id}">Hủy hẹn</button>` : ''}
+                        </div>
+                    `;
             container.appendChild(appointmentElement);
         });
 
@@ -226,13 +262,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (detailContent) {
             detailContent.innerHTML = `
-                    <p><strong>Mã lịch hẹn:</strong> ${displayAppointmentCode}</p>
-                    <p><strong>Bác sĩ:</strong> ${appointment.doctorName}</p>
-                    <p><strong>Dịch vụ:</strong> ${appointment.serviceName}</p>
-                    <p><strong>Thời gian:</strong> ${formatDateForDisplay(appointment.slotDate)} lúc ${formatTimeForDisplay(appointment.slotTimeRange)}</p>
-                    <p><strong>Ghi chú:</strong> ${displayNotes}</p>
-                    <p><strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appointment.status)}">${mapStatusToVietnamese(appointment.status)}</span></p>
-                `;
+                        <p><strong>Mã lịch hẹn:</strong> ${displayAppointmentCode}</p>
+                        <p><strong>Bác sĩ:</strong> ${appointment.doctorName}</p>
+                        <p><strong>Dịch vụ:</strong> ${appointment.serviceName}</p>
+                        <p><strong>Thời gian:</strong> ${formatDateForDisplay(appointment.slotDate)} lúc ${formatTimeForDisplay(appointment.slotTimeRange)}</p>
+                        <p><strong>Ghi chú:</strong> ${displayNotes}</p>
+                        <p><strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appointment.status)}">${mapStatusToVietnamese(appointment.status)}</span></p>
+                    `;
         }
 
         if (btnCancelAppointment) {
@@ -390,9 +426,18 @@ document.addEventListener('DOMContentLoaded', function () {
             notesInput.value = '';
             appointmentTimeSelect.innerHTML = '<option value="">-- Chọn giờ hẹn --</option>';
             appointmentTimeSelect.disabled = true;
+            // Xóa thông báo khi mở modal đặt lịch mới
+            if (timeSlotMessage) {
+                timeSlotMessage.textContent = '';
+            }
 
             doctorSelect.innerHTML = '<option value="">-- Chọn bác sĩ --</option>';
             serviceSelect.innerHTML = '<option value="">-- Chọn dịch vụ --</option>';
+
+            // SỬA ĐỔI: Tắt và reset trường ngày hẹn khi mới mở modal
+            appointmentDateInput.innerHTML = '<option value="">-- Vui lòng chọn ngày --</option>';
+            appointmentDateInput.disabled = true;
+
 
             doctorsData = await fetchDoctors();
             servicesData = await fetchServices();
@@ -416,12 +461,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 option.textContent = service.serviceName;
                 serviceSelect.appendChild(option);
             });
-
-            const today = new Date();
-            today.setDate(today.getDate());
-            const minDate = today.toISOString().split('T')[0];
-            appointmentDateInput.min = minDate;
-            appointmentDateInput.value = '';
 
             showCustomModal(newAppointmentModal);
         });
@@ -455,58 +494,81 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnCloseDetail)
         btnCloseDetail.addEventListener('click', () => hideCustomModal(appointmentDetailModal));
 
-    if (appointmentDateInput)
-        appointmentDateInput.addEventListener('change', populateAvailableTimeSlots);
-    if (doctorSelect)
-        doctorSelect.addEventListener('change', populateAvailableTimeSlots);
+    // MỚI: Listener cho doctorSelect để populate ngày làm việc từ API backend
+    if (doctorSelect) {
+        doctorSelect.addEventListener('change', async function() {
+            const selectedDoctorId = this.value;
+            appointmentDateInput.innerHTML = '<option value="">-- Vui lòng chọn ngày --</option>'; // Reset ngày
+            appointmentDateInput.disabled = true; // Tắt ngày
+            appointmentTimeSelect.innerHTML = '<option value="">-- Chọn giờ hẹn --</option>'; // Reset giờ
+            appointmentTimeSelect.disabled = true; // Tắt giờ
+            if (timeSlotMessage) timeSlotMessage.textContent = ''; // Xóa thông báo
 
-    // Thêm listener cho serviceSelect để debug giá trị
-    if (serviceSelect) {
-        serviceSelect.addEventListener('change', function () {
-            console.log("Service selected! serviceSelect.value:", this.value);
-            console.log("Type of serviceSelect.value:", typeof this.value);
+            if (selectedDoctorId) {
+                // Gọi API backend để lấy các ngày làm việc
+                const workingDates = await fetchWorkingDaysForDoctor(selectedDoctorId);
+                if (workingDates.length > 0) {
+                    workingDates.forEach(date => {
+                        const option = document.createElement('option');
+                        option.value = date;
+                        option.textContent = formatDateForDisplay(date); // Định dạng ngày cho dễ đọc
+                        appointmentDateInput.appendChild(option);
+                    });
+                    appointmentDateInput.disabled = false; // Bật trường ngày hẹn
+                } else {
+                    if (timeSlotMessage) {
+                        timeSlotMessage.textContent = 'Bác sĩ này hiện không có ngày làm việc nào có sẵn.';
+                        timeSlotMessage.style.color = 'red';
+                    }
+                }
+            }
         });
     }
 
+    // Giữ nguyên listener này vì nó cần thiết khi ngày hẹn thay đổi
+    if (appointmentDateInput)
+        appointmentDateInput.addEventListener('change', populateAvailableTimeSlots);
+
+
     async function populateAvailableTimeSlots() {
         const selectedDoctorId = doctorSelect.value;
-        const selectedDate = appointmentDateInput.value;
+        const selectedDate = appointmentDateInput.value; // Lấy giá trị từ select box
 
         appointmentTimeSelect.innerHTML = '<option value="">-- Chọn giờ hẹn --</option>';
         appointmentTimeSelect.disabled = true;
+        if (timeSlotMessage) {
+            timeSlotMessage.textContent = '';
+        }
 
         if (selectedDoctorId && selectedDate) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const selectedDateObj = new Date(selectedDate);
-            selectedDateObj.setHours(0, 0, 0, 0);
-
-            if (selectedDateObj < today) {
-                showCustomAlert('Không thể đặt lịch cho ngày trong quá khứ.', false);
-                appointmentDateInput.value = '';
-                return;
-            }
-
+            // Gọi API /slots/available với doctorId và date
             const slots = await fetchAvailableSlots(selectedDoctorId, selectedDate);
+
             if (slots.length > 0) {
                 slots.forEach(slot => {
                     const option = document.createElement('option');
-                    // Sử dụng trực tiếp slot.startTime vì Gson đã được cấu hình để serialize LocalTime thành chuỗi
-                    const startTimeString = slot.startTime; // Giờ đây startTime sẽ là chuỗi "HH:mm"
+                    const startTimeString = slot.startTime; // Giả sử slot có startTime
                     if (startTimeString) {
                         const [hours, minutes] = startTimeString.split(':');
+                        // Sử dụng toLocaleTimeString để hiển thị giờ chuẩn xác và thân thiện
                         const displayTime = new Date(`2000-01-01T${hours}:${minutes}`).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit', hour12: true});
 
-                        option.value = slot.id;
+                        option.value = slot.id; // Giá trị của option là slot ID
                         option.textContent = displayTime;
                         appointmentTimeSelect.appendChild(option);
                     } else {
-                        console.warn("startTime is null for slot:", slot); // Đổi cảnh báo thành startTime
+                        console.warn("startTime is null for slot:", slot);
                     }
                 });
                 appointmentTimeSelect.disabled = false;
+                if (timeSlotMessage) {
+                    timeSlotMessage.textContent = '';
+                }
             } else {
-                showCustomAlert('Không có khung giờ trống cho bác sĩ này vào ngày đã chọn.', false);
+                if (timeSlotMessage) {
+                    timeSlotMessage.textContent = 'Không có khung giờ trống cho ngày này.';
+                    timeSlotMessage.style.color = 'red';
+                }
             }
         }
     }
@@ -515,32 +577,34 @@ document.addEventListener('DOMContentLoaded', function () {
         appointmentForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
-            // Thêm logging để kiểm tra giá trị trước khi parse
-            console.log("Giá trị doctorSelect.value:", doctorSelect.value);
-            console.log("Giá trị serviceSelect.value:", serviceSelect.value); // Log this value
-            console.log("Giá trị appointmentTimeSelect.value:", appointmentTimeSelect.value);
-
+            // Lấy ID bác sĩ, ID dịch vụ, và ID slot từ các dropdown
             const doctorId = parseInt(doctorSelect.value);
             const serviceId = parseInt(serviceSelect.value);
-            const slotId = parseInt(appointmentTimeSelect.value);
-            // notes không được gửi lên DB vì cột không tồn tại
-            // const notes = notesInput.value;
+            const slotId = parseInt(appointmentTimeSelect.value); // Đây là slot ID được chọn
+
+            // Lấy userAccountId từ biến toàn cục USER_ACCOUNT_ID_FROM_JSP
+            const patientUserAccountId = USER_ACCOUNT_ID_FROM_JSP;
+
+            if (!patientUserAccountId) {
+                showCustomAlert('Lỗi: Không tìm thấy ID tài khoản bệnh nhân. Vui lòng đăng nhập lại.', false);
+                return;
+            }
 
             if (isNaN(doctorId) || isNaN(serviceId) || isNaN(slotId)) {
-                console.error("Lỗi: Một trong các ID (Bác sĩ, Dịch vụ, Giờ hẹn) không phải là số.");
+                console.error("Lỗi: Vui lòng điền đầy đủ thông tin bắt buộc (Bác sĩ, Dịch vụ, Giờ hẹn).");
                 showCustomAlert('Vui lòng điền đầy đủ thông tin bắt buộc (Bác sĩ, Dịch vụ, Giờ hẹn).', false);
                 return;
             }
 
+            // Dữ liệu gửi đi cho backend
             const newAppointmentData = {
+                patient_id: patientUserAccountId, // Gửi userAccountId mà backend mong đợi
                 doctor_id: doctorId,
-                service_id: serviceId, // Đây là services_id trong DB
-                slot_id: slotId
-                        // notes không được gửi lên DB
-                        // notes: notes
+                service_id: serviceId, // Đảm bảo key này khớp với backend (services_id -> service_id)
+                slot_id: slotId, // Gửi slot_id trực tiếp
+                notes: notesInput.value // Ghi chú
             };
 
-            // Thêm logging để kiểm tra dữ liệu gửi đi
             console.log("Attempting to send new appointment data:", newAppointmentData);
             console.log("JSON payload:", JSON.stringify(newAppointmentData));
 
@@ -552,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     body: JSON.stringify(newAppointmentData)
                 });
-                // Thêm logging để kiểm tra phản hồi từ server
+
                 console.log("Server response status:", response.status, response.statusText);
 
                 const responseData = await response.json().catch(() => ({message: 'Phản hồi không phải JSON'}));
