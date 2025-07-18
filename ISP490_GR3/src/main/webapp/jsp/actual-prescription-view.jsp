@@ -413,7 +413,7 @@
                 <% } %>
             </ul>
         </nav>
-            
+
         <!-- Main Content -->
         <div id="content">
             <!-- Top Navbar -->
@@ -506,10 +506,9 @@
                 <!-- Action Buttons -->
                 <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                     <div>
-                        <a href="${pageContext.request.contextPath}/doctor/medical-records?action=edit&recordId=<%= record != null ? record.getId() : "" %>" 
-                           class="action-btn back-btn">
-                            <i class="bi bi-arrow-left"></i>
-                            <span class="btn-text">Quay lại hồ sơ</span>
+                        <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại
                         </a>
                     </div>
                     <div class="action-buttons">
@@ -676,36 +675,36 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-        
+
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Sidebar toggle
-                const sidebarCollapse = document.getElementById('sidebarCollapse');
-                const sidebar = document.getElementById('sidebar');
-                const content = document.getElementById('content');
+                            document.addEventListener('DOMContentLoaded', function () {
+                                // Sidebar toggle
+                                const sidebarCollapse = document.getElementById('sidebarCollapse');
+                                const sidebar = document.getElementById('sidebar');
+                                const content = document.getElementById('content');
 
-                if (sidebarCollapse) {
-                    sidebarCollapse.addEventListener('click', function () {
-                        sidebar.classList.toggle('collapsed');
-                        content.classList.toggle('expanded');
-                    });
-                }
+                                if (sidebarCollapse) {
+                                    sidebarCollapse.addEventListener('click', function () {
+                                        sidebar.classList.toggle('collapsed');
+                                        content.classList.toggle('expanded');
+                                    });
+                                }
 
-                // Responsive sidebar
-                function checkWidth() {
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.add('collapsed');
-                        content.classList.add('expanded');
-                    } else {
-                        sidebar.classList.remove('collapsed');
-                        content.classList.remove('expanded');
-                    }
-                }
+                                // Responsive sidebar
+                                function checkWidth() {
+                                    if (window.innerWidth <= 768) {
+                                        sidebar.classList.add('collapsed');
+                                        content.classList.add('expanded');
+                                    } else {
+                                        sidebar.classList.remove('collapsed');
+                                        content.classList.remove('expanded');
+                                    }
+                                }
 
-                // Initial check
-                checkWidth();
-                window.addEventListener('resize', checkWidth);
-            });
+                                // Initial check
+                                checkWidth();
+                                window.addEventListener('resize', checkWidth);
+                            });
         </script>
     </body>
 </html>
