@@ -1,5 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="java.util.List" %>
+<%@ page import="com.mycompany.isp490_gr3.model.Doctor" %>
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
+
+
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -17,6 +21,33 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
     </head>
     <body>
+        <%
+              List<Doctor> doctorsWithoutSchedule = (List<Doctor>) request.getAttribute("doctorsWithoutSchedule");
+              if (doctorsWithoutSchedule != null && !doctorsWithoutSchedule.isEmpty()) {
+        %>
+        <!-- Toast hiển thị bác sĩ chưa có lịch -->
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+            <div id="toastDoctor" class="toast align-items-center text-dark border-warning" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header bg-warning text-dark">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong class="me-auto">Thông báo</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    <p>Các bác sĩ chưa có lịch làm việc :</p>
+                    <ul class="mb-1">
+                        <% for (Doctor d : doctorsWithoutSchedule) { %>
+                        <li><%= d.getFullName() %></li>
+                            <% } %>
+                    </ul>
+                    <a href="<%= request.getContextPath() %>/receptionist/manage-doctor-schedule" class="btn btn-sm btn-primary">Tạo lịch ngay</a>
+                </div>
+            </div>
+        </div>
+        <%
+            }
+        %>
+        
         <%
         // Get user role for access control
         Object userRole = session.getAttribute("userRole");
@@ -51,6 +82,7 @@
             userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
         }
         %>
+
 
         <!-- Sidebar -->
         <nav id="sidebar">
@@ -134,7 +166,7 @@
                         <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
                     </a>
                 </li>
-              
+
                 <li>
                     <a href="${pageContext.request.contextPath}/queue">
                         <i class="bi bi-people-fill"></i> Quản lý hàng đợi
@@ -250,6 +282,7 @@
             </nav>
 
             <!-- Main Content Area -->
+
             <div class="container-fluid mt-4">
                 <!-- Welcome Section -->
                 <div class="row mb-5">
@@ -456,8 +489,19 @@
             </div>
         </div>
 
+
+
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const toastEl = document.getElementById("toastDoctor");
+                if (toastEl) {
+                    const toast = new bootstrap.Toast(toastEl, {delay: 10000});
+                    toast.show();
+                }
+            });
+        </script>
 
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -489,5 +533,6 @@
                 window.addEventListener('resize', checkWidth);
             });
         </script>
+
     </body>
 </html>
