@@ -46,10 +46,6 @@
             User.Role currentRole = currentUser.getRole();
             String userRoleDisplay = currentRole != null ? currentRole.getValue() : "Patient";
 
-            // Không còn cần patientAccountIdentifier ở đây nữa, vì backend sẽ tự lấy từ session
-            
-            // Debugging: In giá trị cuối cùng của patientAccountIdentifier ra console server
-            // System.out.println("PATIENT_ACCOUNT_ID_FROM_JSP (final value): " + patientAccountIdentifier); 
         %>
 
         <nav id="sidebar">
@@ -244,29 +240,32 @@
                     <form id="newAppointmentForm">
                         <div class="form-group">
                             <label for="newDoctorName">Chọn Bác sĩ:</label>
-                            <select id="newDoctorName" name="doctorId" required>
+                            <select class="form-control" id="newDoctorName" name="doctorId" required>
                                 <option value="">-- Chọn bác sĩ --</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="newService">Dịch vụ:</label>
-                            <select id="newService" name="serviceId" required>
+                            <select class="form-control" id="newService" name="serviceId" required>
                                 <option value="">-- Chọn dịch vụ --</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="newAppointmentDate">Ngày hẹn:</label>
-                            <input type="date" id="newAppointmentDate" name="date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="newAppointmentTime">Giờ hẹn:</label>
-                            <select id="newAppointmentTime" name="time" required>
-                                <option value="">-- Chọn giờ hẹn --</option>
+                            <select class="form-control" id="newAppointmentDate" name="appointmentDate" required disabled>
+                                <option value="">-- Vui lòng chọn ngày --</option>
                             </select>
                         </div>
                         <div class="form-group">
+                            <label for="newAppointmentTime">Giờ hẹn:</label>
+                            <select class="form-control" id="newAppointmentTime" name="time" required disabled>
+                                <option value="">-- Chọn giờ hẹn --</option>
+                            </select>
+                            <small id="timeSlotMessage" class="form-text text-muted" style="color: red;"></small>
+                        </div>
+                        <div class="form-group">
                             <label for="newNotes">Ghi chú (tùy chọn):</label>
-                            <textarea id="newNotes" name="notes" rows="3"></textarea>
+                            <textarea class="form-control" id="newNotes" name="notes" rows="3"></textarea>
                         </div>
                         <div class="modal-actions">
                             <button type="submit" class="btn btn-primary" id="submitNewAppointmentBtn"><i class="bi bi-check-circle"></i> Đặt Lịch</button>

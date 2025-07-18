@@ -5,10 +5,12 @@ import com.google.gson.GsonBuilder;
 import com.mycompany.isp490_gr3.dao.DAOAppointment;
 import com.mycompany.isp490_gr3.dao.DAODoctor;
 import com.mycompany.isp490_gr3.dao.DAOService;
+import com.mycompany.isp490_gr3.dao.DAOSlot; // Import DAOSlot
 import com.mycompany.isp490_gr3.model.Appointment;
 import com.mycompany.isp490_gr3.model.Doctor;
 import com.mycompany.isp490_gr3.model.MedicalService;
-import com.mycompany.isp490_gr3.model.User; // Assuming User model exists
+import com.mycompany.isp490_gr3.model.Slot; // Import Slot model
+import com.mycompany.isp490_gr3.model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,15 +22,18 @@ import java.io.PrintWriter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-// Map this servlet to handle API requests specifically for patient-related appointments, doctors, and services
-//@WebServlet("/api/patient/*") // Changed URL pattern to be more specific
+//@WebServlet("/api/patient/*")
 public class AppointmentScheduleController extends HttpServlet {
 
+    private static final Logger LOGGER = Logger.getLogger(AppointmentScheduleController.class.getName());
     private Gson gson;
     private DAOAppointment appointmentDAO;
     private DAODoctor doctorDAO;
     private DAOService medicalServiceDAO;
+    private DAOSlot slotDAO; // Khai báo DAOSlot
 
     @Override
     public void init() throws ServletException {
@@ -37,6 +42,7 @@ public class AppointmentScheduleController extends HttpServlet {
         appointmentDAO = new DAOAppointment();
         doctorDAO = new DAODoctor();
         medicalServiceDAO = new DAOService();
+        slotDAO = new DAOSlot(); // Khởi tạo DAOSlot
     }
 
     @Override
@@ -47,32 +53,29 @@ public class AppointmentScheduleController extends HttpServlet {
         if (!checkPatientAccess(request, response)) {
             return;
         }
-        // pathInfo will now be relative to /api/patient/ (e.g., "/appointments/patient/PAT001", "/doctors", "/services")
+
         String pathInfo = request.getPathInfo();
-        String servletPath = request.getServletPath(); // Should be /api/patient
-        String requestURI = request.getRequestURI(); // Full URI
+        String servletPath = request.getServletPath();
+        String requestURI = request.getRequestURI();
 
         System.out.println("AppointmentScheduleController - doGet - Request URI: " + requestURI);
         System.out.println("AppointmentScheduleController - doGet - Servlet Path: " + servletPath);
         System.out.println("AppointmentScheduleController - doGet - PathInfo: " + pathInfo);
 
         try {
-            // Handle requests to the base URL like /api/patient or /api/patient/
             if (pathInfo == null || pathInfo.equals("/")) {
                 System.out.println("AppointmentScheduleController - doGet - PathInfo is null or root. This might be an implicit browser request or an incomplete API call.");
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400 Bad Request
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.print(gson.toJson(Map.of("message", "Đường dẫn API không hợp lệ hoặc không có tài nguyên cụ thể. Vui lòng cung cấp endpoint (ví dụ: /doctors, /services).")));
                 return;
             }
 
             // --- Handle /api/patient/appointments/patient/{userAccountId} ---
-            // pathInfo will be like "/appointments/patient/PAT001"
             if (pathInfo.startsWith("/appointments/patient/")) {
                 System.out.println("AppointmentScheduleController - doGet - Handling /appointments/patient/ request.");
                 String[] pathParts = pathInfo.split("/");
-                // Expected pathParts: [ "", "appointments", "patient", "{userAccountId}" ]
                 if (pathParts.length == 4) {
-                    String userAccountId = pathParts[3]; // This is the user.id from session
+                    String userAccountId = pathParts[3];
                     System.out.println("AppointmentScheduleController - doGet - userAccountId: " + userAccountId);
 
                     Integer patientId = appointmentDAO.getPatientIdByAccountId(userAccountId);
@@ -95,7 +98,6 @@ public class AppointmentScheduleController extends HttpServlet {
                     out.print(gson.toJson(Map.of("message", "Định dạng đường dẫn không đúng cho lịch hẹn của bệnh nhân.")));
                 }
             } // --- Handle /api/patient/doctors ---
-            // pathInfo will be "/doctors"
             else if (pathInfo.equals("/doctors")) {
                 System.out.println("AppointmentScheduleController - doGet - Handling /doctors request.");
                 List<Doctor> doctors = doctorDAO.findAllDoctors();
@@ -103,20 +105,62 @@ public class AppointmentScheduleController extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_OK);
                 System.out.println("AppointmentScheduleController - doGet - Sent list of doctors.");
             } // --- Handle /api/patient/services ---
-            // pathInfo will be "/services"
             else if (pathInfo.equals("/services")) {
                 System.out.println("AppointmentScheduleController - doGet - Handling /services request.");
                 List<MedicalService> services = medicalServiceDAO.getAllServices();
                 out.print(gson.toJson(services));
                 response.setStatus(HttpServletResponse.SC_OK);
                 System.out.println("AppointmentScheduleController - doGet - Sent list of services.");
+            } // --- NEW: Handle /api/patient/doctors/{doctorId}/available-dates ---
+            else if (pathInfo.matches("/doctors/\\d+/available-dates")) {
+                System.out.println("AppointmentScheduleController - doGet - Handling /doctors/{doctorId}/available-dates request.");
+                String[] pathParts = pathInfo.split("/");
+                int doctorId = Integer.parseInt(pathParts[2]); // pathParts[0]="", [1]="doctors", [2]="{doctorId}", [3]="available-dates"
+                System.out.println("Fetching available dates for doctor ID: " + doctorId);
+
+                List<java.time.LocalDate> availableDates = slotDAO.getAvailableDatesForDoctor(doctorId);
+                out.print(gson.toJson(availableDates));
+                response.setStatus(HttpServletResponse.SC_OK);
+                System.out.println("Sent available dates for doctor: " + doctorId);
+            } // --- NEW/UPDATED: Handle /api/patient/slots/available?doctorId={id}&date={date} ---
+            else if (pathInfo.equals("/slots/available")) {
+                System.out.println("AppointmentScheduleController - doGet - Handling /slots/available request.");
+                String doctorIdParam = request.getParameter("doctorId");
+                String dateParam = request.getParameter("date");
+
+                if (doctorIdParam == null || dateParam == null) {
+                    System.out.println("AppointmentScheduleController - doGet - Missing doctorId or date parameter for /slots/available.");
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print(gson.toJson(Map.of("message", "Thiếu tham số 'doctorId' hoặc 'date'.")));
+                    return;
+                }
+
+                try {
+                    int doctorId = Integer.parseInt(doctorIdParam);
+                    List<Slot> availableSlots = slotDAO.getAvailableSlots(doctorId, dateParam);
+                    out.print(gson.toJson(availableSlots));
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    System.out.println("Sent available slots for doctor " + doctorId + " on " + dateParam);
+                } catch (NumberFormatException e) {
+                    System.out.println("AppointmentScheduleController - doGet - Invalid doctorId format: " + doctorIdParam);
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print(gson.toJson(Map.of("message", "ID bác sĩ không hợp lệ.")));
+                } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot có sẵn: " + e.getMessage(), e);
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    out.print(gson.toJson(Map.of("message", "Lỗi máy chủ khi lấy slot có sẵn.")));
+                }
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 out.print(gson.toJson(Map.of("message", "Không tìm thấy tài nguyên API.")));
             }
+        } catch (NumberFormatException e) {
+            System.err.println("AppointmentScheduleController - doGet - Number format error in pathInfo: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print(gson.toJson(Map.of("message", "Định dạng ID không hợp lệ trong đường dẫn.")));
         } catch (Exception e) {
             System.err.println("AppointmentScheduleController - doGet - Internal Server Error: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Lỗi trong doGet: " + e.getMessage(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print(gson.toJson(Map.of("message", "Lỗi máy chủ nội bộ: " + e.getMessage())));
         } finally {
@@ -142,7 +186,6 @@ public class AppointmentScheduleController extends HttpServlet {
 
         try {
             // --- Handle /api/patient/appointments (Create new appointment) ---
-            // pathInfo will be "/appointments"
             if (pathInfo != null && pathInfo.equals("/appointments")) {
                 System.out.println("AppointmentScheduleController - doPost - Handling /appointments (create) request.");
                 StringBuilder sb = new StringBuilder();
@@ -243,7 +286,7 @@ public class AppointmentScheduleController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
-        String pathInfo = request.getPathInfo(); // e.g., "/appointments/{appointmentId}/cancel"
+        String pathInfo = request.getPathInfo();
         String servletPath = request.getServletPath();
         String requestURI = request.getRequestURI();
 
@@ -253,11 +296,10 @@ public class AppointmentScheduleController extends HttpServlet {
 
         try {
             // --- Handle /api/patient/appointments/{appointmentId}/cancel ---
-            // pathInfo will be like "/appointments/{appointmentId}/cancel"
             if (pathInfo != null && pathInfo.matches("/appointments/\\d+/cancel")) {
                 System.out.println("AppointmentScheduleController - doPut - Handling /appointments/{id}/cancel request.");
                 String[] pathParts = pathInfo.split("/");
-                int appointmentId = Integer.parseInt(pathParts[2]); // Get ID from path, e.g., for /appointments/123/cancel, pathParts[2] is "123"
+                int appointmentId = Integer.parseInt(pathParts[2]);
                 System.out.println("AppointmentScheduleController - doPut - Appointment ID for cancellation: " + appointmentId);
 
                 boolean success = appointmentDAO.cancelAppointment(appointmentId);
@@ -289,11 +331,6 @@ public class AppointmentScheduleController extends HttpServlet {
         }
     }
 
-    /**
-     * Helper method to get logged-in patient's full name from session. This is
-     * used to populate the response for new appointment creation. In a more
-     * robust system, you might have a dedicated service for user context.
-     */
     private String loggedInPatientFullNameFromSession(HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user != null) {
@@ -307,20 +344,17 @@ public class AppointmentScheduleController extends HttpServlet {
 
         HttpSession session = request.getSession(false);
 
-        // Check if user is logged in
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
             return false;
         }
 
-        // Get current user
         User currentUser = (User) session.getAttribute("user");
         if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
             return false;
         }
 
-        // Allow both Admin and Doctor to access
         if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.PATIENT) {
             response.sendRedirect(request.getContextPath() + "/homepage");
             return false;
