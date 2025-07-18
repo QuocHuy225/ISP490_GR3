@@ -6,6 +6,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -374,6 +375,39 @@ public class DAOSlot {
         }
     }
 
+    /**
+     * Lấy danh sách các ngày mà một bác sĩ có slot trống (còn chỗ) trong tương
+     * lai.
+     *
+     * @param doctorId ID của bác sĩ.
+     * @return Danh sách các LocalDate có slot trống.
+     */
+    public List<LocalDate> getAvailableDatesForDoctor(int doctorId) {
+        List<LocalDate> availableDates = new ArrayList<>();
+        // Lấy DISTINCT ngày mà bác sĩ có slot VÀ số lượng appointment chưa đạt max_patients
+        // Chỉ lấy các ngày từ hôm nay trở đi.
+        String sql = "SELECT DISTINCT s.slot_date "
+                + "FROM slot s "
+                + "LEFT JOIN (SELECT slot_id, COUNT(id) AS booked_count FROM appointment WHERE status != 'cancelled' GROUP BY slot_id) AS a ON s.id = a.slot_id "
+                + "WHERE s.doctor_id = ? AND s.is_deleted = FALSE AND s.slot_date >= CURDATE() " // Chỉ lấy ngày từ hôm nay trở đi
+                + "GROUP BY s.id, s.slot_date, s.max_patients "
+                + "HAVING COALESCE(booked_count, 0) < s.max_patients " // Đảm bảo slot còn chỗ trống
+                + "ORDER BY s.slot_date ASC";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, doctorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    availableDates.add(rs.getDate("slot_date").toLocalDate());
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách ngày trống cho bác sĩ ID " + doctorId + ": " + e.getMessage(), e);
+            e.printStackTrace();
+        }
+        return availableDates;
+    }
+
     // Lấy slot có sẵn (chưa có lịch hẹn của bệnh nhân)
     public List<Slot> getAvailableSlots(int doctorId, String slotDate) {
         List<Slot> availableSlots = new ArrayList<>();
@@ -385,10 +419,13 @@ public class DAOSlot {
             return availableSlots;
         }
 
+        // Truy vấn lấy các slot CÒN TRỐNG (booked_count < max_patients)
         String sql = "SELECT s.id, s.slot_date, s.start_time, s.end_time, s.max_patients "
                 + "FROM slot s "
+                + "LEFT JOIN (SELECT slot_id, COUNT(id) AS booked_count FROM appointment WHERE status != 'cancelled' GROUP BY slot_id) AS a ON s.id = a.slot_id "
                 + "WHERE s.doctor_id = ? AND s.slot_date = ? AND s.is_deleted = FALSE "
-                + "AND NOT EXISTS (SELECT 1 FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NOT NULL AND a.status != 'cancelled')";
+                + "AND COALESCE(booked_count, 0) < s.max_patients " // Đảm bảo slot còn chỗ trống
+                + "ORDER BY s.start_time ASC"; // Sắp xếp theo thời gian để dễ hiển thị
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, doctorId);
@@ -547,18 +584,17 @@ public class DAOSlot {
             LOGGER.log(Level.SEVERE, "Lỗi khi in slot và appointment: " + e.getMessage(), e);
         }
     }
-    
+
     // Lấy danh sách bệnh nhân theo slotId
     public List<PatientDTO> getPatientsBySlotId(int slotId) {
         List<PatientDTO> patients = new ArrayList<>();
-        String sql = "SELECT p.patient_code, p.cccd, p.full_name, p.phone " +
-                     "FROM appointment a " +
-                     "JOIN patients p ON a.patient_id = p.id " +
-                     "WHERE a.slot_id = ? AND a.is_deleted = FALSE AND p.is_deleted = FALSE " +
-                     "AND a.status != 'cancelled'";
+        String sql = "SELECT p.patient_code, p.cccd, p.full_name, p.phone "
+                + "FROM appointment a "
+                + "JOIN patients p ON a.patient_id = p.id "
+                + "WHERE a.slot_id = ? AND a.is_deleted = FALSE AND p.is_deleted = FALSE "
+                + "AND a.status != 'cancelled'";
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, slotId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -577,6 +613,7 @@ public class DAOSlot {
 
     // DTO nội bộ để ánh xạ thông tin bệnh nhân
     public static class PatientDTO {
+
         private String patientCode;
         private String cccd;
         private String fullName;
