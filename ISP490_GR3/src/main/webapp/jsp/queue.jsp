@@ -70,7 +70,7 @@
                     </a>
                 </li>
                 <% } else if (userRole == User.Role.RECEPTIONIST) { %>
-                <li>
+                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-house-door-fill"></i> Trang chủ
                     </a>
@@ -80,14 +80,18 @@
                         <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
                     </a>
                 </li>
-
                 <li>
+                    <a href="${pageContext.request.contextPath}/checkin">
+                        <i class="bi bi-person-check-fill"></i> Quản lý check-in
+                    </a>
+                </li>
+                <li class="active">
                     <a href="${pageContext.request.contextPath}/queue">
                         <i class="bi bi-people-fill"></i> Quản lý hàng đợi
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/patients">
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
@@ -234,6 +238,7 @@
                                 <th>Giờ check-in</th>
                                 <th>Bác sĩ</th>
                                 <th>Trạng thái</th>
+                                
                             </tr>
                         </thead>
                         <tbody id="queueTableBody">
