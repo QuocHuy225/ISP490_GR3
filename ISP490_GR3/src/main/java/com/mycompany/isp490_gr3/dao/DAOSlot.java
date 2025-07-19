@@ -162,40 +162,17 @@ public class DAOSlot {
         }
         String slotSql = "INSERT INTO slot (doctor_id, slot_date, start_time, end_time, max_patients, is_deleted, created_at) "
                 + "VALUES (?, ?, ?, ?, ?, FALSE, CURRENT_TIMESTAMP)";
-        int slotId;
+
         try (PreparedStatement ps = conn.prepareStatement(slotSql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, doctorId);
             ps.setDate(2, Date.valueOf(date));
             ps.setTime(3, Time.valueOf(start));
             ps.setTime(4, Time.valueOf(end));
             ps.setInt(5, maxPatients);
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected == 0) {
-                return false;
-            }
-            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
-                if (!generatedKeys.next()) {
-                    return false;
-                }
-                slotId = generatedKeys.getInt(1);
-            }
-        }
 
-        String appointmentSql = "INSERT INTO appointment (slot_id, appointment_code, status, payment_status, is_deleted, created_at) "
-                + "VALUES (?, ?, 'pending', 'unpaid', FALSE, CURRENT_TIMESTAMP)";
-        try (PreparedStatement ps = conn.prepareStatement(appointmentSql)) {
-            for (int i = 0; i < maxPatients; i++) {
-                String appointmentCode;
-                do {
-                    appointmentCode = "A" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-                } while (!isAppointmentCodeUnique(conn, appointmentCode));
-                ps.setInt(1, slotId);
-                ps.setString(2, appointmentCode);
-                ps.addBatch();
-            }
-            ps.executeBatch();
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
         }
-        return true;
     }
 
     // Kiểm tra trùng giờ
@@ -382,19 +359,27 @@ public class DAOSlot {
      * @param doctorId ID của bác sĩ.
      * @return Danh sách các LocalDate có slot trống.
      */
+    /**
+     * Lấy danh sách các ngày mà một bác sĩ có slot trống (còn chỗ) trong tương
+     * lai.
+     *
+     * @param doctorId ID của bác sĩ.
+     * @return Danh sách các LocalDate có slot trống.
+     */
+    // Dán đoạn code này vào file DAOSlot.java, thay thế cho phương thức cũ.
     public List<LocalDate> getAvailableDatesForDoctor(int doctorId) {
         List<LocalDate> availableDates = new ArrayList<>();
-        // Lấy DISTINCT ngày mà bác sĩ có slot VÀ số lượng appointment chưa đạt max_patients
-        // Chỉ lấy các ngày từ hôm nay trở đi.
+        // Câu lệnh SQL đã được viết lại cho đơn giản và chính xác hơn.
         String sql = "SELECT DISTINCT s.slot_date "
                 + "FROM slot s "
-                + "LEFT JOIN (SELECT slot_id, COUNT(id) AS booked_count FROM appointment WHERE status != 'cancelled' GROUP BY slot_id) AS a ON s.id = a.slot_id "
-                + "WHERE s.doctor_id = ? AND s.is_deleted = FALSE AND s.slot_date >= CURDATE() " // Chỉ lấy ngày từ hôm nay trở đi
-                + "GROUP BY s.id, s.slot_date, s.max_patients "
-                + "HAVING COALESCE(booked_count, 0) < s.max_patients " // Đảm bảo slot còn chỗ trống
+                + "WHERE s.doctor_id = ? "
+                + "AND s.is_deleted = FALSE "
+                + "AND s.slot_date >= CURDATE() "
+                + "AND (SELECT COUNT(a.id) FROM appointment a WHERE a.slot_id = s.id) < s.max_patients "
                 + "ORDER BY s.slot_date ASC";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, doctorId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -402,8 +387,10 @@ public class DAOSlot {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách ngày trống cho bác sĩ ID " + doctorId + ": " + e.getMessage(), e);
-            e.printStackTrace();
+            // Ghi log lỗi để dễ dàng debug nếu có sự cố trong tương lai
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách ngày trống cho bác sĩ ID " + doctorId, e);
+            // Ném lại một RuntimeException để báo hiệu lỗi nghiêm trọng ở tầng DAO
+            throw new RuntimeException("Lỗi truy vấn cơ sở dữ liệu khi lấy ngày làm việc.", e);
         }
         return availableDates;
     }
@@ -422,14 +409,15 @@ public class DAOSlot {
         // Truy vấn lấy các slot CÒN TRỐNG (booked_count < max_patients)
         String sql = "SELECT s.id, s.slot_date, s.start_time, s.end_time, s.max_patients "
                 + "FROM slot s "
-                + "LEFT JOIN (SELECT slot_id, COUNT(id) AS booked_count FROM appointment WHERE status != 'cancelled' GROUP BY slot_id) AS a ON s.id = a.slot_id "
+                + "LEFT JOIN (SELECT slot_id, COUNT(id) AS booked_count FROM appointment WHERE status IN ('pending', 'confirmed', 'done') GROUP BY slot_id) AS a ON s.id = a.slot_id "
                 + "WHERE s.doctor_id = ? AND s.slot_date = ? AND s.is_deleted = FALSE "
+                + "AND s.is_available = TRUE " // Đảm bảo chỉ lấy slot đang hoạt động
                 + "AND COALESCE(booked_count, 0) < s.max_patients " // Đảm bảo slot còn chỗ trống
                 + "ORDER BY s.start_time ASC"; // Sắp xếp theo thời gian để dễ hiển thị
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, doctorId);
-            ps.setDate(2, Date.valueOf(date));
+            ps.setDate(2, java.sql.Date.valueOf(date)); // Sử dụng java.sql.Date.valueOf
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Slot slot = new Slot();
@@ -438,11 +426,13 @@ public class DAOSlot {
                     slot.setStartTime(rs.getTime("start_time").toLocalTime());
                     slot.setEndTime(rs.getTime("end_time").toLocalTime());
                     slot.setMaxPatients(rs.getInt("max_patients"));
+                    // Các thuộc tính khác của Slot nếu cần
                     availableSlots.add(slot);
                 }
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot có sẵn cho bác sĩ " + doctorId + " vào ngày " + slotDate + ": " + e.getMessage(), e);
+            e.printStackTrace();
         }
         return availableSlots;
     }

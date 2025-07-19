@@ -31,7 +31,11 @@
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.fatboyindustrial.gson-javatime-serialisers</groupId>
+            <artifactId>gson-javatime-serialisers</artifactId>
+            <version>1.1.1</version>
+        </dependency>
 
         <!-- JavaMail API for sending emails -->
         <dependency>
@@ -65,7 +69,15 @@
             <artifactId>jackson-annotations</artifactId>
             <version>2.13.4</version> <!-- Phiên bản này cũng thường đi kèm -->
         </dependency>
+        <dependency>
+            <groupId>im.mange</groupId>
+            <artifactId>flakeless_2.12</artifactId>
+            <version>0.0.191</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
+   
+    
              
     <build>
         <finalName>ISP490_GR3</finalName>
