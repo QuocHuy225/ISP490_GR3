@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -420,6 +421,9 @@
         String sortOrder = (String) request.getAttribute("sortOrder");
         String emailSearch = (String) request.getAttribute("emailSearch");
         
+        // Get user counts by role
+        Map<String, Integer> userCountsByRole = (Map<String, Integer>) request.getAttribute("userCountsByRole");
+        
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         boolean isShowingDeleted = showDeleted != null && showDeleted;
         %>
@@ -592,14 +596,6 @@
                     </div>
 
                     <div class="p-4">
-                        <p class="mb-4 text-muted">
-                            <% if (isShowingDeleted) { %>
-                            Danh sách các tài khoản đã bị xóa
-                            <% } else { %>
-                            Quản lý và xem thông tin tất cả người dùng trong hệ thống
-                            <% } %>
-                        </p>
-
                         <form method="get" action="${pageContext.request.contextPath}/admin/authorization" id="filterForm">
                             <% if (isShowingDeleted) { %>
                             <input type="hidden" name="showDeleted" value="true">
@@ -616,16 +612,16 @@
                                             Tất cả quyền
                                         </option>
                                         <option value="Admin" <%= "Admin".equals(roleFilter) ? "selected" : "" %>>
-                                            Quản trị viên
+                                            Quản trị viên (<%= userCountsByRole != null ? userCountsByRole.get("Admin") : 0 %>)
                                         </option>
                                         <option value="Doctor" <%= "Doctor".equals(roleFilter) ? "selected" : "" %>>
-                                            Bác sĩ
+                                            Bác sĩ (<%= userCountsByRole != null ? userCountsByRole.get("Doctor") : 0 %>)
                                         </option>
                                         <option value="Receptionist" <%= "Receptionist".equals(roleFilter) ? "selected" : "" %>>
-                                            Lễ tân
+                                            Lễ tân (<%= userCountsByRole != null ? userCountsByRole.get("Receptionist") : 0 %>)
                                         </option>
                                         <option value="Patient" <%= "Patient".equals(roleFilter) ? "selected" : "" %>>
-                                            Bệnh nhân
+                                            Bệnh nhân (<%= userCountsByRole != null ? userCountsByRole.get("Patient") : 0 %>)
                                         </option>
                                     </select>
                                 </div>
@@ -699,17 +695,6 @@
 
                 <!-- Users Table -->
                 <div class="auth-container">
-                    <div class="auth-header">
-                        <div>
-                            <i class="bi bi-table me-2"></i>
-                            <% if (isShowingDeleted) { %>
-                            Danh sách tài khoản đã xóa
-                            <% } else { %>
-                            Danh sách người dùng
-                            <% } %>
-                        </div>
-                    </div>
-
                     <% 
                     List<User> usersToShow = isShowingDeleted ? deletedUsers : allUsers;
                     if (usersToShow != null && !usersToShow.isEmpty()) { 

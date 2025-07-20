@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * =====================================================
@@ -127,10 +129,18 @@ public class AuthorizationController extends HttpServlet {
 
             }
             
+            // Get user counts by role for dropdown display
+            Map<String, Integer> userCountsByRole = new HashMap<>();
+            userCountsByRole.put("Admin", daoUser.getUserCountByRole(User.Role.ADMIN));
+            userCountsByRole.put("Doctor", daoUser.getUserCountByRole(User.Role.DOCTOR));
+            userCountsByRole.put("Receptionist", daoUser.getUserCountByRole(User.Role.RECEPTIONIST));
+            userCountsByRole.put("Patient", daoUser.getUserCountByRole(User.Role.PATIENT));
+            
             // Set filter parameters for JSP
             request.setAttribute("roleFilter", roleFilter);
             request.setAttribute("sortOrder", sortOrder);
             request.setAttribute("emailSearch", emailSearch);
+            request.setAttribute("userCountsByRole", userCountsByRole);
             
             // Forward to authorization page
             request.getRequestDispatcher("/jsp/authorization.jsp").forward(request, response);
