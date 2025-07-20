@@ -145,35 +145,35 @@
                 <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
+                        <i class="bi bi-house-door-fill"></i> Trang chủ
                     </a>
                 </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check"></i> Quản lý đặt lịch
+                        <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
                     </a>
                 </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/checkin">
-                        <i class="bi bi-calendar-check"></i> Quản lý check-in
+                        <i class="bi bi-person-check-fill"></i> Quản lý check-in
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/#">
-                        <i class="bi bi-calendar-check"></i> Quản lý hàng đợi
+                    <a href="${pageContext.request.contextPath}/queue">
+                        <i class="bi bi-people-fill"></i> Quản lý hàng đợi
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/patients">
-                        <i class="bi bi-people"></i> Quản lý bệnh nhân
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
+                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
                         <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
                     </a>
-                </li>
-                <li>
+                </li> 
+                <li class="active">
                     <a href="${pageContext.request.contextPath}/receptionist/report">
                         <i class="bi bi-speedometer2"></i> Báo cáo thống kê
                     </a>

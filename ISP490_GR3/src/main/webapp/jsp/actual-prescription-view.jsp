@@ -28,82 +28,313 @@
                 padding-bottom: 20px;
                 margin-bottom: 30px;
             }
-            
+
             .prescription-section {
                 margin-bottom: 25px;
                 padding: 20px;
                 border: 1px solid #e0e0e0;
                 border-radius: 8px;
                 background-color: #fff;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             }
-            
+
             .prescription-details {
-                background-color: #f8f9fa;
+                background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+                border: 2px solid #007bff;
+                position: relative;
+                overflow: hidden;
             }
-            
-            .print-section {
-                page-break-inside: avoid;
+
+            .prescription-details::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #007bff, #0056b3);
             }
-            
+
+            .patient-info-card {
+                border: none;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                margin-bottom: 1rem;
+            }
+
+            .patient-info-card .card-header {
+                background: none;
+                border-bottom: none;
+                padding: 12px;
+            }
+
+            .patient-info-card .card-header h5 {
+                font-weight: 600;
+                font-size: 1rem;
+                margin: 0;
+                color: #007bff;
+            }
+
+            .patient-info-card .card-body {
+                padding: 15px;
+            }
+
+            .patient-info-card p {
+                margin-bottom: 10px;
+                padding: 5px 5px 5px 20px;
+                border-bottom: 1px solid #e9ecef;
+                font-size: 1rem;
+                color: #444;
+            }
+
+            .patient-info-card p:last-child {
+                margin-bottom: 0;
+                border-bottom: none;
+            }
+
+            .patient-info-card strong {
+                min-width: 150px;
+                display: inline-block;
+                color: #333;
+            }
+
             .medicine-table {
                 border: 2px solid #007bff;
+                border-radius: 8px;
+                overflow: hidden;
             }
-            
+
             .medicine-table th {
-                background-color: #007bff;
-                color: white;
+                background: #cfe2ff;
+                color: black;
                 font-weight: 600;
                 text-align: center;
-                border: 1px solid #0056b3;
+                border: 0.5px solid #fff;
+                padding: 12px;
             }
-            
+
             .medicine-table td {
                 border: 1px solid #dee2e6;
                 padding: 12px 8px;
-                vertical-align: top;
+                vertical-align: middle;
+                font-size: 1rem;
             }
-            
+
             .medicine-table .medicine-name {
                 font-weight: 600;
                 color: #007bff;
             }
-            
+
             .medicine-table .usage-instructions {
                 font-style: italic;
                 color: #6c757d;
             }
-            
+
+            .receipt-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 2px solid #f8f9fa;
+            }
+
+            .receipt-title {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #2c3e50;
+                display: flex;
+                align-items: center;
+            }
+
+            .receipt-title i {
+                font-size: 1.25rem;
+                margin-right: 0.5rem;
+                padding: 0.3rem;
+                border-radius: 0.4rem;
+                color: white;
+                background: linear-gradient(135deg, #007bff, #0056b3);
+                display: inline-flex;
+                justify-content: center;
+                align-items: center;
+                line-height: 1;
+            }
+
+            .receipt-time {
+                font-size: 0.9rem;
+                color: #6c757d;
+                font-weight: 500;
+            }
+
+            .signature-section .signature-line {
+                border-bottom: 2px solid #343a40;
+                width: 180px;
+                height: 2px;
+                margin: 0 auto;
+            }
+
+            .two-column-container {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            .left-column {
+                flex: 0 0 25%;
+                max-width: 25%;
+                padding-right: 15px;
+            }
+
+            .right-column {
+                flex: 0 0 75%;
+                max-width: 75%;
+                padding-left: 15px;
+            }
+
+            .action-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 0.5rem 1.5rem;
+                border: none;
+                border-radius: 8px;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                min-width: 120px;
+                justify-content: center;
+            }
+
+            .action-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                text-decoration: none;
+            }
+
+            .action-btn i {
+                font-size: 16px;
+            }
+
+            .btn-text {
+                font-size: 15px;
+                white-space: nowrap;
+            }
+
+            .action-btn-update {
+                background: linear-gradient(135deg, #007bff, #0056b3);
+                color: white;
+            }
+
+            .action-btn-update:hover {
+                background: linear-gradient(135deg, #0056b3, #004085);
+                color: white;
+            }
+
+            .action-btn-success {
+                background: linear-gradient(135deg, #28a745, #218838);
+                color: white;
+            }
+
+            .action-btn-success:hover {
+                background: linear-gradient(135deg, #218838, #1e7e34);
+                color: white;
+            }
+
+            .back-btn {
+                background: linear-gradient(135deg, #adb5bd, #868e96);
+                color: white;
+            }
+
+            .back-btn:hover {
+                background: linear-gradient(135deg, #868e96, #6c757d);
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+
+            @media (max-width: 768px) {
+                .left-column, .right-column {
+                    flex: 0 0 100%;
+                    max-width: 100%;
+                    padding-right: 0;
+                    padding-left: 0;
+                }
+
+                .action-btn {
+                    padding: 0.6rem 1.2rem;
+                    min-width: 100px;
+                }
+
+                .btn-text {
+                    display: none;
+                }
+
+                .action-btn i {
+                    font-size: 18px;
+                }
+
+                .medicine-table th,
+                .medicine-table td {
+                    font-size: 0.85rem;
+                    padding: 8px 6px;
+                }
+            }
+
             @media print {
                 .no-print {
                     display: none !important;
                 }
-                
+
                 body {
                     font-size: 12pt;
                     line-height: 1.4;
                 }
-                
+
                 .prescription-section {
                     break-inside: avoid;
                     margin-bottom: 15px;
                     border: 1px solid #000;
                     padding: 10px;
                 }
-                
+
                 .prescription-header {
                     border-bottom: 2px solid #000;
                     margin-bottom: 20px;
                 }
-                
+
+                .prescription-details {
+                    background: #fff !important;
+                    border: 1px solid #000;
+                }
+
+                .prescription-details::before {
+                    display: none;
+                }
+
+                .patient-info-card {
+                    border: 1px solid #000;
+                }
+
                 .medicine-table {
                     font-size: 11pt;
                     border: 2px solid #000;
                 }
-                
+
                 .medicine-table th,
                 .medicine-table td {
                     padding: 8px 6px;
                     border: 1px solid #000;
+                }
+
+                .medicine-table th {
+                    background: #000 !important;
+                    color: #fff !important;
+                }
+
+                .text-primary {
+                    color: #000 !important;
                 }
             }
         </style>
@@ -145,6 +376,9 @@
         Patient patient = (Patient) request.getAttribute("patient");
         MedicalRecord record = (MedicalRecord) request.getAttribute("medicalRecord");
         
+        // Check if medical record is completed
+        boolean isCompleted = record != null && "completed".equals(record.getStatus());
+        
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         SimpleDateFormat fullSdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         %>
@@ -156,7 +390,6 @@
             </div>
             <ul class="list-unstyled components">
                 <% if (currentRole == User.Role.DOCTOR) { %>
-                <!-- Menu cho Bác sĩ -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -180,7 +413,7 @@
                 <% } %>
             </ul>
         </nav>
-            
+
         <!-- Main Content -->
         <div id="content">
             <!-- Top Navbar -->
@@ -270,20 +503,22 @@
                     </div>
                 </div>
 
-                <!-- Back Button -->
+                <!-- Action Buttons -->
                 <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                    <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
-                       class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Quay lại
-                    </a>
-                    
+                    <div>
+                        <a href="${pageContext.request.contextPath}/doctor/medical-records?action=list&patientId=<%= patient.getId() %>" 
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
                     <div class="action-buttons">
                         <a href="${pageContext.request.contextPath}/doctor/actual-prescriptions?action=edit&formId=<%= form.getActualPrescriptionFormId() %>" 
                            class="btn btn-primary me-2">
                             <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                         </a>
-                        <button type="button" class="btn btn-success" onclick="window.print()">
-                            <i class="bi bi-printer me-2"></i>In đơn thuốc
+                        <button type="button" class="action-btn action-btn-success" onclick="window.print()">
+                            <i class="bi bi-printer"></i>
+                            <span class="btn-text">In đơn thuốc</span>
                         </button>
                     </div>
                 </div>
@@ -300,50 +535,64 @@
                     <p class="mb-0">Điện thoại: (028) 1234-5678 | Email: info@anhduongclinic.com</p>
                 </div>
 
-                <!-- Patient & Prescription Info -->
-                <div class="prescription-section prescription-details">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-primary mb-3"><i class="bi bi-person-fill me-2"></i>Thông tin bệnh nhân</h6>
-                            <p class="mb-2"><strong>Mã bệnh nhân:</strong> <%= patient.getPatientCode() %></p>
-                            <p class="mb-2"><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
-                            <p class="mb-2"><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? sdf.format(patient.getDob()) : "" %></p>
-                            <p class="mb-2"><strong>Giới tính:</strong> <%= patient.getGender() == 1 ? "Nam" : "Nữ" %></p>
-                            <p class="mb-0"><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-primary mb-3"><i class="bi bi-capsule me-2"></i>Thông tin đơn thuốc</h6>
-                            <p class="mb-2"><strong>Mã đơn thuốc:</strong> <%= form.getActualPrescriptionFormId() %></p>
-                            <p class="mb-2"><strong>Tên đơn thuốc:</strong> <%= form.getFormName() %></p>
-                            <p class="mb-2"><strong>Ngày kê đơn:</strong> <%= form.getPrescriptionDate() != null ? fullSdf.format(form.getPrescriptionDate()) : "" %></p>
-                            <p class="mb-2"><strong>Mã hồ sơ:</strong> <%= record.getId() %></p>
-                            <% if (form.getNotes() != null && !form.getNotes().trim().isEmpty()) { %>
-                            <p class="mb-0"><strong>Ghi chú:</strong> <%= form.getNotes() %></p>
-                            <% } %>
+                <!-- Two-Column Layout -->
+                <div class="row two-column-container">
+                    <!-- Left Column: Patient & Prescription Info -->
+                    <div class="col-md-3 left-column">
+                        <div class="card medical-card patient-info-card">
+                            <div class="card-header">
+                                <h4 class="text-primary mb-3">
+                                    <i class="bi bi-person-fill me-2"></i>Thông tin bệnh nhân
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Mã bệnh nhân:</strong> <%= patient.getPatientCode() %></p>
+                                <p><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
+                                <p><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? sdf.format(patient.getDob()) : "" %></p>
+                                <p><strong>Giới tính:</strong> <%= patient.getGender() == 1 ? "Nam" : "Nữ" %></p>
+                                <p><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
+                            </div>
+                            <div class="card-header">
+                                <h4 class="text-primary mb-3">
+                                    <i class="bi bi-capsule me-2"></i>Thông tin đơn thuốc
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Mã đơn thuốc:</strong> <%= form.getActualPrescriptionFormId() %></p>
+                                <p><strong>Tên đơn thuốc:</strong> <%= form.getFormName() %></p>
+                                <p><strong>Ngày kê đơn:</strong> <%= form.getPrescriptionDate() != null ? fullSdf.format(form.getPrescriptionDate()) : "" %></p>
+                                <p><strong>Mã hồ sơ:</strong> <%= record.getId() %></p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Medicines Table -->
-                <div class="prescription-section">
-                    <h6 class="text-primary mb-3"><i class="bi bi-capsule-pill me-2"></i>Danh sách thuốc</h6>
-                    <% if (form.getMedicines() != null && !form.getMedicines().isEmpty()) { %>
-                        <div class="table-responsive">
-                            <table class="table medicine-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 5%;">STT</th>
-                                        <th style="width: 25%;">Tên thuốc</th>
-                                        <th style="width: 10%;">ĐVT</th>
-                                        <th style="width: 10%;">Đường dùng</th>
-                                        <th style="width: 8%;">Số ngày</th>
-                                        <th style="width: 8%;">Lần/ngày</th>
-                                        <th style="width: 8%;">Tổng SL</th>
-                                        <th style="width: 26%;">Hướng dẫn sử dụng</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% int index = 1; for (ActualPrescriptionMedicine medicine : form.getMedicines()) { %>
+                    <!-- Right Column: Prescription Details -->
+                    <div class="col-md-9 right-column">
+                        <!-- Medicines Table -->
+                        <div class="prescription-section">
+                            <div class="receipt-header">
+                                <div class="receipt-title">
+                                    <i class="bi bi-capsule-pill"></i>
+                                    Danh sách thuốc
+                                </div>
+                            </div>
+                            <% if (form.getMedicines() != null && !form.getMedicines().isEmpty()) { %>
+                            <div class="table-responsive">
+                                <table class="table medicine-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 5%;">STT</th>
+                                            <th style="width: 25%;">Tên thuốc</th>
+                                            <th style="width: 10%;">ĐVT</th>
+                                            <th style="width: 10%;">Đường dùng</th>
+                                            <th style="width: 8%;">Số ngày</th>
+                                            <th style="width: 8%;">Lần/ngày</th>
+                                            <th style="width: 8%;">Tổng SL</th>
+                                            <th style="width: 26%;">Hướng dẫn sử dụng</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% int index = 1; for (ActualPrescriptionMedicine medicine : form.getMedicines()) { %>
                                         <tr>
                                             <td class="text-center"><%= index++ %></td>
                                             <td class="medicine-name"><%= medicine.getMedicineName() %></td>
@@ -356,51 +605,60 @@
                                                 <%= medicine.getUsageInstructions() != null ? medicine.getUsageInstructions() : "" %>
                                             </td>
                                         </tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <% } else { %>
+                            <div class="text-center py-4">
+                                <i class="bi bi-capsule display-4 text-muted"></i>
+                                <p class="text-muted mt-2">Không có thuốc nào trong đơn này.</p>
+                            </div>
+                            <% } %>
                         </div>
-                    <% } else { %>
-                        <div class="text-center py-4">
-                            <i class="bi bi-capsule display-4 text-muted"></i>
-                            <p class="text-muted mt-2">Không có thuốc nào trong đơn này.</p>
-                        </div>
-                    <% } %>
-                </div>
 
-                <!-- Additional Notes -->
-                <% if (form.getNotes() != null && !form.getNotes().trim().isEmpty()) { %>
-                <div class="prescription-section">
-                    <h6 class="text-primary mb-3"><i class="bi bi-chat-text me-2"></i>Lưu ý đặc biệt</h6>
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <%= form.getNotes() %>
-                    </div>
-                </div>
-                <% } %>
+                        <!-- Additional Notes -->
+                        <% if (form.getNotes() != null && !form.getNotes().trim().isEmpty()) { %>
+                        <div class="prescription-section">
+                            <div class="receipt-header">
+                                <div class="receipt-title">
+                                    <i class="bi bi-chat-text"></i>
+                                    Lưu ý đặc biệt
+                                </div>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <%= form.getNotes() %>
+                            </div>
+                        </div>
+                        <% } %>
 
-                <!-- Signature Section -->
-                <div class="prescription-section print-section">
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <p class="mb-5"><strong>Bệnh nhân</strong></p>
-                            <p class="mb-1">________________________</p>
-                            <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
+                        <!-- Signature Section -->
+                        <div class="prescription-section print-section">
+                            <div class="signature-section">
+                                <div class="row text-center g-4">
+                                    <div class="col-md-4">
+                                        <p class="mb-4 fw-bold">Bệnh nhân</p>
+                                        <p class="signature-line mx-auto"></p>
+                                        <p class="mb-0 text-muted"><em>(Ký và ghi rõ họ tên)</em></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-4 fw-bold">Người nhà bệnh nhân</p>
+                                        <p class="signature-line mx-auto"></p>
+                                        <p class="mb-0 text-muted"><em>(Ký và ghi rõ họ tên)</em></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-4 fw-bold">Bác sĩ điều trị</p>
+                                        <p class="signature-line mx-auto"></p>
+                                        <p class="mb-0 text-muted"><em>(Ký và ghi rõ họ tên)</em></p>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-5">
+                                    <p class="mb-1 text-muted"><em>Ngày <%= new java.text.SimpleDateFormat("dd").format(new java.util.Date()) %> tháng <%= new java.text.SimpleDateFormat("MM").format(new java.util.Date()) %> năm <%= new java.text.SimpleDateFormat("yyyy").format(new java.util.Date()) %></em></p>
+                                    <p class="mb-0 fw-bold text-primary">Đơn thuốc này được kê theo quy định của Bộ Y tế</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <p class="mb-5"><strong>Người nhà bệnh nhân</strong></p>
-                            <p class="mb-1">________________________</p>
-                            <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
-                        </div>
-                        <div class="col-md-4">
-                            <p class="mb-5"><strong>Bác sĩ điều trị</strong></p>
-                            <p class="mb-1">________________________</p>
-                            <p class="mb-0"><em>(Ký và ghi rõ họ tên)</em></p>
-                        </div>
-                    </div>
-                    <div class="text-center mt-4">
-                        <p class="mb-1"><em>Ngày <%= new java.text.SimpleDateFormat("dd").format(new java.util.Date()) %> tháng <%= new java.text.SimpleDateFormat("MM").format(new java.util.Date()) %> năm <%= new java.text.SimpleDateFormat("yyyy").format(new java.util.Date()) %></em></p>
-                        <p class="mb-0"><strong>Đơn thuốc này được kê theo quy định của Bộ Y tế</strong></p>
                     </div>
                 </div>
 
@@ -417,36 +675,36 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-        
+
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Sidebar toggle
-                const sidebarCollapse = document.getElementById('sidebarCollapse');
-                const sidebar = document.getElementById('sidebar');
-                const content = document.getElementById('content');
+                            document.addEventListener('DOMContentLoaded', function () {
+                                // Sidebar toggle
+                                const sidebarCollapse = document.getElementById('sidebarCollapse');
+                                const sidebar = document.getElementById('sidebar');
+                                const content = document.getElementById('content');
 
-                if (sidebarCollapse) {
-                    sidebarCollapse.addEventListener('click', function () {
-                        sidebar.classList.toggle('collapsed');
-                        content.classList.toggle('expanded');
-                    });
-                }
+                                if (sidebarCollapse) {
+                                    sidebarCollapse.addEventListener('click', function () {
+                                        sidebar.classList.toggle('collapsed');
+                                        content.classList.toggle('expanded');
+                                    });
+                                }
 
-                // Responsive sidebar
-                function checkWidth() {
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.add('collapsed');
-                        content.classList.add('expanded');
-                    } else {
-                        sidebar.classList.remove('collapsed');
-                        content.classList.remove('expanded');
-                    }
-                }
+                                // Responsive sidebar
+                                function checkWidth() {
+                                    if (window.innerWidth <= 768) {
+                                        sidebar.classList.add('collapsed');
+                                        content.classList.add('expanded');
+                                    } else {
+                                        sidebar.classList.remove('collapsed');
+                                        content.classList.remove('expanded');
+                                    }
+                                }
 
-                // Initial check
-                checkWidth();
-                window.addEventListener('resize', checkWidth);
-            });
+                                // Initial check
+                                checkWidth();
+                                window.addEventListener('resize', checkWidth);
+                            });
         </script>
     </body>
-</html> 
+</html>

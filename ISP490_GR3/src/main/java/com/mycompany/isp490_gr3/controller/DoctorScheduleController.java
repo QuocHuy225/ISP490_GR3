@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.util.List;
 
 // Map this servlet to handle API requests for doctor schedules and doctors
+// Make sure this servlet is mapped correctly in web.xml or with @WebServlet
 //@WebServlet(urlPatterns = {"/api/doctor-schedules", "/api/doctor-schedules/*", "/api/doctors"})
 public class DoctorScheduleController extends HttpServlet {
 
@@ -45,20 +46,40 @@ public class DoctorScheduleController extends HttpServlet {
                 out.print(gson.toJson(doctors));
             } else if ("/api/doctor-schedules".equals(servletPath)) {
                 if (pathInfo == null || pathInfo.equals("/")) {
-                    // Handle GET /api/doctor-schedules?year=YYYY&month=MM
-                    String yearStr = request.getParameter("year");
-                    String monthStr = request.getParameter("month");
-
-                    if (yearStr == null || monthStr == null) {
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        out.print("{\"status\":\"error\",\"message\":\"Thiếu tham số năm hoặc tháng.\"}");
-                        return;
+                    // Handle GET /api/doctor-schedules?viewMode=month&year=YYYY&month=MM
+                    // OR /api/doctor-schedules?viewMode=week&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+                    String viewMode = request.getParameter("viewMode");
+                    if (viewMode == null) {
+                        viewMode = "month"; // Default to month if not specified
                     }
+                    if ("month".equalsIgnoreCase(viewMode)) {
+                        String yearStr = request.getParameter("year");
+                        String monthStr = request.getParameter("month");
 
-                    int year = Integer.parseInt(yearStr);
-                    int month = Integer.parseInt(monthStr);
-                    List<DoctorSchedule> schedules = scheduleService.getSchedulesByMonth(year, month);
-                    out.print(gson.toJson(schedules));
+                        if (yearStr == null || monthStr == null) {
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            out.print("{\"status\":\"error\",\"message\":\"Thiếu tham số năm hoặc tháng cho chế độ xem tháng.\"}");
+                            return;
+                        }
+
+                        int year = Integer.parseInt(yearStr);
+                        int month = Integer.parseInt(monthStr);
+                        List<DoctorSchedule> schedules = scheduleService.getSchedulesByMonth(year, month);
+                        out.print(gson.toJson(schedules));
+                    } else if ("week".equalsIgnoreCase(viewMode) || "day".equalsIgnoreCase(viewMode)) {
+                        String startDateStr = request.getParameter("startDate");
+                        String endDateStr = request.getParameter("endDate");
+                        if (startDateStr == null || endDateStr == null) {
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            out.print("{\"status\":\"error\",\"message\":\"Thiếu tham số startDate hoặc endDate cho chế độ xem tuần/ngày.\"}");
+                            return;
+                        }
+                        List<DoctorSchedule> schedules = scheduleService.getSchedulesByDateRange(startDateStr, endDateStr);
+                        out.print(gson.toJson(schedules));
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        out.print("{\"status\":\"error\",\"message\":\"Chế độ xem không hợp lệ.\"}");
+                    }
                 } else {
                     // Handle GET /api/doctor-schedules/{id}
                     String scheduleId = pathInfo.substring(1); // Remove leading slash
@@ -114,11 +135,11 @@ public class DoctorScheduleController extends HttpServlet {
                 return;
             }
 
+            // eventName is not passed to service as it's not saved to DB
             String result = scheduleService.createSchedule(
                     requestData.getDoctorId(),
                     requestData.getWorkDate(),
-                    requestData.isActive(),
-                    requestData.getEventName()
+                    requestData.isActive()
             );
 
             if ("success".equals(result)) {
@@ -166,12 +187,12 @@ public class DoctorScheduleController extends HttpServlet {
                 return;
             }
 
+            // eventName is not passed to service as it's not saved to DB
             String result = scheduleService.updateSchedule(
                     scheduleId,
                     requestData.getDoctorId(),
                     requestData.getWorkDate(),
-                    requestData.isActive(),
-                    requestData.getEventName()
+                    requestData.isActive()
             );
 
             if ("success".equals(result)) {
@@ -241,8 +262,8 @@ public class DoctorScheduleController extends HttpServlet {
     }
 
     /**
-     * Checks if the current user has Receptionist or Admin access.
-     * If not, sends an appropriate error response and returns false.
+     * Checks if the current user has Receptionist or Admin access. If not,
+     * sends an appropriate error response and returns false.
      *
      * @param request The HttpServletRequest.
      * @param response The HttpServletResponse.
@@ -284,7 +305,6 @@ public class DoctorScheduleController extends HttpServlet {
         private int doctorId;
         private String workDate; // Expecting "YYYY-MM-DD"
         private boolean isActive;
-        private String eventName;
 
         public int getDoctorId() {
             return doctorId;
@@ -298,8 +318,5 @@ public class DoctorScheduleController extends HttpServlet {
             return isActive;
         }
 
-        public String getEventName() {
-            return eventName;
-        }
     }
 }

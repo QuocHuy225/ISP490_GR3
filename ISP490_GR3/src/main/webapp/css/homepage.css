@@ -36,6 +36,13 @@
     --shadow-light: 0 5px 25px rgba(3, 96, 217, 0.1);
     --shadow-medium: 0 10px 40px rgba(3, 96, 217, 0.15);
     /* Các biến khác bạn có thể đã thêm */
+
+    /* Thêm hoặc điều chỉnh biến màu cho toast */
+    --toast-bg-warning: #ffc107; /* Màu cảnh báo Bootstrap */
+    --toast-text-dark: #212529; /* Màu chữ tối Bootstrap */
+    --toast-border-warning: #ffc107; /* Màu viền cảnh báo */
+    --toast-header-bg-warning: #ffc107; /* Màu nền header cảnh báo */
+    --toast-header-text-warning: #664d03; /* Màu chữ header cảnh báo */ /* Adjusted from your original for contrast */
 }
 
 /* ====================================
@@ -184,7 +191,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ====================================
     APPOINTMENT SECTION
-    ==================================== */
+    =================================== */
 .appointment-card {
     background: var(--card);
     border-radius: var(--radius-lg);
@@ -1020,7 +1027,7 @@ body {
     #sidebar {
         margin-left: -250px;
     }
-    #sidebar.active {
+    #sidebar.active { /* Using 'active' as per previous discussion for expanded state */
         margin-left: 0;
     }
     #content {
@@ -1053,5 +1060,132 @@ body {
 
     .service-card {
         margin-bottom: 20px;
+    }
+}
+
+/* ====================================
+    TOAST NOTIFICATION STYLES (ENHANCED)
+    ==================================== */
+
+/* Base Toast Styling */
+#toastDoctor {
+    width: 350px; /* Adjust width as needed */
+    max-width: 90vw; /* Max width for smaller screens */
+    background-color: var(--card); /* White card background */
+    border-radius: var(--radius-lg); /* Larger border radius consistent with other cards */
+    box-shadow: var(--shadow-medium); /* More prominent shadow */
+    border: none; /* Remove default border */
+    overflow: hidden; /* Ensure content respects border-radius */
+    animation: slideInFromRight 0.5s ease-out forwards; /* Animation for appearance */
+    border: 1px solid var(--toast-border-warning); /* Keep a subtle border from warning color */
+}
+
+/* Toast Header Styling */
+#toastDoctor .toast-header {
+    background-color: var(--toast-header-bg-warning); /* Warning background color */
+    color: var(--toast-header-text-warning); /* Darker text for contrast */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Subtle separator */
+    padding: 0.75rem 1rem; /* Slightly more padding */
+    font-weight: 600; /* Bolder header text */
+    font-size: 1.05rem; /* Slightly larger font */
+    display: flex; /* Use flex to align items */
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem; /* Space between icon, strong, and button */
+}
+
+#toastDoctor .toast-header i {
+    font-size: 1.25rem; /* Larger icon in header */
+    color: var(--toast-header-text-warning); /* Ensure icon color matches text */
+}
+
+#toastDoctor .toast-header .btn-close {
+    /* Adjust close button for better visibility on warning background */
+    filter: brightness(0.6); /* Make it darker */
+    transition: filter 0.2s ease;
+}
+#toastDoctor .toast-header .btn-close:hover {
+    filter: brightness(0.4); /* Even darker on hover */
+}
+
+/* Toast Body Styling */
+#toastDoctor .toast-body {
+    padding: 1rem 1.25rem; /* More generous padding */
+    color: var(--text-dark); /* Darker text for content */
+    font-size: 0.95rem; /* Slightly larger body text */
+}
+
+#toastDoctor .toast-body p {
+    margin-bottom: 0.5rem; /* Spacing for paragraphs */
+}
+
+#toastDoctor .toast-body ul {
+    list-style: inside disc; /* Standard bullet points */
+    padding-left: 0; /* Remove default padding from Bootstrap */
+    margin-bottom: 1rem; /* Spacing below list */
+}
+
+#toastDoctor .toast-body ul li {
+    font-size: 0.9rem; /* Smaller font for list items */
+    color: var(--muted); /* Muted color for doctor names */
+    line-height: 1.4; /* Better line spacing */
+}
+
+#toastDoctor .toast-body .btn-primary {
+    /* Style for the "Tạo lịch ngay" button */
+    padding: 0.5rem 1rem; /* Smaller button */
+    font-size: 0.9rem;
+    border-radius: var(--radius); /* Consistent radius */
+    background: var(--primary); /* Use primary color */
+    border-color: var(--primary);
+    color: var(--primary-foreground);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+#toastDoctor .toast-body .btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Toast Animation */
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Position for fixed bottom-0 end-0 */
+.position-fixed.bottom-0.end-0 {
+    right: 1.5rem !important; /* Adjust right spacing */
+    bottom: 1.5rem !important; /* Adjust bottom spacing */
+}
+
+/* Responsive adjustments for toast on small screens */
+@media (max-width: 767.98px) {
+    #toastDoctor {
+        width: calc(100vw - 30px); /* Full width minus padding on small screens */
+        margin: 0 auto; /* Center it */
+        right: auto !important; /* Override fixed right */
+        left: 50% !important; /* Center horizontally */
+        transform: translateX(-50%);
+        bottom: 1rem !important; /* Closer to bottom on small screens */
+    }
+    /* Adjust slide-in animation for mobile to center */
+    @keyframes slideInFromRight {
+        from {
+            transform: translateX(50%) translateY(100%); /* Start off screen bottom-right */
+            opacity: 0;
+        }
+        to {
+            transform: translateX(-50%) translateY(0); /* End centered at bottom */
+            opacity: 1;
+        }
     }
 }

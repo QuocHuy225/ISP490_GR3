@@ -202,13 +202,26 @@ public class ActualPrescriptionController extends HttpServlet {
         User currentUser = (User) session.getAttribute("user");
         String userId = currentUser != null ? currentUser.getId() : "system";
 
+        String medicalRecordId = request.getParameter("medicalRecordId");
         try {
-            String medicalRecordId = request.getParameter("medicalRecordId");
             int patientId = Integer.parseInt(request.getParameter("patientId"));
             String doctorIdStr = request.getParameter("doctorId");
             Integer doctorId = (doctorIdStr != null && !doctorIdStr.isEmpty()) ? Integer.parseInt(doctorIdStr) : null;
             String formName = request.getParameter("formName");
             String notes = request.getParameter("notes");
+
+            if (formName == null || formName.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập tên đơn thuốc.");
+                MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
+                Patient patient = daoPatient.getPatientById(record.getPatientId());
+                List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
+                request.setAttribute("medicalRecord", record);
+                request.setAttribute("patient", patient);
+                request.setAttribute("templateMeds", templateMeds);
+                request.setAttribute("action", "add");
+                request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
+                return;
+            }
 
             ActualPrescriptionForm form = new ActualPrescriptionForm();
             form.setMedicalRecordId(medicalRecordId);
@@ -220,6 +233,19 @@ public class ActualPrescriptionController extends HttpServlet {
             form.setUpdatedBy(userId);
 
             List<ActualPrescriptionMedicine> medicines = parseMedicinesFromRequest(request);
+
+            if (medicines.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập ít nhất một thuốc và tên thuốc không được để trống.");
+                MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
+                Patient patient = daoPatient.getPatientById(record.getPatientId());
+                List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
+                request.setAttribute("medicalRecord", record);
+                request.setAttribute("patient", patient);
+                request.setAttribute("templateMeds", templateMeds);
+                request.setAttribute("action", "add");
+                request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
+                return;
+            }
 
             boolean success = daoRx.addForm(form, medicines);
             if (success) {
@@ -233,8 +259,7 @@ public class ActualPrescriptionController extends HttpServlet {
         } catch (IllegalStateException e) {
             if (e.getMessage().contains("already exists")) {
                 // Prescription already exists for this medical record
-                String redirectMedicalRecordId = request.getParameter("medicalRecordId");
-                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?medicalRecordId=" + redirectMedicalRecordId + "&error=prescription_exists");
+                response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?medicalRecordId=" + medicalRecordId + "&error=prescription_exists");
             } else {
                 LOGGER.log(Level.SEVERE, "State error: {0}", e.getMessage());
                 response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=state_error");
@@ -255,6 +280,21 @@ public class ActualPrescriptionController extends HttpServlet {
             String formName = request.getParameter("formName");
             String notes = request.getParameter("notes");
 
+            if (formName == null || formName.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập tên đơn thuốc.");
+                // Lấy lại dữ liệu cần thiết để render lại form
+                String medicalRecordId = request.getParameter("medicalRecordId");
+                MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
+                Patient patient = daoPatient.getPatientById(record.getPatientId());
+                List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
+                request.setAttribute("medicalRecord", record);
+                request.setAttribute("patient", patient);
+                request.setAttribute("templateMeds", templateMeds);
+                request.setAttribute("action", "update");
+                request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
+                return;
+            }
+
             ActualPrescriptionForm form = daoRx.getFormById(formId);
             if (form == null) {
                 response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?error=form_not_found");
@@ -265,6 +305,22 @@ public class ActualPrescriptionController extends HttpServlet {
             form.setUpdatedBy(userId);
 
             List<ActualPrescriptionMedicine> medicines = parseMedicinesFromRequest(request);
+
+            if (medicines.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập ít nhất một thuốc và tên thuốc không được để trống.");
+                // Lấy lại dữ liệu cần thiết để render lại form
+                String medicalRecordId = request.getParameter("medicalRecordId");
+                MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
+                Patient patient = daoPatient.getPatientById(record.getPatientId());
+                List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
+                request.setAttribute("medicalRecord", record);
+                request.setAttribute("patient", patient);
+                request.setAttribute("templateMeds", templateMeds);
+                request.setAttribute("action", "update");
+                request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
+                return;
+            }
+
             boolean success = daoRx.updateForm(form, medicines);
             if (success) {
                 response.sendRedirect(request.getContextPath() + "/doctor/actual-prescriptions?action=view&formId=" + form.getActualPrescriptionFormId() + "&success=updated");
@@ -293,9 +349,12 @@ public class ActualPrescriptionController extends HttpServlet {
             if (names[i] == null || names[i].trim().isEmpty()) continue;
             ActualPrescriptionMedicine med = new ActualPrescriptionMedicine();
             med.setMedicineName(names[i].trim());
-            if (days != null && days.length > i && !days[i].isEmpty()) med.setDaysOfTreatment(Integer.parseInt(days[i]));
-            if (unitsPerDay != null && unitsPerDay.length > i && !unitsPerDay[i].isEmpty()) med.setUnitsPerDay(Integer.parseInt(unitsPerDay[i]));
-            if (quantities != null && quantities.length > i && !quantities[i].isEmpty()) med.setTotalQuantity(Integer.parseInt(quantities[i]));
+            if (days != null && days.length > i && days[i] != null && !days[i].trim().isEmpty())
+                med.setDaysOfTreatment(Integer.parseInt(days[i]));
+            if (unitsPerDay != null && unitsPerDay.length > i && unitsPerDay[i] != null && !unitsPerDay[i].trim().isEmpty())
+                med.setUnitsPerDay(Integer.parseInt(unitsPerDay[i]));
+            if (quantities != null && quantities.length > i && quantities[i] != null && !quantities[i].trim().isEmpty())
+                med.setTotalQuantity(Integer.parseInt(quantities[i]));
             if (units != null && units.length > i) med.setUnitOfMeasure(units[i]);
             if (routes != null && routes.length > i) med.setAdministrationRoute(routes[i]);
             if (instructions != null && instructions.length > i) med.setUsageInstructions(instructions[i]);
@@ -333,4 +392,4 @@ public class ActualPrescriptionController extends HttpServlet {
         
         return true;
     }
-} 
+}
