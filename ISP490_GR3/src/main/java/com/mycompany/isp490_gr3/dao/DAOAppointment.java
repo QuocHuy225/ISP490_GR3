@@ -937,16 +937,7 @@ public class DAOAppointment {
     }
 // Trong file DAOAppointment.java
 
-    /**
-     * Lấy thông tin chi tiết của lịch hẹn cuối cùng mà bệnh nhân vừa đặt trong
-     * một slot cụ thể. Phương thức này được gọi ngay sau khi tạo/cập nhật lịch
-     * hẹn thành công để trả về cho client.
-     *
-     * @param patientId ID của bệnh nhân
-     * @param slotId ID của khung giờ
-     * @return Đối tượng Appointment với đầy đủ thông tin, hoặc null nếu không
-     * tìm thấy.
-     */
+ 
     public Appointment getLatestAppointmentByPatientAndSlot(int patientId, int slotId) {
         String sql = "SELECT "
                 + "    a.id AS appointment_id, a.status, a.services_id, "
@@ -961,6 +952,41 @@ public class DAOAppointment {
                 + "ORDER BY a.id DESC "
                 + "LIMIT 1";
 
+
+    public boolean isCheckedIn(int appointmentId) throws SQLException {
+        String sql = "SELECT checkin_time FROM appointment WHERE id = ? AND checkin_time IS NOT NULL";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, appointmentId);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next(); // Trả về true nếu có checkin_time
+        }
+    }
+    
+    public static void main(String[] args) {
+        // Tạo instance của DAOAppointment
+        DAOAppointment dao = new DAOAppointment();
+
+        // Danh sách các appointmentId để test (thay bằng ID thực tế từ cơ sở dữ liệu của bạn)
+        int[] appointmentIdsToTest = {3}; // Ví dụ: 1, 2 có checkin_time, 3 không, 999 không tồn tại
+
+        // Duyệt qua từng appointmentId để test
+        for (int appointmentId : appointmentIdsToTest) {
+            try {
+                // Gọi phương thức isCheckedIn
+                boolean isCheckedIn = dao.isCheckedIn(appointmentId);
+
+                // In kết quả
+                System.out.println("Appointment ID: " + appointmentId);
+                System.out.println("Is Checked In? " + (isCheckedIn ? "Yes" : "No"));
+
+                // Thêm dòng phân cách để dễ đọc
+                System.out.println("---------------------");
+            } catch (SQLException e) {
+                System.err.println("Error testing appointment ID " + appointmentId + ": " + e.getMessage());
+                System.out.println("---------------------");
+            }
+        }
+    }
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
