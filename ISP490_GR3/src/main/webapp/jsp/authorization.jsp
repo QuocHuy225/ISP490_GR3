@@ -554,7 +554,7 @@
                     <%= errorMessage %>
                 </div>
                 <% } %>
-
+                
                 <!-- Quản lý Phân quyền và Bộ lọc -->
                 <div class="auth-container mb-4">
                     <div class="auth-header">
@@ -696,111 +696,6 @@
                         </form>
                     </div>
                 </div>
-
-                <!-- Statistics Container -->
-                <% 
-                // Tính toán thống kê số lượng theo role (chỉ cho tài khoản hoạt động)
-                if (!isShowingDeleted && allUsers != null) {
-                    int totalUsers = allUsers.size();
-                    int adminCount = 0, doctorCount = 0, receptionistCount = 0, patientCount = 0;
-                    
-                    for (User user : allUsers) {
-                        switch (user.getRole()) {
-                            case ADMIN:
-                                adminCount++;
-                                break;
-                            case DOCTOR:
-                                doctorCount++;
-                                break;
-                            case RECEPTIONIST:
-                                receptionistCount++;
-                                break;
-                            case PATIENT:
-                                patientCount++;
-                                break;
-                        }
-                    }
-                %>
-                <div class="auth-container mb-4">
-                    <div class="auth-header">
-                        <div>
-                            <i class="bi bi-bar-chart me-2"></i>
-                            Thống kê tài khoản theo quyền
-                        </div>
-                    </div>
-
-                    <div class="p-4">
-                        <div class="row g-3">
-                            <!-- Tổng số tài khoản -->
-                            <div class="col-md">
-                                <div class="stats-card total">
-                                    <div class="stats-icon">
-                                        <i class="bi bi-people-fill"></i>
-                                    </div>
-                                    <div class="stats-content">
-                                        <div class="stats-number"><%= totalUsers %></div>
-                                        <div class="stats-label">Tổng số</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Admin -->
-                            <div class="col-md">
-                                <div class="stats-card admin">
-                                    <div class="stats-icon">
-                                        <i class="bi bi-shield-fill-check"></i>
-                                    </div>
-                                    <div class="stats-content">
-                                        <div class="stats-number"><%= adminCount %></div>
-                                        <div class="stats-label">Quản trị viên</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Doctor -->
-                            <div class="col-md">
-                                <div class="stats-card doctor">
-                                    <div class="stats-icon">
-                                        <i class="bi bi-heart-pulse-fill"></i>
-                                    </div>
-                                    <div class="stats-content">
-                                        <div class="stats-number"><%= doctorCount %></div>
-                                        <div class="stats-label">Bác sĩ</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Receptionist -->
-                            <div class="col-md">
-                                <div class="stats-card receptionist">
-                                    <div class="stats-icon">
-                                        <i class="bi bi-person-workspace"></i>
-                                    </div>
-                                    <div class="stats-content">
-                                        <div class="stats-number"><%= receptionistCount %></div>
-                                        <div class="stats-label">Lễ tân</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Patient -->
-                            <div class="col-md">
-                                <div class="stats-card patient">
-                                    <div class="stats-icon">
-                                        <i class="bi bi-person-fill"></i>
-                                    </div>
-                                    <div class="stats-content">
-                                        <div class="stats-number"><%= patientCount %></div>
-                                        <div class="stats-label">Bệnh nhân</div>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                        </div>
-                    </div>
-                </div>
-                <% } %>
 
                 <!-- Users Table -->
                 <div class="auth-container">
