@@ -178,9 +178,12 @@
                 </li>
             </ul>
 
-            <c:if test="${not empty sessionScope.message}">
+           <c:if test="${not empty sessionScope.message}">
                 <div class="alert alert-${sessionScope.messageType} alert-dismissible fade show mt-3" role="alert">
                     ${sessionScope.message}
+                    <c:if test="${param.late != null && param.late == 'true'}">
+                        <a href="${pageContext.request.contextPath}/checkin?assignNewSlot=true&appointmentId=${param.appointmentId}" class="btn btn-primary btn-sm ms-2">Chọn slot mới</a>
+                    </c:if>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 <% 
@@ -257,7 +260,7 @@
                 <div id="appointment-list-section" class="${not empty selectedAppointment ? 'col-md-8' : 'col-md-12'}">
                     <div class="appointment-list-section animate-fade-in">  
                         <div class="appointment-list-header">
-                            <h5>Danh sách lịch check-in ${empty slotDate ? LocalDate.now().toString() : slotDate}  (${totalRecords} kết quả)</h5>
+                            <h5>Danh sách lịch check-in hôm nay ${empty slotDate ? LocalDate.now().toString() : slotDate}  (${totalRecords} kết quả)</h5>
                         </div>
 
                         <div class="table-responsive">
