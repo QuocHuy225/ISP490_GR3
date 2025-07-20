@@ -953,40 +953,6 @@ public class DAOAppointment {
                 + "LIMIT 1";
 
 
-    public boolean isCheckedIn(int appointmentId) throws SQLException {
-        String sql = "SELECT checkin_time FROM appointment WHERE id = ? AND checkin_time IS NOT NULL";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, appointmentId);
-            ResultSet rs = stmt.executeQuery();
-            return rs.next(); // Trả về true nếu có checkin_time
-        }
-    }
-    
-    public static void main(String[] args) {
-        // Tạo instance của DAOAppointment
-        DAOAppointment dao = new DAOAppointment();
-
-        // Danh sách các appointmentId để test (thay bằng ID thực tế từ cơ sở dữ liệu của bạn)
-        int[] appointmentIdsToTest = {3}; // Ví dụ: 1, 2 có checkin_time, 3 không, 999 không tồn tại
-
-        // Duyệt qua từng appointmentId để test
-        for (int appointmentId : appointmentIdsToTest) {
-            try {
-                // Gọi phương thức isCheckedIn
-                boolean isCheckedIn = dao.isCheckedIn(appointmentId);
-
-                // In kết quả
-                System.out.println("Appointment ID: " + appointmentId);
-                System.out.println("Is Checked In? " + (isCheckedIn ? "Yes" : "No"));
-
-                // Thêm dòng phân cách để dễ đọc
-                System.out.println("---------------------");
-            } catch (SQLException e) {
-                System.err.println("Error testing appointment ID " + appointmentId + ": " + e.getMessage());
-                System.out.println("---------------------");
-            }
-        }
-    }
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
@@ -1025,4 +991,15 @@ public class DAOAppointment {
         }
         return null;
     }
+    
+    
+    public boolean isCheckedIn(int appointmentId) throws SQLException {
+        String sql = "SELECT checkin_time FROM appointment WHERE id = ? AND checkin_time IS NOT NULL";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, appointmentId);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next(); // Trả về true nếu có checkin_time
+        }
+    }
+   
 }
