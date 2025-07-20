@@ -192,7 +192,6 @@ public class CheckinController extends HttpServlet {
         String doctorIdStr = request.getParameter("doctorId");
         String servicesIdStr = request.getParameter("servicesId");
         String status = request.getParameter("status");
-       
 
         Integer doctorId = null;
         if (doctorIdStr != null && !doctorIdStr.trim().isEmpty()) {
@@ -268,7 +267,7 @@ public class CheckinController extends HttpServlet {
 
     private void handleCheckin(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-       
+
         HttpSession session = request.getSession();
 
         try {
@@ -299,7 +298,7 @@ public class CheckinController extends HttpServlet {
 
             DAOAppointment daoAppointment = new DAOAppointment();
             Slot slot = daoAppointment.getSlotByAppointmentId(appointmentId);
-            
+
             //Không checkin đối với slot quá hạn
             if (slot.getSlotDate().isEqual(LocalDate.now()) && LocalTime.now().isAfter(slot.getEndTime())) {
                 session.setAttribute("message", "Quá thời gian check-in");
@@ -307,27 +306,33 @@ public class CheckinController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/checkin");
                 return;
             }
-            
+
             // Lấy thời gian hiện tại với múi giờ Việt Nam (+7)
-        ZoneId zoneId = ZoneId.of("Asia/Ho_Chi_Minh");
-        LocalDateTime now = LocalDateTime.now(zoneId);
-        LocalTime currentTime = now.toLocalTime();
-        LocalDate currentDate = now.toLocalDate();
-        LocalTime startTime = slot.getStartTime();
-        LocalTime endTime = slot.getEndTime();
-            // Kiểm tra check-in sớm
-        long minutesEarly = ChronoUnit.MINUTES.between(currentTime, startTime); // Thời gian sớm (phút)
-        if (minutesEarly > 30) { // Sớm quá 30 phút
-            session.setAttribute("message", "Không hỗ trợ check-in cho bệnh nhân đến quá sớm");
-            session.setAttribute("messageType", "warning");
-            response.sendRedirect(request.getContextPath() + "/checkin");
-            return;
-        } else if (minutesEarly > 0 && minutesEarly <= 30) { // Sớm từ 0 đến 30 phút
-            session.setAttribute("message", "Tiếp tục check-in sớm?");
-            session.setAttribute("messageType", "warning");
-        }
+            ZoneId zoneId = ZoneId.of("Asia/Ho_Chi_Minh");
+            LocalDateTime now = LocalDateTime.now(zoneId);
+            LocalTime currentTime = now.toLocalTime();
+            LocalDate currentDate = now.toLocalDate();
+            LocalTime startTime = slot.getStartTime();
+            LocalTime endTime = slot.getEndTime();
             
-          
+            // Kiểm tra check-in sớm
+            long minutesEarly = ChronoUnit.MINUTES.between(currentTime, startTime); // Thời gian sớm so với startTime
+            if (minutesEarly > 30) {
+                session.setAttribute("message", "Không hỗ trợ check-in cho bệnh nhân đến quá sớm (hơn 30 phút so với startTime).");
+                session.setAttribute("messageType", "warning");
+                response.sendRedirect(request.getContextPath() + "/checkin");
+                return;
+            } else if (minutesEarly <= 0) {
+                // Kiểm tra check-in muộn so với endTime 
+                long minutesLate = ChronoUnit.MINUTES.between(endTime, currentTime); // Thời gian muộn so với endTime
+                if (minutesLate > 0) { // Nếu currentTime > endTime
+                    session.setAttribute("message", "Bệnh nhân đến muộn sau thời gian kết thúc slot. Vui lòng gán lịch hẹn mới.");
+                    session.setAttribute("messageType", "warning");
+                    response.sendRedirect(request.getContextPath() + "/checkin?late=true&appointmentId=" + appointmentId);
+                    return;
+                }
+                // Nếu trong khoảng từ startTime đến endTime, tiếp tục check-in
+            }
             boolean success = daoAppointment.checkinAppointment(appointmentId, priority, description);
 
             if (success) {

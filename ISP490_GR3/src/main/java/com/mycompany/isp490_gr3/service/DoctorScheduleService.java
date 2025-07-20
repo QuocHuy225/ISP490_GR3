@@ -38,16 +38,26 @@ public class DoctorScheduleService {
      * @return A list of DoctorSchedule objects.
      */
     public List<DoctorSchedule> getSchedulesByMonth(int year, int month) {
-        // IMPORTANT: Ensure findSchedulesByMonth in DAODoctorSchedule only returns ACTIVE schedules
-        // If it currently returns all (active and inactive), you need to modify that DAO method.
         return scheduleDAO.findSchedulesByMonth(year, month);
     }
 
     /**
+     * Retrieves doctor schedules for a given date range.
+     *
+     * @param startDate The start date (YYYY-MM-DD string).
+     * @param endDate The end date (YYYY-MM-DD string).
+     * @return A list of DoctorSchedule objects.
+     */
+    public List<DoctorSchedule> getSchedulesByDateRange(String startDate, String endDate) {
+        Date sqlStartDate = Date.valueOf(startDate);
+        Date sqlEndDate = Date.valueOf(endDate);
+        return scheduleDAO.findSchedulesByDateRange(sqlStartDate, sqlEndDate);
+    }
+
+    /**
      * Checks if a given date falls within the allowed scheduling period. Rule:
-     * - If today is Monday-Thursday, Saturday, Sunday: allow scheduling from
-     * today until the end of the *current* week (Sunday). - If today is Friday:
-     * allow scheduling from today until the end of the *next* week (Sunday).
+     * - If today is Monday-Thursday: allow scheduling from today until the end of the *current* week (Sunday).
+     * - If today is Friday, Saturday, Sunday: allow scheduling from today until the end of the *next* week (Sunday).
      *
      * @param checkDate The date to validate.
      * @return true if the date is within the allowed period, false otherwise.
@@ -59,11 +69,12 @@ public class DoctorScheduleService {
         // Determine the end of the current week (Sunday of this week)
         LocalDate endOfCurrentWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
-        if (today.getDayOfWeek() == DayOfWeek.FRIDAY) {
-            // From Friday, allow until the end of the *next* week
+        // Modified Logic: If today is Friday, Saturday, or Sunday, allow scheduling until the end of the *next* week.
+        DayOfWeek currentDayOfWeek = today.getDayOfWeek();
+        if (currentDayOfWeek == DayOfWeek.FRIDAY || currentDayOfWeek == DayOfWeek.SATURDAY || currentDayOfWeek == DayOfWeek.SUNDAY) {
             limitDate = endOfCurrentWeek.plusWeeks(1);
         } else {
-            // For Mon, Tue, Wed, Thu, Sat, Sun: only allow until the end of the *current* week.
+            // For Mon, Tue, Wed, Thu: only allow until the end of the *current* week.
             limitDate = endOfCurrentWeek;
         }
 
@@ -72,18 +83,15 @@ public class DoctorScheduleService {
     }
 
     /**
-     * Creates a new doctor schedule or reactivates a soft-deleted one. This
-     * method is modified to prioritize reactivating soft-deleted schedules
-     * before creating new ones for the same doctor and date.
+     * Creates a new doctor schedule or reactivates a soft-deleted one.
+     * eventName is NOT saved to DB.
      *
      * @param doctorId The ID of the doctor.
      * @param workDate The work date (YYYY-MM-DD string).
-     * @param isActive Whether the schedule is active (for the new/reactivated
-     * schedule, should usually be true).
-     * @param eventName The display name for the event.
+     * @param isActive Whether the schedule is active (for the new/reactivated schedule, should usually be true).
      * @return A string indicating success or an error message.
      */
-    public String createSchedule(int doctorId, String workDate, boolean isActive, String eventName) {
+    public String createSchedule(int doctorId, String workDate, boolean isActive) { // Removed eventName parameter
         Date sqlWorkDate = Date.valueOf(workDate);
         LocalDate localWorkDate = LocalDate.parse(workDate);
 
@@ -91,23 +99,16 @@ public class DoctorScheduleService {
             return "Ngày làm việc " + workDate + " nằm ngoài khoảng thời gian cho phép. (Chỉ được tạo lịch từ hôm nay đến hết Chủ Nhật của tuần này, hoặc đến hết Chủ Nhật tuần sau nếu là Thứ Sáu)";
         }
 
-        // MODIFIED LOGIC:
-        // First, check for any existing schedule for this doctor and date, regardless of its 'active' status.
-        // This requires a new method in your DAODoctorSchedule.
         DoctorSchedule existingSchedule = scheduleDAO.findScheduleByDoctorIdAndWorkDateIncludingInactive(doctorId, sqlWorkDate);
 
         if (existingSchedule != null) {
-            // If a schedule exists for this doctor on this date
             if (existingSchedule.isActive()) {
-                // If it's already active, it's a conflict.
-                System.out.println("Schedule already exists and is active for doctor " + doctorId + " on " + workDate);
+                System.out.println("Lịch làm việc cho bác sĩ này vào ngày " + workDate + " đã tồn tại và đang hoạt động.");
                 return "Lịch làm việc cho bác sĩ này vào ngày " + workDate + " đã tồn tại và đang hoạt động.";
             } else {
-                // If it's inactive (soft-deleted), reactivate it.
                 System.out.println("Reactivating soft-deleted schedule for doctor " + doctorId + " on " + workDate);
                 existingSchedule.setActive(true); // Set to active
-                existingSchedule.setName(eventName); // Update event name if needed
-                // You might also want to update other fields if they were meant to be modified
+                // existingSchedule.setName(eventName); // eventName is not saved to DB, so don't set here
                 if (scheduleDAO.updateSchedule(existingSchedule)) { // Use update method for reactivation
                     return "success";
                 } else {
@@ -115,12 +116,11 @@ public class DoctorScheduleService {
                 }
             }
         } else {
-            // No existing schedule (active or inactive) found, create a brand new one.
             DoctorSchedule newSchedule = new DoctorSchedule();
             newSchedule.setDoctorId(doctorId);
             newSchedule.setWorkDate(sqlWorkDate);
             newSchedule.setActive(true); // New schedules are always active
-            newSchedule.setName(eventName);
+            // newSchedule.setName(eventName); // eventName is not saved to DB, so don't set here
 
             if (scheduleDAO.saveSchedule(newSchedule)) {
                 return "success";
@@ -131,18 +131,16 @@ public class DoctorScheduleService {
     }
 
     /**
-     * Updates an existing doctor schedule. This method will now explicitly
-     * check against other *active* schedules to prevent conflicts when updating
-     * doctorId or workDate.
+     * Updates an existing doctor schedule.
+     * eventName is NOT updated in DB.
      *
      * @param scheduleId The ID of the schedule to update.
      * @param doctorId The updated doctor ID.
      * @param workDate The updated work date (YYYY-MM-DD string).
      * @param isActive The updated active status.
-     * @param eventName The updated display name.
      * @return A string indicating success or an error message.
      */
-    public String updateSchedule(String scheduleId, int doctorId, String workDate, boolean isActive, String eventName) {
+    public String updateSchedule(String scheduleId, int doctorId, String workDate, boolean isActive) { // Removed eventName parameter
         Date sqlWorkDate = Date.valueOf(workDate);
         LocalDate localWorkDate = LocalDate.parse(workDate);
 
@@ -152,19 +150,16 @@ public class DoctorScheduleService {
 
         DoctorSchedule existingSchedule = scheduleDAO.findScheduleById(scheduleId);
         if (existingSchedule == null) {
-            System.out.println("Schedule with ID " + scheduleId + " not found for update.");
+            System.out.println("Lịch làm việc với ID " + scheduleId + " không tìm thấy.");
             return "Lịch làm việc không tìm thấy.";
         }
 
-        // MODIFIED LOGIC FOR UPDATE:
         // Check for conflicts if doctor or date is changed AND the conflicting schedule is ACTIVE
         if (existingSchedule.getDoctorId() != doctorId || !existingSchedule.getWorkDate().equals(sqlWorkDate)) {
-            // Check if an ACTIVE schedule already exists for the NEW doctorId and NEW workDate
-            // and it's not the same schedule we are trying to update
             DoctorSchedule conflictingActiveSchedule = scheduleDAO.findActiveScheduleByDoctorAndDate(doctorId, sqlWorkDate);
 
             if (conflictingActiveSchedule != null && !conflictingActiveSchedule.getId().equals(scheduleId)) {
-                System.out.println("Update failed: Conflicting active schedule already exists for doctor " + doctorId + " on " + workDate);
+                System.out.println("Cập nhật thất bại: Lịch làm việc cho bác sĩ này vào ngày " + workDate + " đã tồn tại và đang hoạt động.");
                 return "Cập nhật thất bại: Lịch làm việc cho bác sĩ này vào ngày " + workDate + " đã tồn tại và đang hoạt động.";
             }
         }
@@ -172,7 +167,7 @@ public class DoctorScheduleService {
         existingSchedule.setDoctorId(doctorId);
         existingSchedule.setWorkDate(sqlWorkDate);
         existingSchedule.setActive(isActive); // Allow updating active status
-        existingSchedule.setName(eventName);
+        // existingSchedule.setName(eventName); // eventName is not updated in DB, so don't set here
 
         if (scheduleDAO.updateSchedule(existingSchedule)) {
             return "success";

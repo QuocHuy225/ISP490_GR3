@@ -275,7 +275,6 @@ public class AppointmentController extends HttpServlet {
 
         int totalPages = totalRecords > 0 ? (int) Math.ceil((double) totalRecords / recordsPerPage) : 1;
 
-       
         DAODoctor daoDoctor = new DAODoctor();
         List<Doctor> doctors = daoDoctor.findAllDoctors();
         DAOService daoService = new DAOService();
@@ -333,7 +332,6 @@ public class AppointmentController extends HttpServlet {
             String patientIdStr = request.getParameter("patientId");
             String serviceIdStr = request.getParameter("servicesId");
 
-           
             // Kiểm tra nếu thiếu tham số
             if (appointmentIdStr == null || patientIdStr == null || serviceIdStr == null) {
                 out.write(gson.toJson(new ResponseJson(false, "Thiếu appointmentId hoặc patientId hoặc serviceId")));
@@ -355,7 +353,6 @@ public class AppointmentController extends HttpServlet {
 
             DAOAppointment dao = new DAOAppointment();
 
-     
             //1.Kiểm tra lịch hẹn có tồn tại không
             if (!dao.exists(appointmentId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -441,9 +438,17 @@ public class AppointmentController extends HttpServlet {
             Slot slot = dao.getSlotByAppointmentId(appointmentId);
 
             //Ktra slot chưa quá thời gian bỏ gán
-            if (slot.getSlotDate().isEqual(LocalDate.now()) && slot.getStartTime().isBefore(LocalTime.now())) {
+            if (slot.getSlotDate().isEqual(LocalDate.now()) && LocalTime.now().isAfter(slot.getEndTime())) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.write(gson.toJson(new ResponseJson(false, "Slot đã quá thời gian")));
+                return;
+            }
+
+            // Kiểm tra xem lịch hẹn đã được check-in chưa
+            boolean isCheckedIn = dao.isCheckedIn(appointmentId); // Giả định phương thức này tồn tại
+            if (isCheckedIn) {
+                out.print(gson.toJson(new ResponseJson(false, "Không thể bỏ gán vì lịch hẹn đã được check-in")));
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
 

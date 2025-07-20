@@ -6,13 +6,9 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Lịch Làm Việc Bác Sĩ</title>
-        <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <!-- Font Awesome for icons (still useful for calendar arrows) -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-        <!-- Bootstrap Icons (Crucial for sidebar and navbar icons) -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-        <!-- Custom CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/manage-doctor-schedule.css">
         <script> const contextPath = "<%= request.getContextPath() %>";</script>
     </head>
@@ -32,7 +28,7 @@
                 }
             }
             if (currentRole == null) {
-                currentRole = User.Role.PATIENT;
+                currentRole = User.Role.PATIENT; // Default or fallback
             }
             Object userObj = session.getAttribute("user");
             String userName = "User";
@@ -43,7 +39,6 @@
                 userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
             }
             boolean isAdmin = (currentRole == User.Role.ADMIN);
-            // String contextPath = request.getContextPath(); // Already defined by <script> tag above
         %>
         <nav id="sidebar">
             <div class="sidebar-header">
@@ -66,16 +61,16 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/#">
+                    <a href="${pageContext.request.contextPath}/queue">
                         <i class="bi bi-people-fill"></i> Quản lý hàng đợi
                     </a>
                 </li>
-                <li >
-                    <a href="${pageContext.request.contextPath}/patients">
+                <li>
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
-                <li>
+                <li class="active">
                     <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
                         <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
                     </a>
@@ -91,7 +86,7 @@
             <nav class="navbar navbar-expand-lg top-navbar">
                 <div class="container-fluid">
                     <button type="button" id="sidebarCollapse" class="btn btn-primary">
-                        <i class="bi bi-list"></i> <!-- Toggle button (3 horizontal lines) -->
+                        <i class="bi bi-list"></i>
                     </button>
 
                     <div style="margin-left: 60px;">
@@ -102,14 +97,14 @@
                     </div>
 
                     <div class="navbar-search mx-auto">
-                        <i class="bi bi-search"></i> <!-- Search icon -->
+                        <i class="bi bi-search"></i>
                         <input type="text" class="form-control" placeholder="Tìm kiếm bệnh nhân, lịch hẹn, hồ sơ...">
                     </div>
 
                     <div class="dropdown user-dropdown">
                         <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <div class="user-profile-icon">
-                                <i class="bi bi-person-fill"></i> <!-- Avatar icon -->
+                                <i class="bi bi-person-fill"></i>
                             </div>
                             <div class="user-info d-none d-md-block">
                                 <div class="user-name"><%= userName %></div>
@@ -167,9 +162,9 @@
                     </div>
                     <div class="d-flex align-items-center">
                         <select class="form-select form-select-sm me-2 rounded-md" id="viewMode" style="width: auto;">
-                            <option value="month">Month</option>
-                            <option value="week">Week</option>
-                            <option value="day">Day</option>
+                            <option value="month">Xem theo Tháng</option>
+                            <option value="week">Xem theo Tuần</option>
+                            <option value="day">Xem theo Ngày</option>
                         </select>
                         <button class="btn btn-primary rounded-md" id="addEventButton">THÊM LỊCH LÀM VIỆC</button>
                     </div>
@@ -186,11 +181,9 @@
                 </div>
 
                 <div class="calendar-day-grid" id="calendarGrid">
-                    <!-- Calendar days will be generated here by JavaScript -->
                 </div>
             </div>
 
-            <!-- Modal for adding/editing schedule -->
             <div class="modal fade" id="scheduleModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
@@ -205,7 +198,6 @@
                                     <label for="modalDoctorId" class="form-label">Chọn Bác Sĩ:</label>
                                     <select class="form-select rounded-md" id="modalDoctorId" name="doctor_id" required>
                                         <option value="">-- Chọn bác sĩ --</option>
-                                        <!-- Options will be dynamically populated by JavaScript -->
                                     </select>
                                 </div>
                                 <div class="mb-3">
@@ -216,7 +208,6 @@
                                     <input type="checkbox" class="form-check-input rounded-md" id="modalIsActive" name="is_active" value="1" checked>
                                     <label class="form-check-label" for="modalIsActive">Hoạt động</label>
                                 </div>
-                                <!-- Optional: Add a field for event name/summary if needed for display -->
                                 <div class="mb-3">
                                     <label for="modalEventName" class="form-label">Tên Lịch :</label>
                                     <input type="text" class="form-control rounded-md" id="modalEventName" name="event_name">
@@ -272,12 +263,9 @@
             </div>
         </div>
 
-        <!-- Bootstrap JS Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- Custom JavaScript -->
         <script src="${pageContext.request.contextPath}/js/manage-doctor-schedule.js"></script>
 
-        <!-- Script for sidebar toggle -->
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const sidebar = document.getElementById('sidebar');

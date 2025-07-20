@@ -7,6 +7,7 @@
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="java.util.List" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ page import="com.mycompany.isp490_gr3.model.Appointment" %>
 <!DOCTYPE html>
 <html>
     <head>
@@ -70,7 +71,7 @@
                     </a>
                 </li>
                 <% } else if (userRole == User.Role.RECEPTIONIST) { %>
-                <li>
+                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-house-door-fill"></i> Trang chủ
                     </a>
@@ -80,14 +81,18 @@
                         <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
                     </a>
                 </li>
-
                 <li>
+                    <a href="${pageContext.request.contextPath}/checkin">
+                        <i class="bi bi-person-check-fill"></i> Quản lý check-in
+                    </a>
+                </li>
+                <li class="active">
                     <a href="${pageContext.request.contextPath}/queue">
                         <i class="bi bi-people-fill"></i> Quản lý hàng đợi
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/patients">
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>
@@ -201,7 +206,7 @@
                     </div>
                     <div class="col-md-6">
                         <label for="slotDate" class="form-label">Ngày hẹn</label>
-                        <input type="date" class="form-control" id="slotDate" name="slotDate" value="${param.slotDate}" />
+                        <input type="date" class="form-control" id="slotDate" name="slotDate" value="${empty slotDate ? LocalDate.now().toString() : slotDate}">
                     </div>
                 </div>
                 <div class="d-flex justify-content-end gap-2">
@@ -216,7 +221,7 @@
 
             <div class="appointment-list-section animate-fade-in">
                 <div class="appointment-list-header">
-                    <h5 id="queueHeader">Danh sách hàng đợi hôm nay (<span id="totalRecordsDisplay">0</span> kết quả)</h5>
+                    <h5 id="queueHeader">Danh sách hàng đợi hôm nay  ${empty slotDate ? LocalDate.now().toString() : slotDate}  (<span id="totalRecordsDisplay">0</span> kết quả)</h5>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered table-appointments">
@@ -234,6 +239,7 @@
                                 <th>Giờ check-in</th>
                                 <th>Bác sĩ</th>
                                 <th>Trạng thái</th>
+                                
                             </tr>
                         </thead>
                         <tbody id="queueTableBody">
@@ -369,7 +375,7 @@
                                                 if (!addedSeparator && !q.isBeforeCurrentTime) {
                                                     const separatorRow = document.createElement('tr');
                                                     separatorRow.classList.add('separator');
-                                                    separatorRow.innerHTML = `<td colspan="12" style="border-top: 3px solid #007bff; text-align: center; font-weight: bold;">Thời gian hiện tại: ${data.currentTime}</td>`;
+                                                    separatorRow.innerHTML = `<td colspan="12" style="border-bottom: 3px solid #007bff; text-align: center; font-weight: bold;">Thời gian hiện tại: ${data.currentTime}</td>`;
                                                     tableBody.appendChild(separatorRow);
                                                     addedSeparator = true;
                                                 }

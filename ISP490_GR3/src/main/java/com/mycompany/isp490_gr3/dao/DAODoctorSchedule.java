@@ -24,6 +24,7 @@ public class DAODoctorSchedule {
     public List<DoctorSchedule> findSchedulesByMonth(int year, int month) {
         List<DoctorSchedule> schedules = new ArrayList<>();
         // Ensure this query only fetches ACTIVE schedules and ACTIVE doctors
+        // event_name removed from SELECT as it's not stored in DB
         String sql = "SELECT ds.id, ds.doctor_id, ds.work_date, ds.is_active, d.full_name "
                 + "FROM doctor_schedule ds "
                 + "JOIN doctors d ON ds.doctor_id = d.id "
@@ -39,7 +40,7 @@ public class DAODoctorSchedule {
                     schedule.setWorkDate(rs.getDate("work_date"));
                     schedule.setActive(rs.getBoolean("is_active"));
                     schedule.setDoctorName(rs.getString("full_name"));
-                    // For 'name' (eventName) in frontend, you can construct it
+                    // For 'name' (eventName) in frontend, construct it dynamically as it's not stored in DB
                     schedule.setName("Lịch BS " + rs.getString("full_name") + " (" + rs.getDate("work_date").toString() + ")");
                     schedules.add(schedule);
                 }
@@ -79,11 +80,13 @@ public class DAODoctorSchedule {
 
     /**
      * Saves a new doctor schedule to the database.
+     * event_name is NOT saved to DB.
      *
      * @param schedule The DoctorSchedule object to save.
      * @return true if the schedule was saved successfully, false otherwise.
      */
     public boolean saveSchedule(DoctorSchedule schedule) {
+        // Removed event_name from INSERT statement as it's not stored in DB
         String sql = "INSERT INTO doctor_schedule (doctor_id, work_date, is_active) VALUES (?, ?, ?)";
         try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setInt(1, schedule.getDoctorId());
@@ -109,11 +112,13 @@ public class DAODoctorSchedule {
 
     /**
      * Updates an existing doctor schedule in the database.
+     * event_name is NOT updated in DB.
      *
      * @param schedule The DoctorSchedule object with updated information.
      * @return true if the schedule was updated successfully, false otherwise.
      */
     public boolean updateSchedule(DoctorSchedule schedule) {
+        // Removed event_name from UPDATE statement as it's not stored in DB
         String sql = "UPDATE doctor_schedule SET doctor_id = ?, work_date = ?, is_active = ? WHERE id = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, schedule.getDoctorId());
@@ -159,6 +164,7 @@ public class DAODoctorSchedule {
     public DoctorSchedule findScheduleById(String scheduleId) {
         // This query finds a schedule by ID regardless of its active status.
         // It's used when we want to load details for editing/deleting, even if it's inactive.
+        // event_name removed from SELECT as it's not stored in DB
         String sql = "SELECT ds.id, ds.doctor_id, ds.work_date, ds.is_active, d.full_name "
                 + "FROM doctor_schedule ds "
                 + "JOIN doctors d ON ds.doctor_id = d.id "
@@ -173,6 +179,7 @@ public class DAODoctorSchedule {
                     schedule.setWorkDate(rs.getDate("work_date"));
                     schedule.setActive(rs.getBoolean("is_active"));
                     schedule.setDoctorName(rs.getString("full_name"));
+                    // For 'name' (eventName) in frontend, construct it dynamically as it's not stored in DB
                     schedule.setName("Lịch BS " + rs.getString("full_name") + " (" + rs.getDate("work_date").toString() + ")");
                     return schedule;
                 }
@@ -214,6 +221,7 @@ public class DAODoctorSchedule {
      */
     public DoctorSchedule findScheduleByDoctorIdAndWorkDateIncludingInactive(int doctorId, Date workDate) {
         // This query does NOT filter by is_active, so it will find both active and inactive schedules.
+        // No event_name in SELECT
         String sql = "SELECT id, doctor_id, work_date, is_active FROM doctor_schedule WHERE doctor_id = ? AND work_date = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, doctorId);
@@ -247,6 +255,7 @@ public class DAODoctorSchedule {
      */
     public DoctorSchedule findActiveScheduleByDoctorAndDate(int doctorId, Date workDate) {
         // This query explicitly filters by is_active = TRUE
+        // No event_name in SELECT
         String sql = "SELECT id, doctor_id, work_date, is_active FROM doctor_schedule WHERE doctor_id = ? AND work_date = ? AND is_active = TRUE";
         try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, doctorId);
@@ -267,5 +276,46 @@ public class DAODoctorSchedule {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * Finds doctor schedules for a specific date range.
+     * Joins with the doctors table to get doctor's full name.
+     * Explicitly filters for active schedules and active doctors.
+     *
+     * @param startDate The start date of the range (inclusive).
+     * @param endDate The end date of the range (inclusive).
+     * @return A list of DoctorSchedule objects.
+     */
+    public List<DoctorSchedule> findSchedulesByDateRange(Date startDate, Date endDate) {
+        List<DoctorSchedule> schedules = new ArrayList<>();
+        // No event_name in SELECT as it's not stored in DB
+        String sql = "SELECT ds.id, ds.doctor_id, ds.work_date, ds.is_active, d.full_name "
+                   + "FROM doctor_schedule ds "
+                   + "JOIN doctors d ON ds.doctor_id = d.id "
+                   + "WHERE ds.work_date BETWEEN ? AND ? AND ds.is_active = TRUE AND d.is_deleted = FALSE "
+                   + "ORDER BY ds.work_date, d.full_name";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDate(1, startDate);
+            pstmt.setDate(2, endDate);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    DoctorSchedule schedule = new DoctorSchedule();
+                    schedule.setId(String.valueOf(rs.getInt("id")));
+                    schedule.setDoctorId(rs.getInt("doctor_id"));
+                    schedule.setWorkDate(rs.getDate("work_date"));
+                    schedule.setActive(rs.getBoolean("is_active"));
+                    schedule.setDoctorName(rs.getString("full_name"));
+                    // For 'name' (eventName) in frontend, construct it dynamically as it's not stored in DB
+                    schedule.setName("Lịch BS " + rs.getString("full_name") + " (" + rs.getDate("work_date").toString() + ")");
+                    schedules.add(schedule);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error finding schedules by date range: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return schedules;
     }
 }
