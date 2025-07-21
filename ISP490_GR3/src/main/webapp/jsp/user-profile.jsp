@@ -579,11 +579,11 @@
                                 <div class="info-item">
                                     <div class="info-label">
                                         <i class="bi bi-telephone-fill"></i>
-                                        Số điện thoại
+                                        Thông tin liên hệ khác
                                     </div>
-                                    <div class="info-value <%= ((User) request.getAttribute("user")).getPhone() == null ? "empty" : "" %>">
-                                        <%= ((User) request.getAttribute("user")).getPhone() != null ? 
-                                            ((User) request.getAttribute("user")).getPhone() : "Chưa cập nhật" %>
+                                    <div class="info-value <%= ((User) request.getAttribute("user")).getOtherContact() == null ? "empty" : "" %>">
+                                        <%= ((User) request.getAttribute("user")).getOtherContact() != null ? 
+                                            ((User) request.getAttribute("user")).getOtherContact() : "Chưa cập nhật" %>
                                     </div>
                                 </div>
                                 
@@ -642,12 +642,12 @@
                             
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="tel" class="form-control" id="phone" name="phone" 
-                                           value="<%= ((User) request.getAttribute("user")).getPhone() != null ? 
-                                                   ((User) request.getAttribute("user")).getPhone() : "" %>"
+                                    <input type="tel" class="form-control" id="other_contact" name="other_contact" 
+                                           value="<%= ((User) request.getAttribute("user")).getOtherContact() != null ? 
+                                                   ((User) request.getAttribute("user")).getOtherContact() : "" %>"
                                            placeholder="Số điện thoại">
-                                    <label for="phone">
-                                        <i class="bi bi-telephone me-1"></i>Số điện thoại
+                                    <label for="other_contact">
+                                        <i class="bi bi-telephone me-1"></i>Thông tin liên hệ khác
                                     </label>
                                 </div>
                             </div>

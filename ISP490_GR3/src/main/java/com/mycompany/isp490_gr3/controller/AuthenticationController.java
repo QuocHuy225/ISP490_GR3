@@ -157,7 +157,7 @@ public class AuthenticationController extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
-        String phone = request.getParameter("phone");
+        String otherContact = request.getParameter("other_contact");
         String dobStr = request.getParameter("dob");
         String genderStr = request.getParameter("gender");
         String address = request.getParameter("address");
@@ -166,7 +166,7 @@ public class AuthenticationController extends HttpServlet {
         String validationError = validateRegistrationInput(fullName, email, password, confirmPassword);
         if (validationError != null) {
             request.setAttribute("registerError", validationError);
-            setRegistrationFormData(request, fullName, email, phone, dobStr, genderStr, address);
+            setRegistrationFormData(request, fullName, email, otherContact, dobStr, genderStr, address);
             request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
             return;
         }
@@ -174,7 +174,7 @@ public class AuthenticationController extends HttpServlet {
         // Validate Gmail requirement
         if (!email.trim().toLowerCase().endsWith("@gmail.com")) {
             request.setAttribute("registerError", "Vui lòng sử dụng email Gmail để đăng ký");
-            setRegistrationFormData(request, fullName, email, phone, dobStr, genderStr, address);
+            setRegistrationFormData(request, fullName, email, otherContact, dobStr, genderStr, address);
             request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
             return;
         }
@@ -182,7 +182,7 @@ public class AuthenticationController extends HttpServlet {
         // Check if email already exists
         if (daoUser.isEmailExists(email.trim())) {
             request.setAttribute("registerError", "Email đã được sử dụng");
-            setRegistrationFormData(request, fullName, email, phone, dobStr, genderStr, address);
+            setRegistrationFormData(request, fullName, email, otherContact, dobStr, genderStr, address);
             request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
             return;
         }
@@ -195,7 +195,7 @@ public class AuthenticationController extends HttpServlet {
         newUser.setFullName(fullName.trim());
         newUser.setEmail(email.trim());
         newUser.setPassword(password);
-        newUser.setPhone(phone != null ? phone.trim() : null);
+        newUser.setOtherContact(otherContact != null ? otherContact.trim() : null);
         
         // Set default role as Patient
         newUser.setRole(User.Role.PATIENT);
@@ -221,7 +221,7 @@ public class AuthenticationController extends HttpServlet {
         } else {
             // Registration failed
             request.setAttribute("registerError", "Đăng ký thất bại. Vui lòng thử lại.");
-            setRegistrationFormData(request, fullName, email, phone, dobStr, genderStr, address);
+            setRegistrationFormData(request, fullName, email, otherContact, dobStr, genderStr, address);
             request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
         }
     }
@@ -366,11 +366,11 @@ public class AuthenticationController extends HttpServlet {
      * Set registration form data back to request for display
      */
     private void setRegistrationFormData(HttpServletRequest request, String fullName, 
-                                       String email, String phone, String dob, 
+                                       String email, String otherContact, String dob, 
                                        String gender, String address) {
         request.setAttribute("regFullName", fullName);
         request.setAttribute("regEmail", email);
-        request.setAttribute("regPhone", phone);
+        request.setAttribute("regOtherContact", otherContact);
         request.setAttribute("regDob", dob);
         request.setAttribute("regGender", gender);
         request.setAttribute("regAddress", address);

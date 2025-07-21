@@ -13,8 +13,8 @@ public class EmailService {
     // Email configuration - Thay đổi thông tin này theo Gmail của bạn
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final String SMTP_PORT = "587";
-    private static final String SENDER_EMAIL = "tunpa2k3@gmail.com"; // Thay bằng email của bạn
-    private static final String SENDER_PASSWORD = "gxnw cooq tnaj ggsu"; // Thay bằng App Password của Gmail
+    private static final String SENDER_EMAIL = "tungbeok3@gmail.com"; // Thay bằng email của bạn
+    private static final String SENDER_PASSWORD = "gmpg ombp pkbo lshw"; // Thay bằng App Password của Gmail
     
     /**
      * Generate a random 6-digit verification code
@@ -51,9 +51,9 @@ public class EmailService {
             
             // Create message
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(SENDER_EMAIL, "ISP490 Medical System"));
+            message.setFrom(new InternetAddress(SENDER_EMAIL, "Clinic System"));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
-            message.setSubject("Xác thực tài khoản - ISP490 Medical System");
+            message.setSubject("Xác thực tài khoản - Medical Clinic");
             
             // Create email content
             String emailContent = createEmailContent(userFullName, verificationCode);
@@ -98,9 +98,9 @@ public class EmailService {
             
             // Create message
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(SENDER_EMAIL, "Ánh Dương Clinic"));
+            message.setFrom(new InternetAddress(SENDER_EMAIL, "Clinic System"));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
-            message.setSubject("Khôi phục mật khẩu - Ánh Dương Clinic");
+            message.setSubject("Khôi phục mật khẩu - Medical Clinic");
             
             // Create email content
             String emailContent = createResetPasswordEmailContent(userFullName, resetToken, baseUrl);
@@ -128,7 +128,7 @@ public class EmailService {
                 "<div style=\"max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;\">" +
                     "<h2 style=\"color: #2c3e50; text-align: center;\">Xác thực tài khoản</h2>" +
                     "<p>Chào <strong>" + userFullName + "</strong>,</p>" +
-                    "<p>Cảm ơn bạn đã đăng ký tài khoản tại ISP490 Medical System.</p>" +
+                    "<p>Cảm ơn bạn đã đăng ký tài khoản tại Medical Clinic.</p>" +
                     "<p>Để hoàn tất việc đăng ký, vui lòng sử dụng mã xác thực sau:</p>" +
                     "<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 5px; text-align: center; margin: 20px 0;\">" +
                         "<h1 style=\"color: #e74c3c; font-size: 36px; margin: 0; letter-spacing: 5px;\">" + verificationCode + "</h1>" +
@@ -138,7 +138,7 @@ public class EmailService {
                     "<hr style=\"border: none; border-top: 1px solid #eee; margin: 30px 0;\">" +
                     "<p style=\"font-size: 12px; color: #666;\">" +
                         "Trân trọng,<br>" +
-                        "Đội ngũ ISP490 Medical System" +
+                        "Đội ngũ Medical Clinic" +
                     "</p>" +
                 "</div>" +
             "</body>" +
@@ -176,7 +176,7 @@ public class EmailService {
                     "<hr style=\"border: none; border-top: 1px solid #eee; margin: 30px 0;\">" +
                     "<p style=\"font-size: 12px; color: #666;\">" +
                         "Trân trọng,<br>" +
-                        "Đội ngũ Ánh Dương Clinic<br>" +
+                        "Đội ngũ Medical Clinic<br>" +
                         "Email: info@anhduongclinic.com<br>" +
                         "Hotline: +84765317988" +
                     "</p>" +

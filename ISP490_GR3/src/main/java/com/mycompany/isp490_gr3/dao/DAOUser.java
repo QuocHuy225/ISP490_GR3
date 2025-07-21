@@ -73,7 +73,7 @@ public class DAOUser {
             return false;
         }
         
-        String sql = "INSERT INTO user (id, fullname, email, password, phone, role, created_At) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO user (id, fullname, email, password, other_contact, role, created_At) VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -85,7 +85,7 @@ public class DAOUser {
             ps.setString(2, user.getFullName());
             ps.setString(3, user.getEmail());
             ps.setString(4, hashPassword(user.getPassword()));
-            ps.setString(5, user.getPhone());
+            ps.setString(5, user.getOtherContact());
             ps.setString(6, user.getRole().getValue());
             ps.setTimestamp(7, new Timestamp(System.currentTimeMillis()));
             
@@ -113,7 +113,7 @@ public class DAOUser {
             return false;
         }
         
-        String sql = "INSERT INTO user (id, fullname, email, password, phone, role, created_At, verification_token, is_email_verified, verification_expiry_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO user (id, fullname, email, password, other_contact, role, created_At, verification_token, is_email_verified, verification_expiry_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -128,7 +128,7 @@ public class DAOUser {
             ps.setString(2, user.getFullName());
             ps.setString(3, user.getEmail());
             ps.setString(4, hashPassword(user.getPassword()));
-            ps.setString(5, user.getPhone());
+            ps.setString(5, user.getOtherContact());
             ps.setString(6, user.getRole().getValue());
             ps.setTimestamp(7, new Timestamp(System.currentTimeMillis()));
             ps.setString(8, verificationToken);
@@ -159,7 +159,7 @@ public class DAOUser {
             return false;
         }
         
-        String sql = "INSERT INTO user (id, fullname, email, password, phone, role, created_At, is_email_verified, updated_By) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO user (id, fullname, email, password, other_contact, role, created_At, is_email_verified, updated_By) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -171,7 +171,7 @@ public class DAOUser {
             ps.setString(2, user.getFullName());
             ps.setString(3, user.getEmail());
             ps.setString(4, hashPassword(user.getPassword()));
-            ps.setString(5, user.getPhone());
+            ps.setString(5, user.getOtherContact());
             ps.setString(6, user.getRole().getValue());
             ps.setTimestamp(7, new Timestamp(System.currentTimeMillis()));
             ps.setBoolean(8, true); // Pre-verified
@@ -346,13 +346,13 @@ public class DAOUser {
      * @return true if update successful, false otherwise
      */
     public boolean updateUser(User user) {
-        String sql = "UPDATE user SET FullName = ?, Phone = ?, Updated_At = ? WHERE id = ? AND IsDeleted = FALSE";
+        String sql = "UPDATE user SET FullName = ?, Other_Contact = ?, Updated_At = ? WHERE id = ? AND IsDeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, user.getFullName());
-            ps.setString(2, user.getPhone());
+            ps.setString(2, user.getOtherContact());
             ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
             ps.setString(4, user.getId());
             
@@ -543,7 +543,7 @@ public class DAOUser {
         user.setFullName(rs.getString("fullname"));
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));
-        user.setPhone(rs.getString("phone"));
+        user.setOtherContact(rs.getString("other_contact"));
         user.setRole(User.Role.fromString(rs.getString("role")));
         user.setCreatedAt(rs.getTimestamp("created_At"));
         user.setUpdatedBy(rs.getString("updated_By"));

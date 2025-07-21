@@ -605,11 +605,10 @@
                                                 
                                                 <!-- Additional fields -->
                                                 <div class="form-floating mb-3">
-                                                    <input type="tel" name="phone" class="form-control border-0 shadow-sm" 
-                                                           id="registerPhone" placeholder="Số điện thoại"
-                                                           value="${regPhone != null ? regPhone : ''}"
-                                                           style="border-radius: 15px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); color: #374151;">
-                                                    <label for="registerPhone" style="color: #6b7280;"><i class="bi bi-phone me-2"></i>Số điện thoại</label>
+                                                    <input type="tel" name="other_contact" class="form-control border-0 shadow-sm" 
+                                                           id="registerOtherContact" placeholder="Số điện thoại"
+                                                           value="${regOtherContact != null ? regOtherContact : ''}">
+                                                    <label for="registerOtherContact" style="color: #6b7280;"><i class="bi bi-phone me-2"></i>Thông tin liên hệ khác</label>
                                                 </div>
                            
                                                 <button type="submit" class="btn btn-lg w-100 mb-4 fw-medium shadow-sm register-btn" 

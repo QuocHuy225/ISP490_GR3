@@ -181,7 +181,7 @@ public class UserProfileController extends HttpServlet {
         
         // Get form data
         String fullName = request.getParameter("fullName");
-        String phone = request.getParameter("phone");
+        String otherContact = request.getParameter("other_contact");
         String dobStr = request.getParameter("dob");
         String genderStr = request.getParameter("gender");
         String address = request.getParameter("address");
@@ -195,7 +195,7 @@ public class UserProfileController extends HttpServlet {
         
         // Update user information
         user.setFullName(fullName.trim());
-        user.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
+        user.setOtherContact(otherContact != null && !otherContact.trim().isEmpty() ? otherContact.trim() : null);
         
         // Update in database
         boolean updateSuccess = daoUser.updateUser(user);
