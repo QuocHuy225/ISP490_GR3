@@ -246,8 +246,97 @@ window.performStatusUpdate = function(queueId, newStatus, baseURL, modalElement)
     });
 };
 
+// UPDATED: Hàm xem chi tiết hàng đợi (loại bỏ phần hiển thị description)
 window.viewDetails = function(queueId, baseURL) {
-    showNotificationModal('Xem chi tiết hàng đợi ID: ' + queueId); // Sử dụng modal thông báo
+    const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    const detailsContent = document.getElementById('detailsContent');
+    const detailsQueueIdDisplay = document.getElementById('detailsQueueIdDisplay');
+
+    detailsQueueIdDisplay.textContent = queueId;
+
+    detailsContent.innerHTML = '<p class="text-center"><div class="spinner-border text-primary" role="status"></div><br>Đang tải chi tiết...</p>';
+    detailsModal.show();
+
+    fetch(baseURL + '/api/doctor/queue/details?queueId=' + queueId)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Không thể tải chi tiết hàng đợi. Mã lỗi: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data) {
+                let statusDisplay = '';
+                if (data.status === 'waiting') {
+                    statusDisplay = '<span class="badge bg-warning text-dark">Đang chờ</span>';
+                } else if (data.status === 'in_progress') {
+                    statusDisplay = '<span class="badge bg-info text-dark">Đang khám</span>';
+                } else if (data.status === 'completed') {
+                    statusDisplay = '<span class="badge bg-success">Hoàn thành</span>';
+                } else if (data.status === 'skipped') {
+                    statusDisplay = '<span class="badge bg-secondary">Bỏ qua</span>';
+                } else if (data.status === 'rejected') {
+                    statusDisplay = '<span class="badge bg-danger">Từ chối</span>';
+                } else {
+                    statusDisplay = '-';
+                }
+
+                const priorityDisplay = data.priority === 1 ? '<span class="badge bg-danger">Cao</span>' : '<span class="badge bg-secondary">Trung bình</span>';
+
+                detailsContent.innerHTML = `
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Mã lịch hẹn:</strong></div>
+                        <div class="col-md-6">${data.appointmentCode || 'N/A'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Ngày khám:</strong></div>
+                        <div class="col-md-6">${data.slotDate || 'N/A'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Giờ khám:</strong></div>
+                        <div class="col-md-6">${data.slotTimeRange || 'N/A'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Mã bệnh nhân:</strong></div>
+                        <div class="col-md-6">${data.patientCode || 'N/A'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Họ tên bệnh nhân:</strong></div>
+                        <div class="col-md-6">${data.patientName || 'N/A'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Điện thoại bệnh nhân:</strong></div>
+                        <div class="col-md-6">${data.patientPhone || 'N/A'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Dịch vụ:</strong></div>
+                        <div class="col-md-6">${data.serviceName || 'N/A'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Ưu tiên:</strong></div>
+                        <div class="col-md-6">${priorityDisplay}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Giờ check-in:</strong></div>
+                        <div class="col-md-6">${data.checkinTime || 'N/A'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Bác sĩ:</strong></div>
+                        <div class="col-md-6">${data.doctorName || 'N/A'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Trạng thái:</strong></div>
+                        <div class="col-md-6">${statusDisplay}</div>
+                    </div>
+                    `;
+            } else {
+                detailsContent.innerHTML = '<p class="text-center text-danger">Không tìm thấy chi tiết cho hàng đợi này.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi khi tải chi tiết hàng đợi:', error);
+            detailsContent.innerHTML = `<p class="text-center text-danger">Lỗi: ${error.message}</p>`;
+        });
 };
 
 window.viewHistory = function(queueId, baseURL) {
