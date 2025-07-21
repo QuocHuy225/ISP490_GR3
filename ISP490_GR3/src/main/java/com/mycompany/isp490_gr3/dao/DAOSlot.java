@@ -410,6 +410,277 @@ public class DAOSlot {
         return availableSlots;
     }
 
+    // hàm của huy
+    public boolean createSingleSlotAndEmptyAppointments(int doctorId, LocalDate date, LocalTime start, int duration, int maxPatients) throws SQLException {
+        if (maxPatients < 1) { // Đảm bảo maxPatients ít nhất là 1
+            throw new IllegalArgumentException("maxPatients phải lớn hơn 0 để tạo slot và lịch hẹn.");
+        }
+        LocalTime end = start.plusMinutes(duration);
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false); // Bắt đầu transaction
+
+            // 1. Kiểm tra xung đột giờ
+            if (isSlotConflict(conn, doctorId, date, start, end)) {
+                LOGGER.warning("Xung đột giờ cho bác sĩ " + doctorId + " vào ngày " + date + " từ " + start + " đến " + end);
+                conn.rollback();
+                return false;
+            }
+
+            // 2. Chèn slot mới
+            String slotSql = "INSERT INTO slot (doctor_id, slot_date, start_time, end_time, max_patients, is_available, is_deleted, created_at) "
+                    + "VALUES (?, ?, ?, ?, ?, TRUE, FALSE, CURRENT_TIMESTAMP)";
+            int slotId;
+            try (PreparedStatement ps = conn.prepareStatement(slotSql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setInt(1, doctorId);
+                ps.setDate(2, Date.valueOf(date));
+                ps.setTime(3, Time.valueOf(start));
+                ps.setTime(4, Time.valueOf(end));
+                ps.setInt(5, maxPatients);
+                int rowsAffected = ps.executeUpdate();
+                if (rowsAffected == 0) {
+                    conn.rollback();
+                    return false; // Không tạo được slot
+                }
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        slotId = generatedKeys.getInt(1);
+                    } else {
+                        conn.rollback();
+                        throw new SQLException("Không lấy được ID của slot vừa tạo.");
+                    }
+                }
+            }
+
+            // 3. Tạo các bản ghi lịch hẹn trống
+            String appointmentSql = "INSERT INTO appointment (slot_id, appointment_code, status, payment_status, is_deleted, created_at) "
+                    + "VALUES (?, ?, 'pending', 'unpaid', FALSE, CURRENT_TIMESTAMP)";
+            try (PreparedStatement apptPs = conn.prepareStatement(appointmentSql)) {
+                for (int i = 0; i < maxPatients; i++) {
+                    String appointmentCode;
+                    // Tạo mã duy nhất cho mỗi lịch hẹn trống
+                    do {
+                        appointmentCode = "APP" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                    } while (!isAppointmentCodeUnique(conn, appointmentCode));
+
+                    apptPs.setInt(1, slotId);
+                    apptPs.setString(2, appointmentCode);
+                    apptPs.addBatch(); // Thêm vào batch để insert hiệu quả hơn
+                }
+                apptPs.executeBatch(); // Thực thi tất cả các câu lệnh INSERT
+            }
+
+            conn.commit(); // Hoàn tất transaction
+            return true;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi tạo slot và lịch hẹn trống: " + e.getMessage(), e);
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback nếu có lỗi
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Lỗi khi rollback transaction", ex);
+                }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true); // Đảm bảo trả về auto-commit
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Lỗi khi đóng connection", ex);
+                }
+            }
+        }
+    }
+
+    public int createRangeSlotsAndEmptyAppointments(int doctorId, LocalDate date, String startStr, String endStr, int duration, int maxPatients) throws SQLException {
+        if (maxPatients < 1) {
+            throw new IllegalArgumentException("maxPatients phải lớn hơn 0 để tạo slot và lịch hẹn.");
+        }
+        LocalTime startTime = LocalTime.parse(startStr);
+        LocalTime endTime = LocalTime.parse(endStr);
+        int insertedCount = 0;
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false); // Bắt đầu transaction
+
+            LocalTime current = startTime;
+            while (!current.plusMinutes(duration).isAfter(endTime)) {
+                LocalTime next = current.plusMinutes(duration);
+
+                // 1. Kiểm tra xung đột giờ cho từng slot
+                if (isSlotConflict(conn, doctorId, date, current, next)) {
+                    LOGGER.warning("Bỏ qua slot do xung đột giờ cho bác sĩ " + doctorId + " vào ngày " + date + " từ " + current + " đến " + next);
+                    current = next; // Vẫn tiến tới slot tiếp theo
+                    continue;
+                }
+
+                // 2. Chèn slot mới
+                String slotSql = "INSERT INTO slot (doctor_id, slot_date, start_time, end_time, max_patients, is_available, is_deleted, created_at) "
+                        + "VALUES (?, ?, ?, ?, ?, TRUE, FALSE, CURRENT_TIMESTAMP)";
+                int slotId;
+                try (PreparedStatement ps = conn.prepareStatement(slotSql, Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, doctorId);
+                    ps.setDate(2, Date.valueOf(date));
+                    ps.setTime(3, Time.valueOf(current));
+                    ps.setTime(4, Time.valueOf(next));
+                    ps.setInt(5, maxPatients);
+                    int rowsAffected = ps.executeUpdate();
+                    if (rowsAffected == 0) {
+                        LOGGER.warning("Không tạo được slot cho bác sĩ " + doctorId + " vào ngày " + date + " từ " + current + " đến " + next);
+                        current = next;
+                        continue;
+                    }
+                    try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                        if (generatedKeys.next()) {
+                            slotId = generatedKeys.getInt(1);
+                        } else {
+                            LOGGER.warning("Không lấy được ID của slot vừa tạo cho bác sĩ " + doctorId + " vào ngày " + date + " từ " + current + " đến " + next);
+                            current = next;
+                            continue;
+                        }
+                    }
+                }
+
+                // 3. Tạo các bản ghi lịch hẹn trống cho slot này
+                String appointmentSql = "INSERT INTO appointment (slot_id, appointment_code, status, payment_status, is_deleted, created_at) "
+                        + "VALUES (?, ?, 'pending', 'unpaid', FALSE, CURRENT_TIMESTAMP)";
+                try (PreparedStatement apptPs = conn.prepareStatement(appointmentSql)) {
+                    for (int i = 0; i < maxPatients; i++) {
+                        String appointmentCode;
+                        do {
+                            appointmentCode = "APP" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                        } while (!isAppointmentCodeUnique(conn, appointmentCode));
+
+                        apptPs.setInt(1, slotId);
+                        apptPs.setString(2, appointmentCode);
+                        apptPs.addBatch();
+                    }
+                    apptPs.executeBatch();
+                }
+                insertedCount++;
+                current = next;
+            }
+
+            conn.commit(); // Hoàn tất transaction
+            return insertedCount;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi tạo dải slot và lịch hẹn trống: " + e.getMessage(), e);
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback nếu có lỗi
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Lỗi khi rollback transaction", ex);
+                }
+            }
+            return 0;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true); // Đảm bảo trả về auto-commit
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Lỗi khi đóng connection", ex);
+                }
+            }
+        }
+    }
+
+    public List<LocalDate> getAvailableDatesForDoctorNewLogic(int doctorId) {
+        List<LocalDate> availableDates = new ArrayList<>();
+        String sql = "SELECT DISTINCT s.slot_date "
+                + "FROM slot s "
+                + "WHERE s.doctor_id = ? "
+                + "AND s.is_deleted = FALSE "
+                + "AND s.slot_date >= CURDATE() "
+                + "AND EXISTS (SELECT 1 FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NULL AND a.status = 'pending' AND a.is_deleted = FALSE) "
+                + "ORDER BY s.slot_date ASC";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, doctorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    availableDates.add(rs.getDate("slot_date").toLocalDate());
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách ngày trống cho bác sĩ ID " + doctorId, e);
+            throw new RuntimeException("Lỗi truy vấn cơ sở dữ liệu khi lấy ngày làm việc.", e);
+        }
+        return availableDates;
+    }
+
+    // Lấy slot có sẵn (có appointment trống để đặt)
+    // Đây là hàm mới thay thế cho getAvailableSlots (bạn có thể đã có version này)
+    public List<Slot> getAvailableSlotsNewLogic(int doctorId, String slotDate) {
+        List<Slot> availableSlots = new ArrayList<>();
+        LocalDate date;
+        try {
+            date = LocalDate.parse(slotDate);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Ngày không hợp lệ: " + slotDate, e);
+            return availableSlots;
+        }
+
+        String sql = "SELECT s.id, s.doctor_id, s.slot_date, s.start_time, s.end_time, s.max_patients "
+                + "FROM slot s "
+                + "WHERE s.doctor_id = ? AND s.slot_date = ? AND s.is_deleted = FALSE "
+                + "AND s.is_available = TRUE "
+                + "AND EXISTS (SELECT 1 FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NULL AND a.status = 'pending' AND a.is_deleted = FALSE) "
+                + "ORDER BY s.start_time ASC";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, doctorId);
+            ps.setDate(2, java.sql.Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Slot slot = new Slot();
+                    slot.setId(rs.getInt("id"));
+                    slot.setDoctorId(rs.getInt("doctor_id"));
+                    slot.setSlotDate(rs.getDate("slot_date").toLocalDate());
+                    slot.setStartTime(rs.getTime("start_time").toLocalTime());
+                    slot.setEndTime(rs.getTime("end_time").toLocalTime());
+                    slot.setMaxPatients(rs.getInt("max_patients"));
+                    availableSlots.add(slot);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot có sẵn cho bác sĩ " + doctorId + " vào ngày " + slotDate + ": " + e.getMessage(), e);
+            e.printStackTrace();
+        }
+        return availableSlots;
+    }
+
+    public Slot getSlotById(int slotId) throws SQLException {
+        String sql = "SELECT id, doctor_id, slot_date, start_time, end_time, max_patients, is_available, is_deleted FROM slot WHERE id = ? AND is_deleted = FALSE";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, slotId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Slot slot = new Slot();
+                    slot.setId(rs.getInt("id"));
+                    slot.setDoctorId(rs.getInt("doctor_id"));
+                    slot.setSlotDate(rs.getDate("slot_date").toLocalDate());
+                    slot.setStartTime(rs.getTime("start_time").toLocalTime());
+                    slot.setEndTime(rs.getTime("end_time").toLocalTime());
+                    slot.setMaxPatients(rs.getInt("max_patients"));
+                    slot.setAvailable(rs.getBoolean("is_available"));
+                    slot.setDeleted(rs.getBoolean("is_deleted"));
+                    return slot;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot theo ID: " + slotId + ": " + e.getMessage(), e);
+            throw e; // Ném lại lỗi để caller xử lý
+        }
+        return null;
+    }
+// hết hàm của huy
+
     // Test các chức năng
     public static void main(String[] args) {
         DAOSlot dao = new DAOSlot();
@@ -547,18 +818,17 @@ public class DAOSlot {
             LOGGER.log(Level.SEVERE, "Lỗi khi in slot và appointment: " + e.getMessage(), e);
         }
     }
-    
+
     // Lấy danh sách bệnh nhân theo slotId
     public List<PatientDTO> getPatientsBySlotId(int slotId) {
         List<PatientDTO> patients = new ArrayList<>();
-        String sql = "SELECT p.patient_code, p.cccd, p.full_name, p.phone " +
-                     "FROM appointment a " +
-                     "JOIN patients p ON a.patient_id = p.id " +
-                     "WHERE a.slot_id = ? AND a.is_deleted = FALSE AND p.is_deleted = FALSE " +
-                     "AND a.status != 'cancelled'";
+        String sql = "SELECT p.patient_code, p.cccd, p.full_name, p.phone "
+                + "FROM appointment a "
+                + "JOIN patients p ON a.patient_id = p.id "
+                + "WHERE a.slot_id = ? AND a.is_deleted = FALSE AND p.is_deleted = FALSE "
+                + "AND a.status != 'cancelled'";
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, slotId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -581,6 +851,7 @@ public class DAOSlot {
 
     // DTO nội bộ để ánh xạ thông tin bệnh nhân
     public static class PatientDTO {
+
         private String patientCode;
         private String cccd;
         private String fullName;

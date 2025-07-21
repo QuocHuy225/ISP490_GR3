@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.sql.SQLException; // THÊM DÒNG NÀY ĐỂ IMPORT SQLException
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -47,7 +48,7 @@ public void init() throws ServletException {
     // Đăng ký các bộ chuyển đổi
     gsonBuilder.registerTypeAdapter(LocalDate.class, new LocalDateAdapter());
     gsonBuilder.registerTypeAdapter(LocalTime.class, new LocalTimeAdapter());
-    gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()); // <-- Thêm dòng này
+    gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()); 
     
     gson = gsonBuilder.create();
 
@@ -103,7 +104,7 @@ public void init() throws ServletException {
             } else if (pathInfo.matches("/doctors/\\d+/available-dates")) {
                 String[] pathParts = pathInfo.split("/");
                 int doctorId = Integer.parseInt(pathParts[2]);
-                List<java.time.LocalDate> availableDates = slotDAO.getAvailableDatesForDoctor(doctorId);
+                List<java.time.LocalDate> availableDates = slotDAO.getAvailableDatesForDoctorNewLogic(doctorId); 
                 out.print(gson.toJson(availableDates));
                 response.setStatus(HttpServletResponse.SC_OK);
             } else if (pathInfo.equals("/slots/available")) {
@@ -115,7 +116,7 @@ public void init() throws ServletException {
                     return;
                 }
                 int doctorId = Integer.parseInt(doctorIdParam);
-                List<Slot> availableSlots = slotDAO.getAvailableSlots(doctorId, dateParam);
+                List<Slot> availableSlots = slotDAO.getAvailableSlotsNewLogic(doctorId, dateParam); 
                 out.print(gson.toJson(availableSlots));
                 response.setStatus(HttpServletResponse.SC_OK);
             } else {
@@ -142,7 +143,8 @@ public void init() throws ServletException {
 
         String pathInfo = request.getPathInfo();
         try {
-            if (pathInfo != null && pathInfo.equals("/appointments")) {
+            // Xử lý tạo slot và appointment trống (DÀNH CHO LỄ TÂN/ADMIN)
+            if (pathInfo != null && pathInfo.equals("/admin/slots/create")) { 
                 StringBuilder sb = new StringBuilder();
                 try (BufferedReader reader = request.getReader()) {
                     String line;
@@ -153,13 +155,71 @@ public void init() throws ServletException {
                 String jsonInput = sb.toString();
                 Map<String, Object> inputMap = gson.fromJson(jsonInput, Map.class);
 
-                // === PHẦN SỬA LỖI BẮT ĐẦU TỪ ĐÂY ===
-                // 1. Lấy các trường cần thiết từ JSON
+                Double doctorIdDouble = (Double) inputMap.get("doctorId");
+                String slotDateStr = (String) inputMap.get("slotDate");
+                String startTimeStr = (String) inputMap.get("startTime");
+                Double durationDouble = (Double) inputMap.get("duration");
+                Double maxPatientsDouble = (Double) inputMap.get("maxPatients");
+                String type = (String) inputMap.get("type"); 
+                String endTimeStr = (String) inputMap.get("endTime"); 
+
+                if (doctorIdDouble == null || slotDateStr == null || startTimeStr == null || durationDouble == null || maxPatientsDouble == null || type == null) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print(gson.toJson(Map.of("message", "Thiếu tham số bắt buộc để tạo slot.")));
+                    return;
+                }
+
+                int doctorId = doctorIdDouble.intValue();
+                LocalDate slotDate = LocalDate.parse(slotDateStr);
+                LocalTime startTime = LocalTime.parse(startTimeStr);
+                int duration = durationDouble.intValue();
+                int maxPatients = maxPatientsDouble.intValue();
+
+                boolean success = false;
+                int insertedCount = 0;
+
+                if ("single".equalsIgnoreCase(type)) {
+                    success = slotDAO.createSingleSlotAndEmptyAppointments(doctorId, slotDate, startTime, duration, maxPatients);
+                    if(success) insertedCount = 1;
+                } else if ("range".equalsIgnoreCase(type)) {
+                    if (endTimeStr == null) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        out.print(gson.toJson(Map.of("message", "Thiếu endTime cho việc tạo dải slot.")));
+                        return;
+                    }
+                    insertedCount = slotDAO.createRangeSlotsAndEmptyAppointments(doctorId, slotDate, startTimeStr, endTimeStr, duration, maxPatients);
+                    success = (insertedCount > 0);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print(gson.toJson(Map.of("message", "Loại tạo slot không hợp lệ.")));
+                    return;
+                }
+
+                if (success) {
+                    response.setStatus(HttpServletResponse.SC_CREATED);
+                    out.print(gson.toJson(Map.of("message", "Đã tạo " + insertedCount + " slot và các lịch hẹn trống thành công!")));
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    out.print(gson.toJson(Map.of("message", "Không thể tạo slot hoặc lịch hẹn trống. Có thể có xung đột giờ hoặc lỗi database.")));
+                }
+
+            } 
+            // Xử lý việc bệnh nhân đặt lịch hẹn vào slot đã có (pre-booked appointment)
+            else if (pathInfo != null && pathInfo.equals("/appointments")) {
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader reader = request.getReader()) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                }
+                String jsonInput = sb.toString();
+                Map<String, Object> inputMap = gson.fromJson(jsonInput, Map.class);
+
                 String userAccountId = (String) inputMap.get("patient_id");
                 Double serviceIdDouble = (Double) inputMap.get("service_id");
                 Double slotIdDouble = (Double) inputMap.get("slot_id");
 
-                // 2. Kiểm tra các trường bắt buộc
                 if (userAccountId == null || serviceIdDouble == null || slotIdDouble == null) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     out.print(gson.toJson(Map.of("message", "Thiếu ID bệnh nhân, ID dịch vụ hoặc ID khung giờ.")));
@@ -169,7 +229,6 @@ public void init() throws ServletException {
                 int serviceId = serviceIdDouble.intValue();
                 int slotId = slotIdDouble.intValue();
 
-                // 3. Lấy patientId từ userAccountId
                 Integer patientId = appointmentDAO.getPatientIdByAccountId(userAccountId);
                 if (patientId == null) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -177,27 +236,27 @@ public void init() throws ServletException {
                     return;
                 }
 
-                // 4. Gọi đúng phương thức trong DAO (với 3 tham số, không có 'notes')
-                Appointment createdAppointment = appointmentDAO.createAppointmentWithSlotId(patientId, serviceId, slotId);
-
-                // 5. Xử lý kết quả trả về
-                if (createdAppointment != null) {
+                Appointment updatedAppointment = null;
+                try {
+                    updatedAppointment = appointmentDAO.updateEmptyAppointment(patientId, serviceId, slotId);
                     response.setStatus(HttpServletResponse.SC_CREATED);
-                    out.print(gson.toJson(createdAppointment));
-                } else {
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    out.print(gson.toJson(Map.of("message", "Không thể tạo lịch hẹn. Khung giờ có thể đã được đặt.")));
+                    out.print(gson.toJson(updatedAppointment));
+                } catch (SQLException e) {
+                    // CATCH CỤ THỂ SQLException TỪ DAO VÀ TRẢ VỀ THÔNG BÁO LỖI CỦA DAO
+                    LOGGER.log(Level.WARNING, "Lỗi khi đặt lịch hẹn từ bệnh nhân: " + e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // Sử dụng 400 Bad Request cho lỗi nghiệp vụ
+                    out.print(gson.toJson(Map.of("message", e.getMessage()))); // Trả về message từ DAO
                 }
-                // === KẾT THÚC PHẦN SỬA LỖI ===
+
 
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 out.print(gson.toJson(Map.of("message", "Đường dẫn API không hợp lệ cho POST.")));
             }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Lỗi trong doPost: " + e.getMessage(), e);
+        } catch (Exception e) { // Bắt các Exception khác không phải SQLException
+            LOGGER.log(Level.SEVERE, "Lỗi trong doPost (unhandled): " + e.getMessage(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print(gson.toJson(Map.of("message", "Lỗi máy chủ nội bộ.")));
+            out.print(gson.toJson(Map.of("message", "Lỗi máy chủ nội bộ không xác định.")));
         } finally {
             out.flush();
         }
