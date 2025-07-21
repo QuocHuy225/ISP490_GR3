@@ -107,14 +107,13 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const response = await fetch(url);
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({message: `Lỗi máy chủ: ${response.status}`}));
+                const errorData = await response.json().catch(() => ({message: `Phản hồi không phải JSON hoặc server không trả về JSON khi lỗi.`}));
                 throw new Error(errorData.message || errorMessage);
             }
             return await response.json();
         } catch (error) {
             console.error('Lỗi fetch data từ ' + url + ':', error);
-            showCustomAlert(errorMessage + ': ' + error.message, false);
-            return [];
+            throw error; // Ném lại lỗi để các caller có thể bắt và xử lý
         }
     }
     async function fetchAppointments() {
@@ -138,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function fetchWorkingDaysForDoctor(doctorId) {
         if (!doctorId)
             return [];
-        const url = `${API_BASE_URL}/doctors/${doctorId}/available-dates`;
+        const url = `${API_BASE_URL}/doctors/${doctorId}/available-dates`; 
         const dates = await fetchData(url, `Lỗi tải ngày làm việc cho bác sĩ.`);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -173,9 +172,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     <h5 class="card-title">${appt.serviceName || 'Dịch vụ không xác định'}</h5>
                     <p class="card-text">
                         <strong>Bác sĩ:</strong> ${appt.doctorFullName}<br>
-                       <strong>Thời gian:</strong> ${formatDateForDisplay(appt.appointmentDate)} lúc ${appt.appointmentTime}<br>
-                        <strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appt.status)}">${mapStatusToVietnamese(appt.status)}</span>
-                        ${isUpcoming ? `<br><strong>Mã lịch hẹn:</strong> ${appt.appointmentCode || 'N/A'}` : ''}
+                        <strong>Thời gian:</strong> ${formatDateForDisplay(appt.appointmentDate)} lúc ${appt.appointmentTime}<br>
+                        <strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appt.status)}">${mapStatusToVietnamese(appt.status)}</span><br>
+                        <strong>Mã lịch hẹn:</strong> ${appt.appointmentCode || 'N/A'}<br>
+                        <strong>Trạng thái thanh toán:</strong> <span class="badge ${getPaymentStatusBadgeClass(appt.paymentStatus)}">${mapPaymentStatusToVietnamese(appt.paymentStatus)}</span>
                     </p>
                     ${isUpcoming && (appt.status === 'PENDING' || appt.status === 'CONFIRMED') ? `<button class="btn btn-danger btn-sm cancel-btn" data-id="${appt.id}">Hủy hẹn</button>` : ''}
                 </div>`;
@@ -320,7 +320,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 <p><strong>Dịch vụ:</strong> ${appointment.serviceName}</p>
                 <p><strong>Thời gian:</strong> ${formatDateForDisplay(appointment.appointmentDate)} lúc ${appointment.appointmentTime}</p>
                 <p><strong>Ghi chú:</strong> ${appointment.notes || 'Không có'}</p>
-                <p><strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appointment.status)}">${mapStatusToVietnamese(appointment.status)}</span></p>`;
+                <p><strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appointment.status)}">${mapStatusToVietnamese(appointment.status)}</span></p>
+                <p><strong>Trạng thái thanh toán:</strong> <span class="badge ${getPaymentStatusBadgeClass(appointment.paymentStatus)}">${mapPaymentStatusToVietnamese(appointment.paymentStatus)}</span></p>`;
         }
         if (btnCancelAppointment) {
             btnCancelAppointment.style.display = (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') ? 'inline-block' : 'none';
@@ -329,63 +330,68 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function fetchAppointmentsAndRenderUI() {
-        allAppointmentsData = await fetchAppointments();
-        if (!Array.isArray(allAppointmentsData))
-            allAppointmentsData = [];
-        
-        const now = new Date(); 
+        try { 
+            allAppointmentsData = await fetchAppointments();
+            if (!Array.isArray(allAppointmentsData))
+                allAppointmentsData = [];
+            
+            const now = new Date(); 
 
-        const upcoming = [];
-        const history = [];
+            const upcoming = [];
+            const history = [];
 
-        allAppointmentsData.forEach(appt => {
-            if (!appt.appointmentDate || !appt.appointmentTime) {
-                history.push(appt); 
-                return;
-            }
+            allAppointmentsData.forEach(appt => {
+                if (!appt.appointmentDate || !appt.appointmentTime) {
+                    history.push(appt); 
+                    return;
+                }
 
-            const timeParts = appt.appointmentTime.split(' - ');
-            const startTimeStr = timeParts[0];
+                const timeParts = appt.appointmentTime.split(' - ');
+                const startTimeStr = timeParts[0];
 
-            const apptDateTime = new Date(`${appt.appointmentDate}T${startTimeStr}:00`);
+                const apptDateTime = new Date(`${appt.appointmentDate}T${startTimeStr}:00`);
 
-            if (apptDateTime >= now && (appt.status === 'PENDING' || appt.status === 'CONFIRMED')) {
-                upcoming.push(appt);
-            } 
-            else {
-                history.push(appt);
-            }
-        });
+                if (apptDateTime >= now && (appt.status === 'PENDING' || appt.status === 'CONFIRMED')) {
+                    upcoming.push(appt);
+                } 
+                else {
+                    history.push(appt);
+                }
+            });
 
-        upcoming.sort((a, b) => {
-            const aTimeParts = a.appointmentTime.split(' - ');
-            const bTimeParts = b.appointmentTime.split(' - ');
-            const aDateTime = new Date(`${a.appointmentDate}T${aTimeParts[0]}:00`);
-            const bDateTime = new Date(`${b.appointmentDate}T${bTimeParts[0]}:00`);
-            return aDateTime - bDateTime;
-        });
+            upcoming.sort((a, b) => {
+                const aTimeParts = a.appointmentTime.split(' - ');
+                const bTimeParts = b.appointmentTime.split(' - ');
+                const aDateTime = new Date(`${a.appointmentDate}T${aTimeParts[0]}:00`);
+                const bDateTime = new Date(`${b.appointmentDate}T${bTimeParts[0]}:00`);
+                return aDateTime - bDateTime;
+            });
 
-        history.sort((a, b) => {
-            const aTimeParts = a.appointmentTime.split(' - ');
-            const bTimeParts = b.appointmentTime.split(' - ');
-            const aDateTime = new Date(`${a.appointmentDate}T${aTimeParts[0]}:00`);
-            const bDateTime = new Date(`${b.appointmentDate}T${bTimeParts[0]}:00`);
-            return bDateTime - aDateTime;
-        });
-        
-        // Cập nhật tổng số trang
-        totalPagesUpcoming = Math.ceil(upcoming.length / ITEMS_PER_PAGE);
-        totalPagesHistory = Math.ceil(history.length / ITEMS_PER_PAGE);
+            history.sort((a, b) => {
+                const aTimeParts = a.appointmentTime.split(' - ');
+                const bTimeParts = b.appointmentTime.split(' - ');
+                const aDateTime = new Date(`${a.appointmentDate}T${aTimeParts[0]}:00`);
+                const bDateTime = new Date(`${b.appointmentDate}T${bTimeParts[0]}:00`);
+                return bDateTime - aDateTime;
+            });
+            
+            // Cập nhật tổng số trang
+            totalPagesUpcoming = Math.ceil(upcoming.length / ITEMS_PER_PAGE);
+            totalPagesHistory = Math.ceil(history.length / ITEMS_PER_PAGE);
 
-        // Đảm bảo trang hiện tại không vượt quá tổng số trang
-        if (currentPageUpcoming > totalPagesUpcoming && totalPagesUpcoming > 0) currentPageUpcoming = totalPagesUpcoming;
-        if (currentPageUpcoming === 0 && totalPagesUpcoming > 0) currentPageUpcoming = 1;
-        if (currentPageHistory > totalPagesHistory && totalPagesHistory > 0) currentPageHistory = totalPagesHistory;
-        if (currentPageHistory === 0 && totalPagesHistory > 0) currentPageHistory = 1;
+            // Đảm bảo trang hiện tại không vượt quá tổng số trang
+            if (currentPageUpcoming > totalPagesUpcoming && totalPagesUpcoming > 0) currentPageUpcoming = totalPagesUpcoming;
+            if (currentPageUpcoming === 0 && totalPagesUpcoming > 0) currentPageUpcoming = 1;
+            if (currentPageHistory > totalPagesHistory && totalPagesHistory > 0) currentPageHistory = totalPagesHistory;
+            if (currentPageHistory === 0 && totalPagesHistory > 0) currentPageHistory = 1;
 
 
-        renderAppointments(upcoming, upcomingAppointmentsList, true, currentPageUpcoming, totalPagesUpcoming, 'upcomingPagination');
-        renderAppointments(history, appointmentHistoryList, false, currentPageHistory, totalPagesHistory, 'historyPagination');
+            renderAppointments(upcoming, upcomingAppointmentsList, true, currentPageUpcoming, totalPagesUpcoming, 'upcomingPagination');
+            renderAppointments(history, appointmentHistoryList, false, currentPageHistory, totalPagesHistory, 'historyPagination');
+        } catch (error) {
+            console.error("Lỗi khi tải và render lịch hẹn:", error);
+            showCustomAlert("Không thể tải danh sách lịch hẹn. Vui lòng thử lại. Lỗi: " + error.message, false);
+        }
     }
 
     // --- Utility Functions ---
@@ -412,6 +418,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function getStatusBadgeClass(status) {
         return {PENDING: 'bg-warning', CONFIRMED: 'bg-primary', DONE: 'bg-success', CANCELLED: 'bg-danger', NO_SHOW: 'bg-secondary'}[status] || 'bg-secondary';
     }
+
+    function mapPaymentStatusToVietnamese(paymentStatus) {
+        return {UNPAID: 'Chưa thanh toán', PAID: 'Đã thanh toán'}[paymentStatus] || paymentStatus;
+    }
+    function getPaymentStatusBadgeClass(paymentStatus) {
+        return {UNPAID: 'bg-danger', PAID: 'bg-success'}[paymentStatus] || 'bg-secondary';
+    }
+
 
     // --- Event Listeners and Initial Load ---
     document.querySelectorAll('.tab-button').forEach(button => {
@@ -553,39 +567,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const newAppointmentData = {
                 patient_id: patientUserAccountId,
-                doctor_id: doctorId,
+                doctor_id: doctorId, 
                 service_id: serviceId,
                 slot_id: slotId
             };
 
             try {
                 const response = await fetch(`${API_BASE_URL}/appointments`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(newAppointmentData)});
-                const responseData = await response.json().catch(() => ({message: 'Phản hồi không phải JSON'}));
+                const responseData = await response.json().catch(() => ({message: `Phản hồi không phải JSON hoặc server không trả về JSON khi lỗi.`}));
+                
                 if (response.ok) {
-                    showCustomAlert('Lịch hẹn đã được tạo thành công!', true);
+                    showCustomAlert('Lịch hẹn đã được đặt thành công!', true);
                     hideCustomModal(newAppointmentModal);
-                    // Reset current pages to 1 after a new appointment is created,
-                    // so the user sees the new appointment on the first page of "Upcoming"
                     currentPageUpcoming = 1;
                     currentPageHistory = 1;
-                    fetchAppointmentsAndRenderUI();
+                    await fetchAppointmentsAndRenderUI(); // CHẮC CHẮN CHỜ HÀM NÀY HOÀN THÀNH
                 } else {
-                    showCustomAlert('Lỗi khi tạo lịch hẹn: ' + (responseData.message || `Lỗi không xác định`), false);
+                    showCustomAlert(responseData.message || `Lỗi không xác định khi đặt lịch hẹn. Mã lỗi: ${response.status}`, false);
                 }
+
             } catch (error) {
-                showCustomAlert('Lỗi mạng khi tạo lịch hẹn.', false);
+                showCustomAlert('Lỗi mạng khi đặt lịch hẹn hoặc lỗi không xác định: ' + error.message, false);
             }
         });
     }
 
     if (btnCancelAppointment) {
-        btnCancelAppointment.addEventListener('click', function () {
+        btnCancelAppointment.addEventListener('click', async function () { // THÊM ASYNC VÀO ĐÂY
             if (currentAppointmentData) {
                 currentAppointmentIdToCancel = currentAppointmentData.id;
                 if (confirmAppointmentIdDisplay)
                     confirmAppointmentIdDisplay.textContent = currentAppointmentIdToCancel;
                 hideCustomModal(appointmentDetailModal);
-                showCustomModal(cancelConfirmModal);
+                // BỌC GỌI MODAL BẰNG try-catch NẾU CÓ Promise CHƯA ĐƯỢC XỬ LÝ TRƯỚC ĐÓ
+                try {
+                    showCustomModal(cancelConfirmModal);
+                } catch (error) {
+                    console.error("Lỗi khi hiển thị modal xác nhận hủy:", error);
+                    showCustomAlert("Không thể hiển thị hộp thoại xác nhận hủy. Vui lòng thử lại.", false);
+                }
             }
         });
     }
@@ -596,17 +616,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             try {
                 const response = await fetch(`${API_BASE_URL}/appointments/${currentAppointmentIdToCancel}/cancel`, {method: 'PUT', headers: {'Content-Type': 'application/json'}});
-                const responseData = await response.json().catch(() => ({message: 'Phản hồi không phải JSON'}));
+                const responseData = await response.json().catch(() => ({message: `Phản hồi không phải JSON hoặc server không trả về JSON khi lỗi.`}));
                 if (response.ok) {
                     showCustomAlert('Lịch hẹn đã được hủy thành công.', true);
                     hideCustomModal(cancelConfirmModal);
-                    // Reset current pages to 1 after cancellation,
-                    // as the list order/content might change
                     currentPageUpcoming = 1;
                     currentPageHistory = 1;
-                    fetchAppointmentsAndRenderUI();
+                    await fetchAppointmentsAndRenderUI(); // CHẮC CHẮN CHỜ HÀM NÀY HOÀN THÀNH
                 } else {
-                    showCustomAlert('Lỗi khi hủy lịch hẹn: ' + (responseData.message || `Lỗi không xác định`), false);
+                    showCustomAlert('Lỗi khi hủy lịch hẹn: ' + (responseData.message || `Lỗi không xác định. Mã lỗi: ${response.status}`), false);
                 }
             } catch (error) {
                 showCustomAlert('Lỗi mạng khi hủy lịch hẹn.', false);
@@ -616,5 +634,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    fetchAppointmentsAndRenderUI();
+    // Wrap the initial fetchAppointmentsAndRenderUI call in a try-catch to catch initial load errors
+    (async () => { // HÀM TỰ GỌI ASYNC ĐỂ BẮT LỖI Promise KHI TẢI TRANG LẦN ĐẦU
+        try {
+            await fetchAppointmentsAndRenderUI();
+        } catch (error) {
+            console.error("Lỗi khi khởi tạo giao diện lịch hẹn:", error);
+            showCustomAlert("Không thể tải dữ liệu ban đầu. Vui lòng thử lại. Lỗi: " + error.message, false);
+        }
+    })();
 });

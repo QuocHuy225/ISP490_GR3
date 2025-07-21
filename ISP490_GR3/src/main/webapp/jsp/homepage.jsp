@@ -114,11 +114,8 @@
                 <li><a href="${pageContext.request.contextPath}/receptionist/report"><i class="bi bi-speedometer2"></i> Báo cáo thống kê</a></li>
 
                 <% } else { %>
-                <li><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
-                <li><a href="${pageContext.request.contextPath}/patient/my-appointments"><i class="bi bi-calendar-check"></i> Lịch hẹn của tôi</a></li>
-                <li><a href="#"><i class="bi bi-file-medical"></i> Hồ sơ sức khỏe</a></li>
-                <li><a href="#"><i class="bi bi-hospital"></i> Dịch vụ</a></li>
-                <li><a href="#"><i class="bi bi-chat-dots"></i> Liên hệ bác sĩ</a></li>
+                <li class="active"><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
+                <li><a href="${pageContext.request.contextPath}/patient/my-appointments"><i class="bi bi-calendar-check"></i> Lịch hẹn của tôi</a></li>               
                 <% } %>
             </ul>
         </nav>
