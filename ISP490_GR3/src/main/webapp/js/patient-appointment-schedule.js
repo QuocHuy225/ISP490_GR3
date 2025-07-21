@@ -48,6 +48,13 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentAppointmentData = null;
     let currentAppointmentIdToCancel = null;
 
+    // --- Biến phân trang ---
+    const ITEMS_PER_PAGE = 5;
+    let currentPageUpcoming = 1;
+    let currentPageHistory = 1;
+    let totalPagesUpcoming = 1;
+    let totalPagesHistory = 1;
+
     // --- Modal Functions ---
     function showCustomModal(modalElement) {
         if (modalElement) {
@@ -139,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- Render Functions ---
-    function renderAppointments(appointments, container, isUpcoming = true) {
+    function renderAppointments(appointments, container, isUpcoming = true, currentPage, totalPages, paginationContainerId) {
         if (!container)
             return;
         container.innerHTML = '';
@@ -147,18 +154,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (appointments.length === 0) {
             if (noAppointmentsParagraph)
                 noAppointmentsParagraph.style.display = 'block';
-            return;
         } else {
             if (noAppointmentsParagraph)
                 noAppointmentsParagraph.style.display = 'none';
         }
 
-        appointments.forEach(appt => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        const appointmentsToRender = appointments.slice(startIndex, endIndex);
+
+        appointmentsToRender.forEach(appt => {
             const appointmentElement = document.createElement('div');
             appointmentElement.className = `card mb-3 appointment-item ${appt.status === 'CANCELLED' ? 'border-danger' : ''}`;
             appointmentElement.dataset.appointmentId = appt.id;
 
-            // === THAY ĐỔI QUAN TRỌNG Ở ĐÂY ===
             appointmentElement.innerHTML = `
                 <div class="card-body">
                     <h5 class="card-title">${appt.serviceName || 'Dịch vụ không xác định'}</h5>
@@ -190,7 +199,117 @@ document.addEventListener('DOMContentLoaded', function () {
                     showAppointmentDetail(appointment);
             });
         });
+
+        // Render pagination controls
+        renderPagination(currentPage, totalPages, paginationContainerId, isUpcoming);
     }
+
+    function renderPagination(currentPage, totalPages, containerId, isUpcoming) {
+        const paginationContainer = document.getElementById(containerId);
+        if (!paginationContainer) return;
+
+        paginationContainer.innerHTML = ''; // Clear previous buttons
+
+        if (totalPages <= 1) {
+            paginationContainer.style.display = 'none'; // Hide if only one page
+            return;
+        }
+        paginationContainer.style.display = 'flex'; // Show pagination
+
+        // Previous button
+        const prevButton = document.createElement('button');
+        prevButton.className = 'btn btn-sm btn-outline-primary pagination-button';
+        prevButton.innerHTML = '&laquo; Trước';
+        prevButton.disabled = currentPage === 1;
+        prevButton.addEventListener('click', () => {
+            if (isUpcoming) {
+                currentPageUpcoming--;
+            } else {
+                currentPageHistory--;
+            }
+            fetchAppointmentsAndRenderUI();
+        });
+        paginationContainer.appendChild(prevButton);
+
+        // Page number buttons
+        // Only show a limited number of page buttons around the current page
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+
+        if (startPage > 1) {
+            const firstPageButton = document.createElement('button');
+            firstPageButton.className = 'btn btn-sm btn-outline-primary pagination-button';
+            firstPageButton.textContent = '1';
+            firstPageButton.addEventListener('click', () => {
+                if (isUpcoming) {
+                    currentPageUpcoming = 1;
+                } else {
+                    currentPageHistory = 1;
+                }
+                fetchAppointmentsAndRenderUI();
+            });
+            paginationContainer.appendChild(firstPageButton);
+            if (startPage > 2) {
+                const dots = document.createElement('span');
+                dots.textContent = '...';
+                dots.className = 'pagination-dots';
+                paginationContainer.appendChild(dots);
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'} pagination-button`;
+            pageButton.textContent = i;
+            pageButton.addEventListener('click', () => {
+                if (isUpcoming) {
+                    currentPageUpcoming = i;
+                } else {
+                    currentPageHistory = i;
+                }
+                fetchAppointmentsAndRenderUI();
+            });
+            paginationContainer.appendChild(pageButton);
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const dots = document.createElement('span');
+                dots.textContent = '...';
+                dots.className = 'pagination-dots';
+                paginationContainer.appendChild(dots);
+            }
+            const lastPageButton = document.createElement('button');
+            lastPageButton.className = 'btn btn-sm btn-outline-primary pagination-button';
+            lastPageButton.textContent = totalPages;
+            lastPageButton.addEventListener('click', () => {
+                if (isUpcoming) {
+                    currentPageUpcoming = totalPages;
+                } else {
+                    currentPageHistory = totalPages;
+                }
+                fetchAppointmentsAndRenderUI();
+            });
+            paginationContainer.appendChild(lastPageButton);
+        }
+
+
+        // Next button
+        const nextButton = document.createElement('button');
+        nextButton.className = 'btn btn-sm btn-outline-primary pagination-button';
+        nextButton.innerHTML = 'Sau &raquo;';
+        nextButton.disabled = currentPage === totalPages;
+        nextButton.addEventListener('click', () => {
+            if (isUpcoming) {
+                currentPageUpcoming++;
+            } else {
+                currentPageHistory++;
+            }
+            fetchAppointmentsAndRenderUI();
+        });
+        paginationContainer.appendChild(nextButton);
+    }
+
 
     function showAppointmentDetail(appointment) {
         currentAppointmentData = appointment;
@@ -199,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <p><strong>Mã lịch hẹn:</strong> ${appointment.appointmentCode || 'N/A'}</p>
                 <p><strong>Bác sĩ:</strong> ${appointment.doctorFullName}</p>
                 <p><strong>Dịch vụ:</strong> ${appointment.serviceName}</p>
-                <p><strong>Thời gian:</strong> ${formatDateForDisplay(appointment.appointmentDate)} lúc ${formatTimeForDisplay(appointment.appointmentTime)}</p>
+                <p><strong>Thời gian:</strong> ${formatDateForDisplay(appointment.appointmentDate)} lúc ${appointment.appointmentTime}</p>
                 <p><strong>Ghi chú:</strong> ${appointment.notes || 'Không có'}</p>
                 <p><strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appointment.status)}">${mapStatusToVietnamese(appointment.status)}</span></p>`;
         }
@@ -213,11 +332,60 @@ document.addEventListener('DOMContentLoaded', function () {
         allAppointmentsData = await fetchAppointments();
         if (!Array.isArray(allAppointmentsData))
             allAppointmentsData = [];
-        const now = new Date();
-        const upcoming = allAppointmentsData.filter(appt => appt.appointmentDate && new Date(appt.appointmentDate) >= now && (appt.status === 'PENDING' || appt.status === 'CONFIRMED')).sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate));
-        const history = allAppointmentsData.filter(appt => !upcoming.includes(appt)).sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate));
-        renderAppointments(upcoming, upcomingAppointmentsList, true);
-        renderAppointments(history, appointmentHistoryList, false);
+        
+        const now = new Date(); 
+
+        const upcoming = [];
+        const history = [];
+
+        allAppointmentsData.forEach(appt => {
+            if (!appt.appointmentDate || !appt.appointmentTime) {
+                history.push(appt); 
+                return;
+            }
+
+            const timeParts = appt.appointmentTime.split(' - ');
+            const startTimeStr = timeParts[0];
+
+            const apptDateTime = new Date(`${appt.appointmentDate}T${startTimeStr}:00`);
+
+            if (apptDateTime >= now && (appt.status === 'PENDING' || appt.status === 'CONFIRMED')) {
+                upcoming.push(appt);
+            } 
+            else {
+                history.push(appt);
+            }
+        });
+
+        upcoming.sort((a, b) => {
+            const aTimeParts = a.appointmentTime.split(' - ');
+            const bTimeParts = b.appointmentTime.split(' - ');
+            const aDateTime = new Date(`${a.appointmentDate}T${aTimeParts[0]}:00`);
+            const bDateTime = new Date(`${b.appointmentDate}T${bTimeParts[0]}:00`);
+            return aDateTime - bDateTime;
+        });
+
+        history.sort((a, b) => {
+            const aTimeParts = a.appointmentTime.split(' - ');
+            const bTimeParts = b.appointmentTime.split(' - ');
+            const aDateTime = new Date(`${a.appointmentDate}T${aTimeParts[0]}:00`);
+            const bDateTime = new Date(`${b.appointmentDate}T${bTimeParts[0]}:00`);
+            return bDateTime - aDateTime;
+        });
+        
+        // Cập nhật tổng số trang
+        totalPagesUpcoming = Math.ceil(upcoming.length / ITEMS_PER_PAGE);
+        totalPagesHistory = Math.ceil(history.length / ITEMS_PER_PAGE);
+
+        // Đảm bảo trang hiện tại không vượt quá tổng số trang
+        if (currentPageUpcoming > totalPagesUpcoming && totalPagesUpcoming > 0) currentPageUpcoming = totalPagesUpcoming;
+        if (currentPageUpcoming === 0 && totalPagesUpcoming > 0) currentPageUpcoming = 1;
+        if (currentPageHistory > totalPagesHistory && totalPagesHistory > 0) currentPageHistory = totalPagesHistory;
+        if (currentPageHistory === 0 && totalPagesHistory > 0) currentPageHistory = 1;
+
+
+        renderAppointments(upcoming, upcomingAppointmentsList, true, currentPageUpcoming, totalPagesUpcoming, 'upcomingPagination');
+        renderAppointments(history, appointmentHistoryList, false, currentPageHistory, totalPagesHistory, 'historyPagination');
     }
 
     // --- Utility Functions ---
@@ -225,14 +393,17 @@ document.addEventListener('DOMContentLoaded', function () {
         return dateString ? new Date(dateString).toLocaleDateString('vi-VN') : '';
     }
 
-    // === THAY ĐỔI QUAN TRỌNG Ở ĐÂY ===
     function formatTimeForDisplay(timeString) {
         if (!timeString)
             return '';
-        const tempDate = new Date(`1970-01-01T${timeString}`);
-        if (isNaN(tempDate.getTime()))
-            return timeString;
-        return tempDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit', hour12: false});
+        const timeParts = timeString.split(' - ');
+        if (timeParts.length > 0) {
+            const tempDate = new Date(`1970-01-01T${timeParts[0]}`);
+            if (!isNaN(tempDate.getTime())) {
+                return tempDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit', hour12: false});
+            }
+        }
+        return timeString;
     }
 
     function mapStatusToVietnamese(status) {
@@ -255,11 +426,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (newAppointmentBtn) {
         newAppointmentBtn.addEventListener('click', async function () {
-            // Vô hiệu hóa nút ngay khi bấm để tránh click đúp
             newAppointmentBtn.disabled = true;
 
             try {
-                // Các công việc reset form giữ nguyên
                 appointmentForm.reset();
                 notesInput.value = '';
                 appointmentTimeSelect.innerHTML = '<option value="">-- Chọn giờ hẹn --</option>';
@@ -272,11 +441,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 appointmentDateInput.innerHTML = '<option value="">-- Vui lòng chọn ngày --</option>';
                 appointmentDateInput.disabled = true;
 
-                // Tải dữ liệu
                 doctorsData = await fetchDoctors();
                 servicesData = await fetchServices();
 
-                // Đổ dữ liệu vào dropdown
                 doctorsData.forEach(doctor => {
                     const option = document.createElement('option');
                     option.value = doctor.id;
@@ -292,17 +459,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 showCustomModal(newAppointmentModal);
             } catch (error) {
-                // Xử lý nếu có lỗi xảy ra trong quá trình fetch
                 console.error("Lỗi khi mở form đặt hẹn mới:", error);
                 showCustomAlert("Không thể tải dữ liệu cho form đặt hẹn. Vui lòng thử lại.", false);
             } finally {
-                // Luôn bật lại nút sau khi mọi việc hoàn tất (dù thành công hay thất bại)
                 newAppointmentBtn.disabled = false;
             }
         });
     }
 
-    // Other modal close buttons
     if (closeNewAppointmentModalBtn)
         closeNewAppointmentModalBtn.addEventListener('click', () => hideCustomModal(newAppointmentModal));
     if (document.getElementById('cancelNewAppointmentBtn'))
@@ -355,11 +519,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     const option = document.createElement('option');
                     option.value = slot.id;
 
-                    // Lấy cả startTime và endTime từ đối tượng slot
                     const startTime = formatTimeForDisplay(slot.startTime);
                     const endTime = formatTimeForDisplay(slot.endTime);
 
-                    // Tạo chuỗi khoảng thời gian
                     option.textContent = `${startTime} - ${endTime}`;
 
                     appointmentTimeSelect.appendChild(option);
@@ -402,6 +564,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (response.ok) {
                     showCustomAlert('Lịch hẹn đã được tạo thành công!', true);
                     hideCustomModal(newAppointmentModal);
+                    // Reset current pages to 1 after a new appointment is created,
+                    // so the user sees the new appointment on the first page of "Upcoming"
+                    currentPageUpcoming = 1;
+                    currentPageHistory = 1;
                     fetchAppointmentsAndRenderUI();
                 } else {
                     showCustomAlert('Lỗi khi tạo lịch hẹn: ' + (responseData.message || `Lỗi không xác định`), false);
@@ -434,6 +600,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (response.ok) {
                     showCustomAlert('Lịch hẹn đã được hủy thành công.', true);
                     hideCustomModal(cancelConfirmModal);
+                    // Reset current pages to 1 after cancellation,
+                    // as the list order/content might change
+                    currentPageUpcoming = 1;
+                    currentPageHistory = 1;
                     fetchAppointmentsAndRenderUI();
                 } else {
                     showCustomAlert('Lỗi khi hủy lịch hẹn: ' + (responseData.message || `Lỗi không xác định`), false);
