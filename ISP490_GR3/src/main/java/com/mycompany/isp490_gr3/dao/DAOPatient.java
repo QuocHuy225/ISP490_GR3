@@ -136,23 +136,88 @@ public class DAOPatient {
             return false;
         }
     }
+    
+    /**
+     * Thêm bệnh nhân mới có liên kết account_id (dùng cho đăng ký user)
+     */
+    public boolean addPatientWithAccount(Patient patient) {
+        if (patient == null || patient.getFullName() == null || patient.getAccountId() == null) {
+            throw new IllegalArgumentException("Patient data is incomplete.");
+        }
+        String sql = "INSERT INTO patients (account_id, patient_code, full_name, created_at, updated_at, is_deleted) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            conn.setAutoCommit(false);
+            try {
+                // Generate patient code
+                String patientCode = generatePatientCode();
+                ps.setString(1, patient.getAccountId());
+                ps.setString(2, patientCode);
+                ps.setString(3, patient.getFullName());
+                ps.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
+                ps.setTimestamp(5, new java.sql.Timestamp(System.currentTimeMillis()));
+                ps.setBoolean(6, false);
+                int result = ps.executeUpdate();
+                if (result > 0) {
+                    try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                        if (generatedKeys.next()) {
+                            patient.setId(generatedKeys.getInt(1));
+                            patient.setPatientCode(patientCode);
+                        }
+                    }
+                }
+                conn.commit();
+                return result > 0;
+            } catch (SQLException e) {
+                conn.rollback();
+                LOGGER.log(Level.SEVERE, "Error adding patient with account: {0}", e.getMessage());
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error adding patient with account: {0}", e.getMessage());
+            return false;
+        }
+    }
 
     public boolean updatePatient(Patient patient) {
-        if (patient == null || patient.getId() <= 0 || patient.getFullName() == null || patient.getDob() == null) {
-            throw new IllegalArgumentException("Patient data is incomplete or invalid ID.");
+        // Chỉ bắt buộc id > 0 và fullName khác null
+        if (patient == null || patient.getId() <= 0 || patient.getFullName() == null) {
+            LOGGER.warning("Patient update failed: missing required id or fullName");
+            return false;
         }
-
         String sql = "UPDATE patients SET full_name = ?, gender = ?, dob = ?, phone = ?, cccd = ?, address = ?, updated_at = ? "
                 + "WHERE id = ? AND is_deleted = 0";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
             try {
                 ps.setString(1, patient.getFullName());
-                ps.setInt(2, patient.getGender());
-                ps.setDate(3, patient.getDob());
-                ps.setString(4, patient.getPhone());
-                ps.setString(5, patient.getCccd());
-                ps.setString(6, patient.getAddress());
+                if (patient.getGender() != 0 && patient.getGender() != 1 && patient.getGender() != 2) {
+                    ps.setNull(2, java.sql.Types.INTEGER);
+                } else {
+                    ps.setInt(2, patient.getGender());
+                }
+                if (patient.getDob() != null) {
+                    ps.setDate(3, patient.getDob());
+                } else {
+                    ps.setNull(3, java.sql.Types.DATE);
+                }
+                if (patient.getPhone() != null) {
+                    ps.setString(4, patient.getPhone());
+                } else {
+                    ps.setNull(4, java.sql.Types.VARCHAR);
+                }
+                if (patient.getCccd() != null) {
+                    ps.setString(5, patient.getCccd());
+                } else {
+                    ps.setNull(5, java.sql.Types.VARCHAR);
+                }
+                if (patient.getAddress() != null) {
+                    ps.setString(6, patient.getAddress());
+                } else {
+                    ps.setNull(6, java.sql.Types.VARCHAR);
+                }
                 ps.setTimestamp(7, new java.sql.Timestamp(System.currentTimeMillis()));
                 ps.setInt(8, patient.getId());
 

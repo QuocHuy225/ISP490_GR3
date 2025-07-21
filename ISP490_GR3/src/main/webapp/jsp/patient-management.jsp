@@ -608,7 +608,6 @@
                                 <label for="addFullName" class="form-label">Họ tên <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="addFullName" name="fullName" placeholder="Nhập họ tên đầy đủ" required>
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="addGender" class="form-label">Giới tính <span class="text-danger">*</span></label>
                                 <select class="form-select" id="addGender" name="gender" required>
@@ -618,22 +617,18 @@
                                     <option value="2">Khác</option>
                                 </select>
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="addDob" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="addDob" name="dob" required>
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="addPhone" class="form-label">Điện thoại <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="addPhone" name="phone" pattern="[0-9]{10,11}" placeholder="Nhập số điện thoại (10-11 chữ số)" required>
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="addCccd" class="form-label">CCCD</label>
                                 <input type="text" class="form-control" id="addCccd" name="cccd" pattern="[0-9]{12}" placeholder="Nhập CCCD (12 chữ số, tùy chọn)">
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="addAddress" class="form-label">Địa chỉ</label>
                                 <textarea class="form-control" id="addAddress" name="address" rows="3" placeholder="Nhập địa chỉ"></textarea>
@@ -676,7 +671,6 @@
                                 <input type="text" class="form-control" id="editFullName" name="fullName" 
                                        value="<%= editPatient.getFullName() %>" required>
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="editGender" class="form-label">Giới tính <span class="text-danger">*</span></label>
                                 <select class="form-select" id="editGender" name="gender" required>
@@ -686,25 +680,21 @@
                                     <option value="2" <%= editPatient.getGender() == 2 ? "selected" : "" %>>Khác</option>
                                 </select>
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="editDob" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="editDob" name="dob" 
-                                       value="<%= dateFormat.format(editPatient.getDob()) %>" required>
+                                       value='<%= (editPatient.getDob() != null) ? dateFormat.format(editPatient.getDob()) : "" %>' required>
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="editPhone" class="form-label">Điện thoại <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="editPhone" name="phone" 
                                        value="<%= editPatient.getPhone() %>" pattern="[0-9]{10,11}" placeholder="10-11 chữ số" required>
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="editCccd" class="form-label">CCCD</label>
                                 <input type="text" class="form-control" id="editCccd" name="cccd" 
                                        value="<%= editPatient.getCccd() %>" pattern="[0-9]{12}" placeholder="12 chữ số (tùy chọn)">
                             </div>
-                            
                             <div class="mb-3">
                                 <label for="editAddress" class="form-label">Địa chỉ</label>
                                 <textarea class="form-control" id="editAddress" name="address" rows="3" placeholder="Nhập địa chỉ"><%= editPatient.getAddress() %></textarea>
