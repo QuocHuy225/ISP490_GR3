@@ -118,4 +118,25 @@ public class DAODoctor {
         }
         return doctor;
     }
+
+    /**
+     * Thêm mới bác sĩ vào bảng doctors
+     * @param doctor Doctor object (cần accountId, fullName, phone, gender)
+     * @return true nếu thêm thành công, false nếu thất bại
+     */
+    public boolean addDoctor(Doctor doctor) {
+        String sql = "INSERT INTO doctors (account_id, full_name, gender, phone, is_deleted, created_at, updated_at) VALUES (?, ?, ?, ?, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, doctor.getAccountId());
+            ps.setString(2, doctor.getFullName());
+            ps.setInt(3, doctor.getGender());
+            ps.setString(4, doctor.getPhone());
+            int result = ps.executeUpdate();
+            return result > 0;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi thêm mới bác sĩ: " + e.getMessage(), e);
+            return false;
+        }
+    }
 }
