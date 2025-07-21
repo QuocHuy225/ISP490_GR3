@@ -93,7 +93,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/patients">
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
                 </li>

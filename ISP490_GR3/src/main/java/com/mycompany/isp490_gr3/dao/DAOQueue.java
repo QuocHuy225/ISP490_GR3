@@ -309,6 +309,83 @@ public class DAOQueue {
         return 0;
     }
 
+    // hàm của huy
+    public boolean updateQueueStatus(int queueId, String newStatus) {
+        // SQL query để cập nhật cột 'status' và 'updated_at'
+        String sql = "UPDATE queue SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+
+        try (Connection conn = DBContext.getConnection(); // Lấy kết nối từ DBContext của bạn
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newStatus); // Đặt giá trị trạng thái mới vào tham số thứ nhất
+            ps.setInt(2, queueId);      // Đặt ID hàng đợi vào tham số thứ hai
+
+            int rowsAffected = ps.executeUpdate(); // Thực thi lệnh cập nhật
+
+            if (rowsAffected > 0) {
+                LOGGER.info("Queue ID " + queueId + " status updated to " + newStatus);
+                return true; // Cập nhật thành công
+            } else {
+                LOGGER.warning("No rows affected when updating status for Queue ID " + queueId + ". Status might be the same or ID not found.");
+                return false; // Không có hàng nào bị ảnh hưởng (có thể ID không tồn tại hoặc trạng thái đã giống)
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi cập nhật trạng thái hàng đợi cho ID " + queueId + " thành " + newStatus + ": " + e.getMessage(), e);
+            return false; // Xảy ra lỗi SQL
+        }
+    }
+
+     public QueueViewDTO getQueueViewDTOById(int queueId) {
+        QueueViewDTO queue = null;
+        String sql = "SELECT "
+                   + "q.id AS queueId, "
+                   + "a.appointment_code AS appointmentCode, "
+                   + "s.slot_date AS slotDate, "
+                   + "CONCAT(TIME_FORMAT(s.start_time, '%H:%i'), ' - ', TIME_FORMAT(s.end_time, '%H:%i')) AS slotTimeRange, "
+                   + "p.patient_code AS patientCode, "
+                   + "p.full_name AS patientName, "
+                   + "p.phone AS patientPhone, "
+                   + "ms.service_name AS serviceName, "
+                   + "q.priority, "
+                   + "a.checkin_time AS checkinTime, "
+                   + "d.full_name AS doctorName, "
+                   + "q.status " // KHÔNG CÓ 'q.description' ở đây
+                   + "FROM queue q "
+                   + "JOIN appointment a ON q.appointment_id = a.id "
+                   + "JOIN slot s ON q.slot_id = s.id "
+                   + "JOIN patients p ON q.patient_id = p.id "
+                   + "JOIN medical_services ms ON a.services_id = ms.services_id "
+                   + "LEFT JOIN doctors d ON q.doctor_id = d.id "
+                   + "WHERE q.id = ?";
+
+        try (Connection conn = DBContext.getConnection(); // Lấy kết nối từ DBContext của bạn
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, queueId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    queue = new QueueViewDTO();
+                    queue.setQueueId(rs.getInt("queueId"));
+                    queue.setAppointmentCode(rs.getString("appointmentCode"));
+                    queue.setSlotDate(rs.getString("slotDate"));
+                    queue.setSlotTimeRange(rs.getString("slotTimeRange"));
+                    queue.setPatientCode(rs.getString("patientCode"));
+                    queue.setPatientName(rs.getString("patientName"));
+                    queue.setPatientPhone(rs.getString("patientPhone"));
+                    queue.setServiceName(rs.getString("serviceName"));
+                    queue.setPriority(rs.getInt("priority"));
+                    queue.setCheckinTime(rs.getTimestamp("checkinTime") != null ? rs.getTimestamp("checkinTime").toLocalDateTime().toString() : null);
+                    queue.setDoctorName(rs.getString("doctorName"));
+                    queue.setStatus(rs.getString("status"));
+                    // KHÔNG CÓ dòng queue.setDescription(rs.getString("description")); ở đây
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy chi tiết hàng đợi theo ID: " + queueId + ": " + e.getMessage(), e);
+        }
+        return queue;
+    }
+
+    // kết thúc hàm của huy
     public static void main(String[] args) {
         DAOQueue dao = new DAOQueue();
 

@@ -92,21 +92,34 @@ html, body {
     transition: all 0.3s ease;
     border-radius: 8px;
     margin: 4px 8px;
+    gap: 10px; /* Đảm bảo có gap 10px giữa icon và chữ */
 }
 
 #sidebar ul li a:hover {
     background: var(--primary-dark);
     transform: translateX(5px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Thêm shadow để khớp homepage */
 }
 
 #sidebar ul li a i {
-    margin-right: 10px;
+    margin-right: 0; /* CHỈNH SỬA: Đặt margin-right về 0 vì đã dùng 'gap' trên thẻ cha 'a' */
     font-size: 1.2em;
 }
 
 #sidebar ul li.active > a {
-    background: var(--primary-dark);
-    border-left: 4px solid var(--white);
+    background: var(--gradient-primary); /* Sử dụng biến gradient-primary để tạo màu xanh gradient */
+    color: var(--white); /* Đảm bảo chữ màu trắng */
+    border-left: none; /* Loại bỏ viền trái nếu có, để gradient hiển thị đầy đủ */
+    font-weight: 600; /* Tăng độ đậm của chữ */
+    box-shadow: var(--shadow-light); /* Thêm shadow nhẹ để nổi bật */
+    transform: translateX(0); /* Đảm bảo không có dịch chuyển ngang */
+    padding: 15px 20px; /* Đảm bảo padding nhất quán */
+}
+#sidebar ul li.active > a:hover {
+    background: var(--gradient-primary); /* Giữ nguyên gradient khi hover trên tab active */
+    color: var(--white);
+    box-shadow: var(--shadow-medium); /* Tăng shadow khi hover */
+    transform: translateX(0);
 }
 
 /* Admin only menu items (nếu có) */

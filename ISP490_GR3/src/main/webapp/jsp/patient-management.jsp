@@ -273,7 +273,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/queue">
+                    <a href="${pageContext.request.contextPath}/doctor/queue">
                         <i class="bi bi-calendar-check"></i> Lịch khám bệnh
                     </a>
                 </li>

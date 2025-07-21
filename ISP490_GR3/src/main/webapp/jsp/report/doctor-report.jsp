@@ -132,15 +132,10 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/patients">
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
                         <i class="bi bi-people"></i> Hồ sơ bệnh nhân
                     </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-clipboard-pulse"></i> Toa thuốc
-                    </a>
-                </li>
+                </li>              
                 <li>
                     <a href="${pageContext.request.contextPath}/doctor/report">
                         <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
