@@ -308,6 +308,21 @@ public class AuthorizationController extends HttpServlet {
             
             // Create user with pre-verified email
             boolean success = daoUser.createVerifiedUser(newUser, currentUser.getId());
+
+            // Nếu là Doctor và tạo user thành công thì thêm vào bảng doctors
+            if (success && role == User.Role.DOCTOR) {
+                // Lấy lại user vừa tạo để lấy id
+                User createdUser = daoUser.getUserByEmail(email.trim());
+                if (createdUser != null) {
+                    com.mycompany.isp490_gr3.model.Doctor doctor = new com.mycompany.isp490_gr3.model.Doctor();
+                    doctor.setAccountId(createdUser.getId());
+                    doctor.setFullName(fullName.trim());
+                    doctor.setPhone("");
+                    // Nếu muốn lấy gender từ form thì cần thêm trường, tạm để mặc định 0
+                    doctor.setGender(0);
+                    new com.mycompany.isp490_gr3.dao.DAODoctor().addDoctor(doctor);
+                }
+            }
             
             if (success) {
                 request.setAttribute("successMessage", 

@@ -843,10 +843,12 @@
                                                                        stockClass + '>' + item.name + stockInfo + '</option>';
                                                                }
 
+                                                               // Thêm input search phía trên select
                                                                row.innerHTML =
                                                                        '<div class="row align-items-center">' +
                                                                        '<div class="col-md-3">' +
-                                                                       '<select class="form-select" name="' + receiptId + '_' + itemType + 'Id" ' +
+                                                                       '<input type="text" class="form-control mb-1" placeholder="Tìm kiếm..." oninput="filterDropdownOptions(this, \'' + rowId + '_select\')">' +
+                                                                       '<select class="form-select" id="' + rowId + '_select" name="' + receiptId + '_' + itemType + 'Id" ' +
                                                                        'onchange="updateItemPrice(\'' + rowId + '\', \'' + itemType + '\')" required>' +
                                                                        '<option value="">-- Chọn --</option>' +
                                                                        itemOptions +
@@ -875,10 +877,7 @@
                                                                        '</div>' +
                                                                        '</div>';
                                                                container.appendChild(row);
-                                                               if (itemId) {
-                                                               const select = row.querySelector('select');
-                                                               updateItemPrice(rowId, itemType, select);
-                                                               }
+                                                               updateItemPrice(rowId, itemType);
                                                                }
 
                                                                function updateItemPrice(rowId, itemType, selectElement = null) {
@@ -1030,6 +1029,22 @@
                                                                existingSecondReceiptItems.forEach(item => {
                                                                addItemRow('receipt2', item.type, item.id, item.quantity);
                                                                });
+                                                               }
+                                                               }
+
+                                                               // Hàm lọc option theo keyword
+                                                               function filterDropdownOptions(input, selectId) {
+                                                               const filter = input.value.toLowerCase();
+                                                               const select = document.getElementById(selectId);
+                                                               for (let i = 0; i < select.options.length; i++) {
+                                                               const option = select.options[i];
+                                                               const text = option.text.toLowerCase();
+                                                               // Không ẩn option đầu tiên ("-- Chọn --")
+                                                               if (i === 0) {
+                                                               option.style.display = '';
+                                                               continue;
+                                                               }
+                                                               option.style.display = text.includes(filter) ? '' : 'none';
                                                                }
                                                                }
         </script>
