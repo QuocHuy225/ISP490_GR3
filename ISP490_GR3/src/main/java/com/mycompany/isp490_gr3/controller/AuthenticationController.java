@@ -1,7 +1,9 @@
 package com.mycompany.isp490_gr3.controller;
 
 import com.mycompany.isp490_gr3.dao.DAOUser;
+import com.mycompany.isp490_gr3.dao.DAOPatient;
 import com.mycompany.isp490_gr3.model.User;
+import com.mycompany.isp490_gr3.model.Patient;
 import com.mycompany.isp490_gr3.service.EmailService;
 import java.io.IOException;
 import java.sql.Date;
@@ -39,12 +41,14 @@ public class AuthenticationController extends HttpServlet {
     
     private DAOUser daoUser;
     private EmailService emailService;
+    private DAOPatient daoPatient;
     
     @Override
     public void init() throws ServletException {
         super.init();
         daoUser = new DAOUser();
         emailService = new EmailService();
+        daoPatient = new DAOPatient();
     }
     
     @Override
@@ -269,6 +273,19 @@ public class AuthenticationController extends HttpServlet {
         boolean verificationSuccess = daoUser.verifyEmail(email.trim(), verificationCode.trim());
         
         if (verificationSuccess) {
+            // Sau khi xác thực thành công, thêm vào bảng patient nếu chưa có
+            User verifiedUser = daoUser.getUserByEmail(email.trim());
+            if (verifiedUser != null && verifiedUser.getRole() == User.Role.PATIENT) {
+                try {
+                    Patient patient = new Patient();
+                    patient.setAccountId(verifiedUser.getId());
+                    patient.setFullName(verifiedUser.getFullName());
+                    // Thêm patient chỉ với 3 trường cần thiết
+                    daoPatient.addPatientWithAccount(patient);
+                } catch (Exception ex) {
+                    // Nếu đã có patient hoặc lỗi thì bỏ qua
+                }
+            }
             // Verification successful - show login modal
             request.setAttribute("registerSuccess", "Xác thực email thành công! Bạn có thể đăng nhập ngay bây giờ.");
             request.getRequestDispatcher("/jsp/landing.jsp").forward(request, response);
