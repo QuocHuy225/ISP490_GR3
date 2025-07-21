@@ -28,10 +28,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Servlet for managing queue operations specifically for Doctors.
- * This includes viewing, searching, and updating queue statuses.
+ * Servlet for managing queue operations specifically for Doctors. This includes
+ * viewing, searching, and updating queue statuses.
  */
-@WebServlet(name = "QueueDoctorController", urlPatterns = {"/doctor/queue", "/api/doctor/queue", "/api/doctor/queue/status"})
+@WebServlet(name = "QueueDoctorController", urlPatterns = {"/doctor/queue", "/api/doctor/queue", "/api/doctor/queue/status", "/api/doctor/queue/details"})
 public class QueueDoctorController extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(QueueDoctorController.class.getName());
@@ -68,7 +68,12 @@ public class QueueDoctorController extends HttpServlet {
         if (!checkDoctorAccess(request, response)) {
             return;
         }
-        processRequest(request, response);
+        String path = request.getServletPath();
+        if ("/api/doctor/queue/details".equals(path)) { // NEW: Handle details API
+            handleDetailsRequest(request, response);
+        } else {
+            processRequest(request, response);
+        }
     }
 
     @Override
@@ -100,7 +105,7 @@ public class QueueDoctorController extends HttpServlet {
         }
     }
 
-     private void processRequest(HttpServletRequest request, HttpServletResponse response)
+    private void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
@@ -126,22 +131,22 @@ public class QueueDoctorController extends HttpServlet {
         if (currentUser != null && currentUser.getRole() == User.Role.DOCTOR) {
             DAODoctor daoDoctor = new DAODoctor();
             // FIX: Pass String currentUser.getId() directly to getDoctorByUserId
-            Doctor currentDoctor = daoDoctor.getDoctorByUserId(currentUser.getId()); 
+            Doctor currentDoctor = daoDoctor.getDoctorByUserId(currentUser.getId());
 
             if (currentDoctor != null) {
                 doctorId = currentDoctor.getId(); // Get the int ID from the Doctor object
             } else {
-                 LOGGER.warning("Logged-in user is a doctor but no associated Doctor found for user: " + currentUser.getId());
+                LOGGER.warning("Logged-in user is a doctor but no associated Doctor found for user: " + currentUser.getId());
             }
 
             String doctorIdParam = request.getParameter("doctorId");
             if (doctorIdParam != null && doctorIdParam.matches("\\d+")) {
-                 int requestedDoctorId = Integer.parseInt(doctorIdParam);
-                 if (requestedDoctorId == doctorId) {
-                     // Use the requested doctorId if it matches the logged-in doctor
-                 } else {
-                     LOGGER.warning("Doctor " + currentUser.getId() + " attempted to view another doctor's queue (ID: " + requestedDoctorId + "). Enforcing own queue.");
-                 }
+                int requestedDoctorId = Integer.parseInt(doctorIdParam);
+                if (requestedDoctorId == doctorId) {
+                    // Use the requested doctorId if it matches the logged-in doctor
+                } else {
+                    LOGGER.warning("Doctor " + currentUser.getId() + " attempted to view another doctor's queue (ID: " + requestedDoctorId + "). Enforcing own queue.");
+                }
             }
             request.setAttribute("doctorId", doctorId);
         } else {
@@ -208,7 +213,7 @@ public class QueueDoctorController extends HttpServlet {
         if (currentUser != null && currentUser.getRole() == User.Role.DOCTOR) {
             DAODoctor daoDoctor = new DAODoctor();
             // FIX: Pass String currentUser.getId() directly to getDoctorByUserId
-            Doctor currentDoctor = daoDoctor.getDoctorByUserId(currentUser.getId()); 
+            Doctor currentDoctor = daoDoctor.getDoctorByUserId(currentUser.getId());
 
             if (currentDoctor != null) {
                 doctorId = currentDoctor.getId();
@@ -224,10 +229,10 @@ public class QueueDoctorController extends HttpServlet {
             }
             String doctorIdParam = request.getParameter("doctorId");
             if (doctorIdParam != null && doctorIdParam.matches("\\d+")) {
-                 int requestedDoctorId = Integer.parseInt(doctorIdParam);
-                 if (requestedDoctorId == doctorId) {
-                     // Use the requested doctorId if it matches the logged-in doctor
-                 }
+                int requestedDoctorId = Integer.parseInt(doctorIdParam);
+                if (requestedDoctorId == doctorId) {
+                    // Use the requested doctorId if it matches the logged-in doctor
+                }
             }
         } else {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -414,5 +419,48 @@ public class QueueDoctorController extends HttpServlet {
             LOGGER.severe("Failed to update queue " + queueId + " to status " + newStatus);
         }
         out.print(new Gson().toJson(responseMap));
+    }
+
+    private void handleDetailsRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+
+        if (!isDoctor(request)) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            out.print(gson.toJson(Map.of("status", "error", "message", "Bạn không có quyền truy cập dữ liệu này.")));
+            return;
+        }
+
+        String queueIdParam = request.getParameter("queueId");
+        if (queueIdParam == null || queueIdParam.trim().isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print(gson.toJson(Map.of("status", "error", "message", "Thiếu ID hàng đợi.")));
+            return;
+        }
+
+        int queueId;
+        try {
+            queueId = Integer.parseInt(queueIdParam);
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print(gson.toJson(Map.of("status", "error", "message", "ID hàng đợi không hợp lệ.")));
+            LOGGER.log(Level.WARNING, "Invalid queueId format for details: " + queueIdParam, e);
+            return;
+        }
+
+        DAOQueue daoQueue = new DAOQueue();
+        QueueViewDTO details = daoQueue.getQueueViewDTOById(queueId); // Bạn cần thêm phương thức này vào DAOQueue
+
+        if (details != null) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            out.print(gson.toJson(details));
+            LOGGER.info("Fetched details for queueId: " + queueId);
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            out.print(gson.toJson(Map.of("status", "error", "message", "Không tìm thấy chi tiết hàng đợi.")));
+            LOGGER.warning("No details found for queueId: " + queueId);
+        }
     }
 }

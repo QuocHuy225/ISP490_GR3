@@ -58,10 +58,26 @@
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
-                <li><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
-                <li class="active"><a href="${pageContext.request.contextPath}/doctor/queue"><i class="bi bi-calendar-check"></i> Lịch khám bệnh</a></li>
-                <li><a href="${pageContext.request.contextPath}/doctor/patients"><i class="bi bi-people"></i> Hồ sơ bệnh nhân</a></li>
-                <li><a href="${pageContext.request.contextPath}/doctor/report"><i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê</a></li>
+                <li class="active">
+                    <a href="${pageContext.request.contextPath}/doctor/queue">
+                        <i class="bi bi-calendar-check"></i> Lịch khám bệnh
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/doctor/patients">
+                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
+                    </a>
+                </li>
+                <li>
+                    <a href="${pageContext.request.contextPath}/doctor/report">
+                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
+                    </a>
+                </li>
+                 <li>
+                    <a href="${pageContext.request.contextPath}/homepage">
+                        <i class="bi bi-speedometer2"></i> Trang chủ
+                    </a>
+                </li>
             </ul>
         </nav>
 
@@ -249,6 +265,25 @@
                             </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="detailsModalLabel">Chi tiết Hàng đợi <span id="detailsQueueIdDisplay"></span></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="detailsContent">
+                                <p class="text-center text-muted">Đang tải chi tiết...</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                         </div>
                     </div>
                 </div>
