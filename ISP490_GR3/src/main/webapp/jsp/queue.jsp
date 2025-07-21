@@ -7,6 +7,7 @@
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="java.util.List" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ page import="com.mycompany.isp490_gr3.model.Appointment" %>
 <!DOCTYPE html>
 <html>
     <head>
@@ -205,7 +206,7 @@
                     </div>
                     <div class="col-md-6">
                         <label for="slotDate" class="form-label">Ngày hẹn</label>
-                        <input type="date" class="form-control" id="slotDate" name="slotDate" value="${param.slotDate}" />
+                        <input type="date" class="form-control" id="slotDate" name="slotDate" value="${empty slotDate ? LocalDate.now().toString() : slotDate}">
                     </div>
                 </div>
                 <div class="d-flex justify-content-end gap-2">
@@ -220,7 +221,7 @@
 
             <div class="appointment-list-section animate-fade-in">
                 <div class="appointment-list-header">
-                    <h5 id="queueHeader">Danh sách hàng đợi hôm nay (<span id="totalRecordsDisplay">0</span> kết quả)</h5>
+                    <h5 id="queueHeader">Danh sách hàng đợi hôm nay  ${empty slotDate ? LocalDate.now().toString() : slotDate}  (<span id="totalRecordsDisplay">0</span> kết quả)</h5>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered table-appointments">
@@ -374,7 +375,7 @@
                                                 if (!addedSeparator && !q.isBeforeCurrentTime) {
                                                     const separatorRow = document.createElement('tr');
                                                     separatorRow.classList.add('separator');
-                                                    separatorRow.innerHTML = `<td colspan="12" style="border-top: 3px solid #007bff; text-align: center; font-weight: bold;">Thời gian hiện tại: ${data.currentTime}</td>`;
+                                                    separatorRow.innerHTML = `<td colspan="12" style="border-bottom: 3px solid #007bff; text-align: center; font-weight: bold;">Thời gian hiện tại: ${data.currentTime}</td>`;
                                                     tableBody.appendChild(separatorRow);
                                                     addedSeparator = true;
                                                 }

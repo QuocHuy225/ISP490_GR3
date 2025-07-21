@@ -198,7 +198,7 @@
                     </div>
                     <div class="col-md-4">
                         <label for="slotDate" class="form-label">Ngày hẹn</label>
-                        <input type="date" class="form-control" id="slotDate" name="slotDate" value="${empty slotDate ? LocalDate.now().toString() : slotDate}"/>
+                        <input type="date" class="form-control" id="slotDate" name="slotDate" value="${empty slotDate ? LocalDate.now().toString() : slotDate}">
                     </div>
                     <div class="col-md-4">
                         <label for="patientCode" class="form-label">Mã bệnh nhân</label>

@@ -937,16 +937,7 @@ public class DAOAppointment {
     }
 // Trong file DAOAppointment.java
 
-    /**
-     * Lấy thông tin chi tiết của lịch hẹn cuối cùng mà bệnh nhân vừa đặt trong
-     * một slot cụ thể. Phương thức này được gọi ngay sau khi tạo/cập nhật lịch
-     * hẹn thành công để trả về cho client.
-     *
-     * @param patientId ID của bệnh nhân
-     * @param slotId ID của khung giờ
-     * @return Đối tượng Appointment với đầy đủ thông tin, hoặc null nếu không
-     * tìm thấy.
-     */
+ 
     public Appointment getLatestAppointmentByPatientAndSlot(int patientId, int slotId) {
         String sql = "SELECT "
                 + "    a.id AS appointment_id, a.status, a.services_id, "
@@ -960,6 +951,7 @@ public class DAOAppointment {
                 + "WHERE a.patient_id = ? AND a.slot_id = ? "
                 + "ORDER BY a.id DESC "
                 + "LIMIT 1";
+
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -999,4 +991,15 @@ public class DAOAppointment {
         }
         return null;
     }
+    
+    
+    public boolean isCheckedIn(int appointmentId) throws SQLException {
+        String sql = "SELECT checkin_time FROM appointment WHERE id = ? AND checkin_time IS NOT NULL";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, appointmentId);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next(); // Trả về true nếu có checkin_time
+        }
+    }
+   
 }

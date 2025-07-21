@@ -6,7 +6,6 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -162,17 +161,40 @@ public class DAOSlot {
         }
         String slotSql = "INSERT INTO slot (doctor_id, slot_date, start_time, end_time, max_patients, is_deleted, created_at) "
                 + "VALUES (?, ?, ?, ?, ?, FALSE, CURRENT_TIMESTAMP)";
-
+        int slotId;
         try (PreparedStatement ps = conn.prepareStatement(slotSql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, doctorId);
             ps.setDate(2, Date.valueOf(date));
             ps.setTime(3, Time.valueOf(start));
             ps.setTime(4, Time.valueOf(end));
             ps.setInt(5, maxPatients);
-
             int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
+            if (rowsAffected == 0) {
+                return false;
+            }
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (!generatedKeys.next()) {
+                    return false;
+                }
+                slotId = generatedKeys.getInt(1);
+            }
         }
+
+        String appointmentSql = "INSERT INTO appointment (slot_id, appointment_code, status, payment_status, is_deleted, created_at) "
+                + "VALUES (?, ?, 'pending', 'unpaid', FALSE, CURRENT_TIMESTAMP)";
+        try (PreparedStatement ps = conn.prepareStatement(appointmentSql)) {
+            for (int i = 0; i < maxPatients; i++) {
+                String appointmentCode;
+                do {
+                    appointmentCode = "A" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                } while (!isAppointmentCodeUnique(conn, appointmentCode));
+                ps.setInt(1, slotId);
+                ps.setString(2, appointmentCode);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+        return true;
     }
 
     // Kiểm tra trùng giờ
@@ -352,49 +374,6 @@ public class DAOSlot {
         }
     }
 
-    /**
-     * Lấy danh sách các ngày mà một bác sĩ có slot trống (còn chỗ) trong tương
-     * lai.
-     *
-     * @param doctorId ID của bác sĩ.
-     * @return Danh sách các LocalDate có slot trống.
-     */
-    /**
-     * Lấy danh sách các ngày mà một bác sĩ có slot trống (còn chỗ) trong tương
-     * lai.
-     *
-     * @param doctorId ID của bác sĩ.
-     * @return Danh sách các LocalDate có slot trống.
-     */
-    // Dán đoạn code này vào file DAOSlot.java, thay thế cho phương thức cũ.
-    public List<LocalDate> getAvailableDatesForDoctor(int doctorId) {
-        List<LocalDate> availableDates = new ArrayList<>();
-        // Câu lệnh SQL đã được viết lại cho đơn giản và chính xác hơn.
-        String sql = "SELECT DISTINCT s.slot_date "
-                + "FROM slot s "
-                + "WHERE s.doctor_id = ? "
-                + "AND s.is_deleted = FALSE "
-                + "AND s.slot_date >= CURDATE() "
-                + "AND (SELECT COUNT(a.id) FROM appointment a WHERE a.slot_id = s.id) < s.max_patients "
-                + "ORDER BY s.slot_date ASC";
-
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, doctorId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    availableDates.add(rs.getDate("slot_date").toLocalDate());
-                }
-            }
-        } catch (SQLException e) {
-            // Ghi log lỗi để dễ dàng debug nếu có sự cố trong tương lai
-            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách ngày trống cho bác sĩ ID " + doctorId, e);
-            // Ném lại một RuntimeException để báo hiệu lỗi nghiêm trọng ở tầng DAO
-            throw new RuntimeException("Lỗi truy vấn cơ sở dữ liệu khi lấy ngày làm việc.", e);
-        }
-        return availableDates;
-    }
-
     // Lấy slot có sẵn (chưa có lịch hẹn của bệnh nhân)
     public List<Slot> getAvailableSlots(int doctorId, String slotDate) {
         List<Slot> availableSlots = new ArrayList<>();
@@ -406,18 +385,14 @@ public class DAOSlot {
             return availableSlots;
         }
 
-        // Truy vấn lấy các slot CÒN TRỐNG (booked_count < max_patients)
         String sql = "SELECT s.id, s.slot_date, s.start_time, s.end_time, s.max_patients "
                 + "FROM slot s "
-                + "LEFT JOIN (SELECT slot_id, COUNT(id) AS booked_count FROM appointment WHERE status IN ('pending', 'confirmed', 'done') GROUP BY slot_id) AS a ON s.id = a.slot_id "
                 + "WHERE s.doctor_id = ? AND s.slot_date = ? AND s.is_deleted = FALSE "
-                + "AND s.is_available = TRUE " // Đảm bảo chỉ lấy slot đang hoạt động
-                + "AND COALESCE(booked_count, 0) < s.max_patients " // Đảm bảo slot còn chỗ trống
-                + "ORDER BY s.start_time ASC"; // Sắp xếp theo thời gian để dễ hiển thị
+                + "AND NOT EXISTS (SELECT 1 FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NOT NULL AND a.status != 'cancelled')";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, doctorId);
-            ps.setDate(2, java.sql.Date.valueOf(date)); // Sử dụng java.sql.Date.valueOf
+            ps.setDate(2, Date.valueOf(date));
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Slot slot = new Slot();
@@ -426,13 +401,11 @@ public class DAOSlot {
                     slot.setStartTime(rs.getTime("start_time").toLocalTime());
                     slot.setEndTime(rs.getTime("end_time").toLocalTime());
                     slot.setMaxPatients(rs.getInt("max_patients"));
-                    // Các thuộc tính khác của Slot nếu cần
                     availableSlots.add(slot);
                 }
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot có sẵn cho bác sĩ " + doctorId + " vào ngày " + slotDate + ": " + e.getMessage(), e);
-            e.printStackTrace();
         }
         return availableSlots;
     }
@@ -574,17 +547,18 @@ public class DAOSlot {
             LOGGER.log(Level.SEVERE, "Lỗi khi in slot và appointment: " + e.getMessage(), e);
         }
     }
-
+    
     // Lấy danh sách bệnh nhân theo slotId
     public List<PatientDTO> getPatientsBySlotId(int slotId) {
         List<PatientDTO> patients = new ArrayList<>();
-        String sql = "SELECT p.patient_code, p.cccd, p.full_name, p.phone "
-                + "FROM appointment a "
-                + "JOIN patients p ON a.patient_id = p.id "
-                + "WHERE a.slot_id = ? AND a.is_deleted = FALSE AND p.is_deleted = FALSE "
-                + "AND a.status != 'cancelled'";
+        String sql = "SELECT p.patient_code, p.cccd, p.full_name, p.phone " +
+                     "FROM appointment a " +
+                     "JOIN patients p ON a.patient_id = p.id " +
+                     "WHERE a.slot_id = ? AND a.is_deleted = FALSE AND p.is_deleted = FALSE " +
+                     "AND a.status != 'cancelled'";
 
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, slotId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -601,9 +575,12 @@ public class DAOSlot {
         return patients;
     }
 
+    public List<LocalDate> getAvailableDatesForDoctor(int doctorId) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
     // DTO nội bộ để ánh xạ thông tin bệnh nhân
     public static class PatientDTO {
-
         private String patientCode;
         private String cccd;
         private String fullName;
