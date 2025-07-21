@@ -91,4 +91,31 @@ public class DAODoctor {
         }
         return list;
     }
+       public Doctor getDoctorByUserId(String userId) { // Changed parameter type to String
+        Doctor doctor = null;
+        // SQL query now filters by 'account_id' which is a String
+        String sql = "SELECT id, account_id, full_name, gender, phone, created_at, updated_at " +
+                     "FROM doctors WHERE account_id = ? AND is_deleted = FALSE";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, userId); // Use setString for String parameter
+            LOGGER.info("Executing SQL: " + sql + " with accountId (userId): " + userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    doctor = new Doctor();
+                    doctor.setId(rs.getInt("id"));
+                    doctor.setAccountId(rs.getString("account_id"));
+                    doctor.setFullName(rs.getString("full_name"));
+                    doctor.setGender(rs.getInt("gender"));
+                    doctor.setPhone(rs.getString("phone"));
+                    doctor.setCreatedAt(rs.getTimestamp("created_at"));
+                    doctor.setUpdatedAt(rs.getTimestamp("updated_at"));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy thông tin bác sĩ theo User Account ID " + userId + ": " + e.getMessage(), e);
+        }
+        return doctor;
+    }
 }

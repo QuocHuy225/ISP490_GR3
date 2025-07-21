@@ -713,6 +713,19 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--foreground);
     font-weight: 500;
 }
+.form-select {
+    /* Đảm bảo padding-right đủ lớn để mũi tên không bị dính vào chữ */
+    padding-right: 2.5rem; /* Giá trị này có thể cần điều chỉnh thêm tùy theo kích thước font và mũi tên thực tế */
+    /* Mũi tên dropdown thường được kiểm soát bằng background-image và background-position */
+    background-position: right 0.75rem center; /* Điều chỉnh vị trí mũi tên sang trái hơn nếu cần */
+    background-size: 16px 12px; /* Kích thước mũi tên, có thể điều chỉnh */
+}
+
+/* Hoặc nếu muốn cụ thể hơn cho select box trong calendar header */
+.calendar-header .form-select {
+    padding-right: 2.5rem; /* Điều chỉnh khoảng cách bên phải */
+    background-position: right 0.75rem center; /* Di chuyển mũi tên sang trái hơn */
+}
 
 /* ====================================
     NOTIFICATION MODAL STYLES

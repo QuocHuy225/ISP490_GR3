@@ -81,46 +81,14 @@
             </div>
             <ul class="list-unstyled components">
                 <% if (currentRole == User.Role.ADMIN) { %>
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-speedometer2"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/authorization">
-                        <i class="bi bi-people-fill"></i> Quản lý người dùng
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/services">
-                        <i class="bi bi-file-medical"></i> Quản lý dịch vụ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medicines">
-                        <i class="bi bi-hospital"></i> Quản lý kho thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/prescriptions">
-                        <i class="bi bi-capsule"></i> Quản lý thuốc
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-exam-templates">
-                        <i class="bi bi-file-text"></i> Mẫu khám bệnh
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/admin/medical-supplies">
-                        <i class="bi bi-gear-fill"></i> Quản lý vật tư
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="${pageContext.request.contextPath}/report">
-                        <i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê
-                    </a>
-                </li>
+                <li><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/authorization"><i class="bi bi-people-fill"></i> Quản lý người dùng</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/medical-exam-templates"><i class="bi bi-file-text"></i> Mẫu khám bệnh</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/services"><i class="bi bi-file-medical"></i> Quản lý dịch vụ</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/medicines"><i class="bi bi-hospital"></i> Quản lý kho thuốc</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/prescriptions"><i class="bi bi-capsule"></i> Quản lý thuốc</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/medical-supplies"><i class="bi bi-gear-fill"></i> Quản lý vật tư</a></li>
+                <li class="active"><a href="${pageContext.request.contextPath}/admin/report"><i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê</a></li>
                 <% } %>
             </ul>
         </nav>
