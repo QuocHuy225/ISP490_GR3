@@ -247,7 +247,7 @@ public class AuthorizationController extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
-        String phone = request.getParameter("phone");
+        String otherContact = request.getParameter("other_contact");
         String roleStr = request.getParameter("role");
         
         // Validate required fields
@@ -303,7 +303,7 @@ public class AuthorizationController extends HttpServlet {
             newUser.setFullName(fullName.trim());
             newUser.setEmail(email.trim());
             newUser.setPassword(password);
-            newUser.setPhone(phone != null ? phone.trim() : null);
+            newUser.setOtherContact(otherContact != null ? otherContact.trim() : null);
             newUser.setRole(role);
             
             // Create user with pre-verified email

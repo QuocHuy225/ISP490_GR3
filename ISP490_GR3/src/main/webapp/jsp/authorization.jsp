@@ -926,10 +926,10 @@
                                 
                                 <!-- Phone -->
                                 <div class="col-md-6">
-                                    <label for="phone" class="form-label fw-semibold">
-                                        <i class="bi bi-telephone me-1"></i>Số điện thoại
+                                    <label for="other_contact" class="form-label fw-semibold">
+                                        <i class="bi bi-telephone me-1"></i>Thông tin liên hệ khác
                                     </label>
-                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                    <input type="tel" class="form-control" id="other_contact" name="other_contact" 
                                            placeholder="0123456789">
                                 </div>
                                 

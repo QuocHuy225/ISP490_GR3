@@ -39,7 +39,7 @@ public class User {
     private String fullName;
     private String email;
     private String password;
-    private String phone;
+    private String otherContact;
     private Role role;
     private Timestamp createdAt;
     private String updatedBy;
@@ -72,12 +72,12 @@ public class User {
     
     // Full constructor
     public User(String id, String fullName, String email, String password, 
-                String phone, Role role) {
+                String otherContact, Role role) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.password = password;
-        this.phone = phone;
+        this.otherContact = otherContact;
         this.role = role != null ? role : Role.PATIENT;
         this.isDeleted = false;
     }
@@ -115,12 +115,12 @@ public class User {
         this.password = password;
     }
     
-    public String getPhone() {
-        return phone;
+    public String getOtherContact() {
+        return otherContact;
     }
-    
-    public void setPhone(String phone) {
-        this.phone = phone;
+
+    public void setOtherContact(String otherContact) {
+        this.otherContact = otherContact;
     }
     
     public Role getRole() {
@@ -209,7 +209,7 @@ public class User {
                 "id='" + id + '\'' +
                 ", fullName='" + fullName + '\'' +
                 ", email='" + email + '\'' +
-                ", phone='" + phone + '\'' +
+                ", otherContact='" + otherContact + '\'' +
                 ", role=" + role +
                 ", isEmailVerified=" + isEmailVerified +
                 '}';
