@@ -309,6 +309,33 @@ public class DAOQueue {
         return 0;
     }
 
+    
+    // hàm của huy
+    public boolean updateQueueStatus(int queueId, String newStatus) {
+        // SQL query để cập nhật cột 'status' và 'updated_at'
+        String sql = "UPDATE queue SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        
+        try (Connection conn = DBContext.getConnection(); // Lấy kết nối từ DBContext của bạn
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, newStatus); // Đặt giá trị trạng thái mới vào tham số thứ nhất
+            ps.setInt(2, queueId);      // Đặt ID hàng đợi vào tham số thứ hai
+
+            int rowsAffected = ps.executeUpdate(); // Thực thi lệnh cập nhật
+            
+            if (rowsAffected > 0) {
+                LOGGER.info("Queue ID " + queueId + " status updated to " + newStatus);
+                return true; // Cập nhật thành công
+            } else {
+                LOGGER.warning("No rows affected when updating status for Queue ID " + queueId + ". Status might be the same or ID not found.");
+                return false; // Không có hàng nào bị ảnh hưởng (có thể ID không tồn tại hoặc trạng thái đã giống)
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi cập nhật trạng thái hàng đợi cho ID " + queueId + " thành " + newStatus + ": " + e.getMessage(), e);
+            return false; // Xảy ra lỗi SQL
+        }
+    }
+    // kết thúc hàm của huy
     public static void main(String[] args) {
         DAOQueue dao = new DAOQueue();
 

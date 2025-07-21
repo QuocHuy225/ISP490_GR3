@@ -91,7 +91,7 @@
             </div>
             <ul class="list-unstyled components">
                 <% if (currentRole == User.Role.ADMIN) { %>
-                <li><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
+                <li class="active"><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin/authorization"><i class="bi bi-people-fill"></i> Quản lý người dùng</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin/medical-exam-templates"><i class="bi bi-file-text"></i> Mẫu khám bệnh</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin/services"><i class="bi bi-file-medical"></i> Quản lý dịch vụ</a></li>
@@ -100,8 +100,8 @@
                 <li><a href="${pageContext.request.contextPath}/admin/medical-supplies"><i class="bi bi-gear-fill"></i> Quản lý vật tư</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin/report"><i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê</a></li>
                 <% } else if (currentRole == User.Role.DOCTOR) { %>
-                <li><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
-                <li><a href="${pageContext.request.contextPath}/queue"><i class="bi bi-calendar-check"></i> Lịch khám bệnh</a></li>
+                <li class="active"><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
+                <li><a href="${pageContext.request.contextPath}/doctor/queue"><i class="bi bi-calendar-check"></i> Lịch khám bệnh</a></li>
                 <li><a href="${pageContext.request.contextPath}/doctor/patients"><i class="bi bi-people"></i> Hồ sơ bệnh nhân</a></li>
                 <li><a href="${pageContext.request.contextPath}/doctor/report"><i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê</a></li>
                 <% } else if (currentRole == User.Role.RECEPTIONIST) { %>
