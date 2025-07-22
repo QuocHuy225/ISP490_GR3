@@ -17,7 +17,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/queue.css">
-         
+
     </head>
     <body>
         <%
@@ -72,7 +72,7 @@
                     </a>
                 </li>
                 <% } else if (userRole == User.Role.RECEPTIONIST) { %>
-                 <li>
+                <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-house-door-fill"></i> Trang chủ
                     </a>
@@ -240,7 +240,7 @@
                                 <th>Giờ check-in</th>
                                 <th>Bác sĩ</th>
                                 <th>Trạng thái</th>
-                                
+
                             </tr>
                         </thead>
                         <tbody id="queueTableBody">
