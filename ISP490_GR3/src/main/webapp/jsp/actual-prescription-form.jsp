@@ -321,10 +321,10 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label"><i class="bi bi-tag me-2"></i>Tên đơn thuốc <span class="text-danger" >*</span></label>
+                                                <label class="form-label"><i class="bi bi-tag me-2"></i>Tên đơn thuốc</label>
                                                 <input type="text" class="form-control" name="formName" 
                                                        value="<%= form != null ? form.getFormName() : "" %>" 
-                                                       placeholder="Nhập tên đơn thuốc" required>
+                                                       placeholder="Nhập tên đơn thuốc">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -389,44 +389,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            <% index++; } } else { %>
-                                                <!-- Empty row for new prescription -->
-                                                <div class="medicine-row" data-index="0">
-                                                    <button type="button" class="remove-medicine-btn" onclick="removeMedicineRow(this)">
-                                                        <i class="bi bi-x"></i>
-                                                    </button>
-                                                    <div class="row g-2 align-items-end">
-                                                        <div class="col-md-2">
-                                                            <label class="form-label">Tên thuốc <span class="text-danger">*</span></label>
-                                                            <input type="text" class="form-control" name="medicineName" placeholder="Nhập tên thuốc" required>
-                                                        </div>
-                                                        <div class="col-md-1">
-                                                            <label class="form-label">ĐVT</label>
-                                                            <input type="text" class="form-control" name="unitOfMeasure" placeholder="Viên, ml...">
-                                                        </div>
-                                                        <div class="col-md-2">
-                                                            <label class="form-label">Đường dùng</label>
-                                                            <input type="text" class="form-control" name="administrationRoute" placeholder="Uống, tiêm...">
-                                                        </div>
-                                                        <div class="col-md-1">
-                                                            <label class="form-label">Số ngày</label>
-                                                            <input type="number" class="form-control" name="daysOfTreatment" placeholder="0" min="0">
-                                                        </div>
-                                                        <div class="col-md-1">
-                                                            <label class="form-label">Lần/ngày</label>
-                                                            <input type="number" class="form-control" name="unitsPerDay" placeholder="0" min="0">
-                                                        </div>
-                                                        <div class="col-md-1">
-                                                            <label class="form-label">Tổng SL</label>
-                                                            <input type="number" class="form-control" name="totalQuantity" placeholder="0" min="0">
-                                                        </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label">HDSD</label>
-                                                            <input type="text" class="form-control" name="usageInstructions" placeholder="Hướng dẫn sử dụng">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            <% } %>
+                                            <% index++; } } %>
                                         </div>
                                     </div>
 
@@ -592,11 +555,7 @@
 
             function removeMedicineRow(button) {
                 const container = document.getElementById('medicineContainer');
-                if (container.children.length > 1) {
-                    button.closest('.medicine-row').remove();
-                } else {
-                    alert('Phải có ít nhất một thuốc trong đơn!');
-                }
+                button.closest('.medicine-row').remove();
             }
 
             function addTemplateToForm(card) {
@@ -650,19 +609,18 @@
                     $('.is-invalid').removeClass('is-invalid');
 
                     // Kiểm tra tên đơn thuốc
-                    const formNameInput = $(this).find('input[name="formName"]');
-                    const formName = formNameInput.val().trim();
-                    if (!formName) {
-                        if (formNameInput.next('.invalid-feedback').length === 0) {
-                            formNameInput.addClass('is-invalid').after('<div class="invalid-feedback">Vui lòng nhập tên đơn thuốc!</div>');
-                        }
-                        formNameInput.focus();
-                        valid = false;
-                    }
+                    // const formNameInput = $(this).find('input[name="formName"]');
+                    // const formName = formNameInput.val().trim();
+                    // if (!formName) {
+                    //     if (formNameInput.next('.invalid-feedback').length === 0) {
+                    //         formNameInput.addClass('is-invalid').after('<div class="invalid-feedback">Vui lòng nhập tên đơn thuốc!</div>');
+                    //     }
+                    //     formNameInput.focus();
+                    //     valid = false;
+                    // }
 
                     // Kiểm tra ít nhất một tên thuốc
                     let hasMedicine = false;
-                    let firstEmptyMedicine = null;
                     let medicineNames = [];
                     let duplicateFound = false;
                     $(this).find('input[name="medicineName"]').each(function() {
@@ -680,15 +638,10 @@
                             } else {
                                 medicineNames.push(val.toLowerCase());
                             }
-                        } else if (!firstEmptyMedicine) {
-                            firstEmptyMedicine = $(this);
                         }
                     });
-                    if (!hasMedicine && firstEmptyMedicine) {
-                        if (firstEmptyMedicine.next('.invalid-feedback').length === 0) {
-                            firstEmptyMedicine.addClass('is-invalid').after('<div class="invalid-feedback">Vui lòng nhập tên thuốc!</div>');
-                            firstEmptyMedicine.focus();
-                        }
+                    if (!hasMedicine) {
+                        alert('Phải có ít nhất một thuốc trong đơn!');
                         valid = false;
                     }
                     if (!valid) {

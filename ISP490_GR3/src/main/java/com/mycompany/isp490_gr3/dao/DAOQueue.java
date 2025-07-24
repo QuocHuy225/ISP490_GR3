@@ -40,7 +40,8 @@ public class DAOQueue {
                 + "q.status, "
                 + "q.priority, "
                 + "a.checkin_time, "
-                + "d.full_name AS doctor_name "
+                + "d.full_name AS doctor_name, "
+                + "p.id AS patient_id "
                 + "FROM queue q "
                 + "JOIN appointment a ON q.appointment_id = a.id "
                 + "JOIN slot s ON q.slot_id = s.id "
@@ -103,6 +104,7 @@ public class DAOQueue {
                     dto.setCheckinTime(rs.getTimestamp("checkin_time") != null
                             ? rs.getTimestamp("checkin_time").toLocalDateTime().toString() : "");
                     dto.setDoctorName(rs.getString("doctor_name"));
+                    dto.setPatientId(rs.getInt("patient_id"));
                     list.add(dto);
                 }
             }
@@ -179,7 +181,8 @@ public class DAOQueue {
                 + "q.status, "
                 + "q.priority, "
                 + "a.checkin_time, "
-                + "d.full_name AS doctor_name "
+                + "d.full_name AS doctor_name, "
+                + "p.id AS patient_id "
                 + "FROM queue q "
                 + "JOIN appointment a ON q.appointment_id = a.id "
                 + "JOIN slot s ON q.slot_id = s.id "
@@ -244,6 +247,7 @@ public class DAOQueue {
                     dto.setCheckinTime(rs.getTimestamp("checkin_time") != null
                             ? rs.getTimestamp("checkin_time").toLocalDateTime().toString() : "");
                     dto.setDoctorName(rs.getString("doctor_name"));
+                    dto.setPatientId(rs.getInt("patient_id"));
                     result.add(dto);
                 }
             }
@@ -349,7 +353,8 @@ public class DAOQueue {
                    + "q.priority, "
                    + "a.checkin_time AS checkinTime, "
                    + "d.full_name AS doctorName, "
-                   + "q.status " // KHÔNG CÓ 'q.description' ở đây
+                   + "q.status, " // KHÔNG CÓ 'q.description' ở đây
+                   + "p.id AS patient_id "
                    + "FROM queue q "
                    + "JOIN appointment a ON q.appointment_id = a.id "
                    + "JOIN slot s ON q.slot_id = s.id "
@@ -376,6 +381,7 @@ public class DAOQueue {
                     queue.setCheckinTime(rs.getTimestamp("checkinTime") != null ? rs.getTimestamp("checkinTime").toLocalDateTime().toString() : null);
                     queue.setDoctorName(rs.getString("doctorName"));
                     queue.setStatus(rs.getString("status"));
+                    queue.setPatientId(rs.getInt("patient_id"));
                     // KHÔNG CÓ dòng queue.setDescription(rs.getString("description")); ở đây
                 }
             }

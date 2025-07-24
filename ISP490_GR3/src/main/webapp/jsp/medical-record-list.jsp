@@ -280,7 +280,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/doctor/queue">
                         <i class="bi bi-calendar-check"></i> Lịch khám bệnh
                     </a>
                 </li>
@@ -474,11 +474,13 @@
                                                             </td>
                                                             <td><%= record.getCreatedAt() != null ? sdf.format(record.getCreatedAt()) : "" %></td>
                                                             <td>
+                                                                <div style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
                                                                 <% if (record.getFinalDiagnosis() != null && !record.getFinalDiagnosis().isEmpty()) { %>
-                                                                <%= record.getFinalDiagnosis() %>
+                                                                    <%= record.getFinalDiagnosis() %>
                                                                 <% } else { %>
-                                                                <em class="text-muted">Chưa có chẩn đoán</em>
+                                                                    <em class="text-muted">Chưa có chẩn đoán</em>
                                                                 <% } %>
+                                                                </div>
                                                             </td>
                                                             <td>
                                                                 <% if ("ongoing".equals(record.getStatus())) { %>

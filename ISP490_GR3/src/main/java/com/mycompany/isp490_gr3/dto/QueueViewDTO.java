@@ -16,11 +16,12 @@ public class QueueViewDTO {
     private String checkinTime;
     private String doctorName;
     private boolean isBeforeCurrentTime;
+    private int patientId;
 
     public QueueViewDTO() {
     }
 
-    public QueueViewDTO(int queueId, int appointmentId, String appointmentCode, String slotDate, String slotTimeRange, String patientCode, String patientName, String patientPhone, String serviceName, String status, int priority, String checkinTime, String doctorName) {
+    public QueueViewDTO(int queueId, int appointmentId, String appointmentCode, String slotDate, String slotTimeRange, String patientCode, String patientName, String patientPhone, String serviceName, String status, int priority, String checkinTime, String doctorName, int patientId) {
         this.queueId = queueId;
         this.appointmentId = appointmentId;
         this.appointmentCode = appointmentCode;
@@ -34,6 +35,7 @@ public class QueueViewDTO {
         this.priority = priority;
         this.checkinTime = checkinTime;
         this.doctorName = doctorName;
+        this.patientId = patientId;
     }
 
     public int getQueueId() {
@@ -140,7 +142,13 @@ public class QueueViewDTO {
         this.doctorName = doctorName;
     }
 
-   
+    public int getPatientId() {
+        return patientId;
+    }
+    public void setPatientId(int patientId) {
+        this.patientId = patientId;
+    }
+
     public boolean isBeforeCurrentTime() {
         return isBeforeCurrentTime;
     }
