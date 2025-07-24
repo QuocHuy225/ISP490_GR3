@@ -318,4 +318,19 @@ public class DAODoctorSchedule {
         }
         return schedules;
     }
+      public boolean isAnyDoctorScheduledOnDate(Date workDate) {
+        String sql = "SELECT COUNT(*) FROM doctor_schedule WHERE work_date = ? AND is_active = TRUE";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDate(1, workDate);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking if any doctor is scheduled on date: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
