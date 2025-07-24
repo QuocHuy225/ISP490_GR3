@@ -687,6 +687,9 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <!-- Select2 CSS & JS -->
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script>
                                                                const servicesData = [
             <% if (services != null) {
@@ -843,12 +846,10 @@
                                                                        stockClass + '>' + item.name + stockInfo + '</option>';
                                                                }
 
-                                                               // Thêm input search phía trên select
                                                                row.innerHTML =
                                                                        '<div class="row align-items-center">' +
                                                                        '<div class="col-md-3">' +
-                                                                       '<input type="text" class="form-control mb-1" placeholder="Tìm kiếm..." oninput="filterDropdownOptions(this, \'' + rowId + '_select\')">' +
-                                                                       '<select class="form-select" id="' + rowId + '_select" name="' + receiptId + '_' + itemType + 'Id" ' +
+                                                                       '<select class="form-select item-select" id="' + rowId + '_select" name="' + receiptId + '_' + itemType + 'Id" ' +
                                                                        'onchange="updateItemPrice(\'' + rowId + '\', \'' + itemType + '\')" required>' +
                                                                        '<option value="">-- Chọn --</option>' +
                                                                        itemOptions +
@@ -871,13 +872,15 @@
                                                                        '<input type="text" class="form-control" id="' + rowId + '_total" readonly>' +
                                                                        '</div>' +
                                                                        '<div class="col-md-1 text-center">' +
-                                                                       '<button type="button" class="btn btn-delete-item" onclick="removeRow(\'' + rowId + '\')">' +
-                                                                       '<i class="bi bi-trash"></i>' +
-                                                                       '</button>' +
+                                                                       '<button type="button" class="btn btn-danger btn-delete-item" onclick="removeItemRow(\'' + rowId + '\')"><i class="bi bi-trash"></i></button>' +
                                                                        '</div>' +
                                                                        '</div>';
                                                                container.appendChild(row);
                                                                updateItemPrice(rowId, itemType);
+                                                               $(row).find('.item-select').select2({
+                                                                       width: '100%',
+                                                                       dropdownParent: $(row).find('.col-md-3')
+                                                               });
                                                                }
 
                                                                function updateItemPrice(rowId, itemType, selectElement = null) {
