@@ -863,44 +863,67 @@ public class DAOAppointment {
     }
 
     public void updateNoShowAppointments() {
-        String updateAppointmentSql = "UPDATE appointment "
+        // SQL update no_show cho appointment CÓ BỆNH NHÂN (patient_id IS NOT NULL), đang pending, và slot quá giờ
+        String updateNoShowSql = "UPDATE appointment "
                 + "SET status = 'no_show' "
-                + "WHERE status = 'pending' "
-                + "AND checkin_time IS NULL "
-                + "AND slot_id IN ( "
+                + "WHERE status IN ('pending') " // Chỉ update nếu đang pending
+                + "AND checkin_time IS NULL " // Chưa check-in
+                + "AND patient_id IS NOT NULL " // Phải có bệnh nhân (booked)
+                + "AND slot_id IN ( " // Lấy slot_id từ slot quá giờ
+                + "    SELECT id FROM slot "
+                + "    WHERE (slot_date < CURDATE()) " // Slot ngày quá khứ
+                + "       OR (slot_date = CURDATE() AND end_time < CURTIME()) " // Hoặc hôm nay nhưng end_time quá giờ hiện tại
+                + ")";
+
+        // SQL update expired cho appointment TRỐNG (patient_id IS NULL), đang pending, và slot quá giờ
+        String updateExpiredSql = "UPDATE appointment "
+                + "SET status = 'expired' "
+                + "WHERE status = 'pending' " // Chỉ update nếu đang pending
+                + "AND patient_id IS NULL " // Phải trống (no patient)
+                + "AND slot_id IN ( " // Lấy slot_id từ slot quá giờ, giống trên
                 + "    SELECT id FROM slot "
                 + "    WHERE (slot_date < CURDATE()) "
                 + "       OR (slot_date = CURDATE() AND end_time < CURTIME()) "
                 + ")";
 
+        // SQL update queue liên quan đến skipped nếu appointment no_show
         String updateQueueSql = "UPDATE queue "
                 + "SET status = 'skipped' "
                 + "WHERE status = 'waiting' "
                 + "AND is_deleted = FALSE "
                 + "AND appointment_id IN ( "
-                + "    SELECT id FROM appointment WHERE status = 'no_show' "
+                + "    SELECT id FROM appointment WHERE status = 'no_show' " // Chỉ queue của appointment no_show
                 + ")";
 
+        // Mở connection từ DBContext
         try (Connection conn = DBContext.getConnection()) {
-            conn.setAutoCommit(false);
-            try (
-                    PreparedStatement ps1 = conn.prepareStatement(updateAppointmentSql); PreparedStatement ps2 = conn.prepareStatement(updateQueueSql)) {
-                int updatedAppointments = ps1.executeUpdate();
-                int updatedQueues = ps2.executeUpdate();
-                conn.commit();
+            conn.setAutoCommit(false);  // Bắt đầu transaction để đảm bảo atomic (nếu error, rollback hết)
 
-                System.out.println("Đã cập nhật " + updatedAppointments + " appointment → no_show");
-                System.out.println("Đã cập nhật " + updatedQueues + " queue → skipped");
-
-            } catch (SQLException e) {
-                conn.rollback();
-                System.err.println("Lỗi khi cập nhật trạng thái no_show/skipped:");
-                e.printStackTrace();
+            // Thực thi update no_show
+            try (PreparedStatement psNoShow = conn.prepareStatement(updateNoShowSql)) {
+                int updatedNoShow = psNoShow.executeUpdate();  // Thực thi SQL, trả về số row update
+                LOGGER.info("Đã cập nhật " + updatedNoShow + " appointment có bệnh nhân → no_show");  // Log kết quả
             }
+
+            // Thực thi update expired
+            try (PreparedStatement psExpired = conn.prepareStatement(updateExpiredSql)) {
+                int updatedExpired = psExpired.executeUpdate();  // Thực thi SQL
+                LOGGER.info("Đã cập nhật " + updatedExpired + " appointment trống → expired");  // Log
+            }
+
+            // Thực thi update queue
+            try (PreparedStatement psQueue = conn.prepareStatement(updateQueueSql)) {
+                int updatedQueues = psQueue.executeUpdate();  // Thực thi SQL
+                LOGGER.info("Đã cập nhật " + updatedQueues + " queue → skipped");  // Log
+            }
+
+            conn.commit();  // Commit transaction nếu tất cả ok
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Lỗi khi cập nhật trạng thái no_show/expired/skipped: " + e.getMessage(), e);  // Log error
         }
     }
+    
 // Thêm phương thức này vào file DAOAppointment.java
 
     // Trong file DAOAppointment.java
@@ -1114,5 +1137,10 @@ public class DAOAppointment {
                 }
             }
         }
+    }
+    public static void main(String[] args) {
+        DAOAppointment dao = new DAOAppointment();  // Giả định DAOAppointment có constructor default
+        dao.updateNoShowAppointments();  // Gọi method để test
+        System.out.println("Test hoàn thành mà không có lỗi.");
     }
 }

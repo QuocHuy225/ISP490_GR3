@@ -31,7 +31,7 @@ public class Appointment {
 
     // ENUM định nghĩa trạng thái
     public enum AppointmentStatus {
-        PENDING, CONFIRMED, DONE, CANCELLED, NO_SHOW, ABANDONED;
+        PENDING, CONFIRMED, DONE, CANCELLED, NO_SHOW, ABANDONED, EXPIRED;
 
         // Helper to convert string from DB to enum
         public static AppointmentStatus fromString(String text) {
