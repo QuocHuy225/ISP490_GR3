@@ -2,7 +2,6 @@ package com.mycompany.isp490_gr3.dao;
 
 import com.mycompany.isp490_gr3.dto.AppointmentViewDTO;
 import com.mycompany.isp490_gr3.model.Appointment;
-import com.mycompany.isp490_gr3.model.Appointment.AppointmentStatus;
 import com.mycompany.isp490_gr3.model.Appointment.PaymentStatus;
 import com.mycompany.isp490_gr3.model.Slot;
 import java.sql.Connection;
@@ -10,14 +9,11 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDate;
 import java.sql.Statement;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -281,18 +277,18 @@ public class DAOAppointment {
     // Trong file DAOAppointment.java
     public List<Appointment> getAppointmentsByPatientId(int patientId) {
         List<Appointment> appointments = new ArrayList<>();
-        // Câu lệnh SQL này JOIN các bảng để lấy tất cả thông tin cần thiết
+        // Bỏ điều kiện `a.is_deleted = FALSE` để lấy cả lịch hẹn đã hủy (đã được đánh dấu is_deleted=TRUE)
         String sql = "SELECT "
-                + "    a.id, a.status, a.services_id, a.appointment_code, a.payment_status, " // ĐÃ SỬA: Thêm a.appointment_code, a.payment_status
+                + "    a.id, a.status, a.services_id, a.appointment_code, a.payment_status, "
                 + "    s.slot_date, s.start_time, s.end_time, "
                 + "    d.full_name AS doctor_name, "
                 + "    ms.service_name "
                 + "FROM appointment a "
                 + "JOIN slot s ON a.slot_id = s.id "
                 + "JOIN doctors d ON s.doctor_id = d.id "
-                + "LEFT JOIN medical_services ms ON a.services_id = ms.services_id " // Dùng LEFT JOIN phòng trường hợp service bị xóa
-                + "WHERE a.patient_id = ? AND a.is_deleted = FALSE " // Thêm điều kiện is_deleted = FALSE
-                + "ORDER BY s.slot_date DESC, s.start_time DESC"; // Sắp xếp
+                + "LEFT JOIN medical_services ms ON a.services_id = ms.services_id "
+                + "WHERE a.patient_id = ? " // Giữ nguyên patient_id
+                + "ORDER BY s.slot_date DESC, s.start_time DESC";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -305,14 +301,13 @@ public class DAOAppointment {
                 appointment.setId(rs.getInt("id"));
                 appointment.setPatientId(patientId);
                 appointment.setServicesId(rs.getInt("services_id"));
-                appointment.setAppointmentCode(rs.getString("appointment_code")); // ĐÃ SỬA: Lấy appointment_code
+                appointment.setAppointmentCode(rs.getString("appointment_code"));
                 appointment.setStatus(Appointment.AppointmentStatus.fromString(rs.getString("status")));
-                appointment.setPaymentStatus(PaymentStatus.fromString(rs.getString("payment_status"))); // ĐÃ SỬA: Lấy payment_status
+                appointment.setPaymentStatus(PaymentStatus.fromString(rs.getString("payment_status")));
                 appointment.setDoctorFullName(rs.getString("doctor_name"));
                 appointment.setServiceName(rs.getString("service_name"));
                 appointment.setAppointmentDate(rs.getDate("slot_date").toString());
 
-                // Tạo khoảng thời gian "HH:mm - HH:mm"
                 LocalTime startTime = rs.getTime("start_time").toLocalTime();
                 LocalTime endTime = rs.getTime("end_time").toLocalTime();
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -369,58 +364,102 @@ public class DAOAppointment {
         return null;
     }
 
-    public boolean cancelAppointment(int appointmentId) {
+    public boolean cancelAppointment(int appointmentId) throws SQLException {
         Connection conn = null;
         try {
             conn = DBContext.getConnection();
             conn.setAutoCommit(false); // Bắt đầu transaction
 
-            // 1. Lấy thông tin lịch hẹn để biết slot_id
-            String getAppointmentSql = "SELECT slot_id FROM appointment WHERE id = ?";
+            // 1. Lấy thông tin chi tiết lịch hẹn gốc để xác nhận và lấy slot_id
+            String getAppointmentDetailsSql = "SELECT patient_id, slot_id, status FROM appointment WHERE id = ? AND is_deleted = FALSE";
+            Integer originalPatientId = null;
             int slotId = -1;
-            try (PreparedStatement psGet = conn.prepareStatement(getAppointmentSql)) {
+            String currentStatus = null;
+
+            try (PreparedStatement psGet = conn.prepareStatement(getAppointmentDetailsSql)) {
                 psGet.setInt(1, appointmentId);
                 ResultSet rs = psGet.executeQuery();
                 if (rs.next()) {
+                    originalPatientId = rs.getInt("patient_id");
+                    if (rs.wasNull()) { // Xử lý trường hợp patient_id là NULL
+                        originalPatientId = null;
+                    }
                     slotId = rs.getInt("slot_id");
+                    currentStatus = rs.getString("status");
                 } else {
                     conn.rollback();
-                    return false; // Không tìm thấy lịch hẹn
+                    LOGGER.warning("Không tìm thấy lịch hẹn hoặc đã bị xóa để hủy: " + appointmentId);
+                    throw new SQLException("Lịch hẹn không tìm thấy hoặc không thể hủy.");
                 }
             }
 
-            // 2. Cập nhật trạng thái lịch hẹn của bệnh nhân thành 'CANCELLED'
-            String updateSql = "UPDATE appointment SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-            try (PreparedStatement psUpdate = conn.prepareStatement(updateSql)) {
+            // Đảm bảo đây là lịch hẹn hợp lệ để hủy (phải có bệnh nhân đặt, và đang pending/confirmed)
+            if (originalPatientId == null || !("pending".equals(currentStatus) || "confirmed".equals(currentStatus))) {
+                conn.rollback();
+                LOGGER.warning("Lịch hẹn " + appointmentId + " không ở trạng thái hợp lệ để hủy (patient_id IS NULL hoặc status không phải pending/confirmed).");
+                throw new SQLException("Không thể hủy lịch hẹn này vì nó không phải là lịch hẹn của bạn hoặc đã ở trạng thái không thể hủy.");
+            }
+
+            // 2. Cập nhật bản ghi lịch hẹn gốc: Đặt status = 'cancelled' và is_deleted = TRUE
+            // Bản ghi này sẽ được giữ lại trong DB để hiển thị trong LỊCH SỬ của bệnh nhân đó.
+            // (Nó sẽ không còn xuất hiện trong các truy vấn 'active' vì is_deleted=TRUE)
+            String updateOriginalSql = "UPDATE appointment SET status = 'cancelled', is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            try (PreparedStatement psUpdate = conn.prepareStatement(updateOriginalSql)) {
                 psUpdate.setInt(1, appointmentId);
                 int affectedRows = psUpdate.executeUpdate();
                 if (affectedRows == 0) {
                     conn.rollback();
-                    return false; // Không hủy được
+                    LOGGER.severe("Không thể cập nhật lịch hẹn gốc thành 'cancelled': " + appointmentId);
+                    throw new SQLException("Không thể hủy lịch hẹn. Vui lòng thử lại.");
                 }
             }
 
-            // 3. Tạo một bản ghi lịch hẹn trống mới cho slot đó
-            // Điều này đảm bảo rằng một "chỗ trống" mới được tạo ra cho người khác đặt
-            String insertEmptySql = "INSERT INTO appointment (slot_id, patient_id, services_id, status, payment_status, created_at, updated_at, is_deleted) VALUES (?, NULL, NULL, 'pending', 'UNPAID', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE)";
-            try (PreparedStatement psInsert = conn.prepareStatement(insertEmptySql)) {
-                psInsert.setInt(1, slotId);
-                psInsert.executeUpdate();
+            // 3. Kiểm tra xem đã có một bản ghi slot trống (patient_id IS NULL, status='pending', is_deleted=FALSE)
+            // cho slot_id này chưa. Điều này ngăn chặn việc tạo ra các bản ghi trống dư thừa.
+            String checkEmptySlotSql = "SELECT COUNT(id) FROM appointment WHERE slot_id = ? AND patient_id IS NULL AND status = 'pending' AND is_deleted = FALSE";
+            boolean emptySlotExists = false;
+            try (PreparedStatement psCheckEmpty = conn.prepareStatement(checkEmptySlotSql)) {
+                psCheckEmpty.setInt(1, slotId);
+                ResultSet rsCheckEmpty = psCheckEmpty.executeQuery();
+                if (rsCheckEmpty.next() && rsCheckEmpty.getInt(1) > 0) {
+                    emptySlotExists = true;
+                }
+            }
+
+            // 4. Nếu chưa có bản ghi slot trống, chèn một bản ghi lịch hẹn mới cho cùng slot_id.
+            // Bản ghi này sẽ có patient_id=NULL và status='pending', làm cho slot có sẵn để người khác đặt.
+            if (!emptySlotExists) {
+                String appointmentCode = generateUniqueAppointmentCode(conn); // Tạo mã lịch hẹn duy nhất mới
+                String insertEmptySql = "INSERT INTO appointment (slot_id, patient_id, services_id, status, payment_status, appointment_code, created_at, updated_at, is_deleted) VALUES (?, NULL, NULL, 'pending', 'UNPAID', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE)";
+                try (PreparedStatement psInsertEmpty = conn.prepareStatement(insertEmptySql)) {
+                    psInsertEmpty.setInt(1, slotId);
+                    psInsertEmpty.setString(2, appointmentCode); // Gán mã mới
+                    psInsertEmpty.executeUpdate();
+                }
+            } else {
+                LOGGER.info("Slot " + slotId + " đã có sẵn một lịch hẹn trống. Không cần tạo mới.");
+            }
+
+            // 5. Xóa mềm (soft delete) bản ghi liên quan trong bảng 'queue' (nếu có)
+            String softDeleteQueueSql = "UPDATE queue SET is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP WHERE appointment_id = ? AND is_deleted = FALSE";
+            try (PreparedStatement psDeleteQueue = conn.prepareStatement(softDeleteQueueSql)) {
+                psDeleteQueue.setInt(1, appointmentId);
+                psDeleteQueue.executeUpdate(); // Không cần kiểm tra affectedRows vì có thể không có hàng đợi
             }
 
             conn.commit(); // Hoàn tất transaction
             return true;
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi khi hủy lịch hẹn và tạo lại chỗ trống: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Lỗi khi hủy lịch hẹn: " + e.getMessage(), e);
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback nếu có lỗi
+                    conn.rollback();
                 } catch (SQLException ex) {
                     LOGGER.log(Level.SEVERE, "Lỗi khi rollback transaction", ex);
                 }
             }
-            return false;
+            throw e; // Ném lại ngoại lệ để controller xử lý
         } finally {
             if (conn != null) {
                 try {
@@ -934,7 +973,7 @@ public class DAOAppointment {
             conn = DBContext.getConnection();
             conn.setAutoCommit(false);
 
-            // BƯỚC 1: Tìm xem có lịch hẹn TRỐNG CÓ SẴN (patient_id IS NULL, status='pending') cho slot này.
+            // BƯỚC 1: Tìm xem có lịch hẹn TRỐNG CÓ SẴN (patient_id IS NULL, status='pending', is_deleted=FALSE) cho slot này.
             // Sử dụng FOR UPDATE để khóa bản ghi tránh tranh chấp
             String findEmptyAppointmentSql = "SELECT id, appointment_code, status, payment_status FROM appointment WHERE slot_id = ? AND patient_id IS NULL AND status = 'pending' AND is_deleted = FALSE LIMIT 1 FOR UPDATE";
 
@@ -961,26 +1000,24 @@ public class DAOAppointment {
             }
 
             // BƯỚC 2: Cập nhật lịch hẹn trống với thông tin bệnh nhân
-            // Cập nhật patient_id, services_id, và status sang 'confirmed' hoặc 'pending' tùy logic khởi tạo
-            // Nếu bạn muốn trạng thái ban đầu là 'pending' (chờ xác nhận bởi lễ tân), hãy giữ 'pending'
-            // Nếu muốn tự động 'confirmed' khi bệnh nhân đặt, đổi thành 'confirmed'
-            String updateSql = "UPDATE appointment SET patient_id = ?, services_id = ?, status = 'pending', updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            String newStatus = "pending"; // Trạng thái khi bệnh nhân đặt lịch
+            String updateSql = "UPDATE appointment SET patient_id = ?, services_id = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
             try (PreparedStatement psUpdate = conn.prepareStatement(updateSql)) {
                 psUpdate.setInt(1, patientId);
                 psUpdate.setInt(2, serviceId);
-                psUpdate.setInt(3, emptyAppointmentId);
+                psUpdate.setString(3, newStatus);
+                psUpdate.setInt(4, emptyAppointmentId);
                 int affectedRows = psUpdate.executeUpdate();
 
                 if (affectedRows == 0) {
                     conn.rollback();
-                    LOGGER.warning("Không thể cập nhật lịch hẹn trống ID: " + emptyAppointmentId + ". Có thể do tranh chấp.");
+                    LOGGER.warning("Không thể cập nhật lịch hẹn ID: " + emptyAppointmentId + ". Có thể do tranh chấp.");
                     return null; // Không thể cập nhật (ví dụ: bị đặt bởi người khác trong tích tắc)
                 }
             }
 
             conn.commit();
             // Sau khi cập nhật thành công, lấy thông tin chi tiết để trả về.
-            // Gọi lại getLatestAppointmentByPatientAndSlot để lấy đầy đủ thông tin sau cập nhật
             return getLatestAppointmentByPatientAndSlot(patientId, slotId);
 
         } catch (SQLException e) {
@@ -1008,14 +1045,14 @@ public class DAOAppointment {
 
     public Appointment getLatestAppointmentByPatientAndSlot(int patientId, int slotId) {
         String sql = "SELECT "
-                + "    a.id AS appointment_id, a.status, a.services_id, a.appointment_code, a.payment_status, " // ĐÃ SỬA: Thêm appointment_code và payment_status
+                + "    a.id AS appointment_id, a.status, a.services_id, a.appointment_code, a.payment_status, "
                 + "    s.slot_date, s.start_time, s.end_time, "
                 + "    d.full_name AS doctor_name, "
                 + "    ms.service_name "
                 + "FROM appointment a "
                 + "JOIN slot s ON a.slot_id = s.id "
                 + "JOIN doctors d ON s.doctor_id = d.id "
-                + "JOIN medical_services ms ON a.services_id = ms.services_id " // Dùng JOIN vì services_id NOT NULL trong appointment
+                + "JOIN medical_services ms ON a.services_id = ms.services_id "
                 + "WHERE a.patient_id = ? AND a.slot_id = ? AND a.is_deleted = FALSE "
                 + "ORDER BY a.id DESC "
                 + "LIMIT 1";
@@ -1033,22 +1070,19 @@ public class DAOAppointment {
                     appointment.setPatientId(patientId);
                     appointment.setSlotId(slotId);
                     appointment.setServicesId(rs.getInt("services_id"));
-                    appointment.setAppointmentCode(rs.getString("appointment_code")); // ĐÃ SỬA: Lấy appointment_code
+                    appointment.setAppointmentCode(rs.getString("appointment_code"));
                     appointment.setStatus(Appointment.AppointmentStatus.fromString(rs.getString("status")));
-                    appointment.setPaymentStatus(PaymentStatus.fromString(rs.getString("payment_status"))); // ĐÃ SỬA: Lấy payment_status
+                    appointment.setPaymentStatus(PaymentStatus.fromString(rs.getString("payment_status")));
                     appointment.setDoctorFullName(rs.getString("doctor_name"));
                     appointment.setServiceName(rs.getString("service_name"));
                     appointment.setAppointmentDate(rs.getDate("slot_date").toString());
 
-                    // Tạo khoảng thời gian "HH:mm - HH:mm"
                     LocalTime startTime = rs.getTime("start_time").toLocalTime();
                     LocalTime endTime = rs.getTime("end_time").toLocalTime();
 
-                    // Định dạng lại cho đẹp (ví dụ: 10:00 - 10:30)
                     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
                     String timeRange = startTime.format(timeFormatter) + " - " + endTime.format(timeFormatter);
 
-                    // Gán khoảng thời gian vào trường appointmentTime
                     appointment.setAppointmentTime(timeRange);
 
                     return appointment;
@@ -1070,46 +1104,76 @@ public class DAOAppointment {
         }
     }
 
+    
     public Appointment updateEmptyAppointment(int patientId, int serviceId, int slotId) throws SQLException {
         Connection conn = null;
         try {
             conn = DBContext.getConnection();
             conn.setAutoCommit(false);
 
-            // ... (Phần kiểm tra giới hạn lịch hẹn trong ngày giữ nguyên)
-            // BƯỚC 3: Tìm kiếm một lịch hẹn trống hoàn toàn (patient_id IS NULL)
-            String findEmptyAppointmentSql = "SELECT id FROM appointment "
-                    + "WHERE slot_id = ? AND patient_id IS NULL AND status = 'pending' AND is_deleted = FALSE LIMIT 1 FOR UPDATE";
+            // CẬP NHẬT: Lấy thông tin slot để biết ngày của slot đó
+            Slot slot = null;
+            String getSlotSql = "SELECT slot_date FROM slot WHERE id = ? AND is_deleted = FALSE";
+            try (PreparedStatement psGetSlot = conn.prepareStatement(getSlotSql)) {
+                psGetSlot.setInt(1, slotId);
+                ResultSet rsSlot = psGetSlot.executeQuery();
+                if (rsSlot.next()) {
+                    slot = new Slot();
+                    slot.setSlotDate(rsSlot.getDate("slot_date").toLocalDate());
+                } else {
+                    conn.rollback();
+                    throw new SQLException("Slot không tồn tại hoặc đã bị xóa.");
+                }
+            }
 
-            Integer targetAppointmentId = null;
+            // THAY ĐỔI CHÍNH: Kiểm tra giới hạn số lượng lịch hẹn TRONG CÙNG NGÀY
+            // Sử dụng MAX_APPOINTMENTS_PER_DAY và countAppointmentsInDateByPatient
+            int currentAppointmentsForThisDay = countAppointmentsInDateByPatient(patientId, slot.getSlotDate());
+            if (currentAppointmentsForThisDay >= MAX_APPOINTMENTS_PER_DAY) {
+                conn.rollback();
+                LOGGER.warning("Bệnh nhân " + patientId + " đã đạt giới hạn " + MAX_APPOINTMENTS_PER_DAY + " lịch hẹn trong ngày " + slot.getSlotDate() + ". Không thể đặt thêm.");
+                throw new SQLException("Bạn chỉ có thể đặt tối đa " + MAX_APPOINTMENTS_PER_DAY + " lịch hẹn trong một ngày. Vui lòng chọn ngày khác hoặc hủy lịch hẹn cũ.");
+            }
+
+            // ... (Các phần còn lại của phương thức updateEmptyAppointment vẫn giữ nguyên)
+            // Cụ thể, phần tìm findEmptyAppointmentSql và cập nhật patient_id, services_id, status
+            // cho bản ghi emptyAppointmentId vẫn sẽ được thực hiện như hiện tại.
+
+            String findEmptyAppointmentSql = "SELECT id, appointment_code, status, payment_status FROM appointment WHERE slot_id = ? AND patient_id IS NULL AND status = 'pending' AND is_deleted = FALSE LIMIT 1 FOR UPDATE";
+            Integer emptyAppointmentId = null;
+            String foundAppointmentCode = null;
+            String foundStatus = null;
+            String foundPaymentStatus = null;
 
             try (PreparedStatement psFind = conn.prepareStatement(findEmptyAppointmentSql)) {
                 psFind.setInt(1, slotId);
                 ResultSet rs = psFind.executeQuery();
                 if (rs.next()) {
-                    targetAppointmentId = rs.getInt("id");
+                    emptyAppointmentId = rs.getInt("id");
+                    foundAppointmentCode = rs.getString("appointment_code");
+                    foundStatus = rs.getString("status");
+                    foundPaymentStatus = rs.getString("payment_status");
                 }
             }
 
-            if (targetAppointmentId == null) {
+            if (emptyAppointmentId == null) {
                 conn.rollback();
-                LOGGER.warning("Không tìm thấy lịch hẹn trống cho slotId: " + slotId + ". Slot có thể đã đầy.");
+                LOGGER.warning("Không tìm thấy lịch hẹn trống cho slotId: " + slotId + ". Slot có thể đã đầy hoặc không có lịch hẹn trống.");
                 throw new SQLException("Không còn lịch hẹn trống phù hợp cho bạn trong khung giờ này.");
             }
 
-            // BƯỚC 4: Cập nhật lịch hẹn trống với thông tin bệnh nhân
             String newStatus = "pending";
             String updateSql = "UPDATE appointment SET patient_id = ?, services_id = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
             try (PreparedStatement psUpdate = conn.prepareStatement(updateSql)) {
                 psUpdate.setInt(1, patientId);
                 psUpdate.setInt(2, serviceId);
                 psUpdate.setString(3, newStatus);
-                psUpdate.setInt(4, targetAppointmentId);
+                psUpdate.setInt(4, emptyAppointmentId);
                 int affectedRows = psUpdate.executeUpdate();
 
                 if (affectedRows == 0) {
                     conn.rollback();
-                    LOGGER.warning("Không thể cập nhật lịch hẹn ID: " + targetAppointmentId + ". Có thể do tranh chấp.");
+                    LOGGER.warning("Không thể cập nhật lịch hẹn ID: " + emptyAppointmentId + ". Có thể do tranh chấp.");
                     throw new SQLException("Không thể hoàn tất việc đặt lịch. Vui lòng thử lại.");
                 }
             }
@@ -1118,7 +1182,7 @@ public class DAOAppointment {
             return getLatestAppointmentByPatientAndSlot(patientId, slotId);
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi khi đặt lịch hẹn vào slotId: " + slotId + " và patientId: " + patientId, e);
+            LOGGER.log(Level.SEVERE, "Lỗi khi đặt lịch hẹn vào slotId: " + slotId + " và patientId: " + patientId + ": " + e.getMessage(), e);
             if (conn != null) {
                 try {
                     conn.rollback();
@@ -1138,9 +1202,52 @@ public class DAOAppointment {
             }
         }
     }
-    public static void main(String[] args) {
-        DAOAppointment dao = new DAOAppointment();  // Giả định DAOAppointment có constructor default
-        dao.updateNoShowAppointments();  // Gọi method để test
-        System.out.println("Test hoàn thành mà không có lỗi.");
+
+    public int countUpcomingAppointmentsForPatient(int patientId) throws SQLException {
+        int count = 0;
+        String sql = "SELECT COUNT(a.id) "
+                + "FROM appointment a "
+                + "JOIN slot s ON a.slot_id = s.id "
+                + "WHERE a.patient_id = ? "
+                + "AND a.is_deleted = FALSE " // Lịch hẹn không bị xóa mềm
+                + "AND a.status IN ('pending', 'confirmed') " // Chỉ đếm các trạng thái chờ hoặc đã xác nhận
+                + "AND ( "
+                + "    s.slot_date > CURDATE() " // Ngày slot là trong tương lai
+                + "    OR (s.slot_date = CURDATE() AND s.start_time >= CURTIME()) " // Hoặc là hôm nay VÀ giờ bắt đầu slot CHƯA TỚI HOẶC ĐANG TỚI
+                + ")";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, patientId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi đếm số lịch hẹn sắp tới của bệnh nhân: " + e.getMessage(), e);
+            throw e;
+        }
+        return count;
+    }
+
+    private String generateUniqueAppointmentCode(Connection conn) throws SQLException {
+        String code;
+        do {
+            code = "APP" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        } while (!isAppointmentCodeUnique(conn, code));
+        return code;
+    }
+
+    // Phương thức kiểm tra tính duy nhất của mã lịch hẹn
+    private boolean isAppointmentCodeUnique(Connection conn, String code) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM appointment WHERE appointment_code = ?";
+        // Sử dụng một kết nối riêng hoặc đảm bảo rằng kết nối được truyền vào là giao dịch an toàn.
+        // Trong trường hợp này, vì generateUniqueAppointmentCode được gọi bên trong một giao dịch
+        // lớn hơn, bạn nên đảm bảo conn này là một phần của giao dịch đó hoặc dùng conn truyền vào.
+        // Đã sửa lại để sử dụng conn truyền vào, nếu không, tạo một conn mới độc lập (ít hiệu quả hơn).
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, code);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() && rs.getInt(1) == 0;
+        }
     }
 }

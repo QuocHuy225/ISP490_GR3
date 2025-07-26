@@ -210,19 +210,6 @@ public class ActualPrescriptionController extends HttpServlet {
             String formName = request.getParameter("formName");
             String notes = request.getParameter("notes");
 
-            if (formName == null || formName.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập tên đơn thuốc.");
-                MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
-                Patient patient = daoPatient.getPatientById(record.getPatientId());
-                List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
-                request.setAttribute("medicalRecord", record);
-                request.setAttribute("patient", patient);
-                request.setAttribute("templateMeds", templateMeds);
-                request.setAttribute("action", "add");
-                request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
-                return;
-            }
-
             ActualPrescriptionForm form = new ActualPrescriptionForm();
             form.setMedicalRecordId(medicalRecordId);
             form.setPatientId(patientId);
@@ -279,21 +266,6 @@ public class ActualPrescriptionController extends HttpServlet {
             String formId = request.getParameter("formId");
             String formName = request.getParameter("formName");
             String notes = request.getParameter("notes");
-
-            if (formName == null || formName.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập tên đơn thuốc.");
-                // Lấy lại dữ liệu cần thiết để render lại form
-                String medicalRecordId = request.getParameter("medicalRecordId");
-                MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
-                Patient patient = daoPatient.getPatientById(record.getPatientId());
-                List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
-                request.setAttribute("medicalRecord", record);
-                request.setAttribute("patient", patient);
-                request.setAttribute("templateMeds", templateMeds);
-                request.setAttribute("action", "update");
-                request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
-                return;
-            }
 
             ActualPrescriptionForm form = daoRx.getFormById(formId);
             if (form == null) {

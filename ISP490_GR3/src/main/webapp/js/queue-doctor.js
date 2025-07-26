@@ -145,6 +145,9 @@ function loadQueue(page = 1, baseURL) {
                             </button>
                         `;
                     }
+                    if (isDoctor && q.patientId) {
+                        actionButtons += `\n<a href="${baseURL}/doctor/medical-records?action=list&patientId=${q.patientId}" class="btn btn-sm btn-success me-1" title="Xem hồ sơ bệnh án"><i class="bi bi-file-medical"></i> Hồ sơ</a>`;
+                    }
 
 
                     row.innerHTML = `
