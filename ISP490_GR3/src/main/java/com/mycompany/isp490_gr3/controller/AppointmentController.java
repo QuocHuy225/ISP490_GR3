@@ -19,25 +19,22 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@WebServlet(name = "AppointmentController", urlPatterns = {"/appointments", "/appointments/add", "/patient/search", "/appointments/remove-patient"})
+@WebServlet(name = "AppointmentController", urlPatterns = {"/appointments", "/appointments/add", "/patient/search", "/appointments/remove-patient", "/appointments/delete"})
 public class AppointmentController extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(AppointmentController.class.getName());
-    private final Gson gson = new Gson(); // Khởi tạo Gson
+    private final Gson gson = new Gson();
 
-    private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+    private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/jsp/landing.jsp");
@@ -52,23 +49,24 @@ public class AppointmentController extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
 
         if (!checkReceptionistAccess(request, response)) {
             return;
         }
 
-        DAOAppointment daoAppointment = new DAOAppointment();
-        daoAppointment.updateNoShowAppointments();
         String path = request.getServletPath();
         if ("/patient/search".equals(path)) {
             handlePatientSearch(request, response);
             return;
         }
 
+        // Lấy tham số từ request
         String appointmentCode = request.getParameter("appointmentCode");
         String patientCode = request.getParameter("patientCode");
         String doctorIdStr = request.getParameter("doctorId");
@@ -103,9 +101,11 @@ public class AppointmentController extends HttpServlet {
             }
         }
 
-        if (slotDate == null) {
-            slotDate = LocalDate.now();
-        }
+        boolean hasSearchParams = (appointmentCode != null && !appointmentCode.trim().isEmpty())
+                || (patientCode != null && !patientCode.trim().isEmpty())
+                || doctorId != null || servicesId != null
+                || (status != null && !status.trim().isEmpty())
+                || slotDate != null;
 
         int currentPage = 1;
         int recordsPerPage = 10;
@@ -114,21 +114,33 @@ public class AppointmentController extends HttpServlet {
             try {
                 currentPage = Integer.parseInt(pageParam);
             } catch (NumberFormatException e) {
+                LOGGER.warning("Invalid page format: " + pageParam);
                 currentPage = 1;
+            }
+        }
+        String recordsPerPageParam = request.getParameter("recordsPerPage");
+        if (recordsPerPageParam != null) {
+            try {
+                recordsPerPage = Integer.parseInt(recordsPerPageParam);
+            } catch (NumberFormatException e) {
+                LOGGER.warning("Invalid recordsPerPage format: " + recordsPerPageParam);
             }
         }
         int offset = (currentPage - 1) * recordsPerPage;
 
+        DAOAppointment daoAppointment = new DAOAppointment();
+        daoAppointment.updateNoShowAppointments();
         List<AppointmentViewDTO> currentPageAppointments;
         int totalRecords;
-        if (appointmentCode == null && patientCode == null && doctorId == null && servicesId == null && status == null
-                && (slotDateStr == null || slotDateStr.trim().isEmpty())) {
-            LOGGER.info("No search parameters provided, fetching today's appointments");
-            currentPageAppointments = daoAppointment.getTodayAppointmentViewDTOs(offset, recordsPerPage);
-            totalRecords = daoAppointment.countTodayAppointmentViewDTOs();
+        if (!hasSearchParams) {
+            LOGGER.info("No search parameters provided, fetching all appointments");
+            currentPageAppointments = daoAppointment.searchAppointmentViewDTOs(null, null, null, null, null, null, offset, recordsPerPage);
+            totalRecords = daoAppointment.countSearchAppointmentViewDTOs(null, null, null, null, null, null);
         } else {
-            LOGGER.info("Fetching appointments with parameters: appointmentCode=" + appointmentCode + ", patientCode=" + patientCode
-                    + ", doctorId=" + doctorId + ", servicesId=" + servicesId + ", status=" + status + ", slotDate=" + slotDate);
+            LOGGER.info("Fetching appointments with parameters: appointmentCode=" + appointmentCode
+                    + ", patientCode=" + patientCode + ", doctorId=" + doctorId
+                    + ", servicesId=" + servicesId + ", status=" + status
+                    + ", slotDate=" + slotDate);
             currentPageAppointments = daoAppointment.searchAppointmentViewDTOs(
                     appointmentCode, patientCode, doctorId, servicesId, status, slotDate, offset, recordsPerPage);
             totalRecords = daoAppointment.countSearchAppointmentViewDTOs(
@@ -144,7 +156,7 @@ public class AppointmentController extends HttpServlet {
 
         request.setAttribute("doctorList", doctors);
         request.setAttribute("serviceList", services);
-        request.setAttribute("statusList", List.of("pending", "confirmed", "done", "cancelled"));
+        request.setAttribute("statusList", List.of("pending", "confirmed", "done", "cancelled", "no_show", "expired"));
         request.setAttribute("currentPageAppointments", currentPageAppointments);
         request.setAttribute("appointmentCode", appointmentCode != null ? appointmentCode : "");
         request.setAttribute("patientCode", patientCode != null ? patientCode : "");
@@ -152,8 +164,7 @@ public class AppointmentController extends HttpServlet {
         request.setAttribute("servicesId", servicesIdStr != null ? servicesIdStr : "");
         request.setAttribute("status", status != null ? status : "");
         request.setAttribute("slotDate", slotDate != null ? slotDate.toString() : "");
-        request.setAttribute("searchPerformed", appointmentCode != null || patientCode != null || doctorId != null
-                || servicesId != null || status != null || slotDate != null);
+        request.setAttribute("searchPerformed", hasSearchParams);
         request.setAttribute("hasResults", !currentPageAppointments.isEmpty());
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
@@ -162,149 +173,54 @@ public class AppointmentController extends HttpServlet {
         request.setAttribute("startIndex", offset);
         request.setAttribute("endIndex", Math.min(offset + recordsPerPage, totalRecords));
 
+        LOGGER.info("doGet: totalRecords=" + totalRecords + ", totalPages=" + totalPages + ", currentPage=" + currentPage + ", offset=" + offset);
+
         request.getRequestDispatcher("/jsp/manageappointment.jsp").forward(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
 
         if (!checkReceptionistAccess(request, response)) {
             return;
         }
 
         String path = request.getServletPath();
+        String action = request.getParameter("action");
+
+        LOGGER.info("doPost: path=" + path + ", action=" + action);
 
         switch (path) {
-            case "/appointments":
-                handleSearch(request, response);
-                break;
-            case "/appointments/add": {
+            case "/appointments/add":
                 try {
-                    handleAddAppointment(request, response);
-                } catch (SQLException ex) {
-                    Logger.getLogger(AppointmentController.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                handleAddAppointment(request, response);
+            } catch (SQLException ex) {
+                LOGGER.log(Level.SEVERE, "Error adding appointment: " + ex.getMessage(), ex);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi khi thêm lịch hẹn.");
             }
             break;
             case "/patient/search":
                 handlePatientSearch(request, response);
                 break;
-            case "/appointments/remove-patient": {
+            case "/appointments/remove-patient":
                 try {
-                    handleRemovePatient(request, response);
-                } catch (SQLException ex) {
-                    Logger.getLogger(AppointmentController.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                handleRemovePatient(request, response);
+            } catch (SQLException ex) {
+                LOGGER.log(Level.SEVERE, "Error removing patient: " + ex.getMessage(), ex);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi khi bỏ gán bệnh nhân.");
             }
             break;
-
             default:
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write(gson.toJson(new ResponseJson(false, "Đường dẫn không hợp lệ")));
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Đường dẫn không hợp lệ.");
         }
-
     }
 
-    private void handleSearch(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String appointmentCode = request.getParameter("appointmentCode");
-        String patientCode = request.getParameter("patientCode");
-        String doctorIdStr = request.getParameter("doctorId");
-        String servicesIdStr = request.getParameter("servicesId");
-        String status = request.getParameter("status");
-        String slotDateStr = request.getParameter("slotDate");
-
-        LOGGER.info("Searching with parameters: appointmentCode=" + appointmentCode + ", patientCode=" + patientCode
-                + ", doctorId=" + doctorIdStr + ", servicesId=" + servicesIdStr + ", status=" + status + ", slotDate=" + slotDateStr);
-
-        Integer doctorId = null;
-        if (doctorIdStr != null && !doctorIdStr.trim().isEmpty()) {
-            try {
-                doctorId = Integer.parseInt(doctorIdStr.trim());
-            } catch (NumberFormatException e) {
-                LOGGER.warning("Invalid doctorId format: " + doctorIdStr);
-            }
-        }
-
-        Integer servicesId = null;
-        if (servicesIdStr != null && !servicesIdStr.trim().isEmpty()) {
-            try {
-                servicesId = Integer.parseInt(servicesIdStr.trim());
-            } catch (NumberFormatException e) {
-                LOGGER.warning("Invalid servicesId format: " + servicesIdStr);
-            }
-        }
-
-        LocalDate slotDate = null;
-        if (slotDateStr != null && !slotDateStr.trim().isEmpty()) {
-            try {
-                slotDate = LocalDate.parse(slotDateStr);
-            } catch (DateTimeParseException e) {
-                LOGGER.warning("Invalid slotDate format: " + slotDateStr);
-            }
-        }
-
-        // Handle pagination
-        int currentPage = 1;
-        int recordsPerPage = 10;
-        String pageParam = request.getParameter("page");
-        if (pageParam != null) {
-            try {
-                currentPage = Integer.parseInt(pageParam);
-            } catch (NumberFormatException e) {
-                currentPage = 1;
-            }
-        }
-        int offset = (currentPage - 1) * recordsPerPage;
-
-        DAOAppointment daoAppointment = new DAOAppointment();
-        List<AppointmentViewDTO> currentPageAppointments;
-        int totalRecords;
-
-        // If no filters are provided, show today's appointments
-        if (appointmentCode == null && patientCode == null && doctorId == null && servicesId == null && status == null && slotDate == null) {
-            currentPageAppointments = daoAppointment.getTodayAppointmentViewDTOs(offset, recordsPerPage);
-            totalRecords = daoAppointment.countTodayAppointmentViewDTOs();
-        } else {
-            currentPageAppointments = daoAppointment.searchAppointmentViewDTOs(appointmentCode, patientCode, doctorId, servicesId, status, slotDate, offset, recordsPerPage);
-            totalRecords = daoAppointment.countSearchAppointmentViewDTOs(appointmentCode, patientCode, doctorId, servicesId, status, slotDate);
-        }
-
-        int totalPages = totalRecords > 0 ? (int) Math.ceil((double) totalRecords / recordsPerPage) : 1;
-
-        DAODoctor daoDoctor = new DAODoctor();
-        List<Doctor> doctors = daoDoctor.findAllDoctors();
-        DAOService daoService = new DAOService();
-        List<MedicalService> services = daoService.getAllServices();
-
-        request.setAttribute("doctorList", doctors);
-        request.setAttribute("serviceList", services);
-        request.setAttribute("statusList", List.of("pending", "confirmed", "done", "cancelled"));
-        request.setAttribute("currentPageAppointments", currentPageAppointments);
-        request.setAttribute("appointmentCode", appointmentCode != null ? appointmentCode : "");
-        request.setAttribute("patientCode", patientCode != null ? patientCode : "");
-        request.setAttribute("doctorId", doctorIdStr != null ? doctorIdStr : "");
-        request.setAttribute("servicesId", servicesIdStr != null ? servicesIdStr : "");
-        request.setAttribute("status", status != null ? status : "");
-        request.setAttribute("slotDate", slotDate != null ? slotDate.toString() : "");
-        request.setAttribute("searchPerformed", true);
-        request.setAttribute("hasResults", !currentPageAppointments.isEmpty());
-        request.setAttribute("currentPage", currentPage);
-        request.setAttribute("totalPages", totalPages);
-        request.setAttribute("recordsPerPage", recordsPerPage);
-        request.setAttribute("totalRecords", totalRecords);
-        request.setAttribute("startIndex", offset);
-        request.setAttribute("endIndex", Math.min(offset + recordsPerPage, totalRecords));
-
-        request.getRequestDispatcher("/jsp/manageappointment.jsp").forward(request, response);
-    }
-
-    private void handlePatientSearch(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
+    private void handlePatientSearch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("application/json");
         try (PrintWriter out = response.getWriter()) {
             String code = request.getParameter("code");
@@ -316,7 +232,7 @@ public class AppointmentController extends HttpServlet {
             List<Patient> patients = daoPatient.searchPatients(code, name, phone, cccd);
             out.print(gson.toJson(patients));
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error searching patients: {0}", e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error searching patients: " + e.getMessage(), e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi khi tìm kiếm bệnh nhân.");
         }
     }
@@ -325,85 +241,82 @@ public class AppointmentController extends HttpServlet {
         response.setContentType("application/json");
         try (PrintWriter out = response.getWriter()) {
             String action = request.getParameter("action");
-            System.out.println("Received action: " + action);
-
-            // Lấy các tham số appointmentId, patientId, serviceId
             String appointmentIdStr = request.getParameter("appointmentId");
             String patientIdStr = request.getParameter("patientId");
             String serviceIdStr = request.getParameter("servicesId");
+            boolean ignoreWarning = "true".equals(request.getParameter("ignoreWarning"));  // Thêm param để ignore warning
 
-            // Kiểm tra nếu thiếu tham số
             if (appointmentIdStr == null || patientIdStr == null || serviceIdStr == null) {
-                out.write(gson.toJson(new ResponseJson(false, "Thiếu appointmentId hoặc patientId hoặc serviceId")));
+                out.print(gson.toJson(new ResponseJson(false, "Thiếu appointmentId hoặc patientId hoặc serviceId")));
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
 
             int appointmentId, patientId, servicesId;
-
             try {
                 appointmentId = Integer.parseInt(appointmentIdStr);
                 patientId = Integer.parseInt(patientIdStr);
                 servicesId = Integer.parseInt(serviceIdStr);
             } catch (NumberFormatException e) {
-                out.write(gson.toJson(new ResponseJson(false, "appointmentId, patientId, hoặc serviceId không hợp lệ")));
+                out.print(gson.toJson(new ResponseJson(false, "appointmentId, patientId, hoặc serviceId không hợp lệ")));
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
 
             DAOAppointment dao = new DAOAppointment();
 
-            //1.Kiểm tra lịch hẹn có tồn tại không
             if (!dao.exists(appointmentId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.write(gson.toJson(new ResponseJson(false, "Lịch hẹn không tồn tại")));
+                out.print(gson.toJson(new ResponseJson(false, "Lịch hẹn không tồn tại")));
                 return;
             }
 
-            //2.Lịch đã được gán chưa?
             if (dao.isAssigned(appointmentId)) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
-                out.write(gson.toJson(new ResponseJson(false, "Lịch đã được gán bệnh nhân")));
+                out.print(gson.toJson(new ResponseJson(false, "Lịch đã được gán bệnh nhân")));
                 return;
             }
 
             Slot slot = dao.getSlotByAppointmentId(appointmentId);
-
-            //3. Kiểm tra slot chưa bị khóa
             if (slot.isDeleted()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.write(gson.toJson(new ResponseJson(false, "Slot đã bị xóa, không thể gán bệnh nhân")));
+                out.print(gson.toJson(new ResponseJson(false, "Slot đã bị xóa, không thể gán bệnh nhân")));
                 return;
             }
 
-            //4. Kiểm tra slot chưa kết thúc
             if (slot.getSlotDate().isEqual(LocalDate.now()) && LocalTime.now().isAfter(slot.getEndTime())) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.write(gson.toJson(new ResponseJson(false, "Slot đã kết thúc, không thể gán bệnh nhân")));
+                out.print(gson.toJson(new ResponseJson(false, "Slot đã kết thúc, không thể gán bệnh nhân")));
                 return;
             }
 
-            //5.Kiểm tra bệnh nhân có cùng dịch vụ trong ngày không?
-            if (dao.hasServiceInSameDay(patientId, servicesId, slot.getSlotDate())) {
-                response.setStatus(HttpServletResponse.SC_CONFLICT);
-                out.write(gson.toJson(new ResponseJson(false, "Bệnh nhân đã có dịch vụ này trong ngày")));
+            // Kiểm tra cùng dịch vụ trong ngày
+            boolean hasSameService = dao.hasServiceInSameDay(patientId, servicesId, slot.getSlotDate());
+            if (hasSameService && !ignoreWarning) {
+                out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã có dịch vụ này trong ngày. Bạn có muốn tiếp tục gán không?", "warning")));
+                response.setStatus(HttpServletResponse.SC_OK);  // Trả 200 để UI handle warning
                 return;
             }
 
-            //6.Kiểm tra bệnh nhân chưa vượt quá số lượng lịch hẹn trong ngày
+            // Kiểm tra số lịch trong ngày
             int countTodayAppointments = dao.countAppointmentsInDateByPatient(patientId, slot.getSlotDate());
-            if (countTodayAppointments >= 2) {
-                response.setStatus(HttpServletResponse.SC_CONFLICT);
-                out.write(gson.toJson(new ResponseJson(false, "Bệnh nhân đã đặt tối đa 2 lịch trong ngày")));
+            if (countTodayAppointments >= 2 && !ignoreWarning) {
+                out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã đặt tối đa 2 lịch trong ngày. Bạn có muốn tiếp tục gán không?", "warning")));
+                response.setStatus(HttpServletResponse.SC_OK);
                 return;
             }
 
-            //7. Thực hiện gán
+            // Nếu ignoreWarning=true hoặc không vi phạm, gán bình thường
             boolean success = dao.assignPatient(appointmentId, patientId, servicesId);
             if (success) {
-                out.write(gson.toJson(new ResponseJson(true, "Gán bệnh nhân thành công")));
+                // Log override nếu ignoreWarning=true
+                if (ignoreWarning) {
+                    LOGGER.info("Override warning for appointmentId=" + appointmentId + ", patientId=" + patientId + " by receptionist");
+                    // Optional: Lưu log override vào DB nếu cần audit
+                }
+                out.print(gson.toJson(new ResponseJson(true, "Gán bệnh nhân thành công")));
             } else {
-                out.write(gson.toJson(new ResponseJson(false, "Không thể gán bệnh nhân")));
+                out.print(gson.toJson(new ResponseJson(false, "Không thể gán bệnh nhân")));
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
         }
@@ -412,12 +325,9 @@ public class AppointmentController extends HttpServlet {
     private void handleRemovePatient(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
         response.setContentType("application/json");
         try (PrintWriter out = response.getWriter()) {
-
             String action = request.getParameter("action");
             String appointmentIdStr = request.getParameter("appointmentId");
 
-            System.out.println("Received parameters: " + appointmentIdStr);
-            // Kiểm tra tham số
             if (!"removePatient".equals(action) || appointmentIdStr == null || appointmentIdStr.trim().isEmpty()) {
                 out.print(gson.toJson(new ResponseJson(false, "Thiếu hoặc tham số không hợp lệ")));
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -425,7 +335,6 @@ public class AppointmentController extends HttpServlet {
             }
 
             int appointmentId;
-
             try {
                 appointmentId = Integer.parseInt(appointmentIdStr);
             } catch (NumberFormatException e) {
@@ -437,22 +346,19 @@ public class AppointmentController extends HttpServlet {
             DAOAppointment dao = new DAOAppointment();
             Slot slot = dao.getSlotByAppointmentId(appointmentId);
 
-            //Ktra slot chưa quá thời gian bỏ gán
             if (slot.getSlotDate().isEqual(LocalDate.now()) && LocalTime.now().isAfter(slot.getEndTime())) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.write(gson.toJson(new ResponseJson(false, "Slot đã quá thời gian")));
+                out.print(gson.toJson(new ResponseJson(false, "Slot đã quá thời gian")));
                 return;
             }
 
-            // Kiểm tra xem lịch hẹn đã được check-in chưa
-            boolean isCheckedIn = dao.isCheckedIn(appointmentId); // Giả định phương thức này tồn tại
+            boolean isCheckedIn = dao.isCheckedIn(appointmentId);
             if (isCheckedIn) {
                 out.print(gson.toJson(new ResponseJson(false, "Không thể bỏ gán vì lịch hẹn đã được check-in")));
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
 
-            // 3. Thực hiện bỏ gán
             boolean success = dao.unassignPatient(appointmentId);
             if (success) {
                 out.print(gson.toJson(new ResponseJson(true, "Bỏ gán bệnh nhân thành công")));
@@ -460,20 +366,25 @@ public class AppointmentController extends HttpServlet {
                 out.print(gson.toJson(new ResponseJson(false, "Không thể bỏ gán bệnh nhân")));
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
-
         }
-
     }
 
+    // Cập nhật class ResponseJson để thêm type
     private static class ResponseJson {
 
         boolean success;
         String message;
+        String type;  // Thêm type để UI biết là warning hay error
 
         ResponseJson(boolean success, String message) {
             this.success = success;
             this.message = message;
         }
-    }
 
+        ResponseJson(boolean success, String message, String type) {
+            this.success = success;
+            this.message = message;
+            this.type = type;
+        }
+    }
 }

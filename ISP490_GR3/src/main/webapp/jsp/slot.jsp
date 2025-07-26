@@ -11,45 +11,17 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/appointment.css">
         <style>
-            /* CSS cho modal thêm slot */
-            #addSlotModal .modal-dialog {
-                max-width: 1000px; /* Giữ kích thước modal thêm slot */
-            }
-            /* CSS cho modal xem bệnh nhân */
-            #viewPatientsModal .modal-dialog {
-                max-width: 800px; /* Giữ kích thước modal xem bệnh nhân */
-            }
-            /* Tăng chiều cao header của modal xem bệnh nhân */
-            #viewPatientsModal .modal-header {
-                padding: 1.5rem; /* Tăng padding */
-                min-height: 100px; /* Đặt chiều cao tối thiểu */
-            }
-            /* Điều chỉnh bảng bệnh nhân để fit với modal */
-            #viewPatientsModal .table-responsive {
-                height: auto; /* Tự điều chỉnh theo nội dung */
-                max-height: calc(90vh - 150px); /* Giới hạn tối đa, trừ chiều cao header (100px) và footer (50px) */
-                overflow-y: auto; /* Cuộn nếu vượt quá */
-                width: 100%; /* Fit với chiều rộng modal */
-            }
-            #viewPatientsModal #patientListTable {
-                table-layout: fixed; /* Phân bổ cột đều */
-                width: 100%; /* Đảm bảo bảng mở rộng hết modal */
-            }
-            #viewPatientsModal #patientListTable th,
-            #viewPatientsModal #patientListTable td {
-                word-wrap: break-word; /* Ngăn cột co quá nhỏ */
-                padding: 0.75rem; /* Đảm bảo padding đều */
-            }
-            .table-responsive {
-                max-height: 70vh; /* Giữ nguyên cho các bảng khác */
-                overflow-y: auto;
-            }
+            #addSlotModal .modal-dialog { max-width: 1000px; }
+            #viewPatientsModal .modal-dialog { max-width: 800px; }
+            #viewPatientsModal .modal-header { padding: 1.5rem; min-height: 100px; }
+            #viewPatientsModal .table-responsive { height: auto; max-height: calc(90vh - 150px); overflow-y: auto; width: 100%; }
+            #viewPatientsModal #patientListTable { table-layout: fixed; width: 100%; }
+            #viewPatientsModal #patientListTable th, #viewPatientsModal #patientListTable td { word-wrap: break-word; padding: 0.75rem; }
+            .table-responsive { max-height: 70vh; overflow-y: auto; }
         </style>
     </head>
-
     <body>
         <%
-            // Kiểm tra phân quyền (hiển thị menu cho Admin)
             Object userRole = session.getAttribute("userRole");
             boolean isAdmin = false;
             if (userRole != null) {
@@ -59,8 +31,6 @@
                     isAdmin = "ADMIN".equalsIgnoreCase(userRole.toString());
                 }
             }
-        
-            // Lấy thông tin người dùng
             Object userObj = session.getAttribute("user");
             String userName = "User";
             String userRoleDisplay = "Patient";
@@ -71,74 +41,35 @@
             }
         %>
 
-        <!-- Sidebar -->
-        <nav id="sidebar">
-            <div class="sidebar-header">
-                <h3>MENU</h3>
-            </div>
+       <nav id="sidebar">
+            <div class="sidebar-header"><h3>MENU</h3></div>
             <ul class="list-unstyled components">
-                <li>
-                    <a href="${pageContext.request.contextPath}/homepage">
-                        <i class="bi bi-house-door-fill"></i> Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/appointments">
-                        <i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/queue">
-                        <i class="bi bi-people-fill"></i> Quản lý hàng đợi
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/doctor/patients">
-                        <i class="bi bi-people"></i> Hồ sơ bệnh nhân
-                    </a>
-                </li>
-                <li>
-                    <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
-                        <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
-                    </a>
-                </li> 
-                <li>
-                    <a href="${pageContext.request.contextPath}/receptionist/report">
-                        <i class="bi bi-speedometer2"></i> Báo cáo thống kê
-                    </a>
-                </li>
+                <li><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-house-door-fill"></i> Trang chủ</a></li>
+                <li class="active"><a href="${pageContext.request.contextPath}/appointments"><i class="bi bi-calendar-check-fill"></i> Quản lý đặt lịch</a></li>
+                <li><a href="${pageContext.request.contextPath}/checkin"><i class="bi bi-person-check-fill"></i> Quản lý check-in</a></li>
+                <li><a href="${pageContext.request.contextPath}/queue"><i class="bi bi-people-fill"></i> Quản lý hàng đợi</a></li>
+                <li><a href="${pageContext.request.contextPath}/doctor/patients"><i class="bi bi-people"></i> Hồ sơ bệnh nhân</a></li>
+                <li><a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule"><i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ</a></li>
+                <li><a href="${pageContext.request.contextPath}/receptionist/report"><i class="bi bi-speedometer2"></i> Báo cáo thống kê</a></li>
             </ul>
         </nav>
 
         <div id="content">
-            <!-- Navbar -->
             <nav class="navbar navbar-expand-lg top-navbar">
                 <div class="container-fluid">
                     <button type="button" id="sidebarCollapse" class="btn btn-primary"><i class="bi bi-list"></i></button>
-                    <div style="margin-left: 60px;">
-                        <h3><span style="color: #007bff;">Ánh Dương</span> <span style="color: #333;">Clinic</span></h3>
-                    </div>
-                    <div class="navbar-search mx-auto">
-                        <i class="bi bi-search"></i>
-                        <input type="text" class="form-control" placeholder="Tìm kiếm slot, bác sĩ...">
-                    </div>
+                    <div style="margin-left: 60px;"><h3><span style="color: #007bff;">Ánh Dương</span> <span style="color: #333;">Clinic</span></h3></div>
+                    <div class="navbar-search mx-auto"><i class="bi bi-search"></i><input type="text" class="form-control" placeholder="Tìm kiếm slot, bác sĩ..."></div>
                     <div class="dropdown user-dropdown">
                         <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <div class="user-profile-icon"><i class="bi bi-person-fill" style="font-size: 1.5rem;"></i></div>
-                            <div class="user-info d-none d-md-block">
-                                <div class="user-name"><%= userName %></div>
-                                <div class="user-role"><%= userRoleDisplay %></div>
-                            </div>
+                            <div class="user-info d-none d-md-block"><div class="user-name"><%= userName %></div><div class="user-role"><%= userRoleDisplay %></div></div>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <% if (isAdmin) { %>
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/authorization">
-                                    <i class="bi bi-people-fill"></i> Quản lý người dùng
-                                </a>
-                            </li>
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/authorization"><i class="bi bi-people-fill"></i> Quản lý người dùng</a></li>
                             <li><hr class="dropdown-divider"></li>
-                                <% } %>
+                            <% } %>
                             <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile"><i class="bi bi-person-fill"></i> Thông tin cá nhân</a></li>
                             <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile"><i class="bi bi-key-fill"></i> Đổi mật khẩu</a></li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-gear-fill"></i> Cài đặt</a></li>
@@ -149,57 +80,46 @@
                 </div>
             </nav>
 
-            <!-- Breadcrumb được căn giữa theo chiều dọc -->
             <div class="content-wrapper">
                 <div class="breadcrumb-container">
                     <nav aria-label="breadcrumb" style="margin-top:20px;">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/homepage">Trang chủ</a></li>
+                            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/homepage"> Trang chủ</a></li>
                             <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/appointments">Quản lý đặt lịch</a></li>
                             <li class="breadcrumb-item active" aria-current="page">Slot</li>
                         </ol>
                     </nav>
                 </div>
-            </div>                          
+            </div>
             <ul class="nav nav-tabs w-100">
-                <li class="nav-item flex-fill text-center">
-                    <a class="nav-link " href="${pageContext.request.contextPath}/appointments">Lịch hẹn</a>
-                </li>
-                <li class="nav-item flex-fill text-center">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/checkin">Check-in</a>
-                </li>
-                <li class="nav-item flex-fill text-center">
-                    <a class="nav-link active" href="${pageContext.request.contextPath}/slot">Slot</a>
-                </li>
+                <li class="nav-item flex-fill text-center"><a class="nav-link" href="${pageContext.request.contextPath}/appointments">Lịch hẹn</a></li>
+                <li class="nav-item flex-fill text-center"><a class="nav-link" href="${pageContext.request.contextPath}/checkin">Check-in</a></li>
+                <li class="nav-item flex-fill text-center"><a class="nav-link active" href="${pageContext.request.contextPath}/slot">Slot</a></li>
             </ul>
 
-            <!-- Thông báo -->
-            <%
-                String message = (String) session.getAttribute("message");
-                String messageType = (String) session.getAttribute("messageType");
-                if (message != null && messageType != null) {
-            %>
-            <div class="alert alert-<%= messageType %> alert-dismissible fade show" role="alert">
-                <%= message %>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <%
-                    session.removeAttribute("message");
-                    session.removeAttribute("messageType");
-                }
-            %>
+            <c:if test="${not empty sessionScope.message}">
+                <div class="alert alert-${sessionScope.messageType} alert-dismissible fade show mt-3" role="alert">
+                    ${sessionScope.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <% session.removeAttribute("message"); session.removeAttribute("messageType"); %>
+            </c:if>
 
-            <!-- Form tìm kiếm -->
-            <form id="searchForm" action="${pageContext.request.contextPath}/slot" method="post"
-                  class="mb-4 mt-3 p-3 border rounded shadow-sm bg-light">
-                <input type="hidden" name="action" value="search" />
+            <!-- Hiển thị tiêu chí tìm kiếm -->
+            <div class="alert alert-info mt-3">
+                Kết quả tìm kiếm cho:
+                Bác sĩ: ${doctorDisplay},
+                Ngày: ${slotDateDisplay}
+            </div>
+
+            <form id="searchForm" action="${pageContext.request.contextPath}/slot" method="get" class="mb-4 mt-3 p-3 border rounded shadow-sm bg-light">
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="doctorId" class="form-label">Bác sĩ</label>
                         <select class="form-select" id="doctorId" name="doctorId">
                             <option value="">--Chọn--</option>
                             <c:forEach var="doctor" items="${doctors}">
-                                <option value="${doctor.id}" ${doctor.id == param.doctorId ? 'selected' : ''}>
+                                <option value="${doctor.id}" ${param.doctorId == doctor.id ? 'selected' : ''}>
                                     ${doctor.fullName}
                                 </option>
                             </c:forEach>
@@ -210,29 +130,27 @@
                     </div>
                     <div class="col-md-6">
                         <label for="slotDate" class="form-label">Ngày hẹn</label>
-                        <input type="date" class="form-control" id="slotDate" name="slotDate" value="${slotDate}" />
+                        <div class="input-group">
+                            <input type="date" class="form-control" id="slotDate" name="slotDate" value="${param.slotDate}">
+<!--                            <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('slotDate').value = ''; document.getElementById('searchForm').submit();">Tất cả ngày</button>-->
+                        </div>
                     </div>
                 </div>
                 <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-light border" id="resetFilterButton">
-                        <i class="bi bi-arrow-clockwise"></i> Đặt lại bộ lọc
-                    </button>
-                    <button type="submit" name="submitSearch" class="btn btn-primary">
-                        <i class="bi bi-search"></i> Tìm kiếm
-                    </button>
+                    <a id="resetFilterButton" href="${pageContext.request.contextPath}/slot" class="btn btn-light border"><i class="bi bi-arrow-clockwise"></i> Đặt lại bộ lọc</a>
+                    <button type="submit" name="submitSearch" value="true" class="btn btn-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
                 </div>
             </form>
 
-            <!-- Danh sách slot -->
-            <div class="appointment-list-section animate-fade-in">  
+            <div class="appointment-list-section animate-fade-in">
                 <div class="appointment-list-header">
                     <h5>Danh sách Slot (${totalRecords} kết quả)</h5>
                     <div class="d-flex gap-2">
                         <form id="deleteMultipleForm" action="${pageContext.request.contextPath}/slot/delete" method="post" style="display: none;">
                             <input type="hidden" name="action" value="deleteMultiple"/>
-                            <input type="hidden" name="doctorId" value="${doctorId}"/>
-                            <input type="hidden" name="slotDate" value="${slotDate}"/>
-                            <input type="hidden" name="page" value="${currentPage}"/>
+                            <input type="hidden" id="deleteDoctorId" name="doctorId" value="${param.doctorId}"/>
+                            <input type="hidden" id="deleteSlotDate" name="slotDate" value="${param.slotDate}"/>
+                            <input type="hidden" id="deletePage" name="page" value="${currentPage}"/>
                             <div id="selectedSlotIds"></div>
                             <button type="button" class="btn btn-danger btn-delete-selected" id="btnDeleteSelected" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
                                 <i class="bi bi-trash"></i> Xóa (<span id="selectedCount">0</span> bản ghi)
@@ -260,7 +178,7 @@
                         <tbody>
                             <c:forEach var="slot" items="${currentPageSlots}" varStatus="loop">
                                 <tr>
-                                    <td><input type="checkbox" name="selectedSlots" value="${slot.id}" class="slot-checkbox" /></td>
+                                    <td><input type="checkbox" name="selectedSlots" value="${slot.id}" class="slot-checkbox"/></td>
                                     <td>${startIndex + loop.index + 1}</td>
                                     <td><c:out value="${slot.slotDate}"/></td>
                                     <td><c:out value="${slot.checkinRange}"/></td>
@@ -278,9 +196,7 @@
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty currentPageSlots}">
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted">Không có slot nào được tìm thấy.</td>
-                                </tr>
+                                <tr><td colspan="8" class="text-center text-muted">Không có slot nào được tìm thấy.</td></tr>
                             </c:if>
                         </tbody>
                     </table>
@@ -295,17 +211,17 @@
                 <nav aria-label="Page navigation">
                     <ul class="pagination justify-content-end">
                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="${pageContext.request.contextPath}/slot?page=${currentPage - 1}${filterParams}" aria-label="Previous">
+                            <a class="page-link" href="${pageContext.request.contextPath}/slot?page=${currentPage - 1}&doctorId=${param.doctorId}&slotDate=${param.slotDate}&submitSearch=true" aria-label="Previous">
                                 <span aria-hidden="true">«</span>
                             </a>
                         </li>
                         <c:forEach begin="1" end="${totalPages}" var="i">
                             <li class="page-item ${currentPage == i ? 'active' : ''}">
-                                <a class="page-link" href="${pageContext.request.contextPath}/slot?page=${i}${filterParams}">${i}</a>
+                                <a class="page-link" href="${pageContext.request.contextPath}/slot?page=${i}&doctorId=${param.doctorId}&slotDate=${param.slotDate}&submitSearch=true">${i}</a>
                             </li>
                         </c:forEach>
                         <li class="page-item ${currentPage == totalPages || totalPages == 0 ? 'disabled' : ''}">
-                            <a class="page-link" href="${pageContext.request.contextPath}/slot?page=${currentPage + 1}${filterParams}" aria-label="Next">
+                            <a class="page-link" href="${pageContext.request.contextPath}/slot?page=${currentPage + 1}&doctorId=${param.doctorId}&slotDate=${param.slotDate}&submitSearch=true" aria-label="Next">
                                 <span aria-hidden="true">»</span>
                             </a>
                         </li>
@@ -328,7 +244,7 @@
                                     <select class="form-select" id="modalDoctorId" name="doctorId" required>
                                         <option value="">--Chọn--</option>
                                         <c:forEach var="doctor" items="${doctors}">
-                                            <option value="${doctor.id}" ${doctor.id == param.doctorId ? 'selected' : ''}>
+                                            <option value="${doctor.id}" ${param.doctorId == doctor.id ? 'selected' : ''}>
                                                 ${doctor.fullName}
                                             </option>
                                         </c:forEach>
@@ -338,7 +254,7 @@
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="slotDateDropdown" class="form-label">Ngày slot<span class="text-danger">*</span></label>
+                                    <label for="slotDateDropdown" class="form-label">Ngày slot <span class="text-danger">*</span></label>
                                     <select class="form-select" id="slotDateDropdown" name="slotDate" required>
                                         <option value="">--Chọn--</option>
                                     </select>
@@ -381,18 +297,12 @@
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
-                            </button>
-                            <button type="submit" form="addSlotForm" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Thêm
-                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-2"></i>Hủy bỏ</button>
+                            <button type="submit" form="addSlotForm" class="btn btn-primary"><i class="bi bi-check-circle me-2"></i>Thêm</button>
                         </div>
                     </div>
                 </div>
             </div>
-
-
 
             <!-- Modal Xem Danh sách Bệnh nhân -->
             <div class="modal fade" id="viewPatientsModal" tabindex="-1" aria-labelledby="viewPatientsModalLabel" aria-hidden="true">
@@ -415,25 +325,20 @@
                                                 <th>Số điện thoại</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="patientListBody">
-                                            <!-- Danh sách bệnh nhân sẽ được thêm bằng JavaScript -->
-                                        </tbody>
+                                        <tbody id="patientListBody"></tbody>
                                     </table>
                                 </div>
-                            </div>
-                            <div id="noPatientsMessage" class="text-center text-muted" style="display: none;">
-                                Không có bệnh nhân nào trong slot này.
+                                <div id="noPatientsMessage" class="text-center text-muted" style="display: none;">
+                                    Không có bệnh nhân nào trong slot này.
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle me-2"></i>Đóng
-                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-2"></i>Đóng</button>
                         </div>
                     </div>
                 </div>
             </div>
-
 
             <!-- Modal Xác nhận Xóa Từng Slot -->
             <div class="modal fade" id="confirmSingleDeleteModal" tabindex="-1" aria-hidden="true">
@@ -449,11 +354,11 @@
                         </div>
                         <div class="modal-footer">
                             <form id="singleDeleteForm" action="${pageContext.request.contextPath}/slot/delete" method="post">
-                                <input type="hidden" name="action" value="deleteSingle">
-                                <input type="hidden" id="singleDeleteSlotId" name="slotId" />
-                                <input type="hidden" name="doctorId" value="${doctorId}"/>
-                                <input type="hidden" name="slotDate" value="${slotDate}"/>
-                                <input type="hidden" name="page" value="${currentPage}"/>
+                                <input type="hidden" name="action" value="deleteSingle"/>
+                                <input type="hidden" id="singleDeleteSlotId" name="slotId"/>
+                                <input type="hidden" id="singleDeleteDoctorId" name="doctorId" value="${param.doctorId}"/>
+                                <input type="hidden" id="singleDeleteSlotDate" name="slotDate" value="${param.slotDate}"/>
+                                <input type="hidden" id="singleDeletePage" name="page" value="${currentPage}"/>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                                 <button type="submit" class="btn btn-danger">Xóa</button>
                             </form>
@@ -474,12 +379,8 @@
                             Bạn muốn xóa <span id="deleteCount" class="text-primary fw-bold"></span> slot ra khỏi hệ thống?
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
-                            </button>
-                            <button type="button" class="btn btn-danger" id="confirmDeleteButton">
-                                <i class="bi bi-trash me-2"></i>Xóa
-                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-2"></i>Hủy bỏ</button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteButton"><i class="bi bi-trash me-2"></i>Xóa</button>
                         </div>
                     </div>
                 </div>
@@ -493,16 +394,10 @@
                     String contextPath = request.getContextPath();
                     String baseURL = scheme + "://" + serverName + ":" + serverPort + contextPath;
                 %>
+                const BASE_URL = '<%= baseURL %>';
+                console.log("BASE_URL:", BASE_URL);
 
                 document.addEventListener("DOMContentLoaded", function () {
-                    const BASE_URL = '<%= baseURL %>';
-
-                    console.log("BASE_URL:", BASE_URL);
-                    console.log("Protocol:", window.location.protocol);
-                    console.log("Host:", window.location.host);
-                    console.log("Context Path:", BASE_URL);
-                    console.log("Full URL:", window.location.href);
-
                     const doctorSelect = document.getElementById("modalDoctorId");
                     const slotDateDropdown = document.getElementById("slotDateDropdown");
                     const addTypeSelect = document.getElementById("addType");
@@ -528,90 +423,49 @@
                     function loadSlotDates(doctorId) {
                         console.log("doctorId:", doctorId);
                         slotDateDropdown.innerHTML = '<option value="">Đang tải...</option>';
-
                         if (!doctorId) {
                             slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
-                            console.log("Không có doctorId, bỏ qua fetch");
                             return;
                         }
-
                         const url = BASE_URL + "/slot/filterSlotDate?doctorId=" + doctorId;
-
-                        console.log("Fetch URL:", url);
-
                         fetch(url)
-                                .then(res => {
-                                    console.log("res", res);
-                                    if (!res.ok) {
-                                        if (res.status === 404) {
-                                            throw new Error("404: Endpoint không tồn tại hoặc doctorId không hợp lệ");
+                            .then(res => {
+                                console.log("Response status:", res.status);
+                                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                                return res.json();
+                            })
+                            .then(data => {
+                                slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
+                                if (!Array.isArray(data) || data.length === 0) {
+                                    slotDateDropdown.innerHTML = '<option value="">Không có ngày làm việc</option>';
+                                } else {
+                                    data.forEach(date => {
+                                        if (date?.trim()) {
+                                            const option = document.createElement("option");
+                                            option.value = date;
+                                            option.textContent = date;
+                                            slotDateDropdown.appendChild(option);
                                         }
-                                        throw new Error(`Lỗi ${res.status}: Không thể tải dữ liệu`);
-                                    }
-                                    return res.json();
-                                })
-                                .then(data => {
-                                    console.log("Dữ liệu nhận được:", data);
-                                    slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
-                                    if (data.error) {
-                                        slotDateDropdown.innerHTML = `<option value="">${data.error}</option>`;
-                                    } else if (!Array.isArray(data) || data.length === 0) {
-                                        slotDateDropdown.innerHTML = '<option value="">Không có ngày làm việc</option>';
-                                    } else {
-                                        data.forEach((item, index) => {
-                                            console.log(`Item ${index}:`, item, typeof item);
-                                            const date = item?.trim();
-                                            if (date) {
-                                                const option = document.createElement("option");
-                                                option.value = date;
-                                                option.textContent = date;
-                                                slotDateDropdown.appendChild(option);
-                                            } else {
-                                                console.warn("Bỏ qua item rỗng:", item);
-                                            }
-                                        });
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error("Lỗi khi tải ngày làm việc:", error);
-                                    slotDateDropdown.innerHTML = `<option value="">Lỗi: ${error.message}</option>`;
-                                    alert("Không thể tải ngày làm việc. Vui lòng thử lại sau.");
-                                });
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Lỗi khi tải ngày làm việc:", error);
+                                slotDateDropdown.innerHTML = `<option value="">Lỗi: ${error.message}</option>`;
+                                alert("Không thể tải ngày làm việc. Vui lòng thử lại sau.");
+                            });
                     }
 
-                    // Khi chọn bác sĩ
                     doctorSelect.addEventListener("change", function () {
-                        console.log("Doctor ID từ dropdown:", this.value);
                         loadSlotDates(this.value);
                     });
 
-                    // Khi mở modal
                     addSlotModal.addEventListener("shown.bs.modal", function () {
                         addTypeSelect.value = "single";
                         toggleSlotFields();
                         slotDateDropdown.innerHTML = '<option value="">--Chọn--</option>';
-                        const selectedDoctorId = doctorSelect.value;
-                        console.log("Doctor ID khi mở modal:", selectedDoctorId);
-                        if (selectedDoctorId) {
-                            loadSlotDates(selectedDoctorId);
-                        }
-                    });
-
-                    // Xử lý nút reset bộ lọc
-                    document.getElementById("resetFilterButton").addEventListener("click", function () {
-                        const form = document.getElementById("searchForm");
-                        form.reset();
-                        document.getElementById("doctorId").value = "";
-                        document.getElementById("slotDate").value = "";
-                        const actionURL = form.getAttribute("action");
-                        const formData = new FormData();
-                        formData.append("action", "search");
-                        fetch(actionURL, {
-                            method: "POST",
-                            body: formData
-                        }).then(() => {
-                            window.location.href = actionURL;
-                        });
+                        const selectedDoctorId = document.getElementById("doctorId").value;
+                        if (selectedDoctorId) loadSlotDates(selectedDoctorId);
                     });
 
                     // Xử lý checkbox và xóa nhiều
@@ -636,13 +490,10 @@
 
                     document.getElementById("checkAll").addEventListener("change", function () {
                         const checked = this.checked;
-                        document.querySelectorAll('.slot-checkbox').forEach(cb => {
-                            cb.checked = checked;
-                        });
+                        document.querySelectorAll('.slot-checkbox').forEach(cb => cb.checked = checked);
                         updateDeleteMultipleVisibility();
                     });
 
-                    // Xử lý xóa nhiều slot
                     document.getElementById('btnDeleteSelected').addEventListener('click', function (event) {
                         event.preventDefault();
                         const checkedCount = document.querySelectorAll('input[name="selectedSlots"]:checked').length;
@@ -663,118 +514,85 @@
                             hiddenInput.value = checkbox.value;
                             container.appendChild(hiddenInput);
                         });
-                        console.log('Slot IDs được chọn:', Array.from(selected).map(cb => cb.value));
                         document.getElementById('deleteMultipleForm').submit();
                     });
 
-                    // Xử lý xóa một slot
                     document.querySelectorAll('.btn-delete-single').forEach(button => {
                         button.addEventListener('click', function (event) {
                             event.preventDefault();
                             const slotId = this.dataset.id;
                             document.getElementById('singleDeleteSlotId').value = slotId;
                             const row = this.closest('tr');
-                            const slotDateCell = row.querySelector('td:nth-child(3)');
-                            const slotTimeRangeCell = row.querySelector('td:nth-child(4)');
-                            const slotDate = slotDateCell ? slotDateCell.textContent.trim() : 'N/A';
-                            const slotTimeRange = slotTimeRangeCell ? slotTimeRangeCell.textContent.trim() : 'N/A';
-                            const slotDateElement = document.getElementById('modalSlotDate');
-                            const slotTimeRangeElement = document.getElementById('slotTimeRange');
-                            if (slotDateElement)
-                                slotDateElement.textContent = slotDate;
-                            if (slotTimeRangeElement)
-                                slotTimeRangeElement.textContent = slotTimeRange;
-                            console.log('Slot ID:', slotId);
-                            console.log('Slot Date:', slotDate);
-                            console.log('Slot Time Range:', slotTimeRange);
+                            const slotDate = row.querySelector('td:nth-child(3)').textContent.trim();
+                            const slotTimeRange = row.querySelector('td:nth-child(4)').textContent.trim();
+                            document.getElementById('modalSlotDate').textContent = slotDate;
+                            document.getElementById('slotTimeRange').textContent = slotTimeRange;
                             const modal = new bootstrap.Modal(document.getElementById('confirmSingleDeleteModal'));
                             modal.show();
                         });
                     });
 
-                    // Xử lý nút Xem danh sách bệnh nhân
                     document.querySelectorAll('.btn-view-patients').forEach(button => {
                         button.addEventListener('click', function (event) {
                             event.preventDefault();
                             const slotId = this.dataset.slotId;
                             console.log('Bắt đầu load danh sách bệnh nhân cho slotId:', slotId);
-
                             const patientListBody = document.getElementById('patientListBody');
                             const noPatientsMessage = document.getElementById('noPatientsMessage');
                             const viewPatientsModal = document.getElementById('viewPatientsModal');
-
-                            // Lấy thông tin slot để hiển thị tiêu đề modal
+                            patientListBody.innerHTML = '<tr><td colspan="4" class="text-center">Đang tải...</td></tr>';
                             const row = this.closest('tr');
                             const slotDate = row.querySelector('td:nth-child(3)').textContent.trim();
                             const slotTimeRange = row.querySelector('td:nth-child(4)').textContent.trim();
-                            document.getElementById('viewPatientsModalLabel').textContent =
-                                    `Danh sách Bệnh nhân đã đặt slot`;
-
-                            // Hiển thị trạng thái đang tải
-                            patientListBody.innerHTML = '<tr><td colspan="4" class="text-center">Đang tải...</td></tr>';
-
-                            // Gọi API để lấy danh sách bệnh nhân
+                            document.getElementById('viewPatientsModalLabel').textContent = `Danh sách Bệnh nhân đã đặt slot`;
                             const query = new URLSearchParams({slotId: slotId}).toString();
-                            console.log('URL query:', query);
                             const url = BASE_URL + "/slot/patients?" + query;
-                            console.log('URL đầy đủ:', url);
-
                             fetch(url, {
                                 method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                }
+                                headers: { 'Content-Type': 'application/json' }
                             })
-                                    .then(res => {
-                                        console.log('Response status:', res.status);
-                                        if (!res.ok) {
-                                            throw new Error(`HTTP error! status: ${res.status}`);
-                                        }
-                                        return res.json();
-                                    })
-
-                                    .then(data => {
-                                        console.log('DATA NHẬN VỀ:', data);
-                                        console.log('Array.isArray(data):', Array.isArray(data));
-                                        console.log('data.length:', data.length);
-                                        console.log('Dữ liệu nhận được từ server:', data);
-
-                                        patientListBody.innerHTML = '';
-                                        if (!Array.isArray(data) || data.length === 0) {
-                                            noPatientsMessage.textContent = 'Không có bệnh nhân nào trong slot này.';
-                                            noPatientsMessage.style.display = 'block';
-                                            patientListBody.parentElement.style.display = 'none';
-                                        } else {
-                                            noPatientsMessage.style.display = 'none';
-                                            patientListBody.parentElement.style.display = 'block';
-                                            data.forEach(patient => {
-                                                const row = document.createElement('tr');
-                                                row.innerHTML = '<td>' + (patient.patientCode || '-') + '</td>' +
-                                                        '<td>' + (patient.cccd || '-') + '</td>' +
-                                                        '<td>' + (patient.fullName || '-') + '</td>' +
-                                                        '<td>' + (patient.phone || '-') + '</td>';
-                                                ;
-                                                patientListBody.appendChild(row);
-                                            });
-                                        }
-                                        const modal = new bootstrap.Modal(viewPatientsModal);
-                                        modal.show();
-                                    })
-                                    .catch(err => {
-                                        console.error('Lỗi khi tải danh sách bệnh nhân:', err);
-                                        patientListBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Lỗi: Không thể tải dữ liệu.</td></tr>';
-                                        noPatientsMessage.textContent = `Lỗi: ${err.message}`;
+                                .then(res => {
+                                    console.log('Response status:', res.status);
+                                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                                    return res.json();
+                                })
+                                .then(data => {
+                                    console.log('Dữ liệu nhận được:', data);
+                                    patientListBody.innerHTML = '';
+                                    if (!Array.isArray(data) || data.length === 0) {
+                                        noPatientsMessage.textContent = 'Không có bệnh nhân nào trong slot này.';
                                         noPatientsMessage.style.display = 'block';
                                         patientListBody.parentElement.style.display = 'none';
-                                        alert("Lỗi khi tải danh sách bệnh nhân!");
-                                        const modal = new bootstrap.Modal(viewPatientsModal);
-                                        modal.show();
-                                    });
+                                    } else {
+                                        noPatientsMessage.style.display = 'none';
+                                        patientListBody.parentElement.style.display = 'block';
+                                        data.forEach(patient => {
+                                            const row = document.createElement('tr');
+                                              row.innerHTML = '<td>' + (patient.patientCode || '-') + '</td>' +
+                                                    '<td>' + (patient.cccd || '-') + '</td>' +
+                                                    '<td>' + (patient.fullName || '-') + '</td>' +
+                                                    '<td>' + (patient.phone || '-') + '</td>'
+                                            ;
+
+                                            patientListBody.appendChild(row);
+                                        });
+                                    }
+                                    const modal = new bootstrap.Modal(viewPatientsModal);
+                                    modal.show();
+                                })
+                                .catch(err => {
+                                    console.error('Lỗi khi tải danh sách bệnh nhân:', err);
+                                    patientListBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Lỗi: Không thể tải dữ liệu.</td></tr>';
+                                    noPatientsMessage.textContent = `Lỗi: ${err.message}`;
+                                    noPatientsMessage.style.display = 'block';
+                                    patientListBody.parentElement.style.display = 'none';
+                                    alert("Lỗi khi tải danh sách bệnh nhân!");
+                                    const modal = new bootstrap.Modal(viewPatientsModal);
+                                    modal.show();
+                                });
                         });
                     });
 
-
-                    // Xử lý khi modal đóng
                     document.querySelectorAll('.modal').forEach(modal => {
                         modal.addEventListener('hidden.bs.modal', function () {
                             const backdrops = document.querySelectorAll('.modal-backdrop');
@@ -785,41 +603,12 @@
                             console.log(`Modal ${modal.id} đã đóng, xóa backdrop`);
                         });
                     });
-                });
 
-                // Các biến từ Controller
-                window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
-                window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
+                    window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
+                    window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
+                });
             </script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
             <script src="${pageContext.request.contextPath}/js/slot.js"></script>
-
-            <%!
-                private String generateFilterParams(HttpServletRequest request) {
-                    StringBuilder params = new StringBuilder();
-                    String slotCode = (String) request.getAttribute("slotCode");
-                    if (slotCode != null && !slotCode.isEmpty()) {
-                        params.append("&slotCode=").append(slotCode);
-                    }
-                    String doctorId = (String) request.getAttribute("doctorId");
-                    if (doctorId != null && !doctorId.isEmpty()) {
-                        params.append("&doctorId=").append(doctorId);
-                    }
-                    String slotDate = (String) request.getAttribute("slotDate");
-                    if (slotDate != null && !slotDate.isEmpty()) {
-                        params.append("&slotDate=").append(slotDate);
-                    }
-                    String status = (String) request.getAttribute("status");
-                    if (status != null && !status.isEmpty()) {
-                        params.append("&status=").append(status);
-                    }
-                    Integer rp = (Integer) request.getAttribute("recordsPerPage");
-                    if (rp != null) {
-                        params.append("&recordsPerPage=").append(rp);
-                    }
-                    params.append("&submitSearch=true");
-                    return params.toString();
-                }
-            %>
     </body>
 </html>

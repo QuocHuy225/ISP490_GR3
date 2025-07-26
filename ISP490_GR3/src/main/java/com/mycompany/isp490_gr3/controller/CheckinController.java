@@ -299,9 +299,9 @@ public class CheckinController extends HttpServlet {
             DAOAppointment daoAppointment = new DAOAppointment();
             Slot slot = daoAppointment.getSlotByAppointmentId(appointmentId);
 
-            //Không checkin đối với slot quá hạn
-            if (slot.getSlotDate().isEqual(LocalDate.now()) && LocalTime.now().isAfter(slot.getEndTime())) {
-                session.setAttribute("message", "Quá thời gian check-in");
+            // Chỉ cho check-in trong ngày hôm nay
+            if (!slot.getSlotDate().isEqual(LocalDate.now())) {
+                session.setAttribute("message", "Chỉ được check-in trong ngày hôm nay. Slot này thuộc ngày khác.");
                 session.setAttribute("messageType", "danger");
                 response.sendRedirect(request.getContextPath() + "/checkin");
                 return;
@@ -311,33 +311,33 @@ public class CheckinController extends HttpServlet {
             ZoneId zoneId = ZoneId.of("Asia/Ho_Chi_Minh");
             LocalDateTime now = LocalDateTime.now(zoneId);
             LocalTime currentTime = now.toLocalTime();
-            LocalDate currentDate = now.toLocalDate();
             LocalTime startTime = slot.getStartTime();
             LocalTime endTime = slot.getEndTime();
-            
-            // Kiểm tra check-in sớm
-            long minutesEarly = ChronoUnit.MINUTES.between(currentTime, startTime); // Thời gian sớm so với startTime
-            if (minutesEarly > 30) {
-                session.setAttribute("message", "Không hỗ trợ check-in cho bệnh nhân đến quá sớm (hơn 30 phút so với startTime).");
-                session.setAttribute("messageType", "warning");
-                response.sendRedirect(request.getContextPath() + "/checkin");
-                return;
-            } else if (minutesEarly <= 0) {
-                // Kiểm tra check-in muộn so với endTime 
-                long minutesLate = ChronoUnit.MINUTES.between(endTime, currentTime); // Thời gian muộn so với endTime
-                if (minutesLate > 0) { // Nếu currentTime > endTime
-                    session.setAttribute("message", "Bệnh nhân đến muộn sau thời gian kết thúc slot. Vui lòng gán lịch hẹn mới.");
-                    session.setAttribute("messageType", "warning");
-                    response.sendRedirect(request.getContextPath() + "/checkin?late=true&appointmentId=" + appointmentId);
-                    return;
-                }
-                // Nếu trong khoảng từ startTime đến endTime, tiếp tục check-in
+
+            String warningMessage = "";  // Để lưu cảnh báo
+
+            // Check sớm: Nếu currentTime < startTime
+            if (currentTime.isBefore(startTime)) {
+                warningMessage = "Bệnh nhân đến sớm trước giờ bắt đầu slot. ";
             }
+
+            // Check muộn: Nếu currentTime > endTime
+            if (currentTime.isAfter(endTime)) {
+                warningMessage += "Bệnh nhân đến muộn sau thời gian kết thúc slot. ";
+            }
+
+            // Tiếp tục check-in dù có cảnh báo
             boolean success = daoAppointment.checkinAppointment(appointmentId, priority, description);
 
             if (success) {
-                session.setAttribute("message", "Check-in thành công!");
-                session.setAttribute("messageType", "success");
+                String message = "Check-in thành công!";
+                if (!warningMessage.isEmpty()) {
+                    message += " [Cảnh báo: " + warningMessage + "]";
+                    session.setAttribute("messageType", "warning");
+                } else {
+                    session.setAttribute("messageType", "success");
+                }
+                session.setAttribute("message", message);
             } else {
                 session.setAttribute("message", "Đã có lỗi khi thực hiện check-in.");
                 session.setAttribute("messageType", "danger");

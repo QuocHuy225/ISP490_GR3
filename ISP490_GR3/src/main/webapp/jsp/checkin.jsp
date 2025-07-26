@@ -264,7 +264,7 @@
                 <div id="appointment-list-section" class="${not empty selectedAppointment ? 'col-md-8' : 'col-md-12'}">
                     <div class="appointment-list-section animate-fade-in">  
                         <div class="appointment-list-header">
-                            <h5>Danh sách lịch check-in hôm nay ${empty slotDate ? LocalDate.now().toString() : slotDate}  (${totalRecords} kết quả)</h5>
+                            <h5>Danh sách lịch check-in ( ${empty slotDate ? LocalDate.now().toString() : slotDate} ) (${totalRecords} kết quả)</h5>
                         </div>
 
                         <div class="table-responsive">
