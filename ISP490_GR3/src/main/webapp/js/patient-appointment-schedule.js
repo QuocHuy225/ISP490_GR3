@@ -319,8 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <p><strong>Dịch vụ:</strong> ${appointment.serviceName}</p>
                 <p><strong>Thời gian:</strong> ${formatDateForDisplay(appointment.appointmentDate)} lúc ${appointment.appointmentTime}</p>
                 <p><strong>Ghi chú:</strong> ${appointment.notes || 'Không có'}</p>
-                <p><strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appointment.status)}">${mapStatusToVietnamese(appointment.status)}</span></p>
-                <%-- Đã xóa dòng "Trạng thái thanh toán" khỏi đây --%>`;
+                <p><strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appointment.status)}">${mapStatusToVietnamese(appointment.status)}</span></p>`; // <--- ĐÃ SỬA DÒNG NÀY
         }
         if (btnCancelAppointment) {
             btnCancelAppointment.style.display = (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') ? 'inline-block' : 'none';
