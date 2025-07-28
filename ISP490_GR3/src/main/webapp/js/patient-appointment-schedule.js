@@ -164,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         appointmentsToRender.forEach(appt => {
             const appointmentElement = document.createElement('div');
+            // Thêm class 'border-danger' nếu trạng thái là CANCELLED để dễ nhận biết trong lịch sử
             appointmentElement.className = `card mb-3 appointment-item ${appt.status === 'CANCELLED' ? 'border-danger' : ''}`;
             appointmentElement.dataset.appointmentId = appt.id;
 
@@ -174,8 +175,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         <strong>Bác sĩ:</strong> ${appt.doctorFullName}<br>
                         <strong>Thời gian:</strong> ${formatDateForDisplay(appt.appointmentDate)} lúc ${appt.appointmentTime}<br>
                         <strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appt.status)}">${mapStatusToVietnamese(appt.status)}</span><br>
-                        <strong>Mã lịch hẹn:</strong> ${appt.appointmentCode || 'N/A'}<br>
-                        <strong>Trạng thái thanh toán:</strong> <span class="badge ${getPaymentStatusBadgeClass(appt.paymentStatus)}">${mapPaymentStatusToVietnamese(appt.paymentStatus)}</span>
+                        <strong>Mã lịch hẹn:</strong> ${appt.appointmentCode || 'N/A'}
+                        
                     </p>
                     ${isUpcoming && (appt.status === 'PENDING' || appt.status === 'CONFIRMED') ? `<button class="btn btn-danger btn-sm cancel-btn" data-id="${appt.id}">Hủy hẹn</button>` : ''}
                 </div>`;
@@ -293,7 +294,6 @@ document.addEventListener('DOMContentLoaded', function () {
             paginationContainer.appendChild(lastPageButton);
         }
 
-
         // Next button
         const nextButton = document.createElement('button');
         nextButton.className = 'btn btn-sm btn-outline-primary pagination-button';
@@ -310,7 +310,6 @@ document.addEventListener('DOMContentLoaded', function () {
         paginationContainer.appendChild(nextButton);
     }
 
-
     function showAppointmentDetail(appointment) {
         currentAppointmentData = appointment;
         if (detailContent) {
@@ -321,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <p><strong>Thời gian:</strong> ${formatDateForDisplay(appointment.appointmentDate)} lúc ${appointment.appointmentTime}</p>
                 <p><strong>Ghi chú:</strong> ${appointment.notes || 'Không có'}</p>
                 <p><strong>Trạng thái:</strong> <span class="badge ${getStatusBadgeClass(appointment.status)}">${mapStatusToVietnamese(appointment.status)}</span></p>
-                <p><strong>Trạng thái thanh toán:</strong> <span class="badge ${getPaymentStatusBadgeClass(appointment.paymentStatus)}">${mapPaymentStatusToVietnamese(appointment.paymentStatus)}</span></p>`;
+                <%-- Đã xóa dòng "Trạng thái thanh toán" khỏi đây --%>`;
         }
         if (btnCancelAppointment) {
             btnCancelAppointment.style.display = (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') ? 'inline-block' : 'none';
@@ -351,11 +350,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const apptDateTime = new Date(`${appt.appointmentDate}T${startTimeStr}:00`);
 
+                // Phân loại lại cho lịch sử: bao gồm cả CANCELLED và những cái đã qua giờ/ngày
                 if (apptDateTime >= now && (appt.status === 'PENDING' || appt.status === 'CONFIRMED')) {
                     upcoming.push(appt);
                 } 
                 else {
-                    history.push(appt);
+                    history.push(appt); // Mọi thứ còn lại (kể cả CANCELLED, DONE, NO_SHOW) đều vào lịch sử
                 }
             });
 
@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const aTimeParts = a.appointmentTime.split(' - ');
                 const bTimeParts = b.appointmentTime.split(' - ');
                 const aDateTime = new Date(`${a.appointmentDate}T${aTimeParts[0]}:00`);
-                const bDateTime = new Date(`${b.appointmentDate}T${bTimeParts[0]}:00`);
+                const bDateTime = new Date(`${b.appointmentDate}T{bTimeParts[0]}:00`);
                 return aDateTime - bDateTime;
             });
 
@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bTimeParts = b.appointmentTime.split(' - ');
                 const aDateTime = new Date(`${a.appointmentDate}T${aTimeParts[0]}:00`);
                 const bDateTime = new Date(`${b.appointmentDate}T${bTimeParts[0]}:00`);
-                return bDateTime - aDateTime;
+                return bDateTime - aDateTime; // Sắp xếp giảm dần theo thời gian
             });
             
             // Cập nhật tổng số trang
@@ -419,12 +419,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return {PENDING: 'bg-warning', CONFIRMED: 'bg-primary', DONE: 'bg-success', CANCELLED: 'bg-danger', NO_SHOW: 'bg-secondary'}[status] || 'bg-secondary';
     }
 
-    function mapPaymentStatusToVietnamese(paymentStatus) {
-        return {UNPAID: 'Chưa thanh toán', PAID: 'Đã thanh toán'}[paymentStatus] || paymentStatus;
-    }
-    function getPaymentStatusBadgeClass(paymentStatus) {
-        return {UNPAID: 'bg-danger', PAID: 'bg-success'}[paymentStatus] || 'bg-secondary';
-    }
+    // Đã xóa các hàm liên quan đến payment status
+    // function mapPaymentStatusToVietnamese(paymentStatus) { ... }
+    // function getPaymentStatusBadgeClass(paymentStatus) { ... }
 
 
     // --- Event Listeners and Initial Load ---
@@ -581,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     hideCustomModal(newAppointmentModal);
                     currentPageUpcoming = 1;
                     currentPageHistory = 1;
-                    await fetchAppointmentsAndRenderUI(); // CHẮC CHẮN CHỜ HÀM NÀY HOÀN THÀNH
+                    await fetchAppointmentsAndRenderUI(); // CHẮC CHẾN CHỜ HÀM NÀY HOÀN THÀNH
                 } else {
                     showCustomAlert(responseData.message || `Lỗi không xác định khi đặt lịch hẹn. Mã lỗi: ${response.status}`, false);
                 }
