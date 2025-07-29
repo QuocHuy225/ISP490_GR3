@@ -3,9 +3,11 @@ package com.mycompany.isp490_gr3.controller;
 import com.mycompany.isp490_gr3.dao.DAOMedicalRequest;
 import com.mycompany.isp490_gr3.dao.DAOPatient;
 import com.mycompany.isp490_gr3.dao.DAOMedicalRecord;
+import com.mycompany.isp490_gr3.dao.DAOPartner;
 import com.mycompany.isp490_gr3.model.MedicalRequest;
 import com.mycompany.isp490_gr3.model.Patient;
 import com.mycompany.isp490_gr3.model.MedicalRecord;
+import com.mycompany.isp490_gr3.model.Partner;
 import com.mycompany.isp490_gr3.model.User;
 
 import jakarta.servlet.ServletException;
@@ -31,6 +33,7 @@ public class MedicalRequestController extends HttpServlet {
     private DAOMedicalRequest daoMedicalRequest;
     private DAOPatient daoPatient;
     private DAOMedicalRecord daoMedicalRecord;
+    private DAOPartner daoPartner;
     
     @Override
     public void init() throws ServletException {
@@ -38,6 +41,7 @@ public class MedicalRequestController extends HttpServlet {
         daoMedicalRequest = new DAOMedicalRequest();
         daoPatient = new DAOPatient();
         daoMedicalRecord = new DAOMedicalRecord();
+        daoPartner = new DAOPartner();
     }
     
     @Override
@@ -160,8 +164,12 @@ public class MedicalRequestController extends HttpServlet {
         
         Patient patient = daoPatient.getPatientById(medicalRecord.getPatientId());
         
+        // Get all partners for the clinic selection
+        List<Partner> partners = daoPartner.getAllPartners();
+        
         request.setAttribute("medicalRecord", medicalRecord);
         request.setAttribute("patient", patient);
+        request.setAttribute("partners", partners);
         request.setAttribute("action", "add");
         
         request.getRequestDispatcher("/jsp/medical-request-form.jsp").forward(request, response);
@@ -186,6 +194,9 @@ public class MedicalRequestController extends HttpServlet {
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRequest.getMedicalRecordId());
         Patient patient = daoPatient.getPatientById(medicalRequest.getPatientId());
         
+        // Get all partners for the clinic selection
+        List<Partner> partners = daoPartner.getAllPartners();
+        
         // Check if medical record is completed - if so, redirect to view mode
         if (medicalRecord != null && medicalRecord.isCompleted()) {
             response.sendRedirect(request.getContextPath() + "/doctor/medical-requests?action=view&requestId=" + requestId + "&error=medical_record_completed");
@@ -195,6 +206,7 @@ public class MedicalRequestController extends HttpServlet {
         request.setAttribute("medicalRequest", medicalRequest);
         request.setAttribute("medicalRecord", medicalRecord);
         request.setAttribute("patient", patient);
+        request.setAttribute("partners", partners);
         request.setAttribute("action", "update");
         
         request.getRequestDispatcher("/jsp/medical-request-form.jsp").forward(request, response);
