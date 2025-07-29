@@ -19,6 +19,19 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
+        <style>
+            /* Thêm style cho nút active */
+            .select-btn.active {
+                background-color: #007bff !important;
+                color: white !important;
+                border-color: #007bff !important;
+                font-weight: bold;
+            }
+            /* Optional: Highlight cả row khi active để rõ ràng hơn */
+            tr.active-row {
+                background-color: #e9ecef !important; /* Màu xám nhạt cho row */
+            }
+        </style>
     </head>
     <body>
         <%
@@ -264,7 +277,7 @@
                 <div id="appointment-list-section" class="${not empty selectedAppointment ? 'col-md-8' : 'col-md-12'}">
                     <div class="appointment-list-section animate-fade-in">  
                         <div class="appointment-list-header">
-                            <h5>Danh sách lịch check-in ( ${empty slotDate ? LocalDate.now().toString() : slotDate} ) (${totalRecords} kết quả)</h5>
+                            <h5>Danh sách check-in ( ${empty slotDate ? LocalDate.now().toString() : slotDate} ) (${totalRecords} kết quả)</h5>
                         </div>
 
                         <div class="table-responsive">
@@ -419,6 +432,10 @@
                             const id = btn.dataset.id;
                             const code = btn.dataset.code;
 
+                            // Remove active từ tất cả nút và row
+                            document.querySelectorAll('.select-btn').forEach(b => b.classList.remove('active'));
+                            document.querySelectorAll('tr').forEach(tr => tr.classList.remove('active-row'));
+
                             // Toggle form hiển thị/ẩn nếu bấm lại cùng dòng
                             if (lastSelectedCode === code && formSection.style.display === "block") {
                                 formSection.style.display = "none";
@@ -432,6 +449,10 @@
                             appointmentIdInput.value = id;
                             prioritySelect.value = ""; // Reset về mặc định
                             noteTextarea.value = "";   // Xóa ghi chú cũ nếu có
+
+                            // Highlight nút và row (optional)
+                            btn.classList.add('active');
+                            btn.closest('tr').classList.add('active-row'); // Highlight cả row để rõ ràng hơn
 
                             // Hiện form và co danh sách
                             formSection.style.display = "block";
