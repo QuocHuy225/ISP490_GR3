@@ -241,6 +241,9 @@
                                                 <a href="#" class="btn btn-sm btn-outline-warning btn-remove-patient" title="Bỏ gán bệnh nhân khỏi lịch hẹn" data-bs-toggle="modal" data-bs-target="#confirmRemovePatientModal" data-id="${appointment.id}" data-code="${appointment.appointmentCode}">
                                                     <i class="bi bi-person-x"> Bỏ gán </i>
                                                 </a>
+                                                <a href="#" class="btn btn-sm btn-outline-primary btn-change-slot" title="Đổi slot cho lịch hẹn" data-bs-toggle="modal" data-bs-target="#changeSlotModal" data-id="${appointment.id}" data-code="${appointment.appointmentCode}">
+                                                    <i class="bi bi-arrow-repeat"> Đổi slot </i>
+                                                </a>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
@@ -389,21 +392,55 @@
                 </div>
             </div>
 
-            <!-- Modal xác nhận xóa nhiều lịch hẹn -->
-            <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
+            <!-- Modal đổi slot -->
+            <div class="modal fade" id="changeSlotModal" tabindex="-1" aria-labelledby="changeSlotModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content shadow-lg rounded-4">
                         <div class="modal-header">
-                            <h5 class="modal-title">Xóa nhiều lịch hẹn</h5>
+                            <h5 class="modal-title fw-bold" id="changeSlotModalLabel">Đổi slot cho lịch hẹn</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
-                            Bạn muốn xóa <span id="deleteCount" class="text-primary fw-bold"></span> lịch hẹn ra khỏi hệ thống?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-2"></i>Hủy bỏ</button>
-                            <button type="button" class="btn btn-danger" id="confirmDeleteButton"><i class="bi bi-trash me-2"></i>Xóa</button>
-                        </div>
+                        <form id="changeSlotForm">
+                            <input type="hidden" id="changeAppointmentId" />
+                            <div class="modal-body px-4 py-3">
+                                <div class="mb-4 border-bottom pb-3">
+                                    <h6 class="fw-bold mb-3">Chọn ngày và slot trống</h6>
+                                    <div class="row g-2">
+                                        <div class="col-md-12">
+                                            <label for="filterSlotDate" class="form-label">Ngày slot</label>
+                                            <input type="date" class="form-control" id="filterSlotDate">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h6 class="fw-bold mb-3">Danh sách slot trống</h6>
+                                    <div class="patient-list-wrapper"> <!-- Reuse style for scrollable list -->
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-bordered" id="availableSlotsTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Ngày</th>
+                                                        <th>Thời gian</th>
+                                                        <th>Bác sĩ</th>
+                                                        <th>Số bệnh nhân tối đa</th>
+                                                        <th>Đã đặt</th>
+                                                        <th>Chọn</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="availableSlotsBody"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-body px-4 pt-0">
+                                <div id="changeSlotErrorMsg" class="alert alert-danger d-none" role="alert"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary" id="saveChangeSlotBtn" disabled>Đổi slot</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -577,6 +614,52 @@
                         });
                     });
 
+                    // Xử lý nút đổi slot
+                    document.querySelectorAll('.btn-change-slot').forEach(button => {
+                        button.addEventListener('click', function (event) {
+                            event.preventDefault();
+                            const appointmentId = this.dataset.id;
+                            const appointmentCode = this.dataset.code;
+                            console.log('Nhấp vào nút Đổi slot, appointmentId:', appointmentId, 'appointmentCode:', appointmentCode);
+
+                            if (!appointmentId) {
+                                console.error('appointmentId không tồn tại trong dataset!');
+                                return;
+                            }
+
+                            const modalEl = document.getElementById('changeSlotModal');
+                            if (!modalEl) {
+                                console.error('Không tìm thấy modal #changeSlotModal!');
+                                return;
+                            }
+
+                            document.getElementById('changeAppointmentId').value = appointmentId;
+                            console.log('Đã đặt appointmentId vào form đổi slot:', appointmentId);
+
+                            const errorBox = document.getElementById('changeSlotErrorMsg');
+                            if (errorBox) {
+                                errorBox.classList.add('d-none');
+                                errorBox.textContent = '';
+                                console.log('Reset lỗi đổi slot');
+                            }
+
+                            // Reset filter date
+                            const filterSlotDate = document.getElementById('filterSlotDate');
+                            if (filterSlotDate) {
+                                filterSlotDate.value = '';
+                            }
+
+                            const modal = new bootstrap.Modal(modalEl);
+                            modal.show();
+                            console.log('Modal đổi slot đã được hiển thị');
+
+                            // Load available slots initially (without date filter)
+                            setTimeout(() => {
+                                loadAvailableSlots();
+                            }, 300);
+                        });
+                    });
+
                     // Load danh sách bệnh nhân
                     function loadPatientList() {
                         console.log('Bắt đầu loadPatientList...');
@@ -655,6 +738,81 @@
                                     alert("Lỗi khi tải danh sách bệnh nhân!");
                                 });
                     }
+
+                    // Load danh sách slot trống
+                    function loadAvailableSlots() {
+                        console.log('Bắt đầu loadAvailableSlots...');
+                        const slotDate = document.getElementById('filterSlotDate').value.trim();
+                        console.log('Tham số lọc ngày:', slotDate);
+                        const query = new URLSearchParams({
+                            date: slotDate // Nếu không có ngày, backend có thể trả tất cả slot trống
+                        }).toString();
+                        const url = BASE_URL + "/slots/available?" + query; // Giả sử endpoint /slots/available để lấy slot trống
+                        console.log('URL đầy đủ:', url);
+                        fetch(url, {
+                            method: 'GET',
+                            headers: {'Content-Type': 'application/json'}
+                        })
+                                .then(res => {
+                                    console.log('Response status:', res.status);
+                                    if (!res.ok)
+                                        throw new Error(`HTTP error! status: ${res.status}`);
+                                    return res.json();
+                                })
+                                .then(data => {
+                                    console.log('Dữ liệu slot nhận được từ server:', data);
+                                    const tbody = document.getElementById('availableSlotsBody');
+                                    if (!tbody) {
+                                        console.error('Không tìm thấy tbody #availableSlotsBody!');
+                                        return;
+                                    }
+                                    tbody.innerHTML = '';
+                                    if (!Array.isArray(data) || data.length === 0) {
+                                        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Không tìm thấy slot trống.</td></tr>';
+                                    } else {
+                                        data.forEach(slot => {
+                                            const row = document.createElement('tr');
+                                            row.innerHTML = '<td>' + (slot.slotDate || '-') + '</td>' +
+                                                    '<td>' + (slot.checkinRange || '-') + '</td>' +
+                                                    '<td>' + (slot.doctorName || '-') + '</td>' +
+                                                    '<td>' + (slot.maxPatients || '-') + '</td>' + // Thêm cột maxPatients
+                                                    '<td>' + (slot.bookedPatients || '0') + '/' + (slot.maxPatients || '-') + '</td>' + // Thêm cột bookedPatients
+                                                    '<td>' +
+                                                    '<div class="form-check">' +
+                                                    '<input type="radio" class="form-check-input select-slot" name="slotSelection" value="' + (slot.id || '') + '" data-id="' + (slot.id || '') + '">' +
+                                                    '</div>' +
+                                                    '</td>';
+
+                                            tbody.appendChild(row);
+                                        });
+                                    }
+
+                                    // Xử lý chọn slot
+                                    document.querySelectorAll('.select-slot').forEach(radio => {
+                                        radio.addEventListener('click', function () {
+                                            const slotId = this.dataset.id;
+                                            console.log('Chọn slot, slotId:', slotId);
+                                            if (!slotId) {
+                                                console.error('slotId không hợp lệ!');
+                                                return;
+                                            }
+                                            document.getElementById('saveChangeSlotBtn').disabled = false;
+                                            console.log('Kích hoạt nút Đổi slot');
+                                        });
+                                    });
+                                })
+                                .catch(err => {
+                                    console.error('Lỗi khi tải danh sách slot trống:', err);
+                                    const tbody = document.getElementById('availableSlotsBody');
+                                    if (tbody) {
+                                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Lỗi: Không thể tải dữ liệu.</td></tr>';
+                                    }
+                                    alert("Lỗi khi tải danh sách slot trống!");
+                                });
+                    }
+
+
+
 
                     // Xử lý submit form gán bệnh nhân
                     const form = document.getElementById('addAppointmentForm');
@@ -764,6 +922,98 @@
                         });
                     }
 
+                    const changeSlotForm = document.getElementById('changeSlotForm');
+                    if (changeSlotForm) {
+                        changeSlotForm.addEventListener('submit', function (event) {
+                            event.preventDefault();
+                            console.log('Submit form đổi slot');
+                            const appointmentId = document.getElementById('changeAppointmentId').value;
+                            const selectedSlot = document.querySelector('input[name="slotSelection"]:checked');
+                            const slotId = selectedSlot ? selectedSlot.value : null;
+                            const errorBox = document.getElementById('changeSlotErrorMsg');
+
+                            console.log('Params trước khi gửi:', {
+                                appointmentId: appointmentId,
+                                newSlotId: slotId
+                            });
+
+                            if (errorBox) {
+                                errorBox.classList.add('d-none');
+                                errorBox.textContent = '';
+                            }
+
+                            if (!appointmentId || !slotId) {
+                                if (errorBox) {
+                                    errorBox.classList.remove('d-none');
+                                    errorBox.textContent = 'Vui lòng chọn slot mới!';
+                                } else {
+                                    alert('Vui lòng chọn slot mới!');
+                                }
+                                return;
+                            }
+
+                            const url = BASE_URL + "/appointments/change-slot";
+                            const params = new URLSearchParams({
+                                appointmentId: appointmentId,
+                                newSlotId: slotId
+                            });
+
+                            console.log('URL và params đầy đủ:', url, params.toString());
+
+                            function sendChangeSlotRequest(params) {
+                                fetch(url, {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                    body: params
+                                })
+                                        .then(res => {
+                                            console.log('Response status từ server:', res.status);
+                                            return res.json().then(data => ({status: res.status, data})); // Lấy cả status và JSON
+                                        })
+                                        .then(({status, data}) => {
+                                            console.log('Phản hồi JSON từ server:', data);
+                                            if (status !== 200) {
+                                                throw new Error(`HTTP ${status}: ${data.message || 'No message'}`);
+                                            }
+                                            if (data.type === "warning") {
+                                                if (confirm(data.message)) {
+                                                    params.append("ignoreWarning", "true");
+                                                    console.log('Gửi lại với ignoreWarning=true:', params.toString());
+                                                    sendChangeSlotRequest(params); // Gửi lại
+                                                }
+                                            } else if (data.success) {
+                                                if (errorBox) {
+                                                    errorBox.classList.add('d-none');
+                                                    errorBox.textContent = '';
+                                                }
+                                                alert('Đổi slot thành công!');
+                                                const modal = bootstrap.Modal.getInstance(document.getElementById('changeSlotModal'));
+                                                modal.hide();
+                                                window.location.reload();
+                                            } else {
+                                                if (errorBox) {
+                                                    errorBox.classList.remove('d-none');
+                                                    errorBox.textContent = data.message || 'Không thể đổi slot';
+                                                } else {
+                                                    alert('Lỗi: ' + (data.message || 'Không thể đổi slot'));
+                                                }
+                                        }
+                                        })
+                                        .catch(err => {
+                                            console.error('Lỗi khi đổi slot (catch):', err);
+                                            if (errorBox) {
+                                                errorBox.classList.remove('d-none');
+                                                errorBox.textContent = 'Lỗi khi đổi slot: ' + err.message;
+                                            } else {
+                                                alert('Lỗi khi đổi slot: ' + err.message);
+                                            }
+                                        });
+                            }
+
+                            sendChangeSlotRequest(params);
+                        });
+                    }
+
                     // Gắn sự kiện input cho tìm kiếm bệnh nhân
                     const filterInputs = ['filterPatientCode', 'filterPatientCCCD', 'filterPatientName', 'filterPatientPhone'];
                     filterInputs.forEach(inputId => {
@@ -775,6 +1025,15 @@
                             console.error(`Không tìm thấy input ${inputId} trong DOM!`);
                         }
                     });
+
+                    // Gắn sự kiện change cho filter ngày slot
+                    const filterSlotDate = document.getElementById('filterSlotDate');
+                    if (filterSlotDate) {
+                        filterSlotDate.addEventListener('change', loadAvailableSlots);
+                        console.log('Đã gắn sự kiện change cho filterSlotDate');
+                    } else {
+                        console.error('Không tìm thấy input #filterSlotDate!');
+                    }
 
                     // Xử lý sidebar
                     const sidebarCollapse = document.getElementById('sidebarCollapse');
@@ -817,6 +1076,12 @@
                             const saveButton = document.getElementById('saveAssignmentBtn');
                             if (saveButton)
                                 saveButton.disabled = true;
+                            // Reset cho modal đổi slot
+                            if (modal.id === 'changeSlotModal') {
+                                const saveChangeBtn = document.getElementById('saveChangeSlotBtn');
+                                if (saveChangeBtn)
+                                    saveChangeBtn.disabled = true;
+                            }
                         });
                     });
 

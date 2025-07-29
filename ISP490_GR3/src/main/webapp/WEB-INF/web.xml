@@ -35,6 +35,9 @@
         <url-pattern>/appointments/add</url-pattern>
         <url-pattern>/patient/search</url-pattern>
         <url-pattern>/appointments/remove-patient</url-pattern>
+        <url-pattern>/slots/available</url-pattern>
+        <url-pattern>/appointments/change-slot</url-pattern>
+        
         
     </servlet-mapping>
 
