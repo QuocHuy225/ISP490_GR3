@@ -383,6 +383,10 @@ body {
     margin-left: -250px;
 }
 
+#sidebar.active {
+    margin-left: 0;
+}
+
 #sidebar .sidebar-header {
     padding: 20px;
     background: var(--primary-dark);
@@ -460,6 +464,11 @@ body {
 
 #content.expanded {
     width: 100%;
+}
+
+#content.active {
+    width: 100%;
+    margin-left: 0;
 }
 
 .top-navbar {

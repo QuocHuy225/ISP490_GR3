@@ -457,6 +457,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="${pageContext.request.contextPath}/admin/partners">
+                        <i class="bi bi-building"></i> Quản lý đối tác
+                    </a>
+                </li>
+                <li>
                     <a href="${pageContext.request.contextPath}/admin/medicines">
                         <i class="bi bi-hospital"></i> Quản lý kho thuốc
                     </a>

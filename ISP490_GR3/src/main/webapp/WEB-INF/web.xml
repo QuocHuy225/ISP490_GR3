@@ -136,6 +136,16 @@
         <url-pattern>/receptionist/manage-doctor-schedule</url-pattern>
     </servlet-mapping>
     
+    <servlet>
+        <servlet-name>PartnerController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.PartnerController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PartnerController</servlet-name>
+        <url-pattern>/admin/partners</url-pattern>
+        <url-pattern>/admin/partners/*</url-pattern>
+    </servlet-mapping>
+    
     
     <error-page>
         <error-code>404</error-code>
