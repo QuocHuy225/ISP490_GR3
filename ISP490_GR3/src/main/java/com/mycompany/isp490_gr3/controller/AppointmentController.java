@@ -473,6 +473,12 @@ public class AppointmentController extends HttpServlet {
                 out.print(gson.toJson(new ResponseJson(false, "Slot mới không tồn tại hoặc đã bị xóa")));
                 return;
             }
+            
+            if (dao.isAssigned(appointmentId)) {
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã tồn tại trong slot.")));
+                return;
+            }
 
             // Kiểm tra slot mới đã đầy chưa
             if (dao.isSlotAssigned(newSlotId)) {
