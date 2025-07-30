@@ -18,6 +18,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
         <!-- Homepage specific CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/homepage.css">
+        <!-- DataTables CSS -->
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
         <!-- Authorization specific styles -->
         <style>
             /* Authorization specific styles only */
@@ -161,6 +163,67 @@
             .table-responsive {
                 max-height: 600px;
                 overflow-y: auto;
+            }
+
+            /* DataTables custom styles */
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_info,
+            .dataTables_wrapper .dataTables_processing,
+            .dataTables_wrapper .dataTables_paginate {
+                color: #2B3674;
+                font-weight: 500;
+            }
+
+            /* Hide DataTables filter since we have custom search */
+            .dataTables_wrapper .dataTables_filter {
+                display: none !important;
+            }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button {
+                border: 1px solid #dee2e6;
+                background: white;
+                color: #2B3674 !important;
+                padding: 8px 12px;
+                margin: 0 2px;
+                border-radius: 6px;
+                transition: all 0.3s ease;
+            }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+                background: #0360D9 !important;
+                color: white !important;
+                border-color: #0360D9;
+            }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+                background: #0360D9 !important;
+                color: white !important;
+                border-color: #0360D9;
+            }
+
+            .dataTables_wrapper .dataTables_length select {
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                padding: 4px 8px;
+            }
+
+            .dataTables_wrapper .dataTables_info {
+                padding-top: 15px;
+            }
+
+            .dataTables_wrapper .dataTables_paginate {
+                padding-top: 15px;
+            }
+
+            /* Add margin to length menu text */
+            .dataTables_wrapper .dataTables_length {
+                margin-left: 20px;
+            }
+
+            /* Add margin to info text */
+            .dataTables_wrapper .dataTables_info {
+                margin-left: 20px;
             }
 
             /* Filter section styles */
@@ -319,6 +382,23 @@
 
                 .col-md-3, .col-md-4, .col-md-2 {
                     margin-bottom: 1rem;
+                }
+
+                /* DataTables responsive adjustments */
+                .dataTables_wrapper .dataTables_length,
+                .dataTables_wrapper .dataTables_info {
+                    text-align: center;
+                    margin-bottom: 10px;
+                }
+
+                .dataTables_wrapper .dataTables_paginate {
+                    text-align: center;
+                    margin-top: 10px;
+                }
+
+                .dataTables_wrapper .dataTables_paginate .paginate_button {
+                    padding: 6px 10px;
+                    font-size: 0.9rem;
                 }
             }
 
@@ -699,13 +779,13 @@
                 </div>
 
                 <!-- Users Table -->
-                <div class="auth-container">
+                <div class="auth-container loading">
                     <% 
                     List<User> usersToShow = isShowingDeleted ? deletedUsers : allUsers;
                     if (usersToShow != null && !usersToShow.isEmpty()) { 
                     %>
                     <div class="table-responsive">
-                        <table class="table users-table">
+                        <table class="table users-table" id="usersTable">
                             <thead class="table-primary">
                                 <tr>
                                     <th>Người dùng</th>
@@ -781,15 +861,22 @@
                                         <% } %>
                                     </td>
                                 </tr>
-                                <% } %>
-                            </tbody>
-                        </table>
+                                                                            <% } %>
+                                        </tbody>
+                                    </table>
+                                    <!-- Empty state will be handled by DataTables -->
                     </div>
                     <% } else { %>
                     <div class="p-5 text-center">
                         <i class="bi bi-people" style="font-size: 4rem; color: #A3AED0;"></i>
                         <h4 class="mt-3">Không có người dùng nào</h4>
-                        <p class="text-muted">Danh sách người dùng trống hoặc có lỗi khi tải dữ liệu.</p>
+                        <p class="text-muted">
+                            <% if (isShowingDeleted) { %>
+                            Không có tài khoản nào đã bị xóa.
+                            <% } else { %>
+                            Danh sách người dùng trống hoặc có lỗi khi tải dữ liệu.
+                            <% } %>
+                        </p>
                     </div>
                     <% } %>
                 </div>
@@ -985,10 +1072,15 @@
             </div>
         </div>
 
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- DataTables JS -->
+        <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
         <script>
-                                                document.addEventListener('DOMContentLoaded', function () {
+                                                $(document).ready(function () {
                                                     // Sidebar toggle
                                                     const sidebarCollapse = document.getElementById('sidebarCollapse');
                                                     const sidebar = document.getElementById('sidebar');
@@ -1251,6 +1343,35 @@
                                                             this.classList.remove('is-invalid');
                                                         } else {
                                                             this.classList.remove('is-valid', 'is-invalid');
+                                                        }
+                                                    });
+
+                                                    // Initialize DataTable
+                                                    var usersTable = $('#usersTable').DataTable({
+                                                        "searching": false, // Disable built-in search since we have custom search
+                                                        "order": [[2, "desc"]], // Default sort by created_at (descending)
+                                                        "pageLength": 10, // Default page length
+                                                        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
+                                                        "language": {
+                                                            "lengthMenu": "Hiển thị _MENU_ mục",
+                                                            "zeroRecords": "Không có dữ liệu",
+                                                            "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                                                            "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
+                                                            "infoFiltered": "(lọc từ _MAX_ tổng số mục)",
+                                                            "paginate": {
+                                                                "first": "Đầu",
+                                                                "last": "Cuối",
+                                                                "next": "Tiếp",
+                                                                "previous": "Trước"
+                                                            }
+                                                        },
+                                                        "drawCallback": function(settings) {
+                                                            // Add custom styling after each draw
+                                                            $('.dataTables_wrapper').addClass('mt-3');
+                                                        },
+                                                        "initComplete": function(settings, json) {
+                                                            // Remove loading state after table is initialized
+                                                            $('.loading').removeClass('loading');
                                                         }
                                                     });
                                                 });
