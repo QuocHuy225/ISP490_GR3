@@ -3,7 +3,9 @@
 <%@ page import="com.mycompany.isp490_gr3.model.Patient" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalRecord" %>
 <%@ page import="com.mycompany.isp490_gr3.model.MedicalRequest" %>
+<%@ page import="com.mycompany.isp490_gr3.model.Partner" %>
 <%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -235,6 +237,7 @@
         Patient patient = (Patient) request.getAttribute("patient");
         MedicalRecord medicalRecord = (MedicalRecord) request.getAttribute("medicalRecord");
         MedicalRequest medicalRequest = (MedicalRequest) request.getAttribute("medicalRequest");
+        List<Partner> partners = (List<Partner>) request.getAttribute("partners");
     
         // Check if medical record is completed
         boolean isCompleted = medicalRecord != null && "completed".equals(medicalRecord.getStatus());
@@ -453,9 +456,13 @@
                                                 <label for="clinicSampleSelect" class="form-label">Chọn mẫu cơ sở chỉ định</label>
                                                 <select class="form-select" id="clinicSampleSelect" <%= isCompleted ? "disabled" : "" %>>
                                                     <option value="">-- Chọn mẫu --</option>
-                                                    <option value='{"name":"Yến Nhi Clinic","phone":"02812345678","address":"123 Đường ABC, Quận XYZ, TP.Lai Châu"}'>Yến Nhi Clinic - 02812345678 - 123 Đường ABC, Quận XYZ, TP.Lai Châu</option>
-                                                    <option value='{"name":"Anh Tú Clinic","phone":"02898765432","address":"456 Đường DEF, Quận QWE, TP.Lai Châu"}'>Anh Tú Clinic - 02898765432 - 456 Đường DEF, Quận QWE, TP.Lai Châu</option>
-                                                    <option value='{"name":"Quốc Huy Clinic","phone":"02898555432","address":"946 Đường DEF, Quận QWE, TP.Lai Châu"}'>Quốc Huy Clinic - 02898555432 - 946 Đường DEF, Quận QWE, TP.Lai Châu</option>
+                                                    <% if (partners != null) { %>
+                                                        <% for (Partner partner : partners) { %>
+                                                            <option value='{"name":"<%= partner.getName() != null ? partner.getName().replace("\"", "\\\"") : "" %>","phone":"<%= partner.getPhone() != null ? partner.getPhone().replace("\"", "\\\"") : "" %>","address":"<%= partner.getAddress() != null ? partner.getAddress().replace("\"", "\\\"") : "" %>"}'>
+                                                                <%= partner.getName() != null ? partner.getName() : "N/A" %> - <%= partner.getPhone() != null ? partner.getPhone() : "N/A" %> - <%= partner.getAddress() != null ? partner.getAddress() : "N/A" %>
+                                                            </option>
+                                                        <% } %>
+                                                    <% } %>
                                                 </select>
                                             </div>
                                         </div>

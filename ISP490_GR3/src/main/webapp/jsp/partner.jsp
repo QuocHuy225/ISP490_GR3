@@ -1,15 +1,14 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
-<%@ page import="com.mycompany.isp490_gr3.model.Medicine" %>
+<%@ page import="com.mycompany.isp490_gr3.model.Partner" %>
 <%@ page import="java.util.List" %>
-<%@ page import="java.text.DecimalFormat" %>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quản lý kho thuốc - Ánh Dương Clinic</title>
+        <title>Quản lý đối tác - Ánh Dương Clinic</title>
         <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <!-- Bootstrap CSS -->
@@ -56,13 +55,9 @@
             userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
         }
         
-        // Get medicines data
-        List<Medicine> medicines = (List<Medicine>) request.getAttribute("medicines");
-        List<String> medicineUnits = (List<String>) request.getAttribute("medicineUnits");
+        // Get partners data
+        List<Partner> partners = (List<Partner>) request.getAttribute("partners");
         String searchKeyword = (String) request.getAttribute("searchKeyword");
-        
-        // Format for currency display
-        DecimalFormat currencyFormatter = new DecimalFormat("#,###");
         %>
 
         <!-- Sidebar -->
@@ -93,12 +88,12 @@
                         <i class="bi bi-file-medical"></i> Quản lý dịch vụ
                     </a>
                 </li>
-                <li>
+                <li class="active">
                     <a href="${pageContext.request.contextPath}/admin/partners">
                         <i class="bi bi-building"></i> Quản lý đối tác
                     </a>
                 </li>
-                <li class="active">
+                <li>
                     <a href="${pageContext.request.contextPath}/admin/medicines">
                         <i class="bi bi-hospital"></i> Quản lý kho thuốc
                     </a>
@@ -190,7 +185,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <h2 class="text-primary">
-                            <i class="bi bi-hospital me-2"></i>Quản lý kho thuốc
+                            <i class="bi bi-building me-2"></i>Quản lý đối tác
                         </h2>
                     </div>
                 </div>
@@ -204,17 +199,11 @@
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="bi bi-check-circle me-2"></i>
                     <% if ("added".equals(success)) { %>
-                        Thêm thuốc thành công!
+                        Thêm đối tác thành công!
                     <% } else if ("updated".equals(success)) { %>
-                        Cập nhật thông tin thuốc thành công!
+                        Cập nhật thông tin đối tác thành công!
                     <% } else if ("deleted".equals(success)) { %>
-                        Xóa thuốc thành công!
-                    <% } else if ("stock_updated".equals(success)) { %>
-                        Cập nhật số lượng tồn kho thành công!
-                    <% } else if ("stock_added".equals(success)) { %>
-                        Thêm số lượng vào kho thành công!
-                    <% } else if ("stock_reduced".equals(success)) { %>
-                        Giảm số lượng kho thành công!
+                        Xóa đối tác thành công!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -223,52 +212,48 @@
                 <% if (error != null) { %>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <% if ("access_denied".equals(error)) { %>
-                        Bạn không có quyền truy cập chức năng này!
-                    <% } else if ("missing_fields".equals(error)) { %>
+                    <% if ("missing_fields".equals(error)) { %>
                         Vui lòng điền đầy đủ thông tin!
-                    <% } else if ("invalid_values".equals(error)) { %>
-                        Giá trị nhập vào không hợp lệ!
+                    <% } else if ("invalid_phone".equals(error)) { %>
+                        Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam (10-11 chữ số, bắt đầu bằng số 0).
+                    <% } else if ("partner_exists".equals(error)) { %>
+                        Đối tác này đã tồn tại trong hệ thống!
+                    <% } else if ("add_failed".equals(error)) { %>
+                        Thêm đối tác thất bại!
+                    <% } else if ("update_failed".equals(error)) { %>
+                        Cập nhật đối tác thất bại!
+                    <% } else if ("delete_failed".equals(error)) { %>
+                        Xóa đối tác thất bại!
                     <% } else if ("invalid_format".equals(error)) { %>
                         Định dạng dữ liệu không hợp lệ!
-                    <% } else if ("add_failed".equals(error)) { %>
-                        Thêm thuốc thất bại!
-                    <% } else if ("update_failed".equals(error)) { %>
-                        Cập nhật thất bại!
-                    <% } else if ("delete_failed".equals(error)) { %>
-                        Xóa thuốc thất bại!
-                    <% } else if ("invalid_quantity".equals(error)) { %>
-                        Số lượng phải lớn hơn 0!
-                    <% } else if ("invalid_values".equals(error)) { %>
-                        Giá trị nhập vào không hợp lệ! Đơn giá phải lớn hơn 0 và số lượng phải từ 1 trở lên.
-                    <% } else if ("medicine_exists".equals(error)) { %>
-                        Thuốc này đã tồn tại!
+                    <% } else { %>
+                        Có lỗi xảy ra. Vui lòng thử lại!
                     <% } %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
                 <% } %>
 
-                <!-- Search and Add Section -->
+                <!-- Search and Add Partner Section -->
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body">
                                 <div class="row align-items-center">
                                     <div class="col-md-8">
-                                        <form method="GET" action="${pageContext.request.contextPath}/admin/medicines" class="d-flex">
+                                        <form method="GET" action="${pageContext.request.contextPath}/admin/partners" class="d-flex">
                                             <input type="hidden" name="action" value="search">
                                             <div class="input-group">
                                                 <span class="input-group-text">
                                                     <i class="bi bi-search"></i>
                                                 </span>
                                                 <input type="text" class="form-control" name="keyword" 
-                                                       placeholder="Tìm kiếm theo tên thuốc..." 
+                                                       placeholder="Tìm kiếm theo tên hoặc số điện thoại..." 
                                                        value="<%= searchKeyword != null ? searchKeyword : "" %>">
                                                 <button class="btn btn-primary" type="submit">
                                                     Tìm kiếm
                                                 </button>
                                                 <% if (searchKeyword != null && !searchKeyword.trim().isEmpty()) { %>
-                                                <a href="${pageContext.request.contextPath}/admin/medicines" class="btn btn-outline-secondary">
+                                                <a href="${pageContext.request.contextPath}/admin/partners" class="btn btn-outline-secondary">
                                                     <i class="bi bi-x-circle"></i>
                                                 </a>
                                                 <% } %>
@@ -276,8 +261,8 @@
                                         </form>
                                     </div>
                                     <div class="col-md-4">
-                                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
-                                            <i class="bi bi-plus-circle me-2"></i>Thêm thuốc
+                                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addPartnerModal">
+                                            <i class="bi bi-plus-circle me-2"></i>Thêm đối tác
                                         </button>
                                     </div>
                                 </div>
@@ -286,13 +271,13 @@
                     </div>
                 </div>
 
-                <!-- Medicines Table -->
+                <!-- Partners Table -->
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title mb-0">
-                                    <i class="bi bi-table me-2"></i>Danh sách thuốc trong kho
+                                    <i class="bi bi-table me-2"></i>Danh sách đối tác
                                     <% if (searchKeyword != null && !searchKeyword.trim().isEmpty()) { %>
                                     <span class="badge bg-primary ms-2">Kết quả tìm kiếm: "<%= searchKeyword %>"</span>
                                     <% } %>
@@ -300,51 +285,48 @@
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table id="medicinesTable" class="table table-striped table-hover">
+                                    <table id="partnersTable" class="table table-striped table-hover">
                                         <thead class="table-primary">
                                             <tr>
                                                 <th>ID</th>
-                                                <th>Tên thuốc</th>
-                                                <th>Đơn vị tính</th>
-                                                <th>Đơn giá (VNĐ)</th>
-                                                <th>Số lượng tồn kho</th>
+                                                <th>Tên đối tác</th>
+                                                <th>Số điện thoại</th>
+                                                <th>Địa chỉ</th>
+                                                <th>Mô tả</th>
                                                 <th>Thao tác</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <% if (medicines != null && !medicines.isEmpty()) { %>
-                                                <% for (Medicine medicine : medicines) { %>
+                                            <% if (partners != null && !partners.isEmpty()) {
+                                                for (Partner partner : partners) { %>
                                                 <tr>
-                                                    <td><%= medicine.getExamMedicineId() %></td>
-                                                    <td><%= medicine.getMedicineName() %></td>
-                                                    <td><%= medicine.getUnitOfMeasure() %></td>
-                                                    <td><%= currencyFormatter.format(medicine.getUnitPrice()) %></td>
+                                                    <td><%= partner.getPartnerId() %></td>
+                                                    <td><strong><%= partner.getName() %></strong></td>
+                                                    <td><%= partner.getPhone() %></td>
+                                                    <td><%= partner.getAddress() %></td>
+                                                    <td><%= partner.getDescription() != null ? partner.getDescription() : "" %></td>
                                                     <td>
-                                                        <span class="badge <%= medicine.getStockQuantity() < 10 ? "bg-danger" : medicine.getStockQuantity() < 20 ? "bg-warning" : "bg-success" %>">
-                                                            <%= medicine.getStockQuantity() %>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <a href="${pageContext.request.contextPath}/admin/medicines?edit=<%= medicine.getExamMedicineId() %>" 
-                                                           class="btn btn-sm btn-primary me-2" title="Chỉnh sửa thông tin thuốc">
+                                                        <button type="button" class="btn btn-sm btn-primary me-2" 
+                                                                onclick="editPartner(<%= partner.getPartnerId() %>)" 
+                                                                title="Chỉnh sửa đối tác">
                                                             <i class="bi bi-pencil-square"></i>
-                                                        </a>
+                                                        </button>
                                                         <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                                onclick="deleteMedicine(<%= medicine.getExamMedicineId() %>, '<%= medicine.getMedicineName() %>')" 
-                                                                title="Xóa thuốc">
+                                                                onclick="deletePartner(<%= partner.getPartnerId() %>, '<%= partner.getName() %>')" 
+                                                                title="Xóa đối tác">
                                                             <i class="bi bi-trash3"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
                                                 <% } %>
                                             <% } else { %>
-                                                <!-- Chỉ hiển thị thông báo khi không có search keyword (tức là lần đầu truy cập trang) -->
-                                                <!-- Khi search không có kết quả thì không hiển thị gì (bảng trống) -->
-                                                <% if (searchKeyword == null || searchKeyword.trim().isEmpty()) { %>
+                                                <!-- Chỉ hiển thị thông báo khi không có search keyword -->
+                                                <% String keyword = (String) request.getAttribute("searchKeyword"); %>
+                                                <% if (keyword == null || keyword.trim().isEmpty()) { %>
                                                     <tr>
                                                         <td colspan="6" class="text-center">
                                                             <i class="bi bi-inbox me-2"></i>
-                                                            Chưa có thuốc nào trong kho
+                                                            Chưa có đối tác nào trong hệ thống
                                                         </td>
                                                     </tr>
                                                 <% } %>
@@ -359,38 +341,38 @@
             </div>
         </div>
 
-        <!-- Add Medicine Modal -->
-        <div class="modal fade" id="addMedicineModal" tabindex="-1" aria-labelledby="addMedicineModalLabel" aria-hidden="true">
+        <!-- Add Partner Modal -->
+        <div class="modal fade" id="addPartnerModal" tabindex="-1" aria-labelledby="addPartnerModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="addMedicineModalLabel">
-                            <i class="bi bi-plus-circle me-2"></i>Thêm thuốc mới
+                        <h5 class="modal-title" id="addPartnerModalLabel">
+                            <i class="bi bi-plus-circle me-2"></i>Thêm đối tác mới
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form method="POST" action="${pageContext.request.contextPath}/admin/medicines">
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/partners">
                         <div class="modal-body">
                             <input type="hidden" name="action" value="add">
                             
                             <div class="mb-3">
-                                <label for="addMedicineName" class="form-label">Tên thuốc <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addMedicineName" name="medicineName" placeholder="Nhập tên thuốc" required>
+                                <label for="addName" class="form-label">Tên đối tác <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addName" name="name" placeholder="Nhập tên đối tác" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addUnitOfMeasure" class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addUnitOfMeasure" name="unitOfMeasure" placeholder="Nhập đơn vị tính (Viên, Lọ, Hộp...)" required>
+                                <label for="addPhone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addPhone" name="phone" placeholder="Nhập số điện thoại" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="addUnitPrice" name="unitPrice" min="0" step="0.01" placeholder="Nhập đơn giá" required>
+                                <label for="addAddress" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="addAddress" name="address" rows="2" placeholder="Nhập địa chỉ" required></textarea>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="addStockQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="addStockQuantity" name="stockQuantity" min="1" placeholder="Nhập số lượng" required>
+                                <label for="addDescription" class="form-label">Mô tả</label>
+                                <textarea class="form-control" id="addDescription" name="description" rows="3" placeholder="Nhập mô tả (tùy chọn)"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -398,7 +380,7 @@
                                 <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                             </button>
                             <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle me-2"></i>Thêm thuốc
+                                <i class="bi bi-check-circle me-2"></i>Thêm đối tác
                             </button>
                         </div>
                     </form>
@@ -406,63 +388,45 @@
             </div>
         </div>
 
-        <%
-        // Get edit data for modal
-        Medicine editMedicine = (Medicine) request.getAttribute("editMedicine");
-        boolean isEdit = editMedicine != null;
-        %>
-
-        <!-- Edit Medicine Modal -->
-        <div class="modal fade" id="editMedicineModal" tabindex="-1" aria-labelledby="editMedicineModalLabel" aria-hidden="true">
+        <!-- Edit Partner Modal -->
+        <div class="modal fade" id="editPartnerModal" tabindex="-1" aria-labelledby="editPartnerModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editMedicineModalLabel">
-                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin thuốc
+                        <h5 class="modal-title" id="editPartnerModalLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin đối tác
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form method="POST" action="${pageContext.request.contextPath}/admin/medicines">
+                    <form method="POST" action="${pageContext.request.contextPath}/admin/partners">
                         <div class="modal-body">
                             <input type="hidden" name="action" value="update">
-                            <input type="hidden" name="medicineId" value="<%= isEdit ? editMedicine.getExamMedicineId() : "" %>">
+                            <input type="hidden" name="partnerId" id="editPartnerId">
                             
                             <div class="mb-3">
-                                <label for="editMedicineName" class="form-label">Tên thuốc <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editMedicineName" name="medicineName" 
-                                       placeholder="Nhập tên thuốc" value="<%= isEdit ? editMedicine.getMedicineName() : "" %>" required>
+                                <label for="editName" class="form-label">Tên đối tác <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editName" name="name" placeholder="Nhập tên đối tác" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editUnitOfMeasure" class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="editUnitOfMeasure" name="unitOfMeasure" 
-                                       placeholder="Nhập đơn vị tính (Viên, Lọ, Hộp...)" value="<%= isEdit ? editMedicine.getUnitOfMeasure() : "" %>" required>
+                                <label for="editPhone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editPhone" name="phone" placeholder="Nhập số điện thoại" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editUnitPrice" class="form-label">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="editUnitPrice" name="unitPrice" 
-                                       min="0" step="0.01" placeholder="Nhập đơn giá" value="<%= isEdit ? editMedicine.getUnitPrice() : "" %>" required>
+                                <label for="editAddress" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="editAddress" name="address" rows="2" placeholder="Nhập địa chỉ" required></textarea>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="editStockQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="editStockQuantity" name="stockQuantity" 
-                                       min="1" placeholder="Nhập số lượng" value="<%= isEdit ? editMedicine.getStockQuantity() : "" %>" required>
+                                <label for="editDescription" class="form-label">Mô tả</label>
+                                <textarea class="form-control" id="editDescription" name="description" rows="3" placeholder="Nhập mô tả (tùy chọn)"></textarea>
                             </div>
-                            
-
                         </div>
-                        <div class="modal-footer bg-light">
-                            <% if (isEdit) { %>
-                            <a href="${pageContext.request.contextPath}/admin/medicines" class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
-                            </a>
-                            <% } else { %>
+                        <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                 <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                             </button>
-                            <% } %>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>Cập nhật
                             </button>
@@ -472,34 +436,29 @@
             </div>
         </div>
 
-
-
         <!-- Delete Confirmation Modal -->
-        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal fade" id="deletePartnerModal" tabindex="-1" aria-labelledby="deletePartnerModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title text-danger" id="deleteConfirmModalLabel">
-                            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
+                        <h5 class="modal-title" id="deletePartnerModalLabel">
+                            <i class="bi bi-exclamation-triangle text-danger me-2"></i>Xác nhận xóa
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Bạn có chắc chắn muốn xóa thuốc <strong id="deleteMedicineName"></strong> không?</p>
-                        <p class="text-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            Hành động này không thể hoàn tác!
-                        </p>
+                        <p>Bạn có chắc chắn muốn xóa đối tác <strong id="deletePartnerName"></strong>?</p>
+                        <p class="text-muted"><small>Hành động này không thể hoàn tác.</small></p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="bi bi-x-circle me-2"></i>Hủy bỏ
                         </button>
-                        <form method="POST" action="${pageContext.request.contextPath}/admin/medicines" style="display: inline;">
+                        <form method="POST" action="${pageContext.request.contextPath}/admin/partners" style="display: inline;">
                             <input type="hidden" name="action" value="delete">
-                            <input type="hidden" id="deleteMedicineId" name="medicineId">
+                            <input type="hidden" name="partnerId" id="deletePartnerId">
                             <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash me-2"></i>Xóa
+                                <i class="bi bi-trash3 me-2"></i>Xóa
                             </button>
                         </form>
                     </div>
@@ -507,13 +466,12 @@
             </div>
         </div>
 
-        <!-- Bootstrap Bundle with Popper -->
+        <!-- Scripts -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-        <!-- DataTables JS -->
         <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+        <script src="${pageContext.request.contextPath}/js/homepage.js"></script>
         
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -545,39 +503,40 @@
                 window.addEventListener('resize', checkWidth);
 
                 // Initialize DataTable
-                $('#medicinesTable').DataTable({
-                    "searching": false, // Disable built-in search
-                    "language": {
-                        "lengthMenu": "Hiển thị _MENU_ mục",
-                        "zeroRecords": "Không có dữ liệu", // Không hiển thị thông báo khi không có dữ liệu
-                        "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
-                        "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
-                        "infoFiltered": "(lọc từ _MAX_ tổng số mục)",
-                        "paginate": {
-                            "first": "Đầu",
-                            "last": "Cuối",
-                            "next": "Tiếp",
-                            "previous": "Trước"
-                        }
-                    }
+                $('#partnersTable').DataTable({
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
+                    },
+                    pageLength: 10,
+                    order: [[0, 'desc']],
+                    dom: 'lrtip' // Remove search box (f), keep length, processing, info, pagination
                 });
-
             });
 
-            // Delete medicine function
-            function deleteMedicine(medicineId, medicineName) {
-                document.getElementById('deleteMedicineId').value = medicineId;
-                document.getElementById('deleteMedicineName').textContent = medicineName;
-                new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+            function editPartner(partnerId) {
+                // Fetch partner data and populate modal
+                fetch('${pageContext.request.contextPath}/admin/partners?action=get&id=' + partnerId)
+                    .then(response => response.json())
+                    .then(partner => {
+                        document.getElementById('editPartnerId').value = partner.partnerId;
+                        document.getElementById('editName').value = partner.name;
+                        document.getElementById('editPhone').value = partner.phone;
+                        document.getElementById('editAddress').value = partner.address;
+                        document.getElementById('editDescription').value = partner.description || '';
+                        
+                        new bootstrap.Modal(document.getElementById('editPartnerModal')).show();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra khi tải thông tin đối tác!');
+                    });
+            }
+
+            function deletePartner(partnerId, partnerName) {
+                document.getElementById('deletePartnerId').value = partnerId;
+                document.getElementById('deletePartnerName').textContent = partnerName;
+                new bootstrap.Modal(document.getElementById('deletePartnerModal')).show();
             }
         </script>
-
-        <% if (isEdit) { %>
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            new bootstrap.Modal(document.getElementById('editMedicineModal')).show();
-        });
-        </script>
-        <% } %>
     </body>
 </html> 
