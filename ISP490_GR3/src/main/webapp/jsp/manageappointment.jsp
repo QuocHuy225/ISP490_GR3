@@ -743,9 +743,13 @@
                     function loadAvailableSlots() {
                         console.log('Bắt đầu loadAvailableSlots...');
                         const slotDate = document.getElementById('filterSlotDate').value.trim();
-                        console.log('Tham số lọc ngày:', slotDate);
+                        const appointmentId = document.getElementById('changeAppointmentId').value;
+                        console.log('Tham số lọc:', {slotDate, appointmentId});
+
+
                         const query = new URLSearchParams({
-                            date: slotDate // Nếu không có ngày, backend có thể trả tất cả slot trống
+                            date: slotDate, // Nếu không có ngày, backend có thể trả tất cả slot trống
+                            appointmentId: appointmentId
                         }).toString();
                         const url = BASE_URL + "/slots/available?" + query; // Giả sử endpoint /slots/available để lấy slot trống
                         console.log('URL đầy đủ:', url);

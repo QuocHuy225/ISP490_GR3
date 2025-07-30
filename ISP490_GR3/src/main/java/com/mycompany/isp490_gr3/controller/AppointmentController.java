@@ -268,7 +268,6 @@ public class AppointmentController extends HttpServlet {
             String serviceIdStr = request.getParameter("servicesId");
             boolean ignoreWarning = "true".equals(request.getParameter("ignoreWarning"));  // Thêm param để ignore warning
 
-            
             if (appointmentIdStr == null || patientIdStr == null || serviceIdStr == null) {
                 out.print(gson.toJson(new ResponseJson(false, "Thiếu appointmentId hoặc patientId hoặc serviceId")));
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -313,22 +312,27 @@ public class AppointmentController extends HttpServlet {
                 return;
             }
 
-            // Kiểm tra cùng dịch vụ trong ngày
+            // Kiểm tra trùng dịch vụ và số lượng lịch hẹn (chỉ để trả về cảnh báo)
             boolean hasSameService = dao.hasServiceInSameDay(patientId, servicesId, slot.getSlotDate());
-            if (hasSameService && !ignoreWarning) {
-                out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã có dịch vụ này trong ngày. Bạn có muốn tiếp tục gán không?", "warning")));
-                response.setStatus(HttpServletResponse.SC_OK);  // Trả 200 để UI handle warning
-                return;
-            }
-
-            // Kiểm tra số lịch trong ngày
             int countTodayAppointments = dao.countAppointmentsInDateByPatient(patientId, slot.getSlotDate());
-            if (countTodayAppointments >= 2 && !ignoreWarning) {
-                out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã đặt tối đa 2 lịch trong ngày. Bạn có muốn tiếp tục gán không?", "warning")));
+
+            if ((hasSameService || countTodayAppointments >= 2) && !ignoreWarning) {
+                StringBuilder warningMsg = new StringBuilder("Bệnh nhân đã có ");
+                if (hasSameService) {
+                    warningMsg.append("dịch vụ này");
+                }
+                if (hasSameService && countTodayAppointments >= 2) {
+                    warningMsg.append(" và ");
+                }
+                if (countTodayAppointments >= 2) {
+                    warningMsg.append("nhiều hơn 2 lịch trong ngày");
+                }
+                warningMsg.append(". Bạn có muốn tiếp tục gán không?");
+                out.print(gson.toJson(new ResponseJson(false, warningMsg.toString(), "warning")));
                 response.setStatus(HttpServletResponse.SC_OK);
                 return;
             }
-
+            
             // Nếu ignoreWarning=true hoặc không vi phạm, gán bình thường
             boolean success = dao.assignPatient(appointmentId, patientId, servicesId);
             if (success) {
@@ -396,6 +400,8 @@ public class AppointmentController extends HttpServlet {
         response.setContentType("application/json");
         try (PrintWriter out = response.getWriter()) {
             String dateStr = request.getParameter("date");
+            String appointmentIdStr = request.getParameter("appointmentId");
+            
             LocalDate date = null;
             if (dateStr != null && !dateStr.isEmpty()) {
                 try {
@@ -407,9 +413,21 @@ public class AppointmentController extends HttpServlet {
                     return;
                 }
             }
+            
+            Integer appointmentId = null;
+        if (appointmentIdStr != null && !appointmentIdStr.isEmpty()) {
+            try {
+                appointmentId = Integer.parseInt(appointmentIdStr);
+            } catch (NumberFormatException e) {
+                LOGGER.warning("Invalid appointmentId format: " + appointmentIdStr);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson(new ResponseJson(false, "appointmentId không hợp lệ")));
+                return;
+            }
+        }
 
             DAOAppointment dao = new DAOAppointment();
-            List<SlotViewDTO> availableSlots = dao.getAvailableSlots(date);
+            List<SlotViewDTO> availableSlots = dao.getAvailableSlots(date, appointmentId);
             out.print(gson.toJson(availableSlots));
         }
     }
