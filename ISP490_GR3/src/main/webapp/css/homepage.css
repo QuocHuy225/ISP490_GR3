@@ -383,9 +383,7 @@ body {
     margin-left: -250px;
 }
 
-#sidebar.active {
-    margin-left: 0;
-}
+/* Removed #sidebar.active - using only #sidebar.collapsed for consistency */
 
 #sidebar .sidebar-header {
     padding: 20px;
@@ -466,10 +464,7 @@ body {
     width: 100%;
 }
 
-#content.active {
-    width: 100%;
-    margin-left: 0;
-}
+/* Removed #content.active - using only #content.expanded for consistency */
 
 .top-navbar {
     background: var(--white);
@@ -1034,13 +1029,16 @@ body {
 
     /* Homepage specific mobile styles */
     #sidebar {
+        margin-left: -250px; /* Default collapsed on mobile */
+    }
+    #sidebar.collapsed { /* Using 'collapsed' for consistency with desktop */
         margin-left: -250px;
     }
-    #sidebar.active { /* Using 'active' as per previous discussion for expanded state */
-        margin-left: 0;
-    }
     #content {
-        width: 100%;
+        width: 100%; /* Full width on mobile */
+    }
+    #content.expanded {
+        width: 100%; /* Ensure full width when sidebar is collapsed */
     }
     .top-navbar {
         margin-left: 0;
