@@ -1250,7 +1250,7 @@ public class DAOAppointment {
         }
     }
 
-    public List<SlotViewDTO> getAvailableSlots(LocalDate date) throws SQLException {
+    public List<SlotViewDTO> getAvailableSlots(LocalDate date, Integer appointmentId) throws SQLException {
         List<SlotViewDTO> slots = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT s.id, s.slot_date, s.start_time, s.end_time, s.max_patients, d.full_name AS doctor_name, "
@@ -1261,16 +1261,20 @@ public class DAOAppointment {
                 + "AND s.is_available = TRUE "
                 + "AND (s.slot_date > CURDATE() OR (s.slot_date = CURDATE() AND s.end_time > CURTIME())) "
                 + "AND EXISTS (SELECT 1 FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NULL AND a.status = 'pending' AND a.is_deleted = FALSE) "
-                + "GROUP BY s.id, s.slot_date, s.start_time, s.end_time, s.max_patients, d.full_name "
-                + "HAVING booked_patients < s.max_patients "
         );
 
         List<Object> params = new ArrayList<>();
+        if (appointmentId != null) {
+            sql.append("AND s.id != (SELECT slot_id FROM appointment WHERE id = ? AND is_deleted = FALSE) ");
+            params.add(appointmentId);
+        }
         if (date != null) {
             sql.append("AND s.slot_date = ? ");
             params.add(Date.valueOf(date));
         }
 
+        sql.append("GROUP BY s.id, s.slot_date, s.start_time, s.end_time, s.max_patients, d.full_name ");
+        sql.append("HAVING booked_patients < s.max_patients ");
         sql.append("ORDER BY s.slot_date, s.start_time");
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -1284,19 +1288,16 @@ public class DAOAppointment {
                     SlotViewDTO slot = new SlotViewDTO();
                     slot.setId(rs.getInt("id"));
                     slot.setSlotDate(rs.getDate("slot_date").toLocalDate().format(dateFormatter));
-
-                    // Kiểm tra null cho start_time và end_time
                     Time startTimeSql = rs.getTime("start_time");
                     Time endTimeSql = rs.getTime("end_time");
                     String startTime = startTimeSql != null ? startTimeSql.toLocalTime().format(timeFormatter) : "-";
                     String endTime = endTimeSql != null ? endTimeSql.toLocalTime().format(timeFormatter) : "-";
-
                     slot.setStartTime(startTime);
                     slot.setEndTime(endTime);
-                    slot.setCheckinRange(startTime + " - " + endTime); // Tương ứng slotTimeRange trong JSP
+                    slot.setCheckinRange(startTime + " - " + endTime);
                     slot.setDoctorName(rs.getString("doctor_name"));
                     slot.setMaxPatients(rs.getInt("max_patients"));
-                    slot.setBookedPatients(rs.getInt("booked_patients")); // Lấy từ subquery
+                    slot.setBookedPatients(rs.getInt("booked_patients"));
                     slots.add(slot);
                 }
             }
