@@ -300,12 +300,15 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <%
+        // Xử lý logic toast trong scriptlet
+        boolean shouldShowToast = (scheduleToastMessage != null && !scheduleToastMessage.isEmpty());
+        %>
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
+            document.addEventListener('DOMContentLoaded', function () {
+                // Toast functionality
                 const toastEl = document.getElementById("toastDoctor");
-                // Lấy cờ từ request attribute
-                // SỬA ĐỔI DÒNG NÀY ĐỂ ĐẢM BẢO CHÍNH XÁC TRUE/FALSE
-                const shouldShowToastNow = <%= request.getAttribute("scheduleToastMessage") != null && !((String)request.getAttribute("scheduleToastMessage")).isEmpty() %>; 
+                const shouldShowToastNow = <%= shouldShowToast %>; 
                 console.log("homepage.jsp: shouldShowToastNow =", shouldShowToastNow);
 
                 if (toastEl && shouldShowToastNow) {
@@ -315,31 +318,32 @@
                         toastEl.remove();
                     });
                 }
-            });
-        </script>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
+                // Sidebar toggle
                 const sidebarCollapse = document.getElementById('sidebarCollapse');
                 const sidebar = document.getElementById('sidebar');
                 const content = document.getElementById('content');
 
                 sidebarCollapse.addEventListener('click', function () {
-                    sidebar.classList.toggle('active');
-                    content.classList.toggle('active');
+                    sidebar.classList.toggle('collapsed');
+                    content.classList.toggle('expanded');
                 });
 
+                // Responsive sidebar
                 function checkWidth() {
                     if (window.innerWidth <= 768) {
-                        sidebar.classList.add('active'); 
-                        content.classList.add('active'); 
+                        sidebar.classList.add('collapsed');
+                        content.classList.add('expanded');
                     } else {
-                        sidebar.classList.remove('active'); 
-                        content.classList.remove('active'); 
+                        sidebar.classList.remove('collapsed');
+                        content.classList.remove('expanded');
                     }
                 }
 
+                // Initial check
                 checkWidth();
+
+                // Listen for window resize
                 window.addEventListener('resize', checkWidth);
 
                 setTimeout(() => {
