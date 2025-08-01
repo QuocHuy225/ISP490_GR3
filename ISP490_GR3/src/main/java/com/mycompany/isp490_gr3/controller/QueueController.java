@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  *
  * @author FPT SHOP
  */
-@WebServlet(name = "QueueController", urlPatterns = {"/queue", "/api/queue"})
+@WebServlet(name = "QueueController", urlPatterns = {"/queue", "/api/queue", "/api/queue/remove" })
 public class QueueController extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(QueueController.class.getName());
@@ -79,65 +79,57 @@ public class QueueController extends HttpServlet {
         String path = request.getServletPath();
         if ("/api/queue".equals(path)) {
             handleApiRequest(request, response);
-            return;
-        }
-
-        // Xử lý /queue (fallback hoặc load ban đầu)
-        int page = 1;
-        int limit = 10;
-        String pageParam = request.getParameter("page");
-        if (pageParam != null && pageParam.matches("\\d+")) {
-            page = Integer.parseInt(pageParam);
-        }
-        int offset = (page - 1) * limit;
-
-        int doctorId = 0;
-        String doctorIdParam = request.getParameter("doctorId");
-        if (doctorIdParam != null && doctorIdParam.matches("\\d+")) {
-            doctorId = Integer.parseInt(doctorIdParam);
-        }
-
-        String slotDateStr = request.getParameter("slotDate");
-        LocalDate slotDate = null;
-        if (slotDateStr != null && !slotDateStr.trim().isEmpty()) {
-            try {
-                slotDate = LocalDate.parse(slotDateStr);
-            } catch (DateTimeParseException e) {
-                LOGGER.warning("Invalid slotDate format: " + slotDateStr);
-            }
-        }
-
-        String appointmentCode = request.getParameter("appointmentCode");
-        String patientCode = request.getParameter("patientCode");
-
-        // Lấy danh sách bác sĩ
-        DAODoctor daoDoctor = new DAODoctor();
-        List<Doctor> doctors = daoDoctor.findAllDoctors();
-
-        // Lấy danh sách hàng đợi
-        DAOQueue dao = new DAOQueue();
-        List<QueueViewDTO> queueList;
-        int totalRecords;
-
-        if (appointmentCode != null || patientCode != null || doctorId > 0 || slotDate != null) {
-            queueList = dao.searchQueueViewDTOs(appointmentCode, patientCode, doctorId, slotDate, offset, limit);
-            totalRecords = dao.countSearchQueueViewDTOs(appointmentCode, patientCode, doctorId, slotDate);
+        } else if ("/api/queue/remove".equals(path)) {
+            handleRemoveRequest(request, response);
         } else {
-            queueList = dao.getTodayQueueViewDTOs(doctorId, slotDate, offset, limit);
-            totalRecords = dao.countTodayQueueViewDTOs(doctorId, slotDate);
+            // Xử lý /queue (fallback hoặc load ban đầu)
+            int doctorId = 0;
+            String doctorIdParam = request.getParameter("doctorId");
+            if (doctorIdParam != null && doctorIdParam.matches("\\d+")) {
+                doctorId = Integer.parseInt(doctorIdParam);
+            }
+
+            String slotDateStr = request.getParameter("slotDate");
+            LocalDate slotDate = null;
+            if (slotDateStr != null && !slotDateStr.trim().isEmpty()) {
+                try {
+                    slotDate = LocalDate.parse(slotDateStr);
+                } catch (DateTimeParseException e) {
+                    LOGGER.warning("Invalid slotDate format: " + slotDateStr);
+                }
+            }
+
+            String appointmentCode = request.getParameter("appointmentCode");
+            String patientCode = request.getParameter("patientCode");
+
+            // Lấy danh sách bác sĩ
+            DAODoctor daoDoctor = new DAODoctor();
+            List<Doctor> doctors = daoDoctor.findAllDoctors();
+
+            // Lấy danh sách hàng đợi
+            DAOQueue dao = new DAOQueue();
+            List<QueueViewDTO> queueList;
+            int totalRecords;
+
+            if (appointmentCode != null || patientCode != null || doctorId > 0 || slotDate != null) {
+                queueList = dao.searchQueueViewDTOs(appointmentCode, patientCode, doctorId, slotDate, 0, Integer.MAX_VALUE);
+                totalRecords = dao.countSearchQueueViewDTOs(appointmentCode, patientCode, doctorId, slotDate);
+            } else {
+                queueList = dao.getTodayQueueViewDTOs(doctorId, slotDate, 0, Integer.MAX_VALUE);
+                totalRecords = dao.countTodayQueueViewDTOs(doctorId, slotDate);
+            }
+
+            request.setAttribute("doctorList", doctors);
+            request.setAttribute("queueList", queueList);
+            request.setAttribute("doctorId", doctorId);
+            request.setAttribute("slotDate", slotDate != null ? slotDate.toString() : null);
+            request.setAttribute("appointmentCode", appointmentCode);
+            request.setAttribute("patientCode", patientCode);
+            request.setAttribute("totalRecords", totalRecords);
+
+            // Chuyển tiếp đến JSP
+            request.getRequestDispatcher("/jsp/queue.jsp").forward(request, response);
         }
-
-        request.setAttribute("doctorList", doctors);
-        request.setAttribute("queueList", queueList);
-        request.setAttribute("currentPage", page);
-        request.setAttribute("doctorId", doctorId);
-        request.setAttribute("slotDate", slotDate != null ? slotDate.toString() : null);
-        request.setAttribute("appointmentCode", appointmentCode);
-        request.setAttribute("patientCode", patientCode);
-        request.setAttribute("totalRecords", totalRecords);
-
-        // Chuyển tiếp đến JSP
-        request.getRequestDispatcher("/jsp/queue.jsp").forward(request, response);
     }
 
     private void handleApiRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -262,5 +254,48 @@ public class QueueController extends HttpServlet {
 
         String json = new Gson().toJson(responseData);
         response.getWriter().print(json);
+    }
+    
+    private void handleRemoveRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        Map<String, Object> responseData = new HashMap<>();
+
+        if (!checkRoleAccess(request, response)) {
+            responseData.put("success", false);
+            responseData.put("message", "Bạn không có quyền thực hiện hành động này.");
+            response.getWriter().print(new Gson().toJson(responseData));
+            return;
+        }
+
+        String appointmentCode = request.getParameter("appointmentCode");
+        LOGGER.log(Level.INFO, "Received remove request for appointmentCode: {0}", appointmentCode);
+
+        if (appointmentCode == null || appointmentCode.trim().isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            responseData.put("success", false);
+            responseData.put("message", "Mã lịch hẹn không hợp lệ.");
+            response.getWriter().print(new Gson().toJson(responseData));
+            return;
+        }
+
+        DAOQueue dao = new DAOQueue();
+        try {
+            boolean success = dao.removeFromQueue(appointmentCode);
+            if (success) {
+                responseData.put("success", true);
+                responseData.put("message", "Đã gỡ bệnh nhân khỏi hàng đợi thành công.");
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                responseData.put("success", false);
+                responseData.put("message", "Không tìm thấy lịch hẹn với mã: " + appointmentCode);
+            }
+        } catch (Exception e) {
+            LOGGER.severe("Error removing from queue: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            responseData.put("success", false);
+            responseData.put("message", "Lỗi hệ thống khi gỡ bệnh nhân khỏi hàng đợi.");
+        }
+
+        response.getWriter().print(new Gson().toJson(responseData));
     }
 }

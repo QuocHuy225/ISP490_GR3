@@ -1,13 +1,15 @@
 <%-- 
     Document   : queue
-    Created on : Jul 14, 2025, 10:46:13 AM
+    Created on : Jul 14, 2025, 10:46:13 AM
     Author     : FPT SHOP
 --%>
+
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="java.util.List" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ page import="com.mycompany.isp490_gr3.model.Appointment" %>
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -17,40 +19,37 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/queue.css">
-
     </head>
     <body>
         <%
-                    // Get user role for access control
-                    Object userRole = session.getAttribute("userRole");
-                    boolean isAdmin = false;
-                    if (userRole != null) {
-                        if (userRole instanceof User.Role) {
-                            isAdmin = ((User.Role) userRole) == User.Role.ADMIN;
-                        } else {
-                            // Fallback for String role if User.Role enum is not used directly
-                            isAdmin = "ADMIN".equalsIgnoreCase(userRole.toString());
-                        }
-                    }
+            // Get user role for access control
+            Object userRole = session.getAttribute("userRole");
+            boolean isAdmin = false;
+            if (userRole != null) {
+                if (userRole instanceof User.Role) {
+                    isAdmin = ((User.Role) userRole) == User.Role.ADMIN;
+                } else {
+                    isAdmin = "ADMIN".equalsIgnoreCase(userRole.toString());
+                }
+            }
             
-                    // Get user information
-                    Object userObj = session.getAttribute("user");
-                    String userName = "User";
-                    String userRoleDisplay = "Patient";
-                    if (userObj instanceof User) {
-                        User user = (User) userObj;
-                        userName = user.getFullName() != null ? user.getFullName() : user.getEmail();
-                        userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
-                    }
+            // Get user information
+            Object userObj = session.getAttribute("user");
+            String userName = "User";
+            String userRoleDisplay = "Patient";
+            if (userObj instanceof User) {
+                User user = (User) userObj;
+                userName = user.getFullName() != null ? user.getFullName() : user.getEmail();
+                userRoleDisplay = user.getRole() != null ? user.getRole().getValue() : "Patient";
+            }
         %>
-
+        
         <nav id="sidebar">
             <div class="sidebar-header">
                 <h3>MENU</h3>
             </div>
             <ul class="list-unstyled components">
                 <% if (userRole == User.Role.DOCTOR) { %>
-                <!-- Menu cho Bác sĩ -->
                 <li>
                     <a href="${pageContext.request.contextPath}/homepage">
                         <i class="bi bi-speedometer2"></i> Trang chủ
@@ -101,7 +100,7 @@
                     <a href="${pageContext.request.contextPath}/receptionist/manage-doctor-schedule">
                         <i class="bi bi-calendar-event-fill"></i> Quản lý lịch bác sĩ
                     </a>
-                </li> 
+                </li>
                 <li>
                     <a href="${pageContext.request.contextPath}/receptionist/report">
                         <i class="bi bi-speedometer2"></i> Báo cáo thống kê
@@ -110,26 +109,23 @@
                 <% } %>
             </ul>
         </nav>
-
+        
         <div id="content">
             <nav class="navbar navbar-expand-lg top-navbar">
                 <div class="container-fluid">
                     <button type="button" id="sidebarCollapse" class="btn btn-primary">
                         <i class="bi bi-list"></i>
                     </button>
-
                     <div style="margin-left: 60px;">
                         <h3>
                             <span style="color: #007bff;">Ánh Dương</span>
                             <span style="color: #333;">Clinic</span>
                         </h3>
                     </div>
-
                     <div class="navbar-search mx-auto">
                         <i class="bi bi-search"></i>
                         <input type="text" class="form-control" placeholder="Tìm kiếm bệnh nhân, lịch hẹn, hồ sơ...">
                     </div>
-
                     <div class="dropdown user-dropdown">
                         <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <div class="user-profile-icon">
@@ -149,7 +145,7 @@
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                                <% } %>
+                            <% } %>
                             <li>
                                 <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
                                     <i class="bi bi-person-fill"></i>
@@ -179,8 +175,7 @@
                     </div>
                 </div>
             </nav>
-
-            <!-- Breadcrumb được căn giữa theo chiều dọc -->
+            
             <div class="content-wrapper">
                 <div class="breadcrumb-container">
                     <nav aria-label="breadcrumb" style="margin-top:17px;">
@@ -190,9 +185,8 @@
                         </ol>
                     </nav>
                 </div>
-            </div>                          
-
-
+            </div>
+            
             <form id="searchForm" action="${pageContext.request.contextPath}/queue" method="post" class="mb-4 mt-3 p-3 border rounded shadow-sm bg-light">
                 <input type="hidden" name="action" value="search" />
                 <div class="row mb-3">
@@ -219,10 +213,10 @@
                     </button>
                 </div>
             </form>
-
+            
             <div class="appointment-list-section animate-fade-in">
                 <div class="appointment-list-header">
-                    <h5 id="queueHeader">Danh sách hàng đợi hôm nay  ${empty slotDate ? LocalDate.now().toString() : slotDate}  (<span id="totalRecordsDisplay">0</span> kết quả)</h5>
+                    <h5 id="queueHeader">Danh sách hàng đợi hôm nay ${empty slotDate ? LocalDate.now().toString() : slotDate} (<span id="totalRecordsDisplay">0</span> kết quả)</h5>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered table-appointments">
@@ -240,7 +234,7 @@
                                 <th>Giờ check-in</th>
                                 <th>Bác sĩ</th>
                                 <th>Trạng thái</th>
-
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="queueTableBody">
@@ -248,7 +242,6 @@
                         </tbody>
                     </table>
                 </div>
-
                 <div class="pagination-container">
                     <div class="pagination-info" id="paginationInfo">
                         <!-- Sẽ được cập nhật bằng AJAX -->
@@ -260,8 +253,26 @@
                     </nav>
                 </div>
             </div>
-
-
+            
+            <!-- Modal for confirming removal -->
+            <div class="modal fade" id="confirmRemoveModal" tabindex="-1" aria-labelledby="confirmRemoveModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmRemoveModalLabel">Xác nhận gỡ lịch hẹn</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Bạn có chắc chắn muốn gỡ lịch hẹn <span id="modalAppointmentCode"></span>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-danger" id="confirmRemoveButton">Gỡ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <script>
                 <%
                     String scheme = request.getScheme();
@@ -270,7 +281,7 @@
                     String contextPath = request.getContextPath();
                     String baseURL = scheme + "://" + serverName + ":" + serverPort + contextPath;
                 %>
-
+                
                 document.addEventListener("DOMContentLoaded", function () {
                     const BASE_URL = "<%= baseURL %>";
                     console.log("BASE_URL:", BASE_URL);
@@ -278,21 +289,26 @@
                     const resetFilterButton = document.getElementById("resetFilterButton");
                     const tableBody = document.getElementById("queueTableBody");
                     const paginationInfo = document.getElementById("paginationInfo");
-
+                    const confirmRemoveModal = new bootstrap.Modal(document.getElementById('confirmRemoveModal'));
+                    const modalAppointmentCode = document.getElementById('modalAppointmentCode');
+                    
+                    const confirmRemoveButton = document.getElementById('confirmRemoveButton');
+                    let currentAppointmentCode = '';
+                    
                     if (!tableBody) {
                         console.error("Không tìm thấy queueTableBody trong DOM!");
                         return;
                     }
-
+                    
                     // Load initial queue
                     loadQueue();
-
+                    
                     // Search form submit with AJAX
                     searchForm.addEventListener("submit", function (e) {
                         e.preventDefault();
                         loadQueue();
                     });
-
+                    
                     // Reset filter with AJAX
                     resetFilterButton.addEventListener("click", function () {
                         const form = document.getElementById("searchForm");
@@ -302,7 +318,6 @@
                         const actionURL = form.getAttribute("action");
                         const formData = new FormData();
                         formData.append("action", "search");
-
                         fetch(actionURL, {
                             method: "POST",
                             body: formData
@@ -313,167 +328,211 @@
                             alert("Lỗi khi đặt lại bộ lọc: " + err.message);
                         });
                     });
-
+                    
                     // Load danh sách hàng đợi
                     function loadQueue() {
                         const doctorIdElement = document.getElementById('doctorId');
                         const slotDateElement = document.getElementById('slotDate');
+                        
                         if (!doctorIdElement || !slotDateElement) {
                             console.error("Không tìm thấy phần tử doctorId hoặc slotDate trong DOM!");
                             return;
                         }
-
+                        
                         const doctorId = doctorIdElement.value.trim();
                         const slotDate = slotDateElement.value.trim();
                         console.log("doctorId value:", doctorId);
                         console.log("slotDate value:", slotDate);
-
+                        
                         const query = new URLSearchParams({
                             doctorId: doctorId,
                             slotDate: slotDate
                         }).toString();
                         const url = BASE_URL + "/api/queue?" + query;
                         console.log("Generated URL:", url);
-
-                        tableBody.innerHTML = '<tr><td colspan="12" class="text-center"><div class="spinner">Đang tải...</div></td></tr>';
-
+                        
+                        tableBody.innerHTML = '<tr><td colspan="13" class="text-center"><div class="spinner">Đang tải...</div></td></tr>';
+                        
                         fetch(url, {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json'
                             }
                         })
-                                .then(res => {
-                                    console.log('Response status at ' + new Date().toLocaleString() + ':', res.status);
-                                    if (res.status === 404) {
-                                        throw new Error("404 Not Found: Endpoint /api/queue không tồn tại hoặc không được ánh xạ đúng!");
-                                    }
-                                    if (res.status === 403) {
-                                        throw new Error("403 Forbidden: Bạn không có quyền truy cập hoặc session hết hạn!");
-                                    }
-                                    if (!res.ok) {
-                                        throw new Error(`HTTP error! status: ${res.status} - URL: ${url}`);
-                                    }
-                                    return res.json();
-                                })
-                                .then(data => {
-                                    console.log("Received data:", JSON.stringify(data, null, 2));
-                                    const totalRecordsDisplay = document.getElementById('totalRecordsDisplay');
-                                    totalRecordsDisplay.textContent = data.totalRecords || 0;
-                                    paginationInfo.innerHTML = 'Hiển thị ' + (data.queueList ? data.queueList.length : 0) + ' / ' + (data.totalRecords || 0) + ' kết quả';
-
-                                    tableBody.innerHTML = '';
-                                    if (!data.queueList || data.queueList.length === 0) {
-                                        console.log("Không có dữ liệu trong queueList hoặc queueList không tồn tại. Data:", JSON.stringify(data));
-                                        tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Không có hàng đợi nào được tìm thấy.</td></tr>';
-                                    } else {
-                                        console.log("Bắt đầu render queueList với", data.queueList.length, "bản ghi");
-                                        let addedSeparator = false;
-                                        data.queueList.forEach((q, index) => {
-                                            try {
-                                                console.log("Rendering item", index + 1, ":", q);
-                                                // Thêm viền ngăn cách khi gặp phần tử đầu tiên sau currentTime
-                                                if (!addedSeparator && !q.isBeforeCurrentTime) {
-                                                    const separatorRow = document.createElement('tr');
-                                                    separatorRow.classList.add('separator');
-                                                    separatorRow.innerHTML = `<td colspan="12" style="border-bottom: 3px solid #007bff; text-align: center; font-weight: bold;">Thời gian hiện tại: ${data.currentTime}</td>`;
-                                                    tableBody.appendChild(separatorRow);
-                                                    addedSeparator = true;
-                                                }
-
-                                                const row = document.createElement('tr');
-                                                if (q.priority === 1) {
-                                                    row.classList.add('priority-high'); // Ưu tiên cao gần viền
-                                                }
-                                                if (q.isBeforeCurrentTime) {
-                                                    row.classList.add('before-current');
-                                                } else {
-                                                    row.classList.add('after-current');
-                                                }
-                                                row.innerHTML = '<td>' + (index + 1) + '</td>' +
-                                                        '<td>' + (q.appointmentCode || '-') + '</td>' +
-                                                        '<td>' + (q.slotDate || '-') + '</td>' +
-                                                        '<td>' + (q.slotTimeRange || '-') + '</td>' +
-                                                        '<td>' + (q.patientCode || '-') + '</td>' +
-                                                        '<td>' + (q.patientName || '-') + '</td>' +
-                                                        '<td>' + (q.patientPhone || '-') + '</td>' +
-                                                        '<td>' + (q.serviceName || '-') + '</td>' +
-                                                        '<td>' + (q.priority === 1 ? '<span class="badge bg-danger">Cao</span>' : '<span class="badge bg-secondary">Trung bình</span>') + '</td>' +
-                                                        '<td>' + (q.checkinTime || '-') + '</td>' +
-                                                        '<td>' + (q.doctorName || '-') + '</td>' +
-                                                        '<td>' +
-                                                        (q.status === 'waiting' ? '<span class="badge bg-warning text-dark">Đang chờ</span>' :
-                                                                q.status === 'in_progress' ? '<span class="badge bg-info text-dark">Đang khám</span>' :
-                                                                q.status === 'completed' ? '<span class="badge bg-success">Hoàn thành</span>' :
-                                                                q.status === 'skipped' ? '<span class="badge bg-secondary">Bỏ qua</span>' :
-                                                                q.status === 'rejected' ? '<span class="badge bg-danger">Từ chối</span>' : '-') +
-                                                        '</td>';
-                                                tableBody.appendChild(row);
-                                            } catch (error) {
-                                                console.error('Lỗi khi render hàng ' + (index + 1) + ':', error, q);
-                                            }
-                                        });
-                                        console.log("Hoàn tất render queueList");
-                                    }
-                                })
-                                .catch(err => {
-                                    console.error('Lỗi khi tải danh sách hàng đợi at ' + new Date().toLocaleString() + ':', err);
-                                    tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Lỗi: Không thể tải dữ liệu. URL: ' + url + '</td></tr>';
-                                })
-                                .finally(() => {
-                                    if (tableBody.querySelector('.spinner')) {
-                                        tableBody.innerHTML = '';
+                        .then(res => {
+                            console.log('Response status at ' + new Date().toLocaleString() + ':', res.status);
+                            if (res.status === 404) {
+                                throw new Error("404 Not Found: Endpoint /api/queue không tồn tại hoặc không được ánh xạ đúng!");
+                            }
+                            if (res.status === 403) {
+                                throw new Error("403 Forbidden: Bạn không có quyền truy cập hoặc session hết hạn!");
+                            }
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status} - URL: ${url}`);
+                            }
+                            return res.json();
+                        })
+                        .then(data => {
+                            console.log("Received data:", JSON.stringify(data, null, 2));
+                            const totalRecordsDisplay = document.getElementById('totalRecordsDisplay');
+                            totalRecordsDisplay.textContent = data.totalRecords || 0;
+                            paginationInfo.innerHTML = 'Hiển thị ' + (data.queueList ? data.queueList.length : 0) + ' / ' + (data.totalRecords || 0) + ' kết quả';
+                            tableBody.innerHTML = '';
+                            
+                            if (!data.queueList || data.queueList.length === 0) {
+                                console.log("Không có dữ liệu trong queueList hoặc queueList không tồn tại. Data:", JSON.stringify(data));
+                                tableBody.innerHTML = '<tr><td colspan="13" class="text-center text-muted">Không có hàng đợi nào được tìm thấy.</td></tr>';
+                            } else {
+                                console.log("Bắt đầu render queueList với", data.queueList.length, "bản ghi");
+                                let addedSeparator = false;
+                                
+                                data.queueList.forEach((q, index) => {
+                                    try {
+                                        console.log("Rendering item", index + 1, ":", q);
+                                        
+                                        // Thêm viền ngăn cách khi gặp phần tử đầu tiên sau currentTime
+                                        if (!addedSeparator && !q.isBeforeCurrentTime) {
+                                            const separatorRow = document.createElement('tr');
+                                            separatorRow.classList.add('separator');
+                                            separatorRow.innerHTML = `<td colspan="13" style="border-bottom: 3px solid #007bff; text-align: center; font-weight: bold;">Thời gian hiện tại: ${data.currentTime}</td>`;
+                                            tableBody.appendChild(separatorRow);
+                                            addedSeparator = true;
+                                        }
+                                        
+                                        const row = document.createElement('tr');
+                                        if (q.priority === 1) {
+                                            row.classList.add('priority-high');
+                                        }
+                                        if (q.isBeforeCurrentTime) {
+                                            row.classList.add('before-current');
+                                        } else {
+                                            row.classList.add('after-current');
+                                        }
+                                        
+                                        row.innerHTML = '<td>' + (index + 1) + '</td>' +
+                                            '<td>' + (q.appointmentCode || '-') + '</td>' +
+                                            '<td>' + (q.slotDate || '-') + '</td>' +
+                                            '<td>' + (q.slotTimeRange || '-') + '</td>' +
+                                            '<td>' + (q.patientCode || '-') + '</td>' +
+                                            '<td>' + (q.patientName || '-') + '</td>' +
+                                            '<td>' + (q.patientPhone || '-') + '</td>' +
+                                            '<td>' + (q.serviceName || '-') + '</td>' +
+                                            '<td>' + (q.priority === 1 ? '<span class="badge bg-danger">Cao</span>' : '<span class="badge bg-secondary">Trung bình</span>') + '</td>' +
+                                            '<td>' + (q.checkinTime || '-') + '</td>' +
+                                            '<td>' + (q.doctorName || '-') + '</td>' +
+                                            '<td>' +
+                                            (q.status === 'waiting' ? '<span class="badge bg-warning text-dark">Đang chờ</span>' :
+                                             q.status === 'in_progress' ? '<span class="badge bg-info text-dark">Đang khám</span>' :
+                                             q.status === 'completed' ? '<span class="badge bg-success">Hoàn thành</span>' :
+                                             q.status === 'skipped' ? '<span class="badge bg-secondary">Bỏ qua</span>' :
+                                             q.status === 'rejected' ? '<span class="badge bg-danger">Từ chối</span>' : '-') +
+                                            '</td>' +
+                                            '<td>' +
+                                            '<button class="btn btn-sm btn-danger remove-btn" data-appointment-code="' + (q.appointmentCode || '') + '"><i class="bi bi-trash"></i> Gỡ</button>' +
+                                            '</td>';
+                                        
+                                        tableBody.appendChild(row);
+                                    } catch (error) {
+                                        console.error('Lỗi khi render hàng ' + (index + 1) + ':', error, q);
                                     }
                                 });
+                                
+                                console.log("Hoàn tất render queueList");
+                                
+                                // Add event listeners for remove buttons
+                                document.querySelectorAll('.remove-btn').forEach(button => {
+                                    button.addEventListener('click', function() {
+                                        currentAppointmentCode = this.getAttribute('data-appointment-code');
+                                        modalAppointmentCode.textContent = currentAppointmentCode;
+                                        confirmRemoveModal.show();
+                                    });
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Lỗi khi tải danh sách hàng đợi at ' + new Date().toLocaleString() + ':', err);
+                            tableBody.innerHTML = '<tr><td colspan="13" class="text-center text-danger">Lỗi: Không thể tải dữ liệu. URL: ' + url + '</td></tr>';
+                        })
+                        .finally(() => {
+                            if (tableBody.querySelector('.spinner')) {
+                                tableBody.innerHTML = '';
+                            }
+                        });
                     }
+                    
+                    // Confirm remove button in modal
+                    confirmRemoveButton.addEventListener('click', function() {
+                        removeAppointment(currentAppointmentCode);
+                        confirmRemoveModal.hide();
+                    });
+                    
+                    // Function to remove appointment
+                    function removeAppointment(appointmentCode) {
+                        const url = BASE_URL + "/api/queue/remove?appointmentCode=" + encodeURIComponent(appointmentCode);
+                        console.log('Gửi yêu cầu gỡ lịch hẹn tới URL:', url, 'vào lúc:', new Date().toLocaleString());
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(res => {
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                alert('Đã gỡ lịch hẹn ' + appointmentCode + ' thành công!');
+                                loadQueue(); // Reload the queue to reflect changes
+                            } else {
+                                alert('Lỗi: ' + (data.message || 'Không thể gỡ lịch hẹn.'));
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Lỗi khi gỡ lịch hẹn at ' + new Date().toLocaleString() + ':', err);
+                            alert('Lỗi: Không thể gỡ lịch hẹn. Vui lòng thử lại sau.');
+                        });
+                    }
+                    
                     // Các biến từ Controller
                     window.GLOBAL_IS_SEARCH_PERFORMED = ${requestScope.searchPerformed != null ? requestScope.searchPerformed : false};
                     window.GLOBAL_HAS_RESULTS = ${requestScope.hasResults != null ? requestScope.hasResults : false};
                 });
             </script>
-
+            
             <%!
-                              // Hàm trợ giúp để tạo lại các tham số lọc cho phân trang
-                              // Lấy các giá trị đã được Controller setAttribute (là các param gốc từ người dùng)
-                              private String generateFilterParams(HttpServletRequest request) {
-                                  StringBuilder params = new StringBuilder();
-
-                                  // Lấy các giá trị đã được Controller setAttribute
-                                  String appointmentCode = (String) request.getAttribute("appointmentCode");
-                                  if (appointmentCode != null && !appointmentCode.isEmpty()) {
-                                      params.append("&appointmentCode=").append(appointmentCode);
-                                  }
-                                  String patientId = (String) request.getAttribute("patientId"); // Đây là patient ID String
-                                  if (patientId != null && !patientId.isEmpty()) {
-                                      params.append("&patientId=").append(patientId);
-                                  }
-                                  String doctorId = (String) request.getAttribute("doctorId"); // Đây là doctor ID String
-                                  if (doctorId != null && !doctorId.isEmpty()) {
-                                      params.append("&doctorId=").append(doctorId);
-                                  }
-                                  String status = (String) request.getAttribute("status");
-                                  if (status != null && !status.isEmpty()) {
-                                      params.append("&status=").append(status);
-                                  }
-                                  Boolean showDeleted = (Boolean) request.getAttribute("showDeleted");
-                                  if (showDeleted != null && showDeleted) { // Chỉ thêm nếu là true
-                                      params.append("&showDeleted=").append(showDeleted);
-                                  }
-                
-                                  // recordsPerPage có thể lấy từ request.getAttribute vì Controller cũng set nó
-                                  Integer rp = (Integer) request.getAttribute("recordsPerPage");
-                                  if (rp != null) {
-                                      params.append("&recordsPerPage=").append(rp);
-                                  }
-
-                                  // IMPORTANT: Always append submitSearch=true for pagination links
-                                  // This ensures the Controller always considers it a "search" request
-                                  // when navigating between pages, even if no explicit filter changed.
-                                  params.append("&submitSearch=true");
-
-                                  return params.toString();
-                              }
+                // Hàm trợ giúp để tạo lại các tham số lọc cho phân trang
+                private String generateFilterParams(HttpServletRequest request) {
+                    StringBuilder params = new StringBuilder();
+                    String appointmentCode = (String) request.getAttribute("appointmentCode");
+                    if (appointmentCode != null && !appointmentCode.isEmpty()) {
+                        params.append("&appointmentCode=").append(appointmentCode);
+                    }
+                    String patientId = (String) request.getAttribute("patientId");
+                    if (patientId != null && !patientId.isEmpty()) {
+                        params.append("&patientId=").append(patientId);
+                    }
+                    String doctorId = (String) request.getAttribute("doctorId");
+                    if (doctorId != null && !doctorId.isEmpty()) {
+                        params.append("&doctorId=").append(doctorId);
+                    }
+                    String status = (String) request.getAttribute("status");
+                    if (status != null && !status.isEmpty()) {
+                        params.append("&status=").append(status);
+                    }
+                    Boolean showDeleted = (Boolean) request.getAttribute("showDeleted");
+                    if (showDeleted != null && showDeleted) {
+                        params.append("&showDeleted=").append(showDeleted);
+                    }
+                    Integer rp = (Integer) request.getAttribute("recordsPerPage");
+                    if (rp != null) {
+                        params.append("&recordsPerPage=").append(rp);
+                    }
+                    params.append("&submitSearch=true");
+                    return params.toString();
+                }
             %>
-
     </body>
 </html>
