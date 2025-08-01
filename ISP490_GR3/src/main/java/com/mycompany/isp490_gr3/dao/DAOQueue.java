@@ -339,32 +339,32 @@ public class DAOQueue {
         }
     }
 
-     public QueueViewDTO getQueueViewDTOById(int queueId) {
+    public QueueViewDTO getQueueViewDTOById(int queueId) {
         QueueViewDTO queue = null;
         String sql = "SELECT "
-                   + "q.id AS queueId, "
-                   + "a.appointment_code AS appointmentCode, "
-                   + "s.slot_date AS slotDate, "
-                   + "CONCAT(TIME_FORMAT(s.start_time, '%H:%i'), ' - ', TIME_FORMAT(s.end_time, '%H:%i')) AS slotTimeRange, "
-                   + "p.patient_code AS patientCode, "
-                   + "p.full_name AS patientName, "
-                   + "p.phone AS patientPhone, "
-                   + "ms.service_name AS serviceName, "
-                   + "q.priority, "
-                   + "a.checkin_time AS checkinTime, "
-                   + "d.full_name AS doctorName, "
-                   + "q.status, " // KHÔNG CÓ 'q.description' ở đây
-                   + "p.id AS patient_id "
-                   + "FROM queue q "
-                   + "JOIN appointment a ON q.appointment_id = a.id "
-                   + "JOIN slot s ON q.slot_id = s.id "
-                   + "JOIN patients p ON q.patient_id = p.id "
-                   + "JOIN medical_services ms ON a.services_id = ms.services_id "
-                   + "LEFT JOIN doctors d ON q.doctor_id = d.id "
-                   + "WHERE q.id = ?";
+                + "q.id AS queueId, "
+                + "a.appointment_code AS appointmentCode, "
+                + "s.slot_date AS slotDate, "
+                + "CONCAT(TIME_FORMAT(s.start_time, '%H:%i'), ' - ', TIME_FORMAT(s.end_time, '%H:%i')) AS slotTimeRange, "
+                + "p.patient_code AS patientCode, "
+                + "p.full_name AS patientName, "
+                + "p.phone AS patientPhone, "
+                + "ms.service_name AS serviceName, "
+                + "q.priority, "
+                + "a.checkin_time AS checkinTime, "
+                + "d.full_name AS doctorName, "
+                + "q.status, " // KHÔNG CÓ 'q.description' ở đây
+                + "p.id AS patient_id "
+                + "FROM queue q "
+                + "JOIN appointment a ON q.appointment_id = a.id "
+                + "JOIN slot s ON q.slot_id = s.id "
+                + "JOIN patients p ON q.patient_id = p.id "
+                + "JOIN medical_services ms ON a.services_id = ms.services_id "
+                + "LEFT JOIN doctors d ON q.doctor_id = d.id "
+                + "WHERE q.id = ?";
 
         try (Connection conn = DBContext.getConnection(); // Lấy kết nối từ DBContext của bạn
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, queueId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -391,62 +391,83 @@ public class DAOQueue {
         return queue;
     }
 
-    // kết thúc hàm của huy
-    public static void main(String[] args) {
-        DAOQueue dao = new DAOQueue();
-
-        // Tham số test
-        int pageSize = 10;
-        int currentPage = 1;
-        int offset = (currentPage - 1) * pageSize;
-
-        // Test 1: Danh sách hàng đợi mặc định
-        System.out.println("=== Test 1: Danh sách hàng đợi mặc định ===");
-        int doctorId1 = 0;
-        LocalDate slotDate1 = null;
-        List<QueueViewDTO> queueList1 = dao.getTodayQueueViewDTOs(doctorId1, slotDate1, offset, pageSize);
-        int count1 = dao.countTodayQueueViewDTOs(doctorId1, slotDate1);
-        if (queueList1.isEmpty()) {
-            System.out.println("Không có bệnh nhân nào trong hàng đợi hôm nay.");
-        } else {
-            System.out.println("Tổng số bản ghi: " + count1);
-            for (QueueViewDTO dto : queueList1) {
-                System.out.println(dto.toString());
-            }
+    public boolean removeFromQueue(String appointmentCode) {
+        if (appointmentCode == null || appointmentCode.trim().isEmpty()) {
+            LOGGER.warning("Mã lịch hẹn không hợp lệ: " + appointmentCode);
+            return false;
         }
 
-        // Test 2: Tìm kiếm với doctorId = 1 và patientCode = BN0002
-        System.out.println("\n=== Test 2: Tìm kiếm hàng đợi cho bác sĩ ID = 1 và mã bệnh nhân BN0002 ===");
-        int doctorId2 = 1;
-        LocalDate slotDate2 = null;
-        String appointmentCode2 = null;
-        String patientCode2 = "BN0002";
-        List<QueueViewDTO> queueList2 = dao.searchQueueViewDTOs(appointmentCode2, patientCode2, doctorId2, slotDate2, offset, pageSize);
-        int count2 = dao.countSearchQueueViewDTOs(appointmentCode2, patientCode2, doctorId2, slotDate2);
-        if (queueList2.isEmpty()) {
-            System.out.println("Không có hàng đợi nào cho bác sĩ ID = " + doctorId2 + " với mã bệnh nhân " + patientCode2);
-        } else {
-            System.out.println("Tổng số bản ghi: " + count2);
-            for (QueueViewDTO dto : queueList2) {
-                System.out.println(dto.toString());
-            }
-        }
+        String sqlQueue = "UPDATE queue q "
+                + "INNER JOIN appointment a ON q.appointment_id = a.id "
+                + "SET q.status = 'rejected', q.updated_at = CURRENT_TIMESTAMP "
+                + "WHERE a.appointment_code = ? "
+                + "AND q.status IN ('waiting', 'in_progress') "
+                + "AND q.is_deleted = FALSE "
+                + "AND a.is_deleted = FALSE";
+        String sqlAppointment = "UPDATE appointment a "
+                + "SET a.status = 'cancelled', a.updated_at = CURRENT_TIMESTAMP "
+                + "WHERE a.appointment_code = ? "
+                + "AND a.status IN ('pending', 'confirmed') "
+                + "AND a.is_deleted = FALSE";
 
-        // Test 3: Tìm kiếm với doctorId = 1 và slotDate = 15/07/2025
-        System.out.println("\n=== Test 3: Tìm kiếm hàng đợi cho bác sĩ ID = 1 và ngày 15/07/2025 ===");
-        int doctorId3 = 1;
-        LocalDate slotDate3 = LocalDate.of(2025, 7, 15);
-        String appointmentCode3 = null;
-        String patientCode3 = null;
-        List<QueueViewDTO> queueList3 = dao.searchQueueViewDTOs(appointmentCode3, patientCode3, doctorId3, slotDate3, offset, pageSize);
-        int count3 = dao.countSearchQueueViewDTOs(appointmentCode3, patientCode3, doctorId3, slotDate3);
-        if (queueList3.isEmpty()) {
-            System.out.println("Không có hàng đợi nào cho bác sĩ ID = " + doctorId3 + " vào ngày " + slotDate3);
-        } else {
-            System.out.println("Tổng số bản ghi: " + count3);
-            for (QueueViewDTO dto : queueList3) {
-                System.out.println(dto.toString());
+        Connection conn = null;
+        PreparedStatement stmtQueue = null;
+        PreparedStatement stmtAppointment = null;
+        boolean success = false;
+
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false); // Bắt đầu giao dịch
+
+            // Cập nhật bảng queue
+            stmtQueue = conn.prepareStatement(sqlQueue);
+            stmtQueue.setString(1, appointmentCode);
+            int rowsAffectedQueue = stmtQueue.executeUpdate();
+            LOGGER.info("Cập nhật queue cho appointmentCode " + appointmentCode + ": " + rowsAffectedQueue + " hàng bị ảnh hưởng");
+
+            // Cập nhật bảng appointment
+            stmtAppointment = conn.prepareStatement(sqlAppointment);
+            stmtAppointment.setString(1, appointmentCode);
+            int rowsAffectedAppointment = stmtAppointment.executeUpdate();
+            LOGGER.info("Cập nhật appointment cho appointmentCode " + appointmentCode + ": " + rowsAffectedAppointment + " hàng bị ảnh hưởng");
+
+            // Chỉ commit nếu cả hai cập nhật đều thành công
+            if (rowsAffectedQueue > 0 && rowsAffectedAppointment > 0) {
+                conn.commit();
+                success = true;
+                LOGGER.info("Đã gỡ thành công khỏi queue và cập nhật appointment thành 'cancelled' cho appointmentCode: " + appointmentCode);
+            } else {
+                conn.rollback();
+                LOGGER.warning("Không tìm thấy bản ghi queue hoặc appointment hợp lệ cho appointmentCode: " + appointmentCode
+                        + " (queue rows: " + rowsAffectedQueue + ", appointment rows: " + rowsAffectedAppointment + ")");
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi gỡ khỏi queue và cập nhật appointment cho appointmentCode: " + appointmentCode, e);
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    LOGGER.log(Level.SEVERE, "Lỗi khi rollback giao dịch cho appointmentCode: " + appointmentCode, rollbackEx);
+                }
+            }
+        } finally {
+            try {
+                if (stmtQueue != null) {
+                    stmtQueue.close();
+                }
+                if (stmtAppointment != null) {
+                    stmtAppointment.close();
+                }
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, "Lỗi khi đóng tài nguyên cho appointmentCode: " + appointmentCode, e);
             }
         }
+        return success;
     }
+
+    
 }
