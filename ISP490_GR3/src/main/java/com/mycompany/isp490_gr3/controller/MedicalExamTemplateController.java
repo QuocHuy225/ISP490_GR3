@@ -321,7 +321,7 @@ public class MedicalExamTemplateController extends HttpServlet {
             if (daoTemplate.isTemplateNameExists(name.trim(), id)) {
                 request.setAttribute("errorMessage", "Tên mẫu đơn đã tồn tại");
                 request.setAttribute("action", "edit");
-                showEditForm(request, response);
+                showTemplateList(request, response);
                 return;
             }
             
@@ -343,7 +343,6 @@ public class MedicalExamTemplateController extends HttpServlet {
         } catch (NumberFormatException e) {
             request.setAttribute("errorMessage", "ID không hợp lệ");
         }
-        
         
         showTemplateList(request, response);
     }
