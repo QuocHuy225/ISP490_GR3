@@ -395,6 +395,13 @@ public class WarehouseController extends HttpServlet {
                 return;
             }
             
+            // Check if another supply with same group and name exists
+            MedicalSupply existingSupply = warehouseDAO.findExistingSupply(supplyGroup.trim(), supplyName.trim());
+            if (existingSupply != null && existingSupply.getSupplyId() != supplyId) {
+                response.sendRedirect(request.getContextPath() + "/admin/medical-supplies?error=supply_exists");
+                return;
+            }
+            
             MedicalSupply supply = new MedicalSupply();
             supply.setSupplyId(supplyId);
             supply.setSupplyGroup(supplyGroup.trim());
@@ -603,6 +610,13 @@ public class WarehouseController extends HttpServlet {
             
             if (unitPrice.compareTo(BigDecimal.ZERO) <= 0 || stockQuantity < 1) {
                 response.sendRedirect(request.getContextPath() + "/admin/medicines?error=invalid_values");
+                return;
+            }
+            
+            // Check if another medicine with same name and unit exists
+            Medicine existingMedicine = warehouseDAO.findExistingMedicine(medicineName.trim(), unitOfMeasure.trim());
+            if (existingMedicine != null && existingMedicine.getExamMedicineId() != medicineId) {
+                response.sendRedirect(request.getContextPath() + "/admin/medicines?error=medicine_exists");
                 return;
             }
             
