@@ -160,6 +160,7 @@ public class MedicalExamTemplateController extends HttpServlet {
         List<MedicalExamTemplate> templates = daoTemplate.getAllTemplates();
         request.setAttribute("templates", templates);
         request.setAttribute("totalTemplates", templates.size());
+        request.setAttribute("action", "list");
         
         request.getRequestDispatcher("/jsp/medical-exam-templates.jsp").forward(request, response);
     }
@@ -233,6 +234,7 @@ public class MedicalExamTemplateController extends HttpServlet {
         request.setAttribute("templates", templates);
         request.setAttribute("searchKeyword", keyword);
         request.setAttribute("totalTemplates", templates.size());
+        // request.setAttribute("action", "list");
         
         request.getRequestDispatcher("/jsp/medical-exam-templates.jsp").forward(request, response);
     }
@@ -253,7 +255,7 @@ public class MedicalExamTemplateController extends HttpServlet {
         if (name == null || name.trim().isEmpty()) {
             request.setAttribute("errorMessage", "Tên mẫu đơn không được để trống");
             request.setAttribute("action", "add");
-            request.getRequestDispatcher("/jsp/medical-exam-templates.jsp").forward(request, response);
+            showTemplateList(request, response);
             return;
         }
         
@@ -265,7 +267,7 @@ public class MedicalExamTemplateController extends HttpServlet {
             request.setAttribute("physicalExam", physicalExam);
             request.setAttribute("clinicalInfo", clinicalInfo);
             request.setAttribute("finalDiagnosis", finalDiagnosis);
-            request.getRequestDispatcher("/jsp/medical-exam-templates.jsp").forward(request, response);
+            showTemplateList(request, response);
             return;
         }
         
@@ -341,6 +343,7 @@ public class MedicalExamTemplateController extends HttpServlet {
         } catch (NumberFormatException e) {
             request.setAttribute("errorMessage", "ID không hợp lệ");
         }
+        
         
         showTemplateList(request, response);
     }
