@@ -1250,42 +1250,72 @@ public class DAOAppointment {
         }
     }
 
-    public List<SlotViewDTO> getAvailableSlots(LocalDate date) throws SQLException {
+    public List<SlotViewDTO> getAvailableSlots(LocalDate date, Integer appointmentId) throws SQLException {
         List<SlotViewDTO> slots = new ArrayList<>();
+        Integer patientId = null;
+
+        // Lấy patient_id từ appointment
+        if (appointmentId != null) {
+            try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT patient_id FROM appointment WHERE id = ? AND is_deleted = FALSE")) {
+                ps.setInt(1, appointmentId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        patientId = rs.getInt("patient_id");
+                        if (rs.wasNull()) {
+                            patientId = null;
+                        }
+                    }
+                }
+            }
+        }
+
         StringBuilder sql = new StringBuilder(
                 "SELECT s.id, s.slot_date, s.start_time, s.end_time, s.max_patients, d.full_name AS doctor_name, "
-                + "(SELECT COUNT(*) FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NOT NULL AND a.status IN ('pending', 'confirmed') AND a.is_deleted = FALSE) AS booked_patients "
+                + "(SELECT COUNT(*) FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NOT NULL AND a.status IN ('pending','confirmed') AND a.is_deleted = FALSE) AS booked_patients "
                 + "FROM slot s "
                 + "JOIN doctors d ON s.doctor_id = d.id "
                 + "WHERE s.is_deleted = FALSE "
                 + "AND s.is_available = TRUE "
                 + "AND (s.slot_date > CURDATE() OR (s.slot_date = CURDATE() AND s.end_time > CURTIME())) "
                 + "AND EXISTS (SELECT 1 FROM appointment a WHERE a.slot_id = s.id AND a.patient_id IS NULL AND a.status = 'pending' AND a.is_deleted = FALSE) "
-                + "GROUP BY s.id, s.slot_date, s.start_time, s.end_time, s.max_patients, d.full_name "
-                + "HAVING booked_patients < s.max_patients "
         );
 
         List<Object> params = new ArrayList<>();
+
+        if (appointmentId != null) {
+            sql.append("AND s.id != (SELECT slot_id FROM appointment WHERE id = ? AND is_deleted = FALSE) ");
+            params.add(appointmentId);
+        }
+
+        if (patientId != null) {
+            sql.append("AND s.id NOT IN (SELECT slot_id FROM appointment WHERE patient_id = ? AND status IN ('pending','confirmed') AND is_deleted = FALSE) ");
+            params.add(patientId);
+        }
+
         if (date != null) {
             sql.append("AND s.slot_date = ? ");
             params.add(Date.valueOf(date));
         }
 
+        sql.append("GROUP BY s.id, s.slot_date, s.start_time, s.end_time, s.max_patients, d.full_name ");
+        sql.append("HAVING booked_patients < s.max_patients ");
         sql.append("ORDER BY s.slot_date, s.start_time");
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
+
             try (ResultSet rs = ps.executeQuery()) {
                 DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
                 while (rs.next()) {
                     SlotViewDTO slot = new SlotViewDTO();
                     slot.setId(rs.getInt("id"));
                     slot.setSlotDate(rs.getDate("slot_date").toLocalDate().format(dateFormatter));
 
-                    // Kiểm tra null cho start_time và end_time
                     Time startTimeSql = rs.getTime("start_time");
                     Time endTimeSql = rs.getTime("end_time");
                     String startTime = startTimeSql != null ? startTimeSql.toLocalTime().format(timeFormatter) : "-";
@@ -1293,17 +1323,19 @@ public class DAOAppointment {
 
                     slot.setStartTime(startTime);
                     slot.setEndTime(endTime);
-                    slot.setCheckinRange(startTime + " - " + endTime); // Tương ứng slotTimeRange trong JSP
+                    slot.setCheckinRange(startTime + " - " + endTime);
                     slot.setDoctorName(rs.getString("doctor_name"));
                     slot.setMaxPatients(rs.getInt("max_patients"));
-                    slot.setBookedPatients(rs.getInt("booked_patients")); // Lấy từ subquery
+                    slot.setBookedPatients(rs.getInt("booked_patients"));
+
                     slots.add(slot);
                 }
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách slot trống: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách slot: " + e.getMessage(), e);
             throw e;
         }
+
         return slots;
     }
 
@@ -1566,20 +1598,72 @@ public class DAOAppointment {
     }
 
     public static void main(String[] args) {
-        DAOAppointment dao = new DAOAppointment();
-        int appointmentId = 18; // Thay bằng ID lịch hẹn hiện tại thật từ DB của bạn (phải có bệnh nhân gán, status pending/confirmed, chưa hết hạn)
-        int newSlotId = 10; // Thay bằng ID slot mới thật từ DB của bạn (phải có lịch hẹn trống, chưa đầy)
+        DAOAppointment dao = new DAOAppointment(); // Giả định bạn có class DAOAppointment
 
+        // Test case 1: Lấy slot trống cho ngày cụ thể, không có appointmentId
+        LocalDate date = LocalDate.of(2025, 7, 31); // Chọn ngày tương lai
+        Integer appointmentId = 36;
+        System.out.println("Test case 1: Lấy slot trống cho ngày " + date + " (không có appointmentId)");
         try {
-            boolean success = dao.changeSlot(appointmentId, newSlotId);
-            if (success) {
-                System.out.println("Đổi slot thành công cho lịch hẹn ID " + appointmentId + " sang slot mới ID " + newSlotId);
-            } else {
-                System.out.println("Đổi slot thất bại. Kiểm tra log để biết lý do.");
-            }
+            List<SlotViewDTO> slots = dao.getAvailableSlots(date, appointmentId);
+            printSlots(slots);
         } catch (SQLException e) {
-            System.out.println("Lỗi khi đổi slot: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot trống: " + e.getMessage(), e);
+        }
+
+        // Test case 2: Lấy slot trống cho ngày cụ thể, có appointmentId (giả sử appointmentId = 5 có slot_id = 1)
+        appointmentId = 5; // Thay bằng appointmentId thực tế có trong DB
+        System.out.println("\nTest case 2: Lấy slot trống cho ngày " + date + " với appointmentId = " + appointmentId);
+        try {
+            List<SlotViewDTO> slots = dao.getAvailableSlots(date, appointmentId);
+            printSlots(slots);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot trống: " + e.getMessage(), e);
+        }
+
+        // Test case 3: Lấy tất cả slot trống, không có ngày và appointmentId
+        date = null;
+        appointmentId = null;
+        System.out.println("\nTest case 3: Lấy tất cả slot trống (không có ngày và appointmentId)");
+        try {
+            List<SlotViewDTO> slots = dao.getAvailableSlots(date, appointmentId);
+            printSlots(slots);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot trống: " + e.getMessage(), e);
+        }
+
+        // Test case 4: Lấy slot trống với appointmentId không hợp lệ (giả sử 999 không tồn tại)
+        appointmentId = 999;
+        date = LocalDate.of(2025, 7, 30);
+        System.out.println("\nTest case 4: Lấy slot trống cho ngày " + date + " với appointmentId không hợp lệ = " + appointmentId);
+        try {
+            List<SlotViewDTO> slots = dao.getAvailableSlots(date, appointmentId);
+            printSlots(slots);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot trống: " + e.getMessage(), e);
+        }
+
+        // Test case 5: Lấy slot trống cho ngày cụ thể, có appointmentId, kiểm tra loại bỏ slot có cùng patient_id
+        appointmentId = 5; // Giả sử appointmentId = 5 có patient_id = 123
+        System.out.println("\nTest case 5: Lấy slot trống cho ngày " + date + " với appointmentId = " + appointmentId + " (kiểm tra loại bỏ slot cùng patient_id)");
+        try {
+            List<SlotViewDTO> slots = dao.getAvailableSlots(date, appointmentId);
+            printSlots(slots);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy slot trống: " + e.getMessage(), e);
+        }
+    }
+
+    private static void printSlots(List<SlotViewDTO> slots) {
+        if (slots.isEmpty()) {
+            System.out.println("Không tìm thấy slot trống.");
+            return;
+        }
+        System.out.println("Danh sách slot trống:");
+        for (SlotViewDTO slot : slots) {
+            System.out.printf("ID: %d, Date: %s, Time: %s, Doctor: %s, Max Patients: %d, Booked: %d%n",
+                    slot.getId(), slot.getSlotDate(), slot.getCheckinRange(),
+                    slot.getDoctorName(), slot.getMaxPatients(), slot.getBookedPatients());
         }
     }
 

@@ -116,7 +116,8 @@
     <servlet-mapping>   
         <servlet-name>QueueController</servlet-name>
         <url-pattern>/queue</url-pattern> 
-        <url-pattern>/api/queue</url-pattern>      
+        <url-pattern>/api/queue</url-pattern> 
+        <url-pattern>/api/queue/remove</url-pattern>      
     </servlet-mapping>
     
     
