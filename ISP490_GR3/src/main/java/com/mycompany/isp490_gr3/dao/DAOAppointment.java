@@ -1665,6 +1665,24 @@ public class DAOAppointment {
                     slot.getId(), slot.getSlotDate(), slot.getCheckinRange(),
                     slot.getDoctorName(), slot.getMaxPatients(), slot.getBookedPatients());
         }
+
+    }
+
+    public boolean isPatientInSlot(int slotId, int patientId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM appointment WHERE slot_id = ? AND patient_id = ? AND status IN ('pending', 'confirmed') AND is_deleted = FALSE";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, slotId);
+            ps.setInt(2, patientId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi kiểm tra bệnh nhân trong slot: " + e.getMessage(), e);
+            throw e;
+        }
+        return false;
     }
 
 }
