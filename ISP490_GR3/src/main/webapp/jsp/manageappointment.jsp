@@ -965,20 +965,30 @@
                             console.log('URL và params đầy đủ:', url, params.toString());
 
                             function sendChangeSlotRequest(params) {
+                                const url = '/appointments/change-slot'; // Xác minh endpoint chính xác
+                                const errorBox = document.getElementById('errorBox'); // Giả định ID của errorBox
+
                                 fetch(url, {
                                     method: 'POST',
                                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                                     body: params
                                 })
                                         .then(res => {
-                                            console.log('Response status từ server:', res.status);
-                                            return res.json().then(data => ({status: res.status, data})); // Lấy cả status và JSON
+                                            console.log('Trạng thái phản hồi từ server:', res.status, 'Content-Type:', res.headers.get('Content-Type'));
+                                            // Kiểm tra content type trước khi parse JSON
+                                            if (!res.headers.get('Content-Type')?.includes('application/json')) {
+                                                return res.text().then(text => {
+                                                    throw new Error(`Phản hồi không phải JSON: ${text.substring(0, 50)}...`);
+                                                });
+                                            }
+                                            return res.json().then(data => ({status: res.status, data}));
                                         })
                                         .then(({status, data}) => {
                                             console.log('Phản hồi JSON từ server:', data);
-                                            if (status !== 200) {
-                                                throw new Error(`HTTP ${status}: ${data.message || 'No message'}`);
+                                            if (!data || typeof data !== 'object') {
+                                                throw new Error('Phản hồi JSON không hợp lệ');
                                             }
+
                                             if (data.type === "warning") {
                                                 if (confirm(data.message)) {
                                                     params.append("ignoreWarning", "true");
@@ -990,26 +1000,36 @@
                                                     errorBox.classList.add('d-none');
                                                     errorBox.textContent = '';
                                                 }
-                                                alert('Đổi slot thành công!');
+                                                alert(`Đổi slot thành công! (Mã: ${data.messageCode || 'MSG155'})`);
                                                 const modal = bootstrap.Modal.getInstance(document.getElementById('changeSlotModal'));
                                                 modal.hide();
                                                 window.location.reload();
                                             } else {
+                                                const errorMessage = data.message || `Không thể đổi slot (Mã: ${data.messageCode || 'Không xác định'})`;
                                                 if (errorBox) {
                                                     errorBox.classList.remove('d-none');
-                                                    errorBox.textContent = data.message || 'Không thể đổi slot';
+                                                    errorBox.textContent = errorMessage;
                                                 } else {
-                                                    alert('Lỗi: ' + (data.message || 'Không thể đổi slot'));
+                                                    alert(`Lỗi: ${errorMessage}`);
                                                 }
                                         }
                                         })
                                         .catch(err => {
-                                            console.error('Lỗi khi đổi slot (catch):', err);
+                                            console.error('Không thể đổi slot', err);
+                                            let errorMessage = err.message;
+                                            // Xử lý trường hợp chuyển hướng đến trang đăng nhập
+                                            if (err.message.includes('<!doctype')) {
+                                                errorMessage = 'Phiên hết hạn hoặc không có quyền truy cập. Vui lòng đăng nhập lại.';
+                                            }
                                             if (errorBox) {
                                                 errorBox.classList.remove('d-none');
-                                                errorBox.textContent = 'Lỗi khi đổi slot: ' + err.message;
+                                                errorBox.textContent = `Lỗi khi đổi slot: ${errorMessage}`;
                                             } else {
-                                                alert('Lỗi khi đổi slot: ' + err.message);
+                                                alert(`Lỗi khi đổi slot: ${errorMessage}`);
+                                            }
+                                            // Chuyển hướng đến trang đăng nhập nếu cần
+                                            if (errorMessage.includes('Vui lòng đăng nhập lại')) {
+                                                window.location.href = '/jsp/landing.jsp';
                                             }
                                         });
                             }

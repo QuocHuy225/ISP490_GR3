@@ -474,7 +474,7 @@ public class AppointmentController extends HttpServlet {
                 return;
             }
             
-            if (dao.isAssigned(appointmentId)) {
+            if (dao.isPatientInSlot(newSlotId, newSlotId)) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
                 out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã tồn tại trong slot.")));
                 return;
