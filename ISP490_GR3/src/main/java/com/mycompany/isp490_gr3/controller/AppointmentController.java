@@ -27,6 +27,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -228,15 +230,9 @@ public class AppointmentController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi khi bỏ gán bệnh nhân.");
             }
             break;
-            case "/appointments/change-slot": {
-                try {
-                    handleChangeSlot(request, response);
-                } catch (SQLException ex) {
-                    Logger.getLogger(AppointmentController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            break;
-
+            case "/appointments/change-slot":
+                handleChangeSlot(request, response);
+                break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Đường dẫn không hợp lệ.");
         }
@@ -292,27 +288,45 @@ public class AppointmentController extends HttpServlet {
                 out.print(gson.toJson(new ResponseJson(false, "Lịch hẹn không tồn tại")));
                 return;
             }
-
+            
+              // 4. Kiểm tra lịch hẹn đã được gán
             if (dao.isAssigned(appointmentId)) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
                 out.print(gson.toJson(new ResponseJson(false, "Lịch đã được gán bệnh nhân")));
                 return;
             }
-
+            
+            // 5. Kiểm tra slot tồn tại và không bị xóa
             Slot slot = dao.getSlotByAppointmentId(appointmentId);
-            if (slot.isDeleted()) {
+            if (slot == null || slot.isDeleted()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print(gson.toJson(new ResponseJson(false, "Slot đã bị xóa, không thể gán bệnh nhân")));
+                out.print(gson.toJson(new ResponseJson(false, "Slot không tồn tại hoặc đã bị xóa")));
                 return;
             }
 
-            if (slot.getSlotDate().isEqual(LocalDate.now()) && LocalTime.now().isAfter(slot.getEndTime())) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print(gson.toJson(new ResponseJson(false, "Slot đã kết thúc, không thể gán bệnh nhân")));
+            //6.Kiểm tra dữ liệu slot
+            LocalDate slotDate = slot.getSlotDate();
+            LocalTime slotEndTime = slot.getEndTime();
+            if (slotDate == null || slotEndTime == null) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(gson.toJson(new ResponseJson(false, "Dữ liệu slot không hợp lệ")));
                 return;
             }
 
-            // Kiểm tra trùng dịch vụ và số lượng lịch hẹn (chỉ để trả về cảnh báo)
+            //7. Kiểm tra slot hết hạn
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            LocalDate currentDate = now.toLocalDate();
+            LocalTime currentTime = now.toLocalTime();
+
+            // Kiểm tra nếu slot đã hết hạn
+            boolean isExpired = slotDate.isBefore(currentDate) || (slotDate.isEqual(currentDate) && !currentTime.isBefore(slotEndTime));
+            if (isExpired) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson(new ResponseJson(false, "Slot đã hết hạn, không thể gán bệnh nhân")));
+                return;
+            }
+
+            // 8. Kiểm tra trùng dịch vụ và số lượng lịch hẹn
             boolean hasSameService = dao.hasServiceInSameDay(patientId, servicesId, slot.getSlotDate());
             int countTodayAppointments = dao.countAppointmentsInDateByPatient(patientId, slot.getSlotDate());
 
@@ -333,6 +347,7 @@ public class AppointmentController extends HttpServlet {
                 return;
             }
             
+            //9.Gán bệnh nhân
             // Nếu ignoreWarning=true hoặc không vi phạm, gán bình thường
             boolean success = dao.assignPatient(appointmentId, patientId, servicesId);
             if (success) {
@@ -371,11 +386,34 @@ public class AppointmentController extends HttpServlet {
             }
 
             DAOAppointment dao = new DAOAppointment();
+            
+          // 5. Kiểm tra slot tồn tại và không bị xóa
             Slot slot = dao.getSlotByAppointmentId(appointmentId);
-
-            if (slot.getSlotDate().isEqual(LocalDate.now()) && LocalTime.now().isAfter(slot.getEndTime())) {
+            if (slot == null || slot.isDeleted()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print(gson.toJson(new ResponseJson(false, "Slot đã quá thời gian")));
+                out.print(gson.toJson(new ResponseJson(false, "Slot không tồn tại hoặc đã bị xóa")));
+                return;
+            }
+
+            //6.Kiểm tra dữ liệu slot
+            LocalDate slotDate = slot.getSlotDate();
+            LocalTime slotEndTime = slot.getEndTime();
+            if (slotDate == null || slotEndTime == null) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(gson.toJson(new ResponseJson(false, "Dữ liệu slot không hợp lệ")));
+                return;
+            }
+
+            //7. Kiểm tra slot hết hạn
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            LocalDate currentDate = now.toLocalDate();
+            LocalTime currentTime = now.toLocalTime();
+
+            // Kiểm tra nếu slot đã hết hạn
+            boolean isExpired = slotDate.isBefore(currentDate) || (slotDate.isEqual(currentDate) && !currentTime.isBefore(slotEndTime));
+            if (isExpired) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson(new ResponseJson(false, "Slot đã hết hạn, không thể bỏ gán bệnh nhân")));
                 return;
             }
 
@@ -401,7 +439,7 @@ public class AppointmentController extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             String dateStr = request.getParameter("date");
             String appointmentIdStr = request.getParameter("appointmentId");
-            
+
             LocalDate date = null;
             if (dateStr != null && !dateStr.isEmpty()) {
                 try {
@@ -413,18 +451,18 @@ public class AppointmentController extends HttpServlet {
                     return;
                 }
             }
-            
+
             Integer appointmentId = null;
-        if (appointmentIdStr != null && !appointmentIdStr.isEmpty()) {
-            try {
-                appointmentId = Integer.parseInt(appointmentIdStr);
-            } catch (NumberFormatException e) {
-                LOGGER.warning("Invalid appointmentId format: " + appointmentIdStr);
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print(gson.toJson(new ResponseJson(false, "appointmentId không hợp lệ")));
-                return;
+            if (appointmentIdStr != null && !appointmentIdStr.isEmpty()) {
+                try {
+                    appointmentId = Integer.parseInt(appointmentIdStr);
+                } catch (NumberFormatException e) {
+                    LOGGER.warning("Invalid appointmentId format: " + appointmentIdStr);
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print(gson.toJson(new ResponseJson(false, "appointmentId không hợp lệ")));
+                    return;
+                }
             }
-        }
 
             DAOAppointment dao = new DAOAppointment();
             List<SlotViewDTO> availableSlots = dao.getAvailableSlots(date, appointmentId);
@@ -432,14 +470,14 @@ public class AppointmentController extends HttpServlet {
         }
     }
 
-    private void handleChangeSlot(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
-        response.setContentType("application/json");
+    private void handleChangeSlot(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             String appointmentIdStr = request.getParameter("appointmentId");
             String newSlotIdStr = request.getParameter("newSlotId");
             boolean ignoreWarning = "true".equals(request.getParameter("ignoreWarning"));
-
-            LOGGER.log(Level.INFO, "handleChangeSlot started: appointmentIdStr={0}, newSlotIdStr={1}, parsed ignoreWarning={2}", new Object[]{appointmentIdStr, newSlotIdStr, ignoreWarning});
+            LOGGER.log(Level.INFO, "handleChangeSlot started: appointmentIdStr={0}, newSlotIdStr={1}, parsed ignoreWarning={2}",
+                    new Object[]{appointmentIdStr, newSlotIdStr, ignoreWarning});
 
             if (appointmentIdStr == null || newSlotIdStr == null || appointmentIdStr.trim().isEmpty() || newSlotIdStr.trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -458,36 +496,31 @@ public class AppointmentController extends HttpServlet {
             }
 
             DAOAppointment dao = new DAOAppointment();
-
-            // Kiểm tra lịch hẹn tồn tại
             if (!dao.exists(appointmentId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.print(gson.toJson(new ResponseJson(false, "Lịch hẹn không tồn tại")));
                 return;
             }
 
-            // Kiểm tra slot mới tồn tại
             SlotViewDTO newSlot = dao.getSlotById(newSlotId);
             if (newSlot == null) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.print(gson.toJson(new ResponseJson(false, "Slot mới không tồn tại hoặc đã bị xóa")));
                 return;
             }
-            
+
             if (dao.isPatientInSlot(newSlotId, newSlotId)) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
-                out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã tồn tại trong slot.")));
+                out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã tồn tại trong slot")));
                 return;
             }
 
-            // Kiểm tra slot mới đã đầy chưa
             if (dao.isSlotAssigned(newSlotId)) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
                 out.print(gson.toJson(new ResponseJson(false, "Slot mới đã đầy")));
                 return;
             }
 
-            // Lấy thông tin lịch hẹn hiện tại
             String getAppointmentSql = "SELECT patient_id, services_id FROM appointment WHERE id = ? AND is_deleted = FALSE";
             int patientId = -1;
             int servicesId = -1;
@@ -508,39 +541,68 @@ public class AppointmentController extends HttpServlet {
                         return;
                     }
                 }
+            } catch (SQLException e) {
+                LOGGER.severe("Lỗi truy vấn database: " + e.getMessage());
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(gson.toJson(new ResponseJson(false, "Lỗi server: " + e.getMessage())));
+                return;
             }
 
-            // Kiểm tra trùng dịch vụ trong ngày của slot mới
-            LocalDate newSlotDate = LocalDate.parse(newSlot.getSlotDate());
-            boolean hasSameService = dao.hasServiceInSameDay(patientId, servicesId, newSlotDate);
-            if (hasSameService && !ignoreWarning) {
-                out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã có dịch vụ này trong ngày. Bạn có muốn tiếp tục đổi slot không?", "warning")));
+            
+           // 5. Kiểm tra slot tồn tại và không bị xóa
+            Slot slot = dao.getSlotByAppointmentId(appointmentId);
+            if (slot == null || slot.isDeleted()) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson(new ResponseJson(false, "Slot không tồn tại hoặc đã bị xóa")));
+                return;
+            }
+
+            //6.Kiểm tra dữ liệu slot
+            LocalDate slotDate = slot.getSlotDate();
+            LocalTime slotEndTime = slot.getEndTime();
+            if (slotDate == null || slotEndTime == null) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(gson.toJson(new ResponseJson(false, "Dữ liệu slot không hợp lệ")));
+                return;
+            }
+
+            //7. Kiểm tra slot hết hạn
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            LocalDate currentDate = now.toLocalDate();
+            LocalTime currentTime = now.toLocalTime();
+
+            // Kiểm tra nếu slot đã hết hạn
+            boolean isExpired = slotDate.isBefore(currentDate) || (slotDate.isEqual(currentDate) && !currentTime.isBefore(slotEndTime));
+            if (isExpired) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson(new ResponseJson(false, "Slot đã hết hạn, không thể đổi bệnh nhân")));
+                return;
+            }
+
+            // 8. Kiểm tra trùng dịch vụ và số lượng lịch hẹn
+            boolean hasSameService = dao.hasServiceInSameDay(patientId, servicesId, slot.getSlotDate());
+            int countTodayAppointments = dao.countAppointmentsInDateByPatient(patientId, slot.getSlotDate());
+
+            if ((hasSameService || countTodayAppointments >= 2) && !ignoreWarning) {
+                StringBuilder warningMsg = new StringBuilder("Bệnh nhân đã có ");
+                if (hasSameService) {
+                    warningMsg.append("dịch vụ này");
+                }
+                if (hasSameService && countTodayAppointments >= 2) {
+                    warningMsg.append(" và ");
+                }
+                if (countTodayAppointments >= 2) {
+                    warningMsg.append("nhiều hơn 2 lịch trong ngày");
+                }
+                warningMsg.append(". Bạn có muốn tiếp tục gán không?");
+                out.print(gson.toJson(new ResponseJson(false, warningMsg.toString(), "warning")));
                 response.setStatus(HttpServletResponse.SC_OK);
                 return;
             }
+            
 
-            // Kiểm tra số lịch hẹn trong ngày của slot mới
-            int countTodayAppointments = dao.countAppointmentsInDateByPatient(patientId, newSlotDate);
-            if (countTodayAppointments >= 2 && !ignoreWarning) {
-                out.print(gson.toJson(new ResponseJson(false, "Bệnh nhân đã đặt tối đa 2 lịch trong ngày. Bạn có muốn tiếp tục đổi slot không?", "warning")));
-                response.setStatus(HttpServletResponse.SC_OK);
-                return;
-            }
-
-            // Kiểm tra slot hiện tại của lịch hẹn
-            Slot currentSlot = dao.getSlotByAppointmentId(appointmentId);
-            if (currentSlot == null) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print(gson.toJson(new ResponseJson(false, "Không tìm thấy slot hiện tại của lịch hẹn")));
-                return;
-            }
-            if (currentSlot.getSlotDate().isEqual(LocalDate.now()) && LocalTime.now().isAfter(currentSlot.getEndTime())) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print(gson.toJson(new ResponseJson(false, "Lịch hẹn hiện tại đã quá thời gian, không thể đổi slot")));
-                return;
-            }
-
-            // Kiểm tra trạng thái check-in
+            
+            //Kiểm tra checkin
             boolean isCheckedIn = dao.isCheckedIn(appointmentId);
             if (isCheckedIn) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -548,7 +610,8 @@ public class AppointmentController extends HttpServlet {
                 return;
             }
 
-            // Thực hiện đổi slot
+            
+            //Gán bệnh nhân
             boolean success = dao.changeSlot(appointmentId, newSlotId);
             if (success) {
                 LOGGER.info("Đổi slot thành công: appointmentId=" + appointmentId + ", newSlotId=" + newSlotId + ", patientId=" + patientId);
@@ -557,6 +620,10 @@ public class AppointmentController extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 out.print(gson.toJson(new ResponseJson(false, "Không thể đổi slot")));
             }
+        } catch (Exception e) {
+            LOGGER.severe("Lỗi không mong muốn trong handleChangeSlot: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().print(gson.toJson(new ResponseJson(false, "Lỗi server: " + e.getMessage())));
         }
     }
 
