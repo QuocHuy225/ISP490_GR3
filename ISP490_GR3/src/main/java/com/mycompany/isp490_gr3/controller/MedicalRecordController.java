@@ -399,7 +399,7 @@ public class MedicalRecordController extends HttpServlet {
         }
         
         // Allow both Admin and Doctor to access
-        if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.DOCTOR) {
+        if (currentUser.getRole() != User.Role.DOCTOR) {
             response.sendRedirect(request.getContextPath() + "/homepage");
             return false;
         }
