@@ -116,7 +116,7 @@ public class DAOWarehouse {
     // Check if supply exists by group and name
     public MedicalSupply findExistingSupply(String supplyGroup, String supplyName) {
         String sql = "SELECT supply_id, supply_group, supply_name, quantity, unit_price, stock_quantity, created_at, updated_at " +
-                    "FROM medical_supply WHERE supply_group = ? AND supply_name = ?";
+                    "FROM medical_supply WHERE supply_group = ? AND supply_name = ? AND isdeleted = FALSE";
         
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
