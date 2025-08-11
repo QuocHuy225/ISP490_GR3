@@ -382,7 +382,9 @@
                 <% if (error != null) { %>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <% if ("medical_record_completed".equals(error)) { %>
+                    <% if ("final_diagnosis_required".equals(error)) { %>
+                    <strong>Thiếu chẩn đoán cuối cùng!</strong> Vui lòng nhập chẩn đoán cuối cùng trước khi hoàn thành hồ sơ bệnh án.
+                    <% } else if ("medical_record_completed".equals(error)) { %>
                     Không thể tạo hoặc chỉnh sửa phiếu chỉ định vì hồ sơ bệnh án đã được hoàn thành!
                     <% } else if ("add_failed".equals(error)) { %>
                     Tạo hồ sơ bệnh án thất bại!
@@ -835,8 +837,15 @@
                                         window.saveRecord = function (status) {
                                             const form = document.getElementById('medicalRecordForm');
                                             document.getElementById('status').value = status;
-                                            // Nếu hoàn thành thì submit form truyền thống để nhận redirect từ backend
+                                            
+                                            // Kiểm tra trường chẩn đoán cuối cùng nếu hoàn thành
                                             if (status === 'completed') {
+                                                const finalDiagnosis = document.getElementById('finalDiagnosis').value.trim();
+                                                if (!finalDiagnosis) {
+                                                    alert('Vui lòng nhập chẩn đoán cuối cùng trước khi hoàn thành hồ sơ bệnh án!');
+                                                    document.getElementById('finalDiagnosis').focus();
+                                                    return;
+                                                }
                                                 form.submit();
                                                 return;
                                             }
