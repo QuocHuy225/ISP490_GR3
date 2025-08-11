@@ -90,7 +90,8 @@ public class MedicalRecordController extends HttpServlet {
         // Get patient information
         Patient patient = patientDAO.getPatientById(patientId);
         if (patient == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Patient not found");
+            // Redirect to not-found page with patient context
+            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=patient&id=" + patientId);
             return;
         }
         
@@ -122,7 +123,8 @@ public class MedicalRecordController extends HttpServlet {
         // Get patient information
         Patient patient = patientDAO.getPatientById(patientId);
         if (patient == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Patient not found");
+            // Redirect to not-found page with patient context
+            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=patient&id=" + patientId);
             return;
         }
         
@@ -148,7 +150,8 @@ public class MedicalRecordController extends HttpServlet {
         // Get patient information
         Patient patient = patientDAO.getPatientById(record.getPatientId());
         if (patient == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Patient not found");
+            // Redirect to not-found page with patient context
+            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=patient&id=" + record.getPatientId());
             return;
         }
         
@@ -175,7 +178,8 @@ public class MedicalRecordController extends HttpServlet {
         // Get patient information
         Patient patient = patientDAO.getPatientById(record.getPatientId());
         if (patient == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Patient not found");
+            // Redirect to not-found page with patient context
+            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=patient&id=" + record.getPatientId());
             return;
         }
         
@@ -189,6 +193,15 @@ public class MedicalRecordController extends HttpServlet {
         
         try {
             MedicalRecord record = extractMedicalRecordFromRequest(request);
+            
+            // Validate final diagnosis if status is completed
+            if ("completed".equals(record.getStatus())) {
+                if (record.getFinalDiagnosis() == null || record.getFinalDiagnosis().trim().isEmpty()) {
+                    response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=new&patientId=" + 
+                                        record.getPatientId() + "&error=final_diagnosis_required");
+                    return;
+                }
+            }
             
             // Get current user for created_by
             Object userObj = request.getSession().getAttribute("user");
@@ -260,6 +273,16 @@ public class MedicalRecordController extends HttpServlet {
                 MedicalRecord record = extractMedicalRecordFromRequest(request);
                 record.setId(recordId);
                 record.setUpdatedBy(updatedBy);
+                
+                // Validate final diagnosis if status is completed
+                if ("completed".equals(record.getStatus())) {
+                    if (record.getFinalDiagnosis() == null || record.getFinalDiagnosis().trim().isEmpty()) {
+                        response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
+                                            recordId + "&error=final_diagnosis_required");
+                        return;
+                    }
+                }
+                
                 success = medicalRecordDAO.updateMedicalRecord(record);
             }
             

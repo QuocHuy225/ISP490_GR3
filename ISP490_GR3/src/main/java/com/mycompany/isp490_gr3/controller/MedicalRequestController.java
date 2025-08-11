@@ -125,7 +125,8 @@ public class MedicalRequestController extends HttpServlet {
         
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
         if (medicalRecord == null) {
-            response.sendRedirect(request.getContextPath() + "/doctor/medical-requests?error=record_not_found");
+            // Redirect to not-found page with medical record context
+            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-record&id=" + medicalRecordId);
             return;
         }
         
@@ -152,7 +153,8 @@ public class MedicalRequestController extends HttpServlet {
         
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
         if (medicalRecord == null) {
-            response.sendRedirect(request.getContextPath() + "/doctor/medical-requests?error=record_not_found");
+            // Redirect to not-found page with medical record context
+            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-record&id=" + medicalRecordId);
             return;
         }
         
@@ -187,7 +189,8 @@ public class MedicalRequestController extends HttpServlet {
         int requestId = Integer.parseInt(requestIdStr);
         MedicalRequest medicalRequest = daoMedicalRequest.getRequestById(requestId);
         if (medicalRequest == null) {
-            response.sendRedirect(request.getContextPath() + "/doctor/medical-requests?error=request_not_found");
+            // Redirect to not-found page with medical request context
+            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-request&id=" + requestId);
             return;
         }
         
@@ -224,7 +227,8 @@ public class MedicalRequestController extends HttpServlet {
         int requestId = Integer.parseInt(requestIdStr);
         MedicalRequest medicalRequest = daoMedicalRequest.getRequestById(requestId);
         if (medicalRequest == null) {
-            response.sendRedirect(request.getContextPath() + "/doctor/medical-requests?error=request_not_found");
+            // Redirect to not-found page with medical request context
+            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-request&id=" + requestId);
             return;
         }
         
@@ -377,7 +381,7 @@ public class MedicalRequestController extends HttpServlet {
     // ===== UTILITY METHODS =====
     
     /**
-     * Check doctor access - allows both ADMIN and DOCTOR
+     * Check doctor access - allows DOCTOR
      */
     private boolean checkDoctorAccess(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
