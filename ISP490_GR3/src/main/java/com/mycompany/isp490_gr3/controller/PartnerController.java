@@ -205,7 +205,7 @@ public class PartnerController extends HttpServlet {
             String address = request.getParameter("address");
             String description = request.getParameter("description");
             
-            // Validate input
+            // Validate input - check for null and empty values
             if (name == null || name.trim().isEmpty() ||
                 phone == null || phone.trim().isEmpty() ||
                 address == null || address.trim().isEmpty()) {
@@ -214,21 +214,51 @@ public class PartnerController extends HttpServlet {
                 return;
             }
             
-            // Validate phone number
-            if (!isValidPhoneNumber(phone.trim())) {
+            // Validate field lengths
+            name = name.trim();
+            phone = phone.trim();
+            address = address.trim();
+            
+            if (name.length() > 255) {
+                response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format&field=name");
+                return;
+            }
+            
+            if (phone.length() > 15) {
+                response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format&field=phone");
+                return;
+            }
+            
+            if (address.length() > 500) {
+                response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format&field=address");
+                return;
+            }
+            
+            if (description != null && description.trim().length() > 1000) {
+                response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format&field=description");
+                return;
+            }
+            
+            // Validate phone number format
+            if (!isValidPhoneNumber(phone)) {
                 response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_phone");
                 return;
             }
             
-            // Check if partner already exists
+            // Check if partner already exists (by name)
             Partner existingPartner = partnerDAO.findExistingPartner(name);
             if (existingPartner != null) {
                 response.sendRedirect(request.getContextPath() + "/admin/partners?error=partner_exists");
                 return;
             }
             
-            // Create new partner
-            Partner newPartner = new Partner(name, phone.trim(), address, description);
+            // Create new partner with cleaned data
+            Partner newPartner = new Partner(
+                name, 
+                phone, 
+                address, 
+                description != null ? description.trim() : null
+            );
             
             boolean success = partnerDAO.addPartner(newPartner);
             
@@ -239,6 +269,8 @@ public class PartnerController extends HttpServlet {
             }
             
         } catch (Exception e) {
+            // Log the exception for debugging
+            e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format");
         }
     }
@@ -253,7 +285,7 @@ public class PartnerController extends HttpServlet {
             String address = request.getParameter("address");
             String description = request.getParameter("description");
             
-            // Validate input
+            // Validate input - check for null and empty values
             if (name == null || name.trim().isEmpty() ||
                 phone == null || phone.trim().isEmpty() ||
                 address == null || address.trim().isEmpty()) {
@@ -262,26 +294,51 @@ public class PartnerController extends HttpServlet {
                 return;
             }
             
-            // Validate phone number
-            if (!isValidPhoneNumber(phone.trim())) {
+            // Validate field lengths
+            name = name.trim();
+            phone = phone.trim();
+            address = address.trim();
+            
+            if (name.length() > 255) {
+                response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format&field=name");
+                return;
+            }
+            
+            if (phone.length() > 15) {
+                response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format&field=phone");
+                return;
+            }
+            
+            if (address.length() > 500) {
+                response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format&field=address");
+                return;
+            }
+            
+            if (description != null && description.trim().length() > 1000) {
+                response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format&field=description");
+                return;
+            }
+            
+            // Validate phone number format
+            if (!isValidPhoneNumber(phone)) {
                 response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_phone");
                 return;
             }
             
-            // Check if another partner with same name exists
+            // Check if another partner with same name exists (excluding current partner)
             Partner existingPartner = partnerDAO.findExistingPartner(name);
             if (existingPartner != null && existingPartner.getPartnerId() != partnerId) {
                 response.sendRedirect(request.getContextPath() + "/admin/partners?error=partner_exists");
                 return;
             }
             
-            // Create partner with updated information
+            // Create partner with updated information and cleaned data
             Partner partner = new Partner();
             partner.setPartnerId(partnerId);
             partner.setName(name);
-            partner.setPhone(phone.trim());
+            partner.setPhone(phone);
             partner.setAddress(address);
-            partner.setDescription(description);
+            partner.setDescription(description != null ? description.trim() : null);
             
             boolean success = partnerDAO.updatePartner(partner);
             
@@ -292,6 +349,10 @@ public class PartnerController extends HttpServlet {
             }
             
         } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format");
+        } catch (Exception e) {
+            // Log the exception for debugging
+            e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin/partners?error=invalid_format");
         }
     }

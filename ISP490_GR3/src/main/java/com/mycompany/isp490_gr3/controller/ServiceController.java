@@ -235,7 +235,7 @@ public class ServiceController extends HttpServlet {
             String serviceName = request.getParameter("serviceName");
             String priceStr = request.getParameter("price");
             
-            // Validate input
+            // Validate input - check for null and empty values
             if (serviceGroup == null || serviceGroup.trim().isEmpty() ||
                 serviceName == null || serviceName.trim().isEmpty() ||
                 priceStr == null || priceStr.trim().isEmpty()) {
@@ -244,21 +244,51 @@ public class ServiceController extends HttpServlet {
                 return;
             }
             
-            BigDecimal price = new BigDecimal(priceStr);
+            // Validate field lengths
+            serviceGroup = serviceGroup.trim();
+            serviceName = serviceName.trim();
             
-            if (price.compareTo(BigDecimal.ZERO) <= 0) {
-                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_price");
+            if (serviceGroup.length() > 100) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format&field=serviceGroup");
                 return;
             }
             
-            // Check if service already exists
+            if (serviceName.length() > 255) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format&field=serviceName");
+                return;
+            }
+            
+            // Validate price
+            BigDecimal price;
+            try {
+                price = new BigDecimal(priceStr.trim());
+            } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format&field=price");
+                return;
+            }
+            
+            // Validate price range (minimum 1000 VND, maximum 999,999,999 VND)
+            BigDecimal minPrice = new BigDecimal("1000");
+            BigDecimal maxPrice = new BigDecimal("999999999");
+            
+            if (price.compareTo(minPrice) < 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_price&type=min");
+                return;
+            }
+            
+            if (price.compareTo(maxPrice) > 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_price&type=max");
+                return;
+            }
+            
+            // Check if service already exists (by group and name combination)
             MedicalService existingService = serviceDAO.findExistingService(serviceGroup, serviceName);
             if (existingService != null) {
                 response.sendRedirect(request.getContextPath() + "/admin/services?error=service_exists");
                 return;
             }
             
-            // Create new service
+            // Create new service with cleaned data
             MedicalService newService = new MedicalService(serviceGroup, serviceName, price);
             
             boolean success = serviceDAO.addService(newService);
@@ -270,6 +300,10 @@ public class ServiceController extends HttpServlet {
             }
             
         } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format");
+        } catch (Exception e) {
+            // Log the exception for debugging
+            e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format");
         }
     }
@@ -283,7 +317,7 @@ public class ServiceController extends HttpServlet {
             String serviceName = request.getParameter("serviceName");
             String priceStr = request.getParameter("price");
             
-            // Validate input
+            // Validate input - check for null and empty values
             if (serviceGroup == null || serviceGroup.trim().isEmpty() ||
                 serviceName == null || serviceName.trim().isEmpty() ||
                 priceStr == null || priceStr.trim().isEmpty()) {
@@ -292,21 +326,51 @@ public class ServiceController extends HttpServlet {
                 return;
             }
             
-            BigDecimal price = new BigDecimal(priceStr);
+            // Validate field lengths
+            serviceGroup = serviceGroup.trim();
+            serviceName = serviceName.trim();
             
-            if (price.compareTo(BigDecimal.ZERO) <= 0) {
-                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_price");
+            if (serviceGroup.length() > 100) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format&field=serviceGroup");
                 return;
             }
             
-            // Check if another service with same group and name exists
+            if (serviceName.length() > 255) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format&field=serviceName");
+                return;
+            }
+            
+            // Validate price
+            BigDecimal price;
+            try {
+                price = new BigDecimal(priceStr.trim());
+            } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format&field=price");
+                return;
+            }
+            
+            // Validate price range (minimum 1000 VND, maximum 999,999,999 VND)
+            BigDecimal minPrice = new BigDecimal("1000");
+            BigDecimal maxPrice = new BigDecimal("999999999");
+            
+            if (price.compareTo(minPrice) < 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_price&type=min");
+                return;
+            }
+            
+            if (price.compareTo(maxPrice) > 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_price&type=max");
+                return;
+            }
+            
+            // Check if another service with same group and name exists (excluding current service)
             MedicalService existingService = serviceDAO.findExistingService(serviceGroup, serviceName);
             if (existingService != null && existingService.getServicesId() != serviceId) {
                 response.sendRedirect(request.getContextPath() + "/admin/services?error=service_exists");
                 return;
             }
             
-            // Create service with updated information
+            // Create service with updated information and cleaned data
             MedicalService service = new MedicalService();
             service.setServicesId(serviceId);
             service.setServiceGroup(serviceGroup);
@@ -322,6 +386,10 @@ public class ServiceController extends HttpServlet {
             }
             
         } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format");
+        } catch (Exception e) {
+            // Log the exception for debugging
+            e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin/services?error=invalid_format");
         }
     }
