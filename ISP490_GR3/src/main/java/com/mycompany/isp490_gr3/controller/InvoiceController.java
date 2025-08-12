@@ -128,7 +128,7 @@ public class InvoiceController extends HttpServlet {
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
         if (medicalRecord == null) {
             // Redirect to not-found page with medical record context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-record&id=" + medicalRecordId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=medical-record&id=" + medicalRecordId);
             return;
         }
         
@@ -156,7 +156,7 @@ public class InvoiceController extends HttpServlet {
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
         if (medicalRecord == null) {
             // Redirect to not-found page with medical record context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-record&id=" + medicalRecordId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=medical-record&id=" + medicalRecordId);
             return;
         }
         
@@ -189,14 +189,14 @@ public class InvoiceController extends HttpServlet {
         Invoice invoice = daoInvoice.getInvoiceById(invoiceId);
         if (invoice == null) {
             // Redirect to not-found page with invoice context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=invoice&id=" + invoiceId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=invoice&id=" + invoiceId);
             return;
         }
         
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(invoice.getMedicalRecordId());
         if (medicalRecord == null) {
             // Redirect to not-found page with medical record context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-record&id=" + invoice.getMedicalRecordId());
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=medical-record&id=" + invoice.getMedicalRecordId());
             return;
         }
         
@@ -236,7 +236,7 @@ public class InvoiceController extends HttpServlet {
         Invoice invoice = daoInvoice.getInvoiceById(invoiceId);
         if (invoice == null) {
             // Redirect to not-found page with invoice context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=invoice&id=" + invoiceId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=invoice&id=" + invoiceId);
             return;
         }
         
