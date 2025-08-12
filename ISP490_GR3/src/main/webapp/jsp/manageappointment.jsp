@@ -965,9 +965,9 @@
                             console.log('URL và params đầy đủ:', url, params.toString());
 
                             function sendChangeSlotRequest(params) {
-                                const url = '/appointments/change-slot'; // Xác minh endpoint chính xác
-                                const errorBox = document.getElementById('errorBox'); // Giả định ID của errorBox
-
+                                const url = BASE_URL + '/appointments/change-slot';
+                                console.log('URL đã sửa đầy đủ:', url);
+                                const errorBox = document.getElementById('changeSlotErrorMsg'); // Sử dụng ID đúng từ HTML
                                 fetch(url, {
                                     method: 'POST',
                                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -975,7 +975,6 @@
                                 })
                                         .then(res => {
                                             console.log('Trạng thái phản hồi từ server:', res.status, 'Content-Type:', res.headers.get('Content-Type'));
-                                            // Kiểm tra content type trước khi parse JSON
                                             if (!res.headers.get('Content-Type')?.includes('application/json')) {
                                                 return res.text().then(text => {
                                                     throw new Error(`Phản hồi không phải JSON: ${text.substring(0, 50)}...`);
@@ -988,36 +987,35 @@
                                             if (!data || typeof data !== 'object') {
                                                 throw new Error('Phản hồi JSON không hợp lệ');
                                             }
-
                                             if (data.type === "warning") {
                                                 if (confirm(data.message)) {
                                                     params.append("ignoreWarning", "true");
                                                     console.log('Gửi lại với ignoreWarning=true:', params.toString());
-                                                    sendChangeSlotRequest(params); // Gửi lại
+                                                    sendChangeSlotRequest(params);
                                                 }
                                             } else if (data.success) {
                                                 if (errorBox) {
                                                     errorBox.classList.add('d-none');
                                                     errorBox.textContent = '';
                                                 }
-                                                alert(`Đổi slot thành công! (Mã: ${data.messageCode || 'MSG155'})`);
+                                                alert(`Đổi slot thành công!`);
                                                 const modal = bootstrap.Modal.getInstance(document.getElementById('changeSlotModal'));
                                                 modal.hide();
                                                 window.location.reload();
                                             } else {
-                                                const errorMessage = data.message || `Không thể đổi slot (Mã: ${data.messageCode || 'Không xác định'})`;
+                                                // Xử lý trường hợp success: false (lỗi thông thường)
+                                                const errorMessage = data.message || `Không thể đổi slot `;
                                                 if (errorBox) {
                                                     errorBox.classList.remove('d-none');
                                                     errorBox.textContent = errorMessage;
                                                 } else {
-                                                    alert(`Lỗi: ${errorMessage}`);
+                                                    alert(errorMessage); // Hiển thị alert nếu không có errorBox
                                                 }
                                         }
                                         })
                                         .catch(err => {
                                             console.error('Không thể đổi slot', err);
                                             let errorMessage = err.message;
-                                            // Xử lý trường hợp chuyển hướng đến trang đăng nhập
                                             if (err.message.includes('<!doctype')) {
                                                 errorMessage = 'Phiên hết hạn hoặc không có quyền truy cập. Vui lòng đăng nhập lại.';
                                             }
@@ -1027,7 +1025,6 @@
                                             } else {
                                                 alert(`Lỗi khi đổi slot: ${errorMessage}`);
                                             }
-                                            // Chuyển hướng đến trang đăng nhập nếu cần
                                             if (errorMessage.includes('Vui lòng đăng nhập lại')) {
                                                 window.location.href = '/jsp/landing.jsp';
                                             }
