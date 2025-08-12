@@ -384,6 +384,26 @@
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     <% if ("final_diagnosis_required".equals(error)) { %>
                     <strong>Thiếu chẩn đoán cuối cùng!</strong> Vui lòng nhập chẩn đoán cuối cùng trước khi hoàn thành hồ sơ bệnh án.
+                    <% } else if ("vital_signs_respiration_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> Nhịp thở phải từ 8 đến 40 lần/phút.
+                    <% } else if ("vital_signs_temperature_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> Nhiệt độ phải từ 32 đến 45°C.
+                    <% } else if ("vital_signs_pulse_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> Mạch phải từ 30 đến 200 lần/phút.
+                    <% } else if ("vital_signs_blood_pressure_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> Huyết áp phải có định dạng số/số (ví dụ: 120/80).
+                    <% } else if ("vital_signs_blood_pressure_range_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> Huyết áp tâm thu phải từ 70-300 mmHg, tâm trương từ 40-200 mmHg.
+                    <% } else if ("vital_signs_blood_pressure_logic_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> Huyết áp tâm thu phải cao hơn tâm trương.
+                    <% } else if ("vital_signs_blood_pressure_format_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> Huyết áp không đúng định dạng số.
+                    <% } else if ("vital_signs_height_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> Chiều cao phải từ 50 đến 250 cm.
+                    <% } else if ("vital_signs_weight_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> Cân nặng phải từ 5 đến 300 kg.
+                    <% } else if ("vital_signs_spo2_invalid".equals(error)) { %>
+                    <strong>Chỉ số sinh tồn không hợp lệ!</strong> SpO2 phải từ 70 đến 100%.
                     <% } else if ("medical_record_completed".equals(error)) { %>
                     Không thể tạo hoặc chỉnh sửa phiếu chỉ định vì hồ sơ bệnh án đã được hoàn thành!
                     <% } else if ("add_failed".equals(error)) { %>
@@ -805,76 +825,15 @@
                                             document.getElementById('templateSelect').value = '';
                                         };
 
-                                        window.validateForm = function () {
-                                            let isValid = true;
-                                            // Only validate non-empty, non-disabled fields for ongoing records
-                                            if (!<%= isCompleted %>) {
-                                                if ($('#respirationRate').val() && !$('#respirationRate').is(':disabled')) {
-                                                    isValid = validateField('respirationRate', 8, 40, 'Nhịp thở phải từ 8 đến 40 lần/phút.') && isValid;
-                                                }
-                                                if ($('#temperature').val() && !$('#temperature').is(':disabled')) {
-                                                    isValid = validateField('temperature', 32, 45, 'Nhiệt độ phải từ 32 đến 45°C.') && isValid;
-                                                }
-                                                if ($('#pulse').val() && !$('#pulse').is(':disabled')) {
-                                                    isValid = validateField('pulse', 30, 200, 'Mạch phải từ 30 đến 200 lần/phút.') && isValid;
-                                                }
-                                                if ($('#bloodPressure').val() && !$('#bloodPressure').is(':disabled')) {
-                                                    isValid = validateBloodPressure() && isValid;
-                                                }
-                                                if ($('#height').val() && !$('#height').is(':disabled')) {
-                                                    isValid = validateField('height', 50, 250, 'Chiều cao phải từ 50 đến 250 cm.') && isValid;
-                                                }
-                                                if ($('#weight').val() && !$('#weight').is(':disabled')) {
-                                                    isValid = validateField('weight', 5, 300, 'Cân nặng phải từ 5 đến 300 kg.') && isValid;
-                                                }
-                                                if ($('#spo2').val() && !$('#spo2').is(':disabled')) {
-                                                    isValid = validateField('spo2', 70, 100, 'SpO2 phải từ 70 đến 100%.') && isValid;
-                                                }
-                                            }
-                                            return isValid;
-                                        };
+                                        // Validation function removed - all validation now handled by backend
 
                                         window.saveRecord = function (status) {
                                             const form = document.getElementById('medicalRecordForm');
                                             document.getElementById('status').value = status;
                                             
-                                            // Kiểm tra trường chẩn đoán cuối cùng nếu hoàn thành
-                                            if (status === 'completed') {
-                                                const finalDiagnosis = document.getElementById('finalDiagnosis').value.trim();
-                                                if (!finalDiagnosis) {
-                                                    alert('Vui lòng nhập chẩn đoán cuối cùng trước khi hoàn thành hồ sơ bệnh án!');
-                                                    document.getElementById('finalDiagnosis').focus();
-                                                    return;
-                                                }
-                                                form.submit();
-                                                return;
-                                            }
-                                            // Các trường hợp khác (lưu nháp, cập nhật) vẫn dùng AJAX như cũ
-                                            const formData = new FormData(form);
-                                            // Log form data for debugging
-                                            console.log('Form data before processing:', Object.fromEntries(formData));
-                                            // Validate only for ongoing records
-                                            if (!<%= isCompleted %> && !validateForm()) {
-                                                return;
-                                            }
-                                            $.ajax({
-                                                url: form.action,
-                                                type: form.method,
-                                                data: formData,
-                                                processData: false,
-                                                contentType: false,
-                                                success: function (data, textStatus, jqXHR) {
-                                                    if (jqXHR && jqXHR.responseURL && jqXHR.responseURL.indexOf('action=list') !== -1) {
-                                                        window.location.href = jqXHR.responseURL;
-                                                    } else {
-                                                        window.location.reload();
-                                                    }
-                                                },
-                                                error: function (xhr, status, error) {
-                                                    console.error('AJAX submission failed:', xhr.responseText, status, error);
-                                                    form.submit();
-                                                }
-                                            });
+                                            // Tất cả validation sẽ được xử lý ở backend
+                                            // Submit form trực tiếp cho cả lưu nháp và hoàn thành
+                                            form.submit();
                                         };
                                     });
         </script>

@@ -91,7 +91,7 @@ public class MedicalRecordController extends HttpServlet {
         Patient patient = patientDAO.getPatientById(patientId);
         if (patient == null) {
             // Redirect to not-found page with patient context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=patient&id=" + patientId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=patient&id=" + patientId);
             return;
         }
         
@@ -124,7 +124,7 @@ public class MedicalRecordController extends HttpServlet {
         Patient patient = patientDAO.getPatientById(patientId);
         if (patient == null) {
             // Redirect to not-found page with patient context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=patient&id=" + patientId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=patient&id=" + patientId);
             return;
         }
         
@@ -151,7 +151,7 @@ public class MedicalRecordController extends HttpServlet {
         Patient patient = patientDAO.getPatientById(record.getPatientId());
         if (patient == null) {
             // Redirect to not-found page with patient context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=patient&id=" + record.getPatientId());
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=patient&id=" + record.getPatientId());
             return;
         }
         
@@ -179,7 +179,7 @@ public class MedicalRecordController extends HttpServlet {
         Patient patient = patientDAO.getPatientById(record.getPatientId());
         if (patient == null) {
             // Redirect to not-found page with patient context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=patient&id=" + record.getPatientId());
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=patient&id=" + record.getPatientId());
             return;
         }
         
@@ -194,7 +194,15 @@ public class MedicalRecordController extends HttpServlet {
         try {
             MedicalRecord record = extractMedicalRecordFromRequest(request);
             
-            // Validate final diagnosis if status is completed
+            // Validate vital signs for both draft and completed records
+            String vitalSignsError = validateVitalSigns(record);
+            if (vitalSignsError != null) {
+                response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=new&patientId=" + 
+                                    record.getPatientId() + "&error=" + vitalSignsError);
+                return;
+            }
+            
+            // Validate final diagnosis only if status is completed
             if ("completed".equals(record.getStatus())) {
                 if (record.getFinalDiagnosis() == null || record.getFinalDiagnosis().trim().isEmpty()) {
                     response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=new&patientId=" + 
@@ -274,7 +282,15 @@ public class MedicalRecordController extends HttpServlet {
                 record.setId(recordId);
                 record.setUpdatedBy(updatedBy);
                 
-                // Validate final diagnosis if status is completed
+                // Validate vital signs for both draft and completed records
+                String vitalSignsError = validateVitalSigns(record);
+                if (vitalSignsError != null) {
+                    response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
+                                        recordId + "&error=" + vitalSignsError);
+                    return;
+                }
+                
+                // Validate final diagnosis only if status is completed
                 if ("completed".equals(record.getStatus())) {
                     if (record.getFinalDiagnosis() == null || record.getFinalDiagnosis().trim().isEmpty()) {
                         response.sendRedirect(request.getContextPath() + "/doctor/medical-records?action=edit&recordId=" + 
@@ -398,6 +414,91 @@ public class MedicalRecordController extends HttpServlet {
         }
         
         return record;
+    }
+    
+    /**
+     * Validate vital signs when completing a medical record
+     * @param record MedicalRecord to validate
+     * @return error code if validation fails, null if validation passes
+     */
+    private String validateVitalSigns(MedicalRecord record) {
+        // Validate respiration rate (8-40)
+        if (record.getRespirationRate() != null) {
+            int respirationRate = record.getRespirationRate();
+            if (respirationRate < 8 || respirationRate > 40) {
+                return "vital_signs_respiration_invalid";
+            }
+        }
+        
+        // Validate temperature (32-45°C)
+        if (record.getTemperature() != null) {
+            double temperature = record.getTemperature().doubleValue();
+            if (temperature < 32.0 || temperature > 45.0) {
+                return "vital_signs_temperature_invalid";
+            }
+        }
+        
+        // Validate pulse (30-200)
+        if (record.getPulse() != null) {
+            int pulse = record.getPulse();
+            if (pulse < 30 || pulse > 200) {
+                return "vital_signs_pulse_invalid";
+            }
+        }
+        
+        // Validate blood pressure format (systolic/diastolic)
+        if (record.getBloodPressure() != null && !record.getBloodPressure().trim().isEmpty()) {
+            String bloodPressure = record.getBloodPressure().trim();
+            if (!bloodPressure.matches("^\\d{2,3}/\\d{2,3}$")) {
+                return "vital_signs_blood_pressure_invalid";
+            }
+            
+            // Additional validation for blood pressure values
+            String[] parts = bloodPressure.split("/");
+            try {
+                int systolic = Integer.parseInt(parts[0]);
+                int diastolic = Integer.parseInt(parts[1]);
+                
+                // Validate systolic (70-300) and diastolic (40-200)
+                if (systolic < 70 || systolic > 300 || diastolic < 40 || diastolic > 200) {
+                    return "vital_signs_blood_pressure_range_invalid";
+                }
+                
+                // Systolic should be higher than diastolic
+                if (systolic <= diastolic) {
+                    return "vital_signs_blood_pressure_logic_invalid";
+                }
+            } catch (NumberFormatException e) {
+                return "vital_signs_blood_pressure_format_invalid";
+            }
+        }
+        
+        // Validate height (50-250cm)
+        if (record.getHeight() != null) {
+            double height = record.getHeight().doubleValue();
+            if (height < 50.0 || height > 250.0) {
+                return "vital_signs_height_invalid";
+            }
+        }
+        
+        // Validate weight (5-300kg)
+        if (record.getWeight() != null) {
+            double weight = record.getWeight().doubleValue();
+            if (weight < 5.0 || weight > 300.0) {
+                return "vital_signs_weight_invalid";
+            }
+        }
+        
+        // Validate SpO2 (70-100%)
+        if (record.getSpo2() != null) {
+            double spo2 = record.getSpo2().doubleValue();
+            if (spo2 < 70.0 || spo2 > 100.0) {
+                return "vital_signs_spo2_invalid";
+            }
+        }
+        
+        // All validations passed
+        return null;
     }
     
     /**

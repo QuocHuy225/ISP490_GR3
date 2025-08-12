@@ -117,7 +117,7 @@ public class ActualPrescriptionController extends HttpServlet {
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
         if (medicalRecord == null) {
             // Redirect to not-found page with medical record context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-record&id=" + medicalRecordId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=medical-record&id=" + medicalRecordId);
             return;
         }
         
@@ -142,7 +142,7 @@ public class ActualPrescriptionController extends HttpServlet {
         MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
         if (record == null) {
             // Redirect to not-found page with medical record context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-record&id=" + medicalRecordId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=medical-record&id=" + medicalRecordId);
             return;
         }
         Patient patient = daoPatient.getPatientById(record.getPatientId());
@@ -164,7 +164,7 @@ public class ActualPrescriptionController extends HttpServlet {
         ActualPrescriptionForm form = daoRx.getFormById(formId);
         if (form == null) {
             // Redirect to not-found page with prescription context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=prescription&id=" + formId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=prescription&id=" + formId);
             return;
         }
         MedicalRecord record = daoMedicalRecord.getMedicalRecordById(form.getMedicalRecordId());
@@ -188,7 +188,7 @@ public class ActualPrescriptionController extends HttpServlet {
         ActualPrescriptionForm form = daoRx.getFormById(formId);
         if (form == null) {
             // Redirect to not-found page with prescription context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=prescription&id=" + formId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=prescription&id=" + formId);
             return;
         }
         MedicalRecord record = daoMedicalRecord.getMedicalRecordById(form.getMedicalRecordId());
@@ -274,7 +274,7 @@ public class ActualPrescriptionController extends HttpServlet {
             ActualPrescriptionForm form = daoRx.getFormById(formId);
             if (form == null) {
                 // Redirect to not-found page with prescription context
-                response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=prescription&id=" + formId);
+                response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=prescription&id=" + formId);
                 return;
             }
             form.setFormName(formName);

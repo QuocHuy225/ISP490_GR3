@@ -126,7 +126,7 @@ public class MedicalRequestController extends HttpServlet {
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
         if (medicalRecord == null) {
             // Redirect to not-found page with medical record context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-record&id=" + medicalRecordId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=medical-record&id=" + medicalRecordId);
             return;
         }
         
@@ -154,7 +154,7 @@ public class MedicalRequestController extends HttpServlet {
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
         if (medicalRecord == null) {
             // Redirect to not-found page with medical record context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-record&id=" + medicalRecordId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=medical-record&id=" + medicalRecordId);
             return;
         }
         
@@ -190,7 +190,7 @@ public class MedicalRequestController extends HttpServlet {
         MedicalRequest medicalRequest = daoMedicalRequest.getRequestById(requestId);
         if (medicalRequest == null) {
             // Redirect to not-found page with medical request context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-request&id=" + requestId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=medical-request&id=" + requestId);
             return;
         }
         
@@ -228,7 +228,7 @@ public class MedicalRequestController extends HttpServlet {
         MedicalRequest medicalRequest = daoMedicalRequest.getRequestById(requestId);
         if (medicalRequest == null) {
             // Redirect to not-found page with medical request context
-            response.sendRedirect(request.getContextPath() + "/jsp/not-found.jsp?type=medical-request&id=" + requestId);
+            response.sendRedirect(request.getContextPath() + "/jsp/homepage.jsp?type=medical-request&id=" + requestId);
             return;
         }
         
