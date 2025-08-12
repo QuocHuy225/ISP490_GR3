@@ -872,7 +872,7 @@
                                                                        '<input type="text" class="form-control" id="' + rowId + '_total" readonly>' +
                                                                        '</div>' +
                                                                        '<div class="col-md-1 text-center">' +
-                                                                       '<button type="button" class="btn btn-danger btn-delete-item" onclick="removeItemRow(\'' + rowId + '\')"><i class="bi bi-trash"></i></button>' +
+                                                                       '<button type="button" class="btn btn-danger btn-delete-item" onclick="removeRow(\'' + rowId + '\')"><i class="bi bi-trash"></i></button>' +
                                                                        '</div>' +
                                                                        '</div>';
                                                                container.appendChild(row);
