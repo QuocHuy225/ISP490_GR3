@@ -116,10 +116,7 @@
                         </h3>
                     </div>
 
-                    <div class="navbar-search mx-auto">
-                        <i class="bi bi-search"></i>
-                        <input type="text" class="form-control" placeholder="Tìm kiếm bệnh nhân, lịch hẹn, hồ sơ...">
-                    </div>
+
 
                     <div class="dropdown user-dropdown">
                         <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">

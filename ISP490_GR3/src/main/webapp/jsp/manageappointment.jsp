@@ -61,7 +61,7 @@
                 <div class="container-fluid">
                     <button type="button" id="sidebarCollapse" class="btn btn-primary"><i class="bi bi-list"></i></button>
                     <div style="margin-left: 60px;"><h3><span style="color: #007bff;">Ánh Dương</span> <span style="color: #333;">Clinic</span></h3></div>
-                    <div class="navbar-search mx-auto"><i class="bi bi-search"></i><input type="text" class="form-control" placeholder="Tìm kiếm bệnh nhân, lịch hẹn, hồ sơ..."></div>
+
                     <div class="dropdown user-dropdown">
                         <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <div class="user-profile-icon"><i class="bi bi-person-fill" style="font-size: 1.5rem;"></i></div>
