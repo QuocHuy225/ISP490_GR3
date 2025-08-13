@@ -545,7 +545,7 @@
                                                 <div id="receipt1_suppliesContainer"></div>
                                                 <div id="receipt1_medicinesContainer"></div>
                                                 <div class="mt-2" id="receipt1_buttons">
-                                                                                                                        <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt1', 'service')" title="Thêm dịch vụ">
+                                                                                                                        <button type="button" class="action-btn action-btn-create" id="receipt1_addServiceBtn" onclick="addNewItemRow('receipt1', 'service')" title="Thêm dịch vụ">
                                                                         <i class="bi bi-plus-circle"></i><span class="btn-text">Dịch vụ</span>
                                                                     </button>
                                                                     <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt1', 'supply')" title="Thêm vật tư">
@@ -598,7 +598,7 @@
                                                     <div id="receipt2_suppliesContainer"></div>
                                                     <div id="receipt2_medicinesContainer"></div>
                                                     <div class="mt-2" id="receipt2_buttons">
-                                                                                                                                <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt2', 'service')" title="Thêm dịch vụ">
+                                                                                                                                <button type="button" class="action-btn action-btn-create" id="receipt2_addServiceBtn" onclick="addNewItemRow('receipt2', 'service')" title="Thêm dịch vụ">
                                                                             <i class="bi bi-plus-circle"></i><span class="btn-text">Dịch vụ</span>
                                                                         </button>
                                                                         <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt2', 'supply')" title="Thêm vật tư">
@@ -822,6 +822,9 @@
                         itemCounters[receiptId][itemType] = 0;
                     }
                 });
+                
+                // Update service button visibility after clearing
+                updateServiceButtonVisibility(receiptId);
                 calculateTotal();
             }
 
@@ -890,6 +893,11 @@
                                                                        width: '100%',
                                                                        dropdownParent: $(row).find('.col-md-3')
                                                                });
+                                                               
+                                                               // Update service button visibility if adding a service
+                                                               if (itemType === 'service') {
+                                                                   updateServiceButtonVisibility(receiptId);
+                                                               }
                                                                }
 
                                                                function updateItemPrice(rowId, itemType, selectElement = null) {
@@ -1065,17 +1073,32 @@
                                                                });
                                                                }
 
-                                                               function addNewItemRow(receiptId, itemType) {
-                                                               // Simply call addItemRow without itemId to create a new empty row
-                                                               addItemRow(receiptId, itemType, '', 1);
-                                                               }
+                                                                           function addNewItemRow(receiptId, itemType) {
+                // Check if this is a service and if there's already a service in this receipt
+                if (itemType === 'service') {
+                    const existingServiceRows = document.querySelectorAll('#' + receiptId + '_servicesContainer .item-row');
+                    if (existingServiceRows.length >= 1) {
+                        alert('Mỗi phiếu thu chỉ được phép có tối đa 1 dịch vụ!');
+                        return;
+                    }
+                }
+                
+                // Simply call addItemRow without itemId to create a new empty row
+                addItemRow(receiptId, itemType, '', 1);
+            }
 
                                                                function removeRow(rowId) {
                                                                const row = document.getElementById(rowId);
                                                                if (row) {
                                                                const itemType = rowId.includes('_service_') ? 'service' : (rowId.includes('_supply_') ? 'supply' : 'medicine');
+                                                               const receiptId = rowId.split('_')[0]; // Extract receipt ID (receipt1 or receipt2)
                                                                row.remove();
                                                                calculateTotal();
+                                                               
+                                                               // Update service button visibility if removing a service
+                                                               if (itemType === 'service') {
+                                                                   updateServiceButtonVisibility(receiptId);
+                                                               }
                                                                
                                                                // Refresh dropdowns for all item types
                                                                refreshItemDropdowns('', itemType);
@@ -1147,6 +1170,10 @@
                                                                addItemRow('receipt2', item.type, item.id, item.quantity);
                                                                });
                                                                }
+                                                               
+                                                               // Update service button visibility for both receipts after loading existing items
+                                                               updateServiceButtonVisibility('receipt1');
+                                                               updateServiceButtonVisibility('receipt2');
                                                                }
 
                                                                // Hàm lọc option theo keyword
@@ -1163,6 +1190,20 @@
                                                                }
                                                                option.style.display = text.includes(filter) ? '' : 'none';
                                                                }
+                                                               }
+                                                               
+                                                               // Hàm cập nhật hiển thị nút thêm dịch vụ
+                                                               function updateServiceButtonVisibility(receiptId) {
+                                                                   const serviceButton = document.getElementById(receiptId + '_addServiceBtn');
+                                                                   const existingServiceRows = document.querySelectorAll('#' + receiptId + '_servicesContainer .item-row');
+                                                                   
+                                                                   if (serviceButton) {
+                                                                       if (existingServiceRows.length >= 1) {
+                                                                           serviceButton.style.display = 'none';
+                                                                       } else {
+                                                                           serviceButton.style.display = 'inline-flex';
+                                                                       }
+                                                                   }
                                                                }
         </script>
     </body>
