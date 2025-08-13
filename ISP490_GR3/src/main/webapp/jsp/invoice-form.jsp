@@ -201,6 +201,11 @@
                 background-color: #e9ecef;
                 cursor: not-allowed;
             }
+            .form-control[readonly] {
+                background-color: #f8f9fa;
+                border-color: #dee2e6;
+                cursor: not-allowed;
+            }
             .action-btn[title]:hover::after {
                 content: attr(title);
                 position: absolute;
@@ -540,15 +545,15 @@
                                                 <div id="receipt1_suppliesContainer"></div>
                                                 <div id="receipt1_medicinesContainer"></div>
                                                 <div class="mt-2" id="receipt1_buttons">
-                                                    <button type="button" class="action-btn action-btn-create" onclick="addItemRow('receipt1', 'service')" title="Thêm dịch vụ">
-                                                        <i class="bi bi-plus-circle"></i><span class="btn-text">Dịch vụ</span>
-                                                    </button>
-                                                    <button type="button" class="action-btn action-btn-create" onclick="addItemRow('receipt1', 'supply')" title="Thêm vật tư">
-                                                        <i class="bi bi-plus-circle"></i><span class="btn-text">Vật tư</span>
-                                                    </button>
-                                                    <button type="button" class="action-btn action-btn-create" onclick="addItemRow('receipt1', 'medicine')" title="Thêm thuốc">
-                                                        <i class="bi bi-plus-circle"></i><span class="btn-text">Thuốc</span>
-                                                    </button>
+                                                                                                                        <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt1', 'service')" title="Thêm dịch vụ">
+                                                                        <i class="bi bi-plus-circle"></i><span class="btn-text">Dịch vụ</span>
+                                                                    </button>
+                                                                    <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt1', 'supply')" title="Thêm vật tư">
+                                                                        <i class="bi bi-plus-circle"></i><span class="btn-text">Vật tư</span>
+                                                                    </button>
+                                                                    <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt1', 'medicine')" title="Thêm thuốc">
+                                                                        <i class="bi bi-plus-circle"></i><span class="btn-text">Thuốc</span>
+                                                                    </button>
                                                 </div>
                                                 <div class="receipt-totals" fw-bold">
                                                     <h6>Tổng phiếu thu</h6>
@@ -593,15 +598,15 @@
                                                     <div id="receipt2_suppliesContainer"></div>
                                                     <div id="receipt2_medicinesContainer"></div>
                                                     <div class="mt-2" id="receipt2_buttons">
-                                                        <button type="button" class="action-btn action-btn-create" onclick="addItemRow('receipt2', 'service')" title="Thêm dịch vụ">
-                                                            <i class="bi bi-plus-circle"></i><span class="btn-text">Dịch vụ</span>
-                                                        </button>
-                                                        <button type="button" class="action-btn action-btn-create" onclick="addItemRow('receipt2', 'supply')" title="Thêm vật tư">
-                                                            <i class="bi bi-plus-circle"></i><span class="btn-text">Vật tư</span>
-                                                        </button>
-                                                        <button type="button" class="action-btn action-btn-create" onclick="addItemRow('receipt2', 'medicine')" title="Thêm thuốc">
-                                                            <i class="bi bi-plus-circle"></i><span class="btn-text">Thuốc</span>
-                                                        </button>
+                                                                                                                                <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt2', 'service')" title="Thêm dịch vụ">
+                                                                            <i class="bi bi-plus-circle"></i><span class="btn-text">Dịch vụ</span>
+                                                                        </button>
+                                                                        <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt2', 'supply')" title="Thêm vật tư">
+                                                                            <i class="bi bi-plus-circle"></i><span class="btn-text">Vật tư</span>
+                                                                        </button>
+                                                                        <button type="button" class="action-btn action-btn-create" onclick="addNewItemRow('receipt2', 'medicine')" title="Thêm thuốc">
+                                                                            <i class="bi bi-plus-circle"></i><span class="btn-text">Thuốc</span>
+                                                                        </button>
                                                     </div>
                                                     <div class="receipt-totals" fw-bold">
                                                         <h6>Tổng phiếu thu</h6>
@@ -688,150 +693,155 @@
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script>
-                                                               const servicesData = [
+            const servicesData = [
             <% if (services != null) {
                     for (int i = 0; i < services.size(); i++) {
                         MedicalService service = services.get(i); %>
-                                                               {
-                                                               id: <%= service.getServicesId() %>,
-                                                                       name: '<%= service.getServiceName().replace("'", "\\'") %>',
-                                                                       price: <%= service.getPrice() %>
-                                                               }<%= i < services.size() - 1 ? "," : "" %>
+                {
+                    id: <%= service.getServicesId() %>,
+                    name: '<%= service.getServiceName().replace("'", "\\'") %>',
+                    price: <%= service.getPrice() %>
+                }<%= i < services.size() - 1 ? "," : "" %>
             <% }
                 } %>
-                                                               ];
-                                                               const suppliesData = [
+            ];
+            const suppliesData = [
             <% if (supplies != null) {
                     for (int i = 0; i < supplies.size(); i++) {
                         MedicalSupply supply = supplies.get(i); %>
-                                                               {
-                                                               id: <%= supply.getSupplyId() %>,
-                                                                       name: '<%= supply.getSupplyName().replace("'", "\\'") %>',
-                                                                       price: <%= supply.getUnitPrice() %>,
-                                                                       stock: <%= supply.getStockQuantity() %>
-                                                               }<%= i < supplies.size() - 1 ? "," : "" %>
+                {
+                    id: <%= supply.getSupplyId() %>,
+                    name: '<%= supply.getSupplyName().replace("'", "\\'") %>',
+                    price: <%= supply.getUnitPrice() %>,
+                    stock: <%= supply.getStockQuantity() %>
+                }<%= i < supplies.size() - 1 ? "," : "" %>
             <% }
                 } %>
-                                                               ];
-                                                               const medicinesData = [
+            ];
+            const medicinesData = [
             <% if (medicines != null) {
                     for (int i = 0; i < medicines.size(); i++) {
                         Medicine medicine = medicines.get(i); %>
-                                                               {
-                                                               id: <%= medicine.getExamMedicineId() %>,
-                                                                       name: '<%= medicine.getMedicineName().replace("'", "\\'") %>',
-                                                                       price: <%= medicine.getUnitPrice() %>,
-                                                                       stock: <%= medicine.getStockQuantity() %>
-                                                               }<%= i < medicines.size() - 1 ? "," : "" %>
+                {
+                    id: <%= medicine.getExamMedicineId() %>,
+                    name: '<%= medicine.getMedicineName().replace("'", "\\'") %>',
+                    price: <%= medicine.getUnitPrice() %>,
+                    stock: <%= medicine.getStockQuantity() %>
+                }<%= i < medicines.size() - 1 ? "," : "" %>
             <% }
                 } %>
-                                                               ];
-                                                               const existingFirstReceiptItems = [];
-                                                               const existingSecondReceiptItems = [];
+            ];
+            const existingFirstReceiptItems = [];
+            const existingSecondReceiptItems = [];
             <% if (isEdit && invoice != null && invoice.getInvoiceItems() != null) {
                 for (InvoiceItem item : invoice.getInvoiceItems()) {
                     if (item.getReceiptNumber() == 1) { %>
-                                                               existingFirstReceiptItems.push({
-                                                               type: '<%= item.getItemType() %>',
-                                                                       id: <%= item.getItemId() %>,
-                                                                       name: '<%= item.getItemName().replace("'", "\\'") %>',
-                                                                       quantity: <%= item.getQuantity() %>,
-                                                                       price: <%= item.getUnitPrice() %>
-                                                               });
+                existingFirstReceiptItems.push({
+                    type: '<%= item.getItemType() %>',
+                    id: <%= item.getItemId() %>,
+                    name: '<%= item.getItemName().replace("'", "\\'") %>',
+                    quantity: <%= item.getQuantity() %>,
+                    price: <%= item.getUnitPrice() %>
+                });
             <% } else if (item.getReceiptNumber() == 2) { %>
-                                                               existingSecondReceiptItems.push({
-                                                               type: '<%= item.getItemType() %>',
-                                                                       id: <%= item.getItemId() %>,
-                                                                       name: '<%= item.getItemName().replace("'", "\\'") %>',
-                                                                       quantity: <%= item.getQuantity() %>,
-                                                                       price: <%= item.getUnitPrice() %>
-                                                               });
+                existingSecondReceiptItems.push({
+                    type: '<%= item.getItemType() %>',
+                    id: <%= item.getItemId() %>,
+                    name: '<%= item.getItemName().replace("'", "\\'") %>',
+                    quantity: <%= item.getQuantity() %>,
+                    price: <%= item.getUnitPrice() %>
+                });
             <% }
                 }
             } %>
-                                                               const hasSecondReceipt = existingSecondReceiptItems.length > 0;
-                                                               let itemCounters = {
-                                                               receipt1: { service: 0, supply: 0, medicine: 0 },
-                                                                       receipt2: { service: 0, supply: 0, medicine: 0 }
-                                                               };
-                                                               document.addEventListener('DOMContentLoaded', function() {
-                                                               initializeSidebar();
-                                                               if (hasSecondReceipt) {
-                                                               document.getElementById('enableSecondReceiptCheckbox').checked = true;
-                                                               toggleSecondReceipt();
-                                                               } else {
-                                                               toggleSecondReceipt();
-                                                               }
-                                                               loadExistingItems();
-                                                               calculateTotal();
-                                                               });
-                                                               function initializeSidebar() {
-                                                               const sidebarCollapse = document.getElementById('sidebarCollapse');
-                                                               const sidebar = document.getElementById('sidebar');
-                                                               const content = document.getElementById('content');
-                                                               sidebarCollapse.addEventListener('click', function() {
-                                                               sidebar.classList.toggle('active');
-                                                               content.classList.toggle('active');
-                                                               });
-                                                               function checkWidth() {
-                                                               if (window.innerWidth <= 768) {
-                                                               sidebar.classList.add('active');
-                                                               content.classList.add('active');
-                                                               } else {
-                                                               sidebar.classList.remove('active');
-                                                               content.classList.remove('active');
-                                                               }
-                                                               }
-                                                               checkWidth();
-                                                               window.addEventListener('resize', checkWidth);
-                                                               }
+            const hasSecondReceipt = existingSecondReceiptItems.length > 0;
+            let itemCounters = {
+                receipt1: { service: 0, supply: 0, medicine: 0 },
+                receipt2: { service: 0, supply: 0, medicine: 0 }
+            };
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeSidebar();
+                if (hasSecondReceipt) {
+                    document.getElementById('enableSecondReceiptCheckbox').checked = true;
+                    toggleSecondReceipt();
+                } else {
+                    toggleSecondReceipt();
+                }
+                loadExistingItems();
+                calculateTotal();
+            });
+            function initializeSidebar() {
+                const sidebarCollapse = document.getElementById('sidebarCollapse');
+                const sidebar = document.getElementById('sidebar');
+                const content = document.getElementById('content');
+                sidebarCollapse.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                    content.classList.toggle('active');
+                });
+                function checkWidth() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.add('active');
+                        content.classList.add('active');
+                    } else {
+                        sidebar.classList.remove('active');
+                        content.classList.remove('active');
+                    }
+                }
+                checkWidth();
+                window.addEventListener('resize', checkWidth);
+            }
 
-                                                               function toggleSecondReceipt() {
-                                                               const checkbox = document.getElementById('enableSecondReceiptCheckbox');
-                                                               const receipt2 = document.getElementById('receipt2');
-                                                               const receipt2Sections = document.getElementById('receipt2_sections');
-                                                               const receipt1 = document.getElementById('receipt1');
-                                                               const receipt1Buttons = document.getElementById('receipt1_buttons');
-                                                               if (checkbox.checked) {
-                                                               document.getElementById('enableSecondReceipt').value = 'true';
-                                                               receipt2.classList.remove('disabled');
-                                                               receipt2Sections.style.display = 'block';
-                                                               receipt1.classList.add('disabled'); // Apply visual disabled style
-                                                               receipt1Buttons.style.display = 'none'; // Hide buttons to prevent adding new items
-                                                               } else {
-                                                               document.getElementById('enableSecondReceipt').value = 'false';
-                                                               receipt2.classList.add('disabled');
-                                                               receipt2Sections.style.display = 'none';
-                                                               receipt1.classList.remove('disabled');
-                                                               receipt1Buttons.style.display = 'block';
-                                                               clearReceiptItems('receipt2');
-                                                               }
-                                                               calculateTotal();
-                                                               }
+            function toggleSecondReceipt() {
+                const checkbox = document.getElementById('enableSecondReceiptCheckbox');
+                const receipt2 = document.getElementById('receipt2');
+                const receipt2Sections = document.getElementById('receipt2_sections');
+                const receipt1 = document.getElementById('receipt1');
+                const receipt1Buttons = document.getElementById('receipt1_buttons');
+                if (checkbox.checked) {
+                    document.getElementById('enableSecondReceipt').value = 'true';
+                    receipt2.classList.remove('disabled');
+                    receipt2Sections.style.display = 'block';
+                    receipt1.classList.add('disabled');
+                    receipt1Buttons.style.display = 'none';
+                } else {
+                    document.getElementById('enableSecondReceipt').value = 'false';
+                    receipt2.classList.add('disabled');
+                    receipt2Sections.style.display = 'none';
+                    receipt1.classList.remove('disabled');
+                    receipt1Buttons.style.display = 'block';
+                    clearReceiptItems('receipt2');
+                }
+                calculateTotal();
+            }
 
-                                                               function clearReceiptItems(receiptId) {
-                                                               ['service', 'supply', 'medicine'].forEach(itemType => {
-                                                               const container = document.getElementById(receiptId + '_' + getContainerSuffix(itemType) + 'Container');
-                                                               if (container) {
-                                                               container.innerHTML = '';
-                                                               itemCounters[receiptId][itemType] = 0;
-                                                               }
-                                                               });
-                                                               calculateTotal();
-                                                               }
+            function clearReceiptItems(receiptId) {
+                ['service', 'supply', 'medicine'].forEach(itemType => {
+                    const container = document.getElementById(receiptId + '_' + getContainerSuffix(itemType) + 'Container');
+                    if (container) {
+                        container.innerHTML = '';
+                        itemCounters[receiptId][itemType] = 0;
+                    }
+                });
+                calculateTotal();
+            }
 
-                                                               function addItemRow(receiptId, itemType, itemId = '', quantity = 1) {
-                                                               const container = document.getElementById(receiptId + '_' + getContainerSuffix(itemType) + 'Container');
-                                                               const counter = itemCounters[receiptId][itemType]++;
-                                                               const rowId = receiptId + '_' + itemType + '_' + counter;
-                                                               const row = document.createElement('div');
-                                                               row.className = 'item-row';
-                                                               row.id = rowId;
-                                                               let itemOptions = '';
-                                                               let itemsData = [];
-                                                               if (itemType === 'service') itemsData = servicesData;
-                                                               else if (itemType === 'supply') itemsData = suppliesData;
-                                                               else if (itemType === 'medicine') itemsData = medicinesData;
+            function addItemRow(receiptId, itemType, itemId = '', quantity = 1) {
+                const container = document.getElementById(receiptId + '_' + getContainerSuffix(itemType) + 'Container');
+                const counter = itemCounters[receiptId][itemType]++;
+                const rowId = receiptId + '_' + itemType + '_' + counter;
+                const row = document.createElement('div');
+                row.className = 'item-row';
+                row.id = rowId;
+                let itemOptions = '';
+                let itemsData = [];
+                if (itemType === 'service') itemsData = servicesData;
+                else if (itemType === 'supply') itemsData = suppliesData;
+                else if (itemType === 'medicine') itemsData = medicinesData;
+                
+                // Filter out already selected items to prevent duplicates for all item types
+                const selectedItems = getSelectedItems(receiptId, itemType);
+                itemsData = itemsData.filter(item => !selectedItems.includes(item.id.toString()) || item.id.toString() === itemId.toString());
+                                                               
                                                                for (let i = 0; i < itemsData.length; i++) {
                                                                const item = itemsData[i];
                                                                const selected = (itemId == item.id) ? 'selected' : '';
@@ -847,7 +857,7 @@
                                                                        '<div class="row align-items-center">' +
                                                                        '<div class="col-md-3">' +
                                                                        '<select class="form-select item-select" id="' + rowId + '_select" name="' + receiptId + '_' + itemType + 'Id" ' +
-                                                                       'onchange="updateItemPrice(\'' + rowId + '\', \'' + itemType + '\')" required>' +
+                                                                       'onchange="updateItemPrice(\'' + rowId + '\', \'' + itemType + '\', this)" required>' +
                                                                        '<option value="">-- Chọn --</option>' +
                                                                        itemOptions +
                                                                        '</select>' +
@@ -859,7 +869,9 @@
                                                                        '</div>' +
                                                                        '<div class="col-md-2">' +
                                                                        '<input type="number" class="form-control" name="' + receiptId + '_' + itemType + 'Quantity" ' +
-                                                                       'value="' + quantity + '" min="1" onchange="calculateRowTotal(\'' + rowId + '\', \'' + itemType + '\')" required>' +
+                                                                       'value="' + (itemType === 'service' ? '1' : quantity) + '" min="1" ' +
+                                                                       (itemType === 'service' ? 'readonly ' : '') +
+                                                                       'onchange="calculateRowTotal(\'' + rowId + '\', \'' + itemType + '\')" required>' +
                                                                        '<small class="text-info" id="' + rowId + '_stock"></small>' +
                                                                        '</div>' +
                                                                        '<div class="col-md-2">' +
@@ -884,6 +896,25 @@
                                                                const select = selectElement || document.querySelector('#' + rowId + ' select');
                                                                const selectedOption = select.options[select.selectedIndex];
                                                                if (selectedOption.value) {
+                                                               // Check if this item is already selected in another row
+                                                               const receiptId = rowId.split('_')[0];
+                                                               const existingRow = findExistingItemRow(receiptId, itemType, selectedOption.value);
+                                                               if (existingRow && existingRow.id !== rowId) {
+                                                               // Reset the select to empty
+                                                               select.value = '';
+                                                               // Focus on the existing row
+                                                               const quantityInput = existingRow.querySelector('input[name$="Quantity"]');
+                                                               if (quantityInput) {
+                                                               quantityInput.focus();
+                                                               quantityInput.select();
+                                                               existingRow.style.backgroundColor = '#fff3cd';
+                                                               setTimeout(() => {
+                                                               existingRow.style.backgroundColor = '';
+                                                               }, 2000);
+                                                               }
+                                                               alert('Mục này đã được thêm vào phiếu thu. Vui lòng thay đổi số lượng ở dòng hiện có thay vì chọn lại.');
+                                                               return;
+                                                               }
                                                                const price = parseFloat(selectedOption.dataset.price);
                                                                const name = selectedOption.text.split(' (')[0];
                                                                const itemId = selectedOption.value;
@@ -906,12 +937,18 @@
                                                                }
                                                                }
                                                                calculateRowTotal(rowId, itemType);
+                                                               
+                                                               // Refresh dropdowns to prevent duplicates for all item types
+                                                               refreshItemDropdowns(rowId, itemType);
                                                                } else {
                                                                document.getElementById(rowId + '_unitPrice').value = '';
                                                                document.getElementById(rowId + '_total').value = '';
                                                                const stockDisplay = document.getElementById(rowId + '_stock');
                                                                if (stockDisplay) stockDisplay.textContent = '';
                                                                calculateTotal();
+                                                               
+                                                               // Refresh dropdowns for all item types
+                                                               refreshItemDropdowns(rowId, itemType);
                                                                }
                                                                }
 
@@ -957,11 +994,91 @@
                                                                }
                                                                }
 
+                                                               function getSelectedItems(receiptId, itemType) {
+                                                               const selectedItems = [];
+                                                               const containerSuffix = getContainerSuffix(itemType);
+                                                               const itemRows = document.querySelectorAll('#' + receiptId + '_' + containerSuffix + 'Container .item-row');
+                                                               itemRows.forEach(row => {
+                                                               const select = row.querySelector('select');
+                                                               if (select && select.value) {
+                                                               selectedItems.push(select.value);
+                                                               }
+                                                               });
+                                                               return selectedItems;
+                                                               }
+                                                               
+                                                               function findExistingItemRow(receiptId, itemType, itemId) {
+                                                               const containerSuffix = getContainerSuffix(itemType);
+                                                               const itemRows = document.querySelectorAll('#' + receiptId + '_' + containerSuffix + 'Container .item-row');
+                                                               for (let row of itemRows) {
+                                                               const select = row.querySelector('select');
+                                                               if (select && select.value === itemId.toString()) {
+                                                               return row;
+                                                               }
+                                                               }
+                                                               return null;
+                                                               }
+                                                               
+                                                               function refreshItemDropdowns(excludeRowId, itemType) {
+                                                               // Refresh dropdowns for both receipts
+                                                               ['receipt1', 'receipt2'].forEach(receiptId => {
+                                                               const containerSuffix = getContainerSuffix(itemType);
+                                                               const itemRows = document.querySelectorAll('#' + receiptId + '_' + containerSuffix + 'Container .item-row');
+                                                               itemRows.forEach(row => {
+                                                               if (row.id !== excludeRowId) {
+                                                               const select = row.querySelector('select');
+                                                               const currentValue = select.value;
+                                                               const selectedItems = getSelectedItems(receiptId, itemType);
+                                                               
+                                                               // Get data source based on item type
+                                                               let itemsData = [];
+                                                               if (itemType === 'service') itemsData = servicesData;
+                                                               else if (itemType === 'supply') itemsData = suppliesData;
+                                                               else if (itemType === 'medicine') itemsData = medicinesData;
+                                                               
+                                                               // Clear and rebuild options
+                                                               select.innerHTML = '<option value="">-- Chọn --</option>';
+                                                               itemsData.forEach(item => {
+                                                               if (!selectedItems.includes(item.id.toString()) || item.id.toString() === currentValue) {
+                                                               const option = document.createElement('option');
+                                                               option.value = item.id;
+                                                               const stockInfo = item.stock ? (item.stock > 0 ? ' (Còn: ' + item.stock + ')' : ' (Hết hàng)') : '';
+                                                               option.textContent = item.name + stockInfo;
+                                                               option.setAttribute('data-price', item.price);
+                                                               if (item.stock !== undefined) {
+                                                               option.setAttribute('data-stock', item.stock);
+                                                               }
+                                                               if (item.id.toString() === currentValue) {
+                                                               option.selected = true;
+                                                               }
+                                                               select.appendChild(option);
+                                                               }
+                                                               });
+                                                               
+                                                               // Reinitialize Select2
+                                                               $(select).select2('destroy').select2({
+                                                               width: '100%',
+                                                               dropdownParent: $(row).find('.col-md-3')
+                                                               });
+                                                               }
+                                                               });
+                                                               });
+                                                               }
+
+                                                               function addNewItemRow(receiptId, itemType) {
+                                                               // Simply call addItemRow without itemId to create a new empty row
+                                                               addItemRow(receiptId, itemType, '', 1);
+                                                               }
+
                                                                function removeRow(rowId) {
                                                                const row = document.getElementById(rowId);
                                                                if (row) {
+                                                               const itemType = rowId.includes('_service_') ? 'service' : (rowId.includes('_supply_') ? 'supply' : 'medicine');
                                                                row.remove();
                                                                calculateTotal();
+                                                               
+                                                               // Refresh dropdowns for all item types
+                                                               refreshItemDropdowns('', itemType);
                                                                }
                                                                }
 
