@@ -154,6 +154,8 @@
     <error-page>
         <error-code>404</error-code>
         <location>/jsp/homepage.jsp</location>
+    </error-page>
+    <error-page>
         <error-code>403</error-code>
         <location>/jsp/homepage.jsp</location>
     </error-page>
