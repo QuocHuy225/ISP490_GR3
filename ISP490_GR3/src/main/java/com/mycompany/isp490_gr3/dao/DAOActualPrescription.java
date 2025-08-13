@@ -18,11 +18,13 @@ public class DAOActualPrescription {
     private static final Logger LOGGER = Logger.getLogger(DAOActualPrescription.class.getName());
 
     // ===== FORM OPERATIONS =====
+
     public List<ActualPrescriptionForm> getFormsByMedicalRecord(String medicalRecordId) {
         List<ActualPrescriptionForm> forms = new ArrayList<>();
         String sql = "SELECT * FROM actual_prescription_form WHERE medical_record_id = ? AND is_deleted = FALSE ORDER BY prescription_date DESC";
 
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, medicalRecordId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -37,7 +39,8 @@ public class DAOActualPrescription {
 
     public ActualPrescriptionForm getFormById(String formId) {
         String sql = "SELECT * FROM actual_prescription_form WHERE actual_prescription_form_id = ? AND is_deleted = FALSE";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, formId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -73,8 +76,8 @@ public class DAOActualPrescription {
             form.setActualPrescriptionFormId(formId);
 
             // Insert form
-            String formSql = "INSERT INTO actual_prescription_form (actual_prescription_form_id, medical_record_id, patient_id, doctor_id, form_name, prescription_date, notes, created_by, updated_by, is_deleted) "
-                    + "VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,?,?,?,FALSE)";
+            String formSql = "INSERT INTO actual_prescription_form (actual_prescription_form_id, medical_record_id, patient_id, doctor_id, form_name, prescription_date, notes, created_by, updated_by, is_deleted) " +
+                    "VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,?,?,?,FALSE)";
             try (PreparedStatement ps = conn.prepareStatement(formSql)) {
                 ps.setString(1, formId);
                 ps.setString(2, form.getMedicalRecordId());
@@ -97,21 +100,13 @@ public class DAOActualPrescription {
 
         } catch (SQLException e) {
             if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
+                try { conn.rollback(); } catch (SQLException ex) { LOGGER.log(Level.SEVERE, null, ex); }
             }
             LOGGER.log(Level.SEVERE, "Error adding prescription form: {0}", e.getMessage());
             return false;
         } finally {
             if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException e) {
-                    /* ignore */ }
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { /* ignore */ }
             }
         }
     }
@@ -148,31 +143,24 @@ public class DAOActualPrescription {
             return true;
         } catch (SQLException e) {
             if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
+                try { conn.rollback(); } catch (SQLException ex) { LOGGER.log(Level.SEVERE, null, ex); }
             }
             LOGGER.log(Level.SEVERE, "Error updating prescription form: {0}", e.getMessage());
             return false;
         } finally {
             if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException e) {
-                }
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) {}
             }
         }
     }
 
     // ===== MEDICINE OPERATIONS =====
+
     private List<ActualPrescriptionMedicine> getMedicinesByForm(String formId) {
         List<ActualPrescriptionMedicine> medicines = new ArrayList<>();
-        String sql = "SELECT m.* FROM actual_prescription_medicine m "
-                + "JOIN actual_prescription_form_medicine fm ON m.actual_pre_medicine_id = fm.actual_pre_medicine_id "
-                + "WHERE fm.actual_prescription_form_id = ? AND m.is_deleted = FALSE ORDER BY m.medicine_name";
+        String sql = "SELECT m.* FROM actual_prescription_medicine m " +
+                "JOIN actual_prescription_form_medicine fm ON m.actual_pre_medicine_id = fm.actual_pre_medicine_id " +
+                "WHERE fm.actual_prescription_form_id = ? AND m.is_deleted = FALSE ORDER BY m.medicine_name";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, formId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -187,65 +175,37 @@ public class DAOActualPrescription {
     }
 
     // ===== INTERNAL HELPERS =====
+
     private void addMedicinesAndMappings(Connection conn, String formId, List<ActualPrescriptionMedicine> medicines) throws SQLException {
-        // Câu lệnh SQL để chèn thuốc mới (nếu chưa tồn tại)
-        String medicineSql = "INSERT INTO actual_prescription_medicine (medicine_name, days_of_treatment, units_per_day, total_quantity, unit_of_measure, administration_route, usage_instructions) "
-                + "VALUES (?,?,?,?,?,?,?)";
-        // Câu lệnh SQL để chèn liên kết
+        String medicineSql = "INSERT INTO actual_prescription_medicine (medicine_name, days_of_treatment, units_per_day, total_quantity, unit_of_measure, administration_route, usage_instructions) " +
+                "VALUES (?,?,?,?,?,?,?)";
         String mappingSql = "INSERT INTO actual_prescription_form_medicine (actual_prescription_form_id, actual_pre_medicine_id) VALUES (?,?)";
 
-        try (PreparedStatement medPs = conn.prepareStatement(medicineSql, Statement.RETURN_GENERATED_KEYS); PreparedStatement mapPs = conn.prepareStatement(mappingSql)) {
+        try (PreparedStatement medPs = conn.prepareStatement(medicineSql, Statement.RETURN_GENERATED_KEYS);
+             PreparedStatement mapPs = conn.prepareStatement(mappingSql)) {
 
             for (ActualPrescriptionMedicine med : medicines) {
-                int medicineId = 0;
-                // Bước 1: Kiểm tra xem thuốc đã tồn tại chưa
-                ActualPrescriptionMedicine existingMed = findMedicineByName(med.getMedicineName());
+                // Always create new medicine record to capture snapshot at time of prescription
+                medPs.setString(1, med.getMedicineName());
+                medPs.setObject(2, med.getDaysOfTreatment());
+                medPs.setObject(3, med.getUnitsPerDay());
+                medPs.setObject(4, med.getTotalQuantity());
+                medPs.setString(5, med.getUnitOfMeasure());
+                medPs.setString(6, med.getAdministrationRoute());
+                medPs.setString(7, med.getUsageInstructions());
+                medPs.executeUpdate();
 
-                if (existingMed != null) {
-                    // Thuốc đã tồn tại, sử dụng ID của bản ghi đã có
-                    medicineId = existingMed.getActualPreMedicineId();
-                } else {
-                    // Thuốc chưa tồn tại, thêm mới và lấy ID
-                    medPs.setString(1, med.getMedicineName());
-                    medPs.setObject(2, med.getDaysOfTreatment());
-                    medPs.setObject(3, med.getUnitsPerDay());
-                    medPs.setObject(4, med.getTotalQuantity());
-                    medPs.setString(5, med.getUnitOfMeasure());
-                    medPs.setString(6, med.getAdministrationRoute());
-                    medPs.setString(7, med.getUsageInstructions());
-                    medPs.executeUpdate();
-
-                    try (ResultSet generated = medPs.getGeneratedKeys()) {
-                        if (generated.next()) {
-                            medicineId = generated.getInt(1);
-                        }
+                try (ResultSet generated = medPs.getGeneratedKeys()) {
+                    if (generated.next()) {
+                        int medId = generated.getInt(1);
+                        mapPs.setString(1, formId);
+                        mapPs.setInt(2, medId);
+                        mapPs.addBatch();
                     }
-                }
-
-                // Bước 2: Chèn liên kết
-                if (medicineId > 0) {
-                    mapPs.setString(1, formId);
-                    mapPs.setInt(2, medicineId);
-                    mapPs.addBatch();
                 }
             }
             mapPs.executeBatch();
         }
-    }
-
-    public ActualPrescriptionMedicine findMedicineByName(String medicineName) {
-        String sql = "SELECT * FROM actual_prescription_medicine WHERE medicine_name = ? AND is_deleted = FALSE";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, medicineName);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToMedicine(rs);
-                }
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error finding medicine by name: {0}", e.getMessage());
-        }
-        return null;
     }
 
     private void deleteMappings(Connection conn, String formId) throws SQLException {
@@ -302,4 +262,4 @@ public class DAOActualPrescription {
         medicine.setDeleted(rs.getBoolean("is_deleted"));
         return medicine;
     }
-}
+} 
