@@ -185,14 +185,11 @@
             <div class="appointment-list-section animate-fade-in">
                 <div class="appointment-list-header">
                     <h5>Danh sách Lịch hẹn (${totalRecords} kết quả)</h5>
-
                 </div>
-
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered table-appointments">
                         <thead class="table-primary">
                             <tr>
-                                <!--                                <th><input type="checkbox" id="checkAll"></th>-->
                                 <th>STT</th>
                                 <th>Mã lịch hẹn</th>
                                 <th>Ngày khám</th>
@@ -206,10 +203,18 @@
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <c:forEach var="appointment" items="${currentPageAppointments}" varStatus="status">
+                        <c:set var="previousSlotDate" value="" />
+                        <c:forEach var="appointment" items="${currentPageAppointments}" varStatus="status">
+                            <c:if test="${previousSlotDate != appointment.slotDate}">
+                                <c:if test="${status.index > 0}">
+                                    </tbody>
+                                </c:if>
+                                <tbody>
+                                    <tr class="table-secondary slot-group-header">
+                                        <td colspan="11" class="fw-bold text-center">${appointment.slotDate}</td>
+                                    </tr>
+                                </c:if>
                                 <tr>
-<!--                                    <td><input type="checkbox" name="selectedAppointments" value="${appointment.id}" class="appointment-checkbox"/></td>-->
                                     <td>${startIndex + status.index + 1}</td>
                                     <td>${appointment.appointmentCode}</td>
                                     <td>${appointment.slotDate}</td>
@@ -248,14 +253,18 @@
                                         </c:choose>
                                     </td>
                                 </tr>
+                                <c:set var="previousSlotDate" value="${appointment.slotDate}" />
                             </c:forEach>
-                            <c:if test="${empty currentPageAppointments}">
-                                <tr><td colspan="12" class="text-center text-muted">Không có lịch hẹn nào được tìm thấy.</td></tr>
-                            </c:if>
-                        </tbody>
+                            <c:if test="${not empty currentPageAppointments}">
+                            </tbody>
+                        </c:if>
+                        <c:if test="${empty currentPageAppointments}">
+                            <tbody>
+                                <tr><td colspan="11" class="text-center text-muted">Không có lịch hẹn nào được tìm thấy.</td></tr>
+                            </tbody>
+                        </c:if>
                     </table>
                 </div>
-
                 <!-- Phân trang -->
                 <div class="pagination-container">
                     <div class="pagination-info">
@@ -282,6 +291,46 @@
                     </nav>
                 </div>
             </div>
+
+            <style>
+                .patient-list-wrapper {
+                    max-height: 300px;
+                    overflow-y: auto;
+                    border: 1px solid #dee2e6;
+                    border-radius: 4px;
+                }
+                .patient-list-wrapper table {
+                    margin-bottom: 0;
+                }
+
+                /* Các lớp màu cho slotDate */
+                .slot-color-1 {
+                    background-color: #f8d7da;
+                } /* Màu đỏ nhạt */
+                .slot-color-2 {
+                    background-color: #d1e7dd;
+                } /* Màu xanh lá nhạt */
+                .slot-color-3 {
+                    background-color: #fff3cd;
+                } /* Màu vàng nhạt */
+                .slot-color-4 {
+                    background-color: #cce5ff;
+                } /* Màu xanh dương nhạt */
+                .slot-color-5 {
+                    background-color: #e2e3e5;
+                } /* Màu xám nhạt */
+
+                /* Định dạng tiêu đề nhóm */
+                .slot-group-header {
+                    font-weight: bold;
+                }
+                .table-appointments tr {
+                    transition: background-color 0.3s;
+                }
+                .table-appointments tr:hover {
+                    background-color: #f5f5f5 !important;
+                } /* Hover effect giữ nguyên */
+            </style>                        
 
             <!-- Modal xác nhận bỏ gán bệnh nhân -->
             <div class="modal fade" id="confirmRemovePatientModal" tabindex="-1" aria-labelledby="confirmRemovePatientModalLabel" aria-hidden="true">
@@ -1103,6 +1152,31 @@
                                 if (saveChangeBtn)
                                     saveChangeBtn.disabled = true;
                             }
+                        });
+                    });
+
+                    // Phân biệt các slotDate bằng màu sắc
+                    const slotColors = [
+                        'slot-color-1',
+                        'slot-color-2',
+                        'slot-color-3',
+                        'slot-color-4',
+                        'slot-color-5'
+                    ];
+                    const slotDates = new Map();
+                    let colorIndex = 0;
+
+                    document.querySelectorAll('.table-appointments tbody').forEach((tbody, index) => {
+                        if (index === 0 && document.querySelector('.table-appointments tbody tr').textContent.includes("Không có lịch hẹn"))
+                            return; // Bỏ qua tbody thông báo rỗng
+                        const slotDate = tbody.querySelector('.slot-group-header td').textContent.trim(); // Lấy slotDate từ tiêu đề
+                        if (!slotDates.has(slotDate)) {
+                            slotDates.set(slotDate, slotColors[colorIndex % slotColors.length]);
+                            colorIndex++;
+                        }
+                        tbody.querySelector('.slot-group-header').classList.add(slotDates.get(slotDate)); // Gán màu cho tiêu đề
+                        tbody.querySelectorAll('tr:not(.slot-group-header)').forEach(row => {
+                            row.classList.add(slotDates.get(slotDate)); // Gán màu cho các hàng dữ liệu
                         });
                     });
 
