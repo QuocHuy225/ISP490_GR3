@@ -544,9 +544,9 @@
                                                         <% } %>
                                                     </td>
                                                     <td><%= patient.getDob() != null ? sdf.format(patient.getDob()) : "" %></td>
-                                                    <td><%= patient.getPhone() %></td>
-                                                    <td><%= patient.getCccd() %></td>
-                                                    <td><%= patient.getAddress() %></td>
+                                                    <td><%= patient.getPhone() != null ? patient.getPhone() : "" %></td>
+                                                    <td><%= patient.getCccd() != null ? patient.getCccd() : "" %></td>
+                                                    <td><%= patient.getAddress() != null ? patient.getAddress() : "" %></td>
                                                     <td>
                                                         <div class="action-buttons-group">
                                                             <% if (currentRole == User.Role.DOCTOR) { %>
@@ -567,7 +567,7 @@
                                                             
                                                             <button type="button" 
                                                                     class="action-btn action-btn-delete" 
-                                                                    onclick="deletePatient(<%=patient.getId()%>, '<%=patient.getFullName()%>')" 
+                                                                    onclick="deletePatient(<%=patient.getId()%>, '<%=patient.getFullName().replace("'", "\\'")%>')" 
                                                                     title="Xóa bệnh nhân">
                                                                 <i class="bi bi-trash3"></i>
                                                                 <span class="btn-text">Xóa</span>
@@ -685,16 +685,16 @@
                             <div class="mb-3">
                                 <label for="editPhone" class="form-label">Điện thoại <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="editPhone" name="phone" 
-                                       value="<%= editPatient.getPhone() %>" pattern="[0-9]{10,11}" placeholder="10-11 chữ số" required>
+                                       value="<%= editPatient.getPhone() != null ? editPatient.getPhone() : "" %>" pattern="[0-9]{10,11}" placeholder="10-11 chữ số" required>
                             </div>
                             <div class="mb-3">
                                 <label for="editCccd" class="form-label">CCCD</label>
                                 <input type="text" class="form-control" id="editCccd" name="cccd" 
-                                       value="<%= editPatient.getCccd() %>" pattern="[0-9]{12}" placeholder="12 chữ số (tùy chọn)">
+                                       value="<%= editPatient.getCccd() != null ? editPatient.getCccd() : "" %>" pattern="[0-9]{12}" placeholder="12 chữ số (tùy chọn)">
                             </div>
                             <div class="mb-3">
                                 <label for="editAddress" class="form-label">Địa chỉ</label>
-                                <textarea class="form-control" id="editAddress" name="address" rows="3" placeholder="Nhập địa chỉ"><%= editPatient.getAddress() %></textarea>
+                                <textarea class="form-control" id="editAddress" name="address" rows="3" placeholder="Nhập địa chỉ"><%= editPatient.getAddress() != null ? editPatient.getAddress() : "" %></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">

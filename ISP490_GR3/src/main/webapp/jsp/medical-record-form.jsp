@@ -438,9 +438,9 @@
                                         <p><strong>Mã bệnh nhân:</strong> <%= patient.getPatientCode() %></p>
                                         <p><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
                                         <p><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? shortSdf.format(patient.getDob()) : "" %></p>
-                                        <p><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
-                                        <p><strong>CCCD:</strong> <%= patient.getCccd() %></p>
-                                        <p><strong>Địa chỉ:</strong> <%= patient.getAddress() %></p>
+                                        <p><strong>Điện thoại:</strong> <%= patient.getPhone() != null ? patient.getPhone() : "" %></p>
+                                        <p><strong>CCCD:</strong> <%= patient.getCccd() != null ? patient.getCccd() : "" %></p>
+                                        <p><strong>Địa chỉ:</strong> <%= patient.getAddress() != null ? patient.getAddress() : "" %></p>
                                     </div>
                                 </div>
                             </div>
