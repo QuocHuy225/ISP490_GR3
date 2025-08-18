@@ -252,6 +252,9 @@ function renderDayView(selectedDate) {
 
 // Populate events into the correct day elements after fetching
 function populateEventsIntoGrid(events) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     events.forEach(event => {
         const eventDate = new Date(event.workDate);
         const eventDateString = formatDate(eventDate);
@@ -278,58 +281,67 @@ function populateEventsIntoGrid(events) {
             eventDiv.textContent = `Lịch BS ${event.doctorName} (${formatDate(new Date(event.workDate))})`;
             eventDiv.dataset.scheduleId = event.id;
 
-            eventDiv.addEventListener('click', async (e) => {
-                e.stopPropagation(); // Prevent day click from firing
+            // Kiểm tra xem lịch có phải của ngày đã qua hay không
+            const eventDateOnly = new Date(eventDate);
+            eventDateOnly.setHours(0, 0, 0, 0);
+            const isPastEvent = eventDateOnly.getTime() < today.getTime();
 
-                try {
-                    const response = await fetch(`${contextPath}/api/doctor-schedules/${event.id}`);
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Không thể tải chi tiết lịch.');
+            if (isPastEvent) {
+                // Thêm class để thay đổi giao diện (ví dụ: làm mờ)
+                eventDiv.classList.add('past-event');
+                // Loại bỏ sự kiện click để không thể mở modal
+            } else {
+                eventDiv.addEventListener('click', async (e) => {
+                    e.stopPropagation(); // Prevent day click from firing
+    
+                    try {
+                        const response = await fetch(`${contextPath}/api/doctor-schedules/${event.id}`);
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Không thể tải chi tiết lịch.');
+                        }
+                        const scheduleDetails = await response.json();
+                        
+                        const workDate = new Date(scheduleDetails.workDate);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const isPastDate = workDate.setHours(0, 0, 0, 0) < today.getTime();
+    
+                        currentEditingScheduleId = scheduleDetails.id;
+                        scheduleModalLabel.textContent = 'Sửa/Xóa Lịch Làm Việc';
+                        modalWorkDateInput.value = formatDate(workDate);
+                        modalDoctorIdSelect.value = scheduleDetails.doctorId;
+                        modalIsActiveCheckbox.checked = scheduleDetails.active;
+                        
+                        const defaultEventName = `Lịch BS ${scheduleDetails.doctorName}`;
+                        modalEventNameInput.value = scheduleDetails.name || defaultEventName;
+                        
+                        saveScheduleBtn.textContent = 'Cập nhật Lịch';
+                        deleteScheduleBtn.style.display = 'inline-block';
+    
+                        modalWorkDateInput.disabled = isPastDate;
+                        modalDoctorIdSelect.disabled = isPastDate;
+                        modalIsActiveCheckbox.disabled = isPastDate;
+                        modalEventNameInput.disabled = isPastDate;
+    
+                        saveScheduleBtn.style.display = isPastDate ? 'none' : 'inline-block';
+                        deleteScheduleBtn.style.display = isPastDate ? 'none' : 'inline-block';
+                        
+                        if (isPastDate) {
+                            showNotification('Thông báo', 'Lịch làm việc của ngày đã qua không thể chỉnh sửa hoặc xóa.', false);
+                        } else {
+                           const minDate = formatDate(today);
+                           modalWorkDateInput.min = minDate;
+                           modalWorkDateInput.max = getAllowedMaxDate();
+                        }
+                        
+                        scheduleModal.show();
+                    } catch (error) {
+                        console.error('Error fetching schedule details:', error);
+                        showNotification('Lỗi', `Không thể tải chi tiết lịch: ${error.message}`, false);
                     }
-                    const scheduleDetails = await response.json();
-                    
-                    const workDate = new Date(scheduleDetails.workDate);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const isPastDate = workDate.setHours(0, 0, 0, 0) < today.getTime();
-
-                    currentEditingScheduleId = scheduleDetails.id;
-                    scheduleModalLabel.textContent = 'Sửa/Xóa Lịch Làm Việc';
-                    modalWorkDateInput.value = formatDate(workDate);
-                    modalDoctorIdSelect.value = scheduleDetails.doctorId;
-                    modalIsActiveCheckbox.checked = scheduleDetails.active;
-                    
-                    // Logic mới: nếu tên lịch không có, gán tên mặc định
-                    const defaultEventName = `Lịch BS ${scheduleDetails.doctorName}`;
-                    modalEventNameInput.value = scheduleDetails.name || defaultEventName;
-                    
-                    saveScheduleBtn.textContent = 'Cập nhật Lịch';
-                    deleteScheduleBtn.style.display = 'inline-block';
-
-                    // Disable fields and buttons if the date is in the past
-                    modalWorkDateInput.disabled = isPastDate;
-                    modalDoctorIdSelect.disabled = isPastDate;
-                    modalIsActiveCheckbox.disabled = isPastDate;
-                    modalEventNameInput.disabled = isPastDate;
-
-                    saveScheduleBtn.style.display = isPastDate ? 'none' : 'inline-block';
-                    deleteScheduleBtn.style.display = isPastDate ? 'none' : 'inline-block';
-                    
-                    if (isPastDate) {
-                        showNotification('Thông báo', 'Lịch làm việc của ngày đã qua không thể chỉnh sửa hoặc xóa.', false);
-                    } else {
-                       const minDate = formatDate(today);
-                       modalWorkDateInput.min = minDate;
-                       modalWorkDateInput.max = getAllowedMaxDate();
-                    }
-                    
-                    scheduleModal.show();
-                } catch (error) {
-                    console.error('Error fetching schedule details:', error);
-                    showNotification('Lỗi', `Không thể tải chi tiết lịch: ${error.message}`, false);
-                }
-            });
+                });
+            }
             eventsContainer.appendChild(eventDiv);
         }
     });
@@ -337,13 +349,10 @@ function populateEventsIntoGrid(events) {
 
 // Handler for clicking on a day (to add new schedule)
 function handleDayClick(e, clickedDate) {
-    // Only allow clicking on current-month days (for month view)
-    // For week/day view, all displayed days are "clickable"
     if (currentViewMode === 'month' && e.currentTarget.classList.contains('other-month')) {
         return;
     }
 
-    // Check if the clicked date is in the past
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (clickedDate.setHours(0, 0, 0, 0) < today.getTime()) {
@@ -353,14 +362,13 @@ function handleDayClick(e, clickedDate) {
 
     currentEditingScheduleId = null;
     scheduleModalLabel.textContent = 'Thêm Lịch Làm Việc';
-    modalWorkDateInput.value = formatDate(clickedDate); // Pre-fill with clicked date
+    modalWorkDateInput.value = formatDate(clickedDate);
     modalDoctorIdSelect.value = '';
     modalIsActiveCheckbox.checked = true;
-    modalEventNameInput.value = ''; // Clear for new entry
+    modalEventNameInput.value = '';
     saveScheduleBtn.textContent = 'Lưu Lịch';
     deleteScheduleBtn.style.display = 'none';
     
-    // Re-enable fields for new schedules
     modalWorkDateInput.disabled = false;
     modalDoctorIdSelect.disabled = false;
     modalIsActiveCheckbox.disabled = false;
@@ -398,23 +406,21 @@ nextMonthBtn.addEventListener('click', () => {
 });
 
 todayButton.addEventListener('click', () => {
-    currentDate = new Date(); // Reset to today's date
+    currentDate = new Date();
     renderCalendar();
 });
 
 addEventButton.addEventListener('click', () => {
     currentEditingScheduleId = null;
     scheduleModalLabel.textContent = 'Thêm Lịch Làm Việc';
-    // Pre-fill date with current selected date/viewed date
     const today = new Date();
     modalWorkDateInput.value = formatDate(today);
     modalDoctorIdSelect.value = '';
     modalIsActiveCheckbox.checked = true;
-    modalEventNameInput.value = ''; // Clear for new schedule, as it's not saved
+    modalEventNameInput.value = '';
     saveScheduleBtn.textContent = 'Lưu Lịch';
     deleteScheduleBtn.style.display = 'none';
 
-    // Re-enable fields for new schedules
     modalWorkDateInput.disabled = false;
     modalDoctorIdSelect.disabled = false;
     modalIsActiveCheckbox.disabled = false;
@@ -430,7 +436,7 @@ addEventButton.addEventListener('click', () => {
 // Event listener for view mode selection
 viewModeSelect.addEventListener('change', (e) => {
     currentViewMode = e.target.value;
-    renderCalendar(); // Re-render calendar with new view mode
+    renderCalendar();
 });
 
 saveScheduleBtn.addEventListener('click', async () => {
@@ -438,7 +444,6 @@ saveScheduleBtn.addEventListener('click', async () => {
     const workDate = modalWorkDateInput.value;
     const isActive = modalIsActiveCheckbox.checked;
     
-    // Lấy tên lịch từ input, nếu trống thì tạo tên mặc định
     const doctorName = modalDoctorIdSelect.options[modalDoctorIdSelect.selectedIndex].text;
     const eventName = modalEventNameInput.value.trim() || `Lịch BS ${doctorName}`;
 
@@ -451,7 +456,6 @@ saveScheduleBtn.addEventListener('click', async () => {
         doctorId: parseInt(doctorId),
         workDate: workDate,
         isActive: isActive,
-        // eventName không được lưu vào DB, nhưng được gửi đi để tiện xử lý nếu cần
         eventName: eventName 
     };
 
@@ -480,7 +484,7 @@ saveScheduleBtn.addEventListener('click', async () => {
         if (response.ok) {
             showNotification('Thành công', responseData.message || 'Lịch làm việc đã được lưu thành công!', true);
             scheduleModal.hide();
-            renderCalendar(); // Re-render to show updated/new schedule
+            renderCalendar();
         } else {
             showNotification('Lỗi', `Có lỗi xảy ra khi lưu lịch: ${responseData.message || 'Lỗi không xác định.'}`, false);
         }
@@ -491,13 +495,12 @@ saveScheduleBtn.addEventListener('click', async () => {
 });
 
 deleteScheduleBtn.addEventListener('click', async () => {
-    // Use custom confirmation modal instead of browser's confirm()
     const confirmationModalInstance = new bootstrap.Modal(document.getElementById('confirmationModal'));
     document.getElementById('confirmationMessage').textContent = 'Bạn có chắc chắn muốn xóa lịch làm việc này không?';
     confirmationModalInstance.show();
 
     document.getElementById('confirmDeleteBtn').onclick = async () => {
-        confirmationModalInstance.hide(); // Hide confirmation modal
+        confirmationModalInstance.hide();
 
         if (currentEditingScheduleId) {
             try {
@@ -509,8 +512,8 @@ deleteScheduleBtn.addEventListener('click', async () => {
 
                 if (response.ok) {
                     showNotification('Thành công', responseData.message || 'Lịch làm việc đã được xóa thành công!', true);
-                    scheduleModal.hide(); // Hide main schedule modal
-                    renderCalendar(); // Re-render to reflect deletion
+                    scheduleModal.hide();
+                    renderCalendar();
                 } else {
                     showNotification('Lỗi', `Có lỗi xảy ra khi xóa lịch: ${responseData.message || 'Lỗi không xác định.'}`, false);
                 }
@@ -525,6 +528,6 @@ deleteScheduleBtn.addEventListener('click', async () => {
 
 // Initial render when the window loads
 window.onload = function () {
-    populateDoctorSelect(); // Populate the doctor dropdown
-    renderCalendar(); // Render the calendar initially (default month view)
+    populateDoctorSelect();
+    renderCalendar();
 };
