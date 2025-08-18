@@ -27,9 +27,6 @@ let currentDate = new Date(); // Current date to track month/year/week/day
 let currentEditingScheduleId = null; // To track which schedule is being edited/deleted
 let currentViewMode = 'month'; // Default view mode
 
-// IMPORTANT: Define contextPath globally in your JSP file like:
-// <script>const contextPath = "<%= request.getContextPath() %>";</script>
-
 // Function to format date to YYYY-MM-DD
 function formatDate(date) {
     const year = date.getFullYear();
@@ -108,17 +105,14 @@ async function renderCalendar() {
     existingWeekdays.forEach(el => el.remove());
 
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    // For day/week view, we need exact date
-    const day = currentDate.getDate();
-
     let actualEvents = [];
     let fetchUrl = '';
     const weekdaysHeader = document.querySelector('.calendar-weekdays');
 
     // Adjust UI and fetch URL based on view mode
     if (currentViewMode === 'month') {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
         currentMonthYearDisplay.textContent = `Tháng ${month + 1} ${year}`;
         fetchUrl = `${contextPath}/api/doctor-schedules?viewMode=month&year=${year}&month=${month + 1}`;
         calendarGrid.className = 'calendar-day-grid'; // Reset grid class for month view
@@ -294,21 +288,42 @@ function populateEventsIntoGrid(events) {
                         throw new Error(errorData.message || 'Không thể tải chi tiết lịch.');
                     }
                     const scheduleDetails = await response.json();
+                    
+                    const workDate = new Date(scheduleDetails.workDate);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const isPastDate = workDate.setHours(0, 0, 0, 0) < today.getTime();
 
                     currentEditingScheduleId = scheduleDetails.id;
                     scheduleModalLabel.textContent = 'Sửa/Xóa Lịch Làm Việc';
-                    modalWorkDateInput.value = formatDate(new Date(scheduleDetails.workDate));
+                    modalWorkDateInput.value = formatDate(workDate);
                     modalDoctorIdSelect.value = scheduleDetails.doctorId;
                     modalIsActiveCheckbox.checked = scheduleDetails.active;
-                    // eventName is not from DB, so construct for display in modal
-                    modalEventNameInput.value = `Lịch BS ${scheduleDetails.doctorName} (${formatDate(new Date(scheduleDetails.workDate))})`;
+                    
+                    // Logic mới: nếu tên lịch không có, gán tên mặc định
+                    const defaultEventName = `Lịch BS ${scheduleDetails.doctorName}`;
+                    modalEventNameInput.value = scheduleDetails.name || defaultEventName;
+                    
                     saveScheduleBtn.textContent = 'Cập nhật Lịch';
                     deleteScheduleBtn.style.display = 'inline-block';
 
-                    const today = new Date();
-                    modalWorkDateInput.min = formatDate(today);
-                    modalWorkDateInput.max = getAllowedMaxDate();
+                    // Disable fields and buttons if the date is in the past
+                    modalWorkDateInput.disabled = isPastDate;
+                    modalDoctorIdSelect.disabled = isPastDate;
+                    modalIsActiveCheckbox.disabled = isPastDate;
+                    modalEventNameInput.disabled = isPastDate;
 
+                    saveScheduleBtn.style.display = isPastDate ? 'none' : 'inline-block';
+                    deleteScheduleBtn.style.display = isPastDate ? 'none' : 'inline-block';
+                    
+                    if (isPastDate) {
+                        showNotification('Thông báo', 'Lịch làm việc của ngày đã qua không thể chỉnh sửa hoặc xóa.', false);
+                    } else {
+                       const minDate = formatDate(today);
+                       modalWorkDateInput.min = minDate;
+                       modalWorkDateInput.max = getAllowedMaxDate();
+                    }
+                    
                     scheduleModal.show();
                 } catch (error) {
                     console.error('Error fetching schedule details:', error);
@@ -328,17 +343,31 @@ function handleDayClick(e, clickedDate) {
         return;
     }
 
+    // Check if the clicked date is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (clickedDate.setHours(0, 0, 0, 0) < today.getTime()) {
+        showNotification('Lỗi', 'Không thể thêm lịch làm việc cho ngày đã qua.', false);
+        return;
+    }
+
     currentEditingScheduleId = null;
     scheduleModalLabel.textContent = 'Thêm Lịch Làm Việc';
     modalWorkDateInput.value = formatDate(clickedDate); // Pre-fill with clicked date
     modalDoctorIdSelect.value = '';
     modalIsActiveCheckbox.checked = true;
-    modalEventNameInput.value = ''; // Event name is not saved, so clear for new entry
+    modalEventNameInput.value = ''; // Clear for new entry
     saveScheduleBtn.textContent = 'Lưu Lịch';
     deleteScheduleBtn.style.display = 'none';
-
-    const today = new Date();
-    modalWorkDateInput.min = formatDate(today);
+    
+    // Re-enable fields for new schedules
+    modalWorkDateInput.disabled = false;
+    modalDoctorIdSelect.disabled = false;
+    modalIsActiveCheckbox.disabled = false;
+    modalEventNameInput.disabled = false;
+    
+    const minDate = formatDate(today);
+    modalWorkDateInput.min = minDate;
     modalWorkDateInput.max = getAllowedMaxDate();
 
     scheduleModal.show();
@@ -377,17 +406,24 @@ addEventButton.addEventListener('click', () => {
     currentEditingScheduleId = null;
     scheduleModalLabel.textContent = 'Thêm Lịch Làm Việc';
     // Pre-fill date with current selected date/viewed date
-    modalWorkDateInput.value = formatDate(currentDate);
+    const today = new Date();
+    modalWorkDateInput.value = formatDate(today);
     modalDoctorIdSelect.value = '';
     modalIsActiveCheckbox.checked = true;
     modalEventNameInput.value = ''; // Clear for new schedule, as it's not saved
     saveScheduleBtn.textContent = 'Lưu Lịch';
     deleteScheduleBtn.style.display = 'none';
 
-    const today = new Date();
-    modalWorkDateInput.min = formatDate(today);
-    modalWorkDateInput.max = getAllowedMaxDate();
+    // Re-enable fields for new schedules
+    modalWorkDateInput.disabled = false;
+    modalDoctorIdSelect.disabled = false;
+    modalIsActiveCheckbox.disabled = false;
+    modalEventNameInput.disabled = false;
 
+    const minDate = formatDate(today);
+    modalWorkDateInput.min = minDate;
+    modalWorkDateInput.max = getAllowedMaxDate();
+    
     scheduleModal.show();
 });
 
@@ -401,9 +437,10 @@ saveScheduleBtn.addEventListener('click', async () => {
     const doctorId = modalDoctorIdSelect.value;
     const workDate = modalWorkDateInput.value;
     const isActive = modalIsActiveCheckbox.checked;
-    // eventName is only for frontend display, not sent to backend.
-    // const doctorName = modalDoctorIdSelect.options[modalDoctorIdSelect.selectedIndex].text; // Not strictly needed here
-    // const eventName = modalEventNameInput.value || `Lịch BS ${doctorName} (${workDate})`; // Not sent to backend
+    
+    // Lấy tên lịch từ input, nếu trống thì tạo tên mặc định
+    const doctorName = modalDoctorIdSelect.options[modalDoctorIdSelect.selectedIndex].text;
+    const eventName = modalEventNameInput.value.trim() || `Lịch BS ${doctorName}`;
 
     if (!doctorId || !workDate) {
         showNotification('Lỗi', 'Vui lòng chọn bác sĩ và ngày làm việc.', false);
@@ -413,8 +450,9 @@ saveScheduleBtn.addEventListener('click', async () => {
     const scheduleData = {
         doctorId: parseInt(doctorId),
         workDate: workDate,
-        isActive: isActive
-                // eventName is NOT included here as it's not saved to DB
+        isActive: isActive,
+        // eventName không được lưu vào DB, nhưng được gửi đi để tiện xử lý nếu cần
+        eventName: eventName 
     };
 
     try {

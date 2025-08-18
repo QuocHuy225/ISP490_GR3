@@ -10,7 +10,8 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/manage-doctor-schedule.css">
-        <script> const contextPath = "<%= request.getContextPath() %>";</script>
+        <script> const contextPath = "<%= request.getContextPath() 
+%>";</script>
     </head>
     <body>
         <%
@@ -28,7 +29,7 @@
                 }
             }
             if (currentRole == null) {
-                currentRole = User.Role.PATIENT; // Default or fallback
+                currentRole = User.Role.PATIENT;
             }
             Object userObj = session.getAttribute("user");
             String userName = "User";
@@ -95,8 +96,6 @@
                             <span style="color: var(--foreground);">Clinic</span>
                         </h3>
                     </div>
-
-
 
                     <div class="dropdown user-dropdown">
                         <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -206,7 +205,7 @@
                                     <label class="form-check-label" for="modalIsActive">Hoạt động</label>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="modalEventName" class="form-label">Tên Lịch :</label>
+                                    <label for="modalEventName" class="form-label">Tên Lịch:</label>
                                     <input type="text" class="form-control rounded-md" id="modalEventName" name="event_name">
                                 </div>
                             </form>

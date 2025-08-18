@@ -15,8 +15,12 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
-@WebServlet(name = "DoctorScheduleController", urlPatterns = {"/api/doctor-schedules", "/api/doctor-schedules/*", "/api/doctors"})
+// Map this servlet to handle API requests for doctor schedules and doctors
+// Make sure this servlet is mapped correctly in web.xml or with @WebServlet
+//@WebServlet(urlPatterns = {"/api/doctor-schedules", "/api/doctor-schedules/*", "/api/doctors"})
 public class DoctorScheduleController extends HttpServlet {
 
     private DoctorScheduleService scheduleService = new DoctorScheduleService();
@@ -133,7 +137,6 @@ public class DoctorScheduleController extends HttpServlet {
                 return;
             }
 
-            // eventName is not passed to service as it's not saved to DB
             String result = scheduleService.createSchedule(
                     requestData.getDoctorId(),
                     requestData.getWorkDate(),
@@ -144,7 +147,6 @@ public class DoctorScheduleController extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_CREATED); // 201 Created
                 out.print("{\"status\":\"success\",\"message\":\"Lịch làm việc đã được tạo thành công.\"}");
             } else {
-                // If result is not "success", it's an error message from the service
                 response.setStatus(HttpServletResponse.SC_CONFLICT); // 409 Conflict (e.g., schedule already exists or date out of range)
                 out.print("{\"status\":\"error\",\"message\":\"" + result + "\"}");
             }
@@ -161,7 +163,6 @@ public class DoctorScheduleController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
-        // Check user access first
         if (!checkReceptionistAccess(request, response)) {
             return;
         }
@@ -172,20 +173,33 @@ public class DoctorScheduleController extends HttpServlet {
             out.print("{\"status\":\"error\",\"message\":\"Thiếu ID lịch làm việc để cập nhật.\"}");
             return;
         }
-        String scheduleId = pathInfo.substring(1); // Get ID from path
+        String scheduleId = pathInfo.substring(1);
 
         try {
-            // Read JSON from request body
+            DoctorSchedule existingSchedule = scheduleService.findScheduleById(scheduleId);
+            if (existingSchedule == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                out.print("{\"status\":\"error\",\"message\":\"Không tìm thấy lịch làm việc để cập nhật.\"}");
+                return;
+            }
+
+            LocalDate localToday = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            LocalDate existingScheduleDate = existingSchedule.getWorkDate().toLocalDate();
+            
+            if (existingScheduleDate.isBefore(localToday)) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print("{\"status\":\"error\",\"message\":\"Không thể cập nhật lịch làm việc của ngày đã qua.\"}");
+                return;
+            }
+            
             DoctorScheduleRequest requestData = gson.fromJson(request.getReader(), DoctorScheduleRequest.class);
 
-            // Basic validation
             if (requestData.getDoctorId() == 0 || requestData.getWorkDate() == null || requestData.getWorkDate().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.print("{\"status\":\"error\",\"message\":\"Thiếu ID bác sĩ hoặc ngày làm việc.\"}");
                 return;
             }
 
-            // eventName is not passed to service as it's not saved to DB
             String result = scheduleService.updateSchedule(
                     scheduleId,
                     requestData.getDoctorId(),
@@ -194,17 +208,16 @@ public class DoctorScheduleController extends HttpServlet {
             );
 
             if ("success".equals(result)) {
-                response.setStatus(HttpServletResponse.SC_OK); // 200 OK
+                response.setStatus(HttpServletResponse.SC_OK);
                 out.print("{\"status\":\"success\",\"message\":\"Lịch làm việc đã được cập nhật thành công.\"}");
             } else {
-                // Determine appropriate status code based on error message
-                int statusCode = HttpServletResponse.SC_BAD_REQUEST; // Default to Bad Request
+                int statusCode = HttpServletResponse.SC_BAD_REQUEST;
                 if (result.contains("không tìm thấy")) {
-                    statusCode = HttpServletResponse.SC_NOT_FOUND; // 404 Not Found
+                    statusCode = HttpServletResponse.SC_NOT_FOUND;
                 } else if (result.contains("đã tồn tại")) {
-                    statusCode = HttpServletResponse.SC_CONFLICT; // 409 Conflict
+                    statusCode = HttpServletResponse.SC_CONFLICT;
                 } else if (result.contains("nằm ngoài khoảng thời gian cho phép")) {
-                    statusCode = HttpServletResponse.SC_FORBIDDEN; // 403 Forbidden or 400 Bad Request
+                    statusCode = HttpServletResponse.SC_FORBIDDEN;
                 }
                 response.setStatus(statusCode);
                 out.print("{\"status\":\"error\",\"message\":\"" + result + "\"}");
@@ -226,7 +239,6 @@ public class DoctorScheduleController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
-        // Check user access first
         if (!checkReceptionistAccess(request, response)) {
             return;
         }
@@ -237,16 +249,32 @@ public class DoctorScheduleController extends HttpServlet {
             out.print("{\"status\":\"error\",\"message\":\"Thiếu ID lịch làm việc để xóa.\"}");
             return;
         }
-        String scheduleId = pathInfo.substring(1); // Get ID from path
+        String scheduleId = pathInfo.substring(1);
 
         try {
+            DoctorSchedule existingSchedule = scheduleService.findScheduleById(scheduleId);
+            if (existingSchedule == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                out.print("{\"status\":\"error\",\"message\":\"Lịch làm việc không tìm thấy hoặc đã bị xóa.\"}");
+                return;
+            }
+
+            LocalDate localToday = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            LocalDate existingScheduleDate = existingSchedule.getWorkDate().toLocalDate();
+            
+            if (existingScheduleDate.isBefore(localToday)) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print("{\"status\":\"error\",\"message\":\"Không thể xóa lịch làm việc của ngày đã qua.\"}");
+                return;
+            }
+            
             boolean success = scheduleService.deleteSchedule(scheduleId);
             if (success) {
-                response.setStatus(HttpServletResponse.SC_OK); // 200 OK
+                response.setStatus(HttpServletResponse.SC_OK);
                 out.print("{\"status\":\"success\",\"message\":\"Lịch làm việc đã được xóa thành công.\"}");
             } else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND); // Or 500 if DAO failed for other reasons
-                out.print("{\"status\":\"error\",\"message\":\"Lịch làm việc không tìm thấy hoặc có lỗi khi xóa.\"}");
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print("{\"status\":\"error\",\"message\":\"Có lỗi xảy ra khi xóa lịch làm việc.\"}");
             }
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -259,49 +287,36 @@ public class DoctorScheduleController extends HttpServlet {
         }
     }
 
-    /**
-     * Checks if the current user has Receptionist or Admin access. If not,
-     * sends an appropriate error response and returns false.
-     *
-     * @param request The HttpServletRequest.
-     * @param response The HttpServletResponse.
-     * @return true if access is granted, false otherwise.
-     * @throws IOException If an input or output exception occurs.
-     */
     private boolean checkReceptionistAccess(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(false);
         PrintWriter out = response.getWriter();
 
-        // Check if user is logged in
         if (session == null || session.getAttribute("user") == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             out.print("{\"status\":\"error\",\"message\":\"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\"}");
             return false;
         }
 
-        // Get current user
         User currentUser = (User) session.getAttribute("user");
         if (currentUser == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             out.print("{\"status\":\"error\",\"message\":\"Thông tin người dùng không hợp lệ trong phiên.\"}");
             return false;
         }
 
-        // Allow both Admin and Receptionist to access
         if (currentUser.getRole() != User.Role.ADMIN && currentUser.getRole() != User.Role.RECEPTIONIST) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403 Forbidden
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             out.print("{\"status\":\"error\",\"message\":\"Bạn không có quyền truy cập chức năng này.\"}");
             return false;
         }
         return true;
     }
 
-    // Inner class to map incoming JSON request body for POST/PUT
     private static class DoctorScheduleRequest {
 
         private int doctorId;
-        private String workDate; // Expecting "YYYY-MM-DD"
+        private String workDate;
         private boolean isActive;
 
         public int getDoctorId() {
@@ -315,6 +330,5 @@ public class DoctorScheduleController extends HttpServlet {
         public boolean isActive() {
             return isActive;
         }
-
     }
 }
