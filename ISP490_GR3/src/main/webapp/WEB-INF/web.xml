@@ -77,28 +77,7 @@
         <url-pattern>/slot/patients</url-pattern>
     </servlet-mapping>
     
-    
-    
-    <servlet>
-        <servlet-name>MakeAppointmentController</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.MakeAppointmentController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>MakeAppointmentController</servlet-name>
-        <url-pattern>/makeappointments</url-pattern> <!-- Đây là URL bạn sẽ truy cập -->
-    </servlet-mapping>
-    
-    
-    <servlet>
-        <servlet-name>DoctorController</servlet-name>
-        <servlet-class>com.mycompany.isp490_gr3.controller.DoctorController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>DoctorController</servlet-name>
-        <url-pattern>/doctors</url-pattern>
-        <url-pattern>/viewdoctor</url-pattern>
-        <url-pattern>/book-appointment</url-pattern>
-    </servlet-mapping>
+
     
     <servlet>
         <servlet-name>AppointmentScheduleController</servlet-name>
@@ -148,6 +127,189 @@
         <servlet-name>PartnerController</servlet-name>
         <url-pattern>/admin/partners</url-pattern>
         <url-pattern>/admin/partners/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- ActualPrescriptionController -->
+    <servlet>
+        <servlet-name>ActualPrescriptionController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.ActualPrescriptionController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ActualPrescriptionController</servlet-name>
+        <url-pattern>/doctor/actual-prescriptions</url-pattern>
+    </servlet-mapping>
+    
+    <!-- AuthenticationController -->
+    <servlet>
+        <servlet-name>AuthenticationController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.AuthenticationController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AuthenticationController</servlet-name>
+        <url-pattern>/auth/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- AuthorizationController -->
+    <servlet>
+        <servlet-name>AuthorizationController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.AuthorizationController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AuthorizationController</servlet-name>
+        <url-pattern>/admin/authorization</url-pattern>
+        <url-pattern>/admin/authorization/view</url-pattern>
+        <url-pattern>/admin/authorization/delete</url-pattern>
+        <url-pattern>/admin/authorization/restore</url-pattern>
+        <url-pattern>/admin/authorization/create</url-pattern>
+    </servlet-mapping>
+    
+    <!-- DoctorReportController -->
+    <servlet>
+        <servlet-name>DoctorReportController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.DoctorReportController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DoctorReportController</servlet-name>
+        <url-pattern>/doctor/report/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- HomepageController -->
+    <servlet>
+        <servlet-name>HomepageController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.HomepageController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>HomepageController</servlet-name>
+        <url-pattern>/homepage</url-pattern>
+    </servlet-mapping>
+    
+    <!-- InvoiceController -->
+    <servlet>
+        <servlet-name>InvoiceController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.InvoiceController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InvoiceController</servlet-name>
+        <url-pattern>/doctor/invoices</url-pattern>
+    </servlet-mapping>
+    
+    <!-- MedicalExamTemplateController -->
+    <servlet>
+        <servlet-name>MedicalExamTemplateController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.MedicalExamTemplateController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MedicalExamTemplateController</servlet-name>
+        <url-pattern>/admin/medical-exam-templates/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- MedicalRecordController -->
+    <servlet>
+        <servlet-name>MedicalRecordController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.MedicalRecordController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MedicalRecordController</servlet-name>
+        <url-pattern>/doctor/medical-records</url-pattern>
+        <url-pattern>/doctor/medical-records/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- MedicalRequestController -->
+    <servlet>
+        <servlet-name>MedicalRequestController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.MedicalRequestController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MedicalRequestController</servlet-name>
+        <url-pattern>/doctor/medical-requests</url-pattern>
+    </servlet-mapping>
+    
+    <!-- PatientController -->
+    <servlet>
+        <servlet-name>PatientController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.PatientController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PatientController</servlet-name>
+        <url-pattern>/doctor/patients</url-pattern>
+    </servlet-mapping>
+    
+    <!-- PrescriptionController -->
+    <servlet>
+        <servlet-name>PrescriptionController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.PrescriptionController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PrescriptionController</servlet-name>
+        <url-pattern>/admin/prescriptions</url-pattern>
+        <url-pattern>/admin/prescriptions/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- QueueDoctorController -->
+    <servlet>
+        <servlet-name>QueueDoctorController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.QueueDoctorController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>QueueDoctorController</servlet-name>
+        <url-pattern>/doctor/queue</url-pattern>
+        <url-pattern>/api/doctor/queue</url-pattern>
+        <url-pattern>/api/doctor/queue/status</url-pattern>
+        <url-pattern>/api/doctor/queue/details</url-pattern>
+    </servlet-mapping>
+    
+    <!-- ReceptionistReportController -->
+    <servlet>
+        <servlet-name>ReceptionistReportController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.ReceptionistReportController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReceptionistReportController</servlet-name>
+        <url-pattern>/receptionist/report/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- ReportController -->
+    <servlet>
+        <servlet-name>ReportController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.ReportController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReportController</servlet-name>
+        <url-pattern>/admin/report/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- ServiceController -->
+    <servlet>
+        <servlet-name>ServiceController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.ServiceController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ServiceController</servlet-name>
+        <url-pattern>/admin/services</url-pattern>
+        <url-pattern>/admin/services/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- UserProfileController -->
+    <servlet>
+        <servlet-name>UserProfileController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.UserProfileController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UserProfileController</servlet-name>
+        <url-pattern>/user/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- WarehouseController -->
+    <servlet>
+        <servlet-name>WarehouseController</servlet-name>
+        <servlet-class>com.mycompany.isp490_gr3.controller.WarehouseController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>WarehouseController</servlet-name>
+        <url-pattern>/admin/medical-supplies</url-pattern>
+        <url-pattern>/admin/medical-supplies/*</url-pattern>
+        <url-pattern>/admin/medicines</url-pattern>
+        <url-pattern>/admin/medicines/*</url-pattern>
     </servlet-mapping>
     
     

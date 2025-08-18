@@ -14,6 +14,7 @@ import com.mycompany.isp490_gr3.util.LocalDateAdapter;
 import com.mycompany.isp490_gr3.util.LocalDateTimeAdapter;
 import com.mycompany.isp490_gr3.util.LocalTimeAdapter;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@WebServlet(name = "AppointmentScheduleController", urlPatterns = {"/api/patient/*"})
 public class AppointmentScheduleController extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(AppointmentScheduleController.class.getName());

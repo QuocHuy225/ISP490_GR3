@@ -31,7 +31,7 @@ import java.util.List;
  * - Chỉ Admin mới được truy cập
  * =====================================================
  */
-
+@WebServlet(name = "PartnerController", urlPatterns = {"/admin/partners", "/admin/partners/*"})
 public class PartnerController extends HttpServlet {
 
     private DAOPartner partnerDAO;

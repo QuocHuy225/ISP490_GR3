@@ -9,8 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
-// Nếu bạn dùng annotation, hãy đảm bảo nó khớp với web.xml
-// @WebServlet("/receptionist/manage-doctor-schedule")
+@WebServlet(name = "ReceptionistScheduleController", urlPatterns = {"/receptionist/manage-doctor-schedule"})
 public class ReceptionistScheduleController extends HttpServlet {
 
     @Override

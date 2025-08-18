@@ -16,9 +16,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-// Map this servlet to handle API requests for doctor schedules and doctors
-// Make sure this servlet is mapped correctly in web.xml or with @WebServlet
-//@WebServlet(urlPatterns = {"/api/doctor-schedules", "/api/doctor-schedules/*", "/api/doctors"})
+@WebServlet(name = "DoctorScheduleController", urlPatterns = {"/api/doctor-schedules", "/api/doctor-schedules/*", "/api/doctors"})
 public class DoctorScheduleController extends HttpServlet {
 
     private DoctorScheduleService scheduleService = new DoctorScheduleService();
