@@ -509,6 +509,7 @@
                                         <p><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
                                         <p><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? shortSdf.format(patient.getDob()) : "" %></p>
                                         <p><strong>Mã hồ sơ:</strong> <%= medicalRecord.getId() %></p>
+                                        <p><strong>Bác sĩ:</strong> <%= request.getAttribute("doctor") != null ? ((com.mycompany.isp490_gr3.model.Doctor) request.getAttribute("doctor")).getFullName() : "Chưa xác định" %></p>
                                         <p><strong>Ngày tạo hồ sơ:</strong> <%= medicalRecord.getCreatedAt() != null ? shortSdf.format(medicalRecord.getCreatedAt()) : "" %></p>
                                         <% if (isEdit && invoice != null) { %>
                                         <p><strong>Mã hóa đơn:</strong> <%= invoice.getInvoiceId() %></p>

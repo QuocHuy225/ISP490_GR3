@@ -332,6 +332,17 @@
                                         </div>
                                     </div>
 
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label"><i class="bi bi-person-badge me-2"></i>Bác sĩ</label>
+                                                <input type="text" class="form-control" 
+                                                       value="<%= request.getAttribute("doctor") != null ? ((com.mycompany.isp490_gr3.model.Doctor) request.getAttribute("doctor")).getFullName() : "Chưa xác định" %>" 
+                                                       readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="mb-3">
                                         <label class="form-label"><i class="bi bi-chat-text me-2"></i>Ghi chú</label>
                                         <textarea class="form-control" name="notes" rows="3" 

@@ -3,6 +3,7 @@ package com.mycompany.isp490_gr3.controller;
 import com.mycompany.isp490_gr3.dao.DAOInvoice;
 import com.mycompany.isp490_gr3.dao.DAOPatient;
 import com.mycompany.isp490_gr3.dao.DAOMedicalRecord;
+import com.mycompany.isp490_gr3.dao.DAODoctor;
 import com.mycompany.isp490_gr3.model.Invoice;
 import com.mycompany.isp490_gr3.model.InvoiceItem;
 import com.mycompany.isp490_gr3.model.Patient;
@@ -11,6 +12,7 @@ import com.mycompany.isp490_gr3.model.MedicalService;
 import com.mycompany.isp490_gr3.model.MedicalSupply;
 import com.mycompany.isp490_gr3.model.Medicine;
 import com.mycompany.isp490_gr3.model.User;
+import com.mycompany.isp490_gr3.model.Doctor;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -37,6 +39,7 @@ public class InvoiceController extends HttpServlet {
     private DAOInvoice daoInvoice;
     private DAOPatient daoPatient;
     private DAOMedicalRecord daoMedicalRecord;
+    private DAODoctor daoDoctor;
     
     @Override
     public void init() throws ServletException {
@@ -44,6 +47,7 @@ public class InvoiceController extends HttpServlet {
         daoInvoice = new DAOInvoice();
         daoPatient = new DAOPatient();
         daoMedicalRecord = new DAOMedicalRecord();
+        daoDoctor = new DAODoctor();
     }
     
     @Override
@@ -162,6 +166,21 @@ public class InvoiceController extends HttpServlet {
         
         Patient patient = daoPatient.getPatientById(medicalRecord.getPatientId());
         
+        // Get doctor information - first try from medical record, then from current user
+        Doctor doctor = null;
+        if (medicalRecord.getDoctorId() != null) {
+            doctor = daoDoctor.findDoctorById(medicalRecord.getDoctorId());
+        } else {
+            // If medical record has no doctor, try to get from current logged-in user
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                User currentUser = (User) session.getAttribute("user");
+                if (currentUser != null) {
+                    doctor = daoDoctor.getDoctorByUserId(currentUser.getId());
+                }
+            }
+        }
+        
         // Load reference data
         List<MedicalService> services = daoInvoice.getAllServices();
         List<MedicalSupply> supplies = daoInvoice.getAllSupplies();
@@ -169,6 +188,7 @@ public class InvoiceController extends HttpServlet {
         
         request.setAttribute("medicalRecord", medicalRecord);
         request.setAttribute("patient", patient);
+        request.setAttribute("doctor", doctor);
         request.setAttribute("services", services);
         request.setAttribute("supplies", supplies);
         request.setAttribute("medicines", medicines);
@@ -208,6 +228,14 @@ public class InvoiceController extends HttpServlet {
         
         Patient patient = daoPatient.getPatientById(invoice.getPatientId());
         
+        // Get doctor information - first try from invoice, then from medical record
+        Doctor doctor = null;
+        if (invoice.getDoctorId() != null) {
+            doctor = daoDoctor.findDoctorById(invoice.getDoctorId());
+        } else if (medicalRecord.getDoctorId() != null) {
+            doctor = daoDoctor.findDoctorById(medicalRecord.getDoctorId());
+        }
+        
         // Load reference data
         List<MedicalService> services = daoInvoice.getAllServices();
         List<MedicalSupply> supplies = daoInvoice.getAllSupplies();
@@ -216,6 +244,7 @@ public class InvoiceController extends HttpServlet {
         request.setAttribute("invoice", invoice);
         request.setAttribute("medicalRecord", medicalRecord);
         request.setAttribute("patient", patient);
+        request.setAttribute("doctor", doctor);
         request.setAttribute("services", services);
         request.setAttribute("supplies", supplies);
         request.setAttribute("medicines", medicines);
@@ -243,9 +272,18 @@ public class InvoiceController extends HttpServlet {
         MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(invoice.getMedicalRecordId());
         Patient patient = daoPatient.getPatientById(invoice.getPatientId());
         
+        // Get doctor information - first try from invoice, then from medical record
+        Doctor doctor = null;
+        if (invoice.getDoctorId() != null) {
+            doctor = daoDoctor.findDoctorById(invoice.getDoctorId());
+        } else if (medicalRecord != null && medicalRecord.getDoctorId() != null) {
+            doctor = daoDoctor.findDoctorById(medicalRecord.getDoctorId());
+        }
+        
         request.setAttribute("invoice", invoice);
         request.setAttribute("medicalRecord", medicalRecord);
         request.setAttribute("patient", patient);
+        request.setAttribute("doctor", doctor);
         
         request.getRequestDispatcher("/jsp/invoice-view.jsp").forward(request, response);
     }
@@ -275,9 +313,21 @@ public class InvoiceController extends HttpServlet {
             }
             
             int patientId = Integer.parseInt(patientIdStr);
-            Integer doctorId = (doctorIdStr != null && !doctorIdStr.isEmpty()) ? Integer.parseInt(doctorIdStr) : null;
             BigDecimal discountAmount = (discountAmountStr != null && !discountAmountStr.isEmpty()) ? 
                                        new BigDecimal(discountAmountStr) : BigDecimal.ZERO;
+            
+            // Get doctorId - first try from medical record, then from current user
+            Integer doctorId = null;
+            MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
+            if (medicalRecord != null && medicalRecord.getDoctorId() != null) {
+                doctorId = medicalRecord.getDoctorId();
+            } else {
+                // If no doctor in medical record, try to get from current logged-in user
+                Doctor currentDoctor = daoDoctor.getDoctorByUserId(userId);
+                if (currentDoctor != null) {
+                    doctorId = currentDoctor.getId();
+                }
+            }
             
             // Create invoice
             Invoice invoice = new Invoice();

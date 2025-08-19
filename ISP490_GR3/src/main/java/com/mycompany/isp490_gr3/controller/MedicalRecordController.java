@@ -3,10 +3,12 @@ package com.mycompany.isp490_gr3.controller;
 import com.mycompany.isp490_gr3.dao.DAOMedicalRecord;
 import com.mycompany.isp490_gr3.dao.DAOPatient;
 import com.mycompany.isp490_gr3.dao.DAOMedicalExamTemplate;
+import com.mycompany.isp490_gr3.dao.DAODoctor;
 import com.mycompany.isp490_gr3.model.MedicalRecord;
 import com.mycompany.isp490_gr3.model.Patient;
 import com.mycompany.isp490_gr3.model.MedicalExamTemplate;
 import com.mycompany.isp490_gr3.model.User;
+import com.mycompany.isp490_gr3.model.Doctor;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,6 +31,7 @@ public class MedicalRecordController extends HttpServlet {
     private DAOMedicalRecord medicalRecordDAO = new DAOMedicalRecord();
     private DAOPatient patientDAO = new DAOPatient();
     private DAOMedicalExamTemplate templateDAO = new DAOMedicalExamTemplate();
+    private DAODoctor doctorDAO = new DAODoctor();
     private Gson gson = new Gson();
     
     @Override
@@ -131,8 +134,38 @@ public class MedicalRecordController extends HttpServlet {
         // Get medical exam templates
         List<MedicalExamTemplate> templates = templateDAO.getAllTemplates();
         
+        // Get current doctor information
+        Doctor doctor = null;
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            User currentUser = (User) session.getAttribute("user");
+            if (currentUser != null) {
+                System.out.println("DEBUG: showNewMedicalRecordForm - Current user ID: " + currentUser.getId());
+                System.out.println("DEBUG: showNewMedicalRecordForm - Current user role: " + currentUser.getRole());
+                
+                // List all doctors to debug
+                java.util.List<Doctor> allDoctors = doctorDAO.findAllDoctors();
+                System.out.println("DEBUG: Total doctors in database: " + allDoctors.size());
+                for (Doctor d : allDoctors) {
+                    System.out.println("DEBUG: Doctor ID=" + d.getId() + ", AccountID=" + d.getAccountId() + ", Name=" + d.getFullName());
+                }
+                
+                doctor = doctorDAO.getDoctorByUserId(currentUser.getId());
+                if (doctor != null) {
+                    System.out.println("DEBUG: showNewMedicalRecordForm - Found doctor: " + doctor.getFullName());
+                } else {
+                    System.out.println("DEBUG: showNewMedicalRecordForm - No doctor found for user ID: " + currentUser.getId());
+                }
+            } else {
+                System.out.println("DEBUG: showNewMedicalRecordForm - Current user is null");
+            }
+        } else {
+            System.out.println("DEBUG: showNewMedicalRecordForm - Session is null");
+        }
+        
         request.setAttribute("patient", patient);
         request.setAttribute("templates", templates);
+        request.setAttribute("doctor", doctor);
         request.setAttribute("isEdit", false);
         request.getRequestDispatcher("/jsp/medical-record-form.jsp").forward(request, response);
     }
@@ -158,9 +191,24 @@ public class MedicalRecordController extends HttpServlet {
         // Get medical exam templates
         List<MedicalExamTemplate> templates = templateDAO.getAllTemplates();
         
+        // Get doctor information from medical record
+        Doctor doctor = null;
+        if (record.getDoctorId() != null) {
+            System.out.println("DEBUG: showEditMedicalRecordForm - Medical record has doctorId: " + record.getDoctorId());
+            doctor = doctorDAO.findDoctorById(record.getDoctorId());
+            if (doctor != null) {
+                System.out.println("DEBUG: showEditMedicalRecordForm - Found doctor: " + doctor.getFullName());
+            } else {
+                System.out.println("DEBUG: showEditMedicalRecordForm - No doctor found for ID: " + record.getDoctorId());
+            }
+        } else {
+            System.out.println("DEBUG: showEditMedicalRecordForm - Medical record has no doctorId");
+        }
+        
         request.setAttribute("patient", patient);
         request.setAttribute("medicalRecord", record);
         request.setAttribute("templates", templates);
+        request.setAttribute("doctor", doctor);
         request.setAttribute("isEdit", true);
         request.getRequestDispatcher("/jsp/medical-record-form.jsp").forward(request, response);
     }
@@ -183,8 +231,15 @@ public class MedicalRecordController extends HttpServlet {
             return;
         }
         
+        // Get doctor information from medical record
+        Doctor doctor = null;
+        if (record.getDoctorId() != null) {
+            doctor = doctorDAO.findDoctorById(record.getDoctorId());
+        }
+        
         request.setAttribute("patient", patient);
         request.setAttribute("medicalRecord", record);
+        request.setAttribute("doctor", doctor);
         request.getRequestDispatcher("/jsp/medical-record-view.jsp").forward(request, response);
     }
     
@@ -340,9 +395,23 @@ public class MedicalRecordController extends HttpServlet {
             record.setPatientId(Integer.parseInt(patientIdStr));
         }
         
+        // Get doctorId - first try from parameter, then from current logged-in user
         String doctorIdStr = request.getParameter("doctorId");
         if (doctorIdStr != null && !doctorIdStr.isEmpty()) {
             record.setDoctorId(Integer.parseInt(doctorIdStr));
+        } else {
+            // If no doctorId in request, try to get from current logged-in user
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                User currentUser = (User) session.getAttribute("user");
+                if (currentUser != null) {
+                    DAODoctor daoDoctor = new DAODoctor();
+                    Doctor currentDoctor = daoDoctor.getDoctorByUserId(currentUser.getId());
+                    if (currentDoctor != null) {
+                        record.setDoctorId(currentDoctor.getId());
+                    }
+                }
+            }
         }
         
         // Vital signs

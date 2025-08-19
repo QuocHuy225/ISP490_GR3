@@ -421,6 +421,7 @@
                                 <p><strong>Giới tính:</strong> <%= patient.getGender() == 1 ? "Nam" : "Nữ" %></p>
                                 <p><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
                                 <p><strong>Địa chỉ:</strong> <%= patient.getAddress() %></p>
+                                <p><strong>Bác sĩ phụ trách:</strong> <%= request.getAttribute("doctor") != null ? ((com.mycompany.isp490_gr3.model.Doctor) request.getAttribute("doctor")).getFullName() : "Chưa xác định" %></p>
                             </div>
                             <div class="card-header">
                                 <h4 class="text-primary mb-3">

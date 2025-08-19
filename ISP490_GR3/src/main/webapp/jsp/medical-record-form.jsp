@@ -441,6 +441,19 @@
                                         <p><strong>Điện thoại:</strong> <%= patient.getPhone() != null ? patient.getPhone() : "" %></p>
                                         <p><strong>CCCD:</strong> <%= patient.getCccd() != null ? patient.getCccd() : "" %></p>
                                         <p><strong>Địa chỉ:</strong> <%= patient.getAddress() != null ? patient.getAddress() : "" %></p>
+                                        <p><strong>Bác sĩ phụ trách:</strong> 
+                                        <%
+                                            Object doctorObj = request.getAttribute("doctor");
+                                            System.out.println("DEBUG JSP: doctor attribute = " + doctorObj);
+                                            if (doctorObj != null) {
+                                                com.mycompany.isp490_gr3.model.Doctor doctor = (com.mycompany.isp490_gr3.model.Doctor) doctorObj;
+                                                System.out.println("DEBUG JSP: doctor name = " + doctor.getFullName());
+                                                out.print(doctor.getFullName());
+                                            } else {
+                                                out.print("Chưa xác định");
+                                            }
+                                        %>
+                                        </p>
                                     </div>
                                 </div>
                             </div>

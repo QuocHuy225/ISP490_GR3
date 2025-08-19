@@ -4,12 +4,14 @@ import com.mycompany.isp490_gr3.dao.DAOActualPrescription;
 import com.mycompany.isp490_gr3.dao.DAOMedicalRecord;
 import com.mycompany.isp490_gr3.dao.DAOPatient;
 import com.mycompany.isp490_gr3.dao.DAOPrescription;
+import com.mycompany.isp490_gr3.dao.DAODoctor;
 import com.mycompany.isp490_gr3.model.ActualPrescriptionForm;
 import com.mycompany.isp490_gr3.model.ActualPrescriptionMedicine;
 import com.mycompany.isp490_gr3.model.MedicalRecord;
 import com.mycompany.isp490_gr3.model.Patient;
 import com.mycompany.isp490_gr3.model.PrescriptionMedicine;
 import com.mycompany.isp490_gr3.model.User;
+import com.mycompany.isp490_gr3.model.Doctor;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -35,6 +37,7 @@ public class ActualPrescriptionController extends HttpServlet {
     private DAOPatient daoPatient;
     private DAOMedicalRecord daoMedicalRecord;
     private DAOPrescription daoPrescriptionTemplate;
+    private DAODoctor daoDoctor;
 
     @Override
     public void init() throws ServletException {
@@ -42,6 +45,7 @@ public class ActualPrescriptionController extends HttpServlet {
         daoPatient = new DAOPatient();
         daoMedicalRecord = new DAOMedicalRecord();
         daoPrescriptionTemplate = new DAOPrescription();
+        daoDoctor = new DAODoctor();
     }
 
     @Override
@@ -147,10 +151,25 @@ public class ActualPrescriptionController extends HttpServlet {
         }
         Patient patient = daoPatient.getPatientById(record.getPatientId());
         List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
+        
+        // Get doctor information from medical record
+        Doctor doctor = null;
+        if (record.getDoctorId() != null) {
+            LOGGER.info("DEBUG: Medical record has doctorId: " + record.getDoctorId());
+            doctor = daoDoctor.findDoctorById(record.getDoctorId());
+            if (doctor != null) {
+                LOGGER.info("DEBUG: Found doctor: " + doctor.getFullName());
+            } else {
+                LOGGER.info("DEBUG: Doctor not found for ID: " + record.getDoctorId());
+            }
+        } else {
+            LOGGER.info("DEBUG: Medical record has no doctorId");
+        }
 
         request.setAttribute("medicalRecord", record);
         request.setAttribute("patient", patient);
         request.setAttribute("templateMeds", templateMeds);
+        request.setAttribute("doctor", doctor);
         request.setAttribute("action", "add");
         request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
     }
@@ -170,11 +189,20 @@ public class ActualPrescriptionController extends HttpServlet {
         MedicalRecord record = daoMedicalRecord.getMedicalRecordById(form.getMedicalRecordId());
         Patient patient = daoPatient.getPatientById(form.getPatientId());
         List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
+        
+        // Get doctor information - first try from prescription form, then from medical record
+        Doctor doctor = null;
+        if (form.getDoctorId() != null) {
+            doctor = daoDoctor.findDoctorById(form.getDoctorId());
+        } else if (record != null && record.getDoctorId() != null) {
+            doctor = daoDoctor.findDoctorById(record.getDoctorId());
+        }
 
         request.setAttribute("form", form);
         request.setAttribute("medicalRecord", record);
         request.setAttribute("patient", patient);
         request.setAttribute("templateMeds", templateMeds);
+        request.setAttribute("doctor", doctor);
         request.setAttribute("action", "update");
         request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
     }
@@ -193,10 +221,19 @@ public class ActualPrescriptionController extends HttpServlet {
         }
         MedicalRecord record = daoMedicalRecord.getMedicalRecordById(form.getMedicalRecordId());
         Patient patient = daoPatient.getPatientById(form.getPatientId());
+        
+        // Get doctor information - first try from prescription form, then from medical record
+        Doctor doctor = null;
+        if (form.getDoctorId() != null) {
+            doctor = daoDoctor.findDoctorById(form.getDoctorId());
+        } else if (record != null && record.getDoctorId() != null) {
+            doctor = daoDoctor.findDoctorById(record.getDoctorId());
+        }
 
         request.setAttribute("form", form);
         request.setAttribute("medicalRecord", record);
         request.setAttribute("patient", patient);
+        request.setAttribute("doctor", doctor);
         request.getRequestDispatcher("/jsp/actual-prescription-view.jsp").forward(request, response);
     }
 
@@ -209,10 +246,27 @@ public class ActualPrescriptionController extends HttpServlet {
         String medicalRecordId = request.getParameter("medicalRecordId");
         try {
             int patientId = Integer.parseInt(request.getParameter("patientId"));
-            String doctorIdStr = request.getParameter("doctorId");
-            Integer doctorId = (doctorIdStr != null && !doctorIdStr.isEmpty()) ? Integer.parseInt(doctorIdStr) : null;
             String formName = request.getParameter("formName");
             String notes = request.getParameter("notes");
+            
+            // Get doctorId - first try from medical record, then from current user
+            Integer doctorId = null;
+            MedicalRecord medicalRecord = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
+            LOGGER.info("DEBUG: handleAddForm - userId: " + userId);
+            if (medicalRecord != null && medicalRecord.getDoctorId() != null) {
+                doctorId = medicalRecord.getDoctorId();
+                LOGGER.info("DEBUG: handleAddForm - Got doctorId from medical record: " + doctorId);
+            } else {
+                LOGGER.info("DEBUG: handleAddForm - Medical record has no doctorId, trying current user");
+                // If no doctor in medical record, try to get from current logged-in user
+                Doctor currentDoctor = daoDoctor.getDoctorByUserId(userId);
+                if (currentDoctor != null) {
+                    doctorId = currentDoctor.getId();
+                    LOGGER.info("DEBUG: handleAddForm - Got doctorId from current user: " + doctorId);
+                } else {
+                    LOGGER.info("DEBUG: handleAddForm - No doctor found for current user");
+                }
+            }
 
             ActualPrescriptionForm form = new ActualPrescriptionForm();
             form.setMedicalRecordId(medicalRecordId);
@@ -227,12 +281,19 @@ public class ActualPrescriptionController extends HttpServlet {
 
             if (medicines.isEmpty()) {
                 request.setAttribute("errorMessage", "Vui lòng nhập ít nhất một thuốc và tên thuốc không được để trống.");
-                MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
-                Patient patient = daoPatient.getPatientById(record.getPatientId());
+                Patient patient = daoPatient.getPatientById(medicalRecord.getPatientId());
                 List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
-                request.setAttribute("medicalRecord", record);
+                
+                // Get doctor information
+                Doctor doctor = null;
+                if (doctorId != null) {
+                    doctor = daoDoctor.findDoctorById(doctorId);
+                }
+                
+                request.setAttribute("medicalRecord", medicalRecord);
                 request.setAttribute("patient", patient);
                 request.setAttribute("templateMeds", templateMeds);
+                request.setAttribute("doctor", doctor);
                 request.setAttribute("action", "add");
                 request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
                 return;
@@ -290,9 +351,19 @@ public class ActualPrescriptionController extends HttpServlet {
                 MedicalRecord record = daoMedicalRecord.getMedicalRecordById(medicalRecordId);
                 Patient patient = daoPatient.getPatientById(record.getPatientId());
                 List<PrescriptionMedicine> templateMeds = daoPrescriptionTemplate.getAllMedicines();
+                
+                // Get doctor information - first try from prescription form, then from medical record
+                Doctor doctor = null;
+                if (form.getDoctorId() != null) {
+                    doctor = daoDoctor.findDoctorById(form.getDoctorId());
+                } else if (record != null && record.getDoctorId() != null) {
+                    doctor = daoDoctor.findDoctorById(record.getDoctorId());
+                }
+                
                 request.setAttribute("medicalRecord", record);
                 request.setAttribute("patient", patient);
                 request.setAttribute("templateMeds", templateMeds);
+                request.setAttribute("doctor", doctor);
                 request.setAttribute("action", "update");
                 request.getRequestDispatcher("/jsp/actual-prescription-form.jsp").forward(request, response);
                 return;

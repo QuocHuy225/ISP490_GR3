@@ -494,11 +494,11 @@
                                     <i class="bi bi-file-medical me-2"></i>Thông tin bệnh nhân
                                 </h4>
                             </div>
-                            <p><strong>Mã bệnh nhân:</strong> <%= patient.getPatientCode() %></p>
-                            <p><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
-                            <p><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? shortSdf.format(patient.getDob()) : "" %></p>
-                            <p><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
-                            <p><strong>Địa chỉ:</strong> <%= patient.getAddress() %></p>
+                                                            <p><strong>Mã bệnh nhân:</strong> <%= patient.getPatientCode() %></p>
+                                <p><strong>Họ tên:</strong> <%= patient.getFullName() %></p>
+                                <p><strong>Ngày sinh:</strong> <%= patient.getDob() != null ? shortSdf.format(patient.getDob()) : "" %></p>
+                                <p><strong>Điện thoại:</strong> <%= patient.getPhone() %></p>
+                                <p><strong>Địa chỉ:</strong> <%= patient.getAddress() %></p>
 
                             <div class="card-header">
                                 <h4 class="text-primary mb-3">
@@ -507,6 +507,7 @@
                             </div>
                             <p><strong>Mã hóa đơn:</strong> <%= invoice.getInvoiceId() %></p>
                             <p><strong>Mã hồ sơ:</strong> <%= invoice.getMedicalRecordId() %></p>
+                            <p><strong>Bác sĩ:</strong> <%= request.getAttribute("doctor") != null ? ((com.mycompany.isp490_gr3.model.Doctor) request.getAttribute("doctor")).getFullName() : "Chưa xác định" %></p>
                             <p><strong>Ngày tạo:</strong> <%= invoice.getCreatedAt() != null ? sdf.format(invoice.getCreatedAt()) : "" %></p>
                         </div>
                     </div>

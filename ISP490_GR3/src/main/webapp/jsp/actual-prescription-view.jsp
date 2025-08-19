@@ -558,6 +558,7 @@
                                 <p><strong>Mã đơn thuốc:</strong> <%= form.getActualPrescriptionFormId() %></p>
                                 <p><strong>Tên đơn thuốc:</strong> <%= form.getFormName() %></p>
                                 <p><strong>Ngày kê đơn:</strong> <%= form.getPrescriptionDate() != null ? fullSdf.format(form.getPrescriptionDate()) : "" %></p>
+                                <p><strong>Bác sĩ:</strong> <%= request.getAttribute("doctor") != null ? ((com.mycompany.isp490_gr3.model.Doctor) request.getAttribute("doctor")).getFullName() : "Chưa xác định" %></p>
                                 <p><strong>Mã hồ sơ:</strong> <%= record.getId() %></p>
                             </div>
                         </div>
