@@ -869,39 +869,94 @@ public class DAOAppointment {
         return 0;
     }
 
-    public boolean checkinAppointment(int appointmentId, int priority, String description) {
-        if (priority != 0 && priority != 1) {
-            throw new IllegalArgumentException("Priority must be 0 (Trung bình) hoặc 1 (Cao).");
-        }
+    // Sửa lại hàm checkinAppointment trong DAOAppointment.java
+public boolean checkinAppointment(int appointmentId, int priority, String description) {
+    Connection conn = null;
+    PreparedStatement psAppointment = null;
+    PreparedStatement psQueueCheck = null;
+    PreparedStatement psQueue = null;
+    boolean success = false;
 
-        try (Connection conn = DBContext.getConnection()) {
-            conn.setAutoCommit(false);
+    try {
+        conn = DBContext.getConnection();
+        conn.setAutoCommit(false); // Bắt đầu giao dịch
 
-            // Update appointment
-            try (PreparedStatement stmt1 = conn.prepareStatement(
-                    "UPDATE appointment SET checkin_time = CURRENT_TIMESTAMP, status = 'confirmed' WHERE id = ?")) {
-                stmt1.setInt(1, appointmentId);
-                stmt1.executeUpdate();
-            }
-
-            // Update queue
-            try (PreparedStatement stmt2 = conn.prepareStatement(
-                    "UPDATE queue SET priority = ?, description = ?, status = 'waiting', updated_at = CURRENT_TIMESTAMP "
-                    + "WHERE appointment_id = ? AND is_deleted = FALSE")) {
-                stmt2.setInt(1, priority);
-                stmt2.setString(2, description);
-                stmt2.setInt(3, appointmentId);
-                stmt2.executeUpdate();
-            }
-
-            conn.commit();
-            return true;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        // Bước 1: Cập nhật appointment
+        String sqlAppointmentUpdate = "UPDATE appointment SET checkin_time = CURRENT_TIMESTAMP, status = 'confirmed' WHERE id = ?";
+        psAppointment = conn.prepareStatement(sqlAppointmentUpdate);
+        psAppointment.setInt(1, appointmentId);
+        int rowsUpdated = psAppointment.executeUpdate();
+        
+        if (rowsUpdated == 0) {
+            LOGGER.warning("Không tìm thấy appointment để cập nhật. ID: " + appointmentId);
+            conn.rollback();
             return false;
         }
+
+        // Bước 2: Kiểm tra bản ghi trong bảng queue
+        String sqlQueueCheck = "SELECT COUNT(*) FROM queue WHERE appointment_id = ?";
+        psQueueCheck = conn.prepareStatement(sqlQueueCheck);
+        psQueueCheck.setInt(1, appointmentId);
+        ResultSet rs = psQueueCheck.executeQuery();
+        rs.next();
+        boolean queueRecordExists = rs.getInt(1) > 0;
+        rs.close();
+        psQueueCheck.close();
+        
+        // Bước 3: INSERT hoặc UPDATE
+        String sqlQueueAction;
+        if (queueRecordExists) {
+            // Nếu bản ghi đã tồn tại, cập nhật nó
+            sqlQueueAction = "UPDATE queue SET priority = ?, description = ?, status = 'waiting', updated_at = CURRENT_TIMESTAMP WHERE appointment_id = ?";
+            psQueue = conn.prepareStatement(sqlQueueAction);
+            psQueue.setInt(1, priority);
+            psQueue.setString(2, description);
+            psQueue.setInt(3, appointmentId);
+        } else {
+            // Nếu chưa tồn tại, tạo mới
+            // ĐÃ SỬA: JOIN với bảng slot để lấy doctor_id
+            sqlQueueAction = "INSERT INTO queue (appointment_id, patient_id, doctor_id, slot_id, priority, description, status, created_at, updated_at) "
+                           + "SELECT a.id, a.patient_id, s.doctor_id, a.slot_id, ?, ?, 'waiting', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP "
+                           + "FROM appointment a JOIN slot s ON a.slot_id = s.id WHERE a.id = ?";
+            psQueue = conn.prepareStatement(sqlQueueAction);
+            psQueue.setInt(1, priority);
+            psQueue.setString(2, description);
+            psQueue.setInt(3, appointmentId);
+        }
+        
+        int queueRowsAffected = psQueue.executeUpdate();
+        
+        if (queueRowsAffected > 0) {
+            conn.commit(); // Hoàn tất giao dịch
+            success = true;
+            LOGGER.info("Check-in và xử lý hàng đợi thành công cho ID: " + appointmentId);
+        } else {
+            conn.rollback();
+            LOGGER.warning("Cập nhật/thêm hàng đợi thất bại cho ID: " + appointmentId);
+        }
+        
+    } catch (SQLException e) {
+        LOGGER.log(Level.SEVERE, "Lỗi khi thực hiện check-in: " + e.getMessage(), e);
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackEx) {
+                LOGGER.log(Level.SEVERE, "Lỗi khi rollback: " + rollbackEx.getMessage(), rollbackEx);
+            }
+        }
+    } finally {
+        try {
+            if (psAppointment != null) psAppointment.close();
+            if (psQueueCheck != null) psQueueCheck.close();
+            if (psQueue != null) psQueue.close();
+            if (conn != null) conn.setAutoCommit(true);
+            if (conn != null) conn.close();
+        } catch (SQLException closeEx) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi đóng tài nguyên: " + closeEx.getMessage(), closeEx);
+        }
     }
+    return success;
+}
 
     public void updateNoShowAppointments() {
 
