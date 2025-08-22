@@ -155,7 +155,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="${pageContext.request.contextPath}/patient/my-appointments">
                         <i class="bi bi-calendar-check"></i> Lịch khám bệnh
                     </a>
                 </li>
