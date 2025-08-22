@@ -291,7 +291,7 @@
             <ul class="list-unstyled components">
                 <% if (currentRole == User.Role.DOCTOR) { %>
                 <li><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
-                <li><a href="#"><i class="bi bi-calendar-check"></i> Lịch khám bệnh</a></li>
+                <li><a href="${pageContext.request.contextPath}/patient/my-appointments"><i class="bi bi-calendar-check"></i> Lịch khám bệnh</a></li>
                 <li class="active"><a href="${pageContext.request.contextPath}/doctor/patients"><i class="bi bi-people"></i> Hồ sơ bệnh nhân</a></li>
                 <li><a href="${pageContext.request.contextPath}/doctor/report"><i class="bi bi-bar-chart-fill"></i> Báo cáo thống kê</a></li>
                     <% } %>
