@@ -107,16 +107,7 @@
                 <% session.removeAttribute("message"); session.removeAttribute("messageType"); %>
             </c:if>
 
-            <!-- Hiển thị tiêu chí tìm kiếm -->
-            <div class="alert alert-info mt-3">
-                Kết quả tìm kiếm cho:
-                Mã lịch hẹn: ${appointmentCodeDisplay},
-                Mã bệnh nhân: ${patientCodeDisplay},
-                Bác sĩ: ${doctorDisplay},
-                Dịch vụ: ${servicesDisplay},
-                Trạng thái: ${statusDisplay},
-                Ngày: ${slotDateDisplay}
-            </div>
+        
 
             <!-- Form tìm kiếm sử dụng GET -->
             <form id="searchForm" action="${pageContext.request.contextPath}/appointments" method="get" class="mb-4 mt-3 p-3 border rounded shadow-sm bg-light">

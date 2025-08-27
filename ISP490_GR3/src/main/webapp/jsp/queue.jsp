@@ -1,9 +1,3 @@
-<%-- 
-    Document   : queue
-    Created on : Jul 14, 2025, 10:46:13 AM
-    Author     : FPT SHOP
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="java.util.List" %>
@@ -235,23 +229,19 @@
                             </tr>
                         </thead>
                         <tbody id="queueTableBody">
-                            <!-- Dữ liệu sẽ được tải bằng AJAX -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
                 <div class="pagination-container">
                     <div class="pagination-info" id="paginationInfo">
-                        <!-- Sẽ được cập nhật bằng AJAX -->
-                    </div>
+                        </div>
                     <nav aria-label="Page navigation">
                         <ul class="pagination justify-content-end" id="pagination">
-                            <!-- Sẽ được cập nhật bằng AJAX -->
-                        </ul>
+                            </ul>
                     </nav>
                 </div>
             </div>
             
-            <!-- Modal for confirming removal -->
             <div class="modal fade" id="confirmRemoveModal" tabindex="-1" aria-labelledby="confirmRemoveModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -291,7 +281,7 @@
                     
                     const confirmRemoveButton = document.getElementById('confirmRemoveButton');
                     let currentAppointmentCode = '';
-                    
+                
                     if (!tableBody) {
                         console.error("Không tìm thấy queueTableBody trong DOM!");
                         return;
@@ -299,13 +289,11 @@
                     
                     // Load initial queue
                     loadQueue();
-                    
                     // Search form submit with AJAX
                     searchForm.addEventListener("submit", function (e) {
                         e.preventDefault();
                         loadQueue();
                     });
-                    
                     // Reset filter with AJAX
                     resetFilterButton.addEventListener("click", function () {
                         const form = document.getElementById("searchForm");
@@ -340,7 +328,6 @@
                         const slotDate = slotDateElement.value.trim();
                         console.log("doctorId value:", doctorId);
                         console.log("slotDate value:", slotDate);
-                        
                         const query = new URLSearchParams({
                             doctorId: doctorId,
                             slotDate: slotDate
@@ -349,7 +336,6 @@
                         console.log("Generated URL:", url);
                         
                         tableBody.innerHTML = '<tr><td colspan="13" class="text-center"><div class="spinner">Đang tải...</div></td></tr>';
-                        
                         fetch(url, {
                             method: 'GET',
                             headers: {
@@ -407,26 +393,26 @@
                                         }
                                         
                                         row.innerHTML = '<td>' + (index + 1) + '</td>' +
-                                            '<td>' + (q.appointmentCode || '-') + '</td>' +
-                                            '<td>' + (q.slotDate || '-') + '</td>' +
-                                            '<td>' + (q.slotTimeRange || '-') + '</td>' +
-                                            '<td>' + (q.patientCode || '-') + '</td>' +
-                                            '<td>' + (q.patientName || '-') + '</td>' +
-                                            '<td>' + (q.patientPhone || '-') + '</td>' +
-                                            '<td>' + (q.serviceName || '-') + '</td>' +
-                                            '<td>' + (q.priority === 1 ? '<span class="badge bg-danger">Cao</span>' : '<span class="badge bg-secondary">Trung bình</span>') + '</td>' +
-                                            '<td>' + (q.checkinTime || '-') + '</td>' +
-                                            '<td>' + (q.doctorName || '-') + '</td>' +
-                                            '<td>' +
-                                            (q.status === 'waiting' ? '<span class="badge bg-warning text-dark">Đang chờ</span>' :
-                                             q.status === 'in_progress' ? '<span class="badge bg-info text-dark">Đang khám</span>' :
-                                             q.status === 'completed' ? '<span class="badge bg-success">Hoàn thành</span>' :
-                                             q.status === 'skipped' ? '<span class="badge bg-secondary">Bỏ qua</span>' :
-                                             q.status === 'rejected' ? '<span class="badge bg-danger">Từ chối</span>' : '-') +
-                                            '</td>' +
-                                            '<td>' +
-                                            '<button class="btn btn-sm btn-danger remove-btn" data-appointment-code="' + (q.appointmentCode || '') + '"><i class="bi bi-trash"></i> Gỡ</button>' +
-                                            '</td>';
+                                                '<td>' + (q.appointmentCode || '-') + '</td>' +
+                                                '<td>' + (q.slotDate || '-') + '</td>' +
+                                                '<td>' + (q.slotTimeRange || '-') + '</td>' +
+                                                '<td>' + (q.patientCode || '-') + '</td>' +
+                                                '<td>' + (q.patientName || '-') + '</td>' +
+                                                '<td>' + (q.patientPhone || '-') + '</td>' +
+                                                '<td>' + (q.serviceName || '-') + '</td>' +
+                                                '<td>' + (q.priority === 1 ? '<span class="badge bg-danger">Cao</span>' : '<span class="badge bg-secondary">Trung bình</span>') + '</td>' +
+                                                '<td>' + (q.checkinTime || '-') + '</td>' +
+                                                '<td>' + (q.doctorName || '-') + '</td>' +
+                                                '<td>' +
+                                                (q.status === 'waiting' ? '<span class="badge bg-warning text-dark">Đang chờ</span>' :
+                                                q.status === 'in_progress' ? '<span class="badge bg-info text-dark">Đang khám</span>' :
+                                                q.status === 'completed' ? '<span class="badge bg-success">Hoàn thành</span>' :
+                                                q.status === 'skipped' ? '<span class="badge bg-secondary">Bỏ qua</span>' :
+                                                q.status === 'rejected' ? '<span class="badge bg-danger">Từ chối</span>' : '-') +
+                                                '</td>' +
+                                                '<td>' +
+                                                '<button class="btn btn-sm btn-danger remove-btn" data-appointment-code="' + (q.appointmentCode || '') + '"><i class="bi bi-trash"></i> Gỡ</button>' +
+                                                '</td>';
                                         
                                         tableBody.appendChild(row);
                                     } catch (error) {
@@ -462,7 +448,6 @@
                         removeAppointment(currentAppointmentCode);
                         confirmRemoveModal.hide();
                     });
-                    
                     // Function to remove appointment
                     function removeAppointment(appointmentCode) {
                         const url = BASE_URL + "/api/queue/remove?appointmentCode=" + encodeURIComponent(appointmentCode);

@@ -105,12 +105,7 @@
                 <% session.removeAttribute("message"); session.removeAttribute("messageType"); %>
             </c:if>
 
-            <!-- Hiển thị tiêu chí tìm kiếm -->
-            <div class="alert alert-info mt-3">
-                Kết quả tìm kiếm cho:
-                Bác sĩ: ${doctorDisplay},
-                Ngày: ${slotDateDisplay}
-            </div>
+            
 
             <form id="searchForm" action="${pageContext.request.contextPath}/slot" method="get" class="mb-4 mt-3 p-3 border rounded shadow-sm bg-light">
                 <div class="row mb-3">
