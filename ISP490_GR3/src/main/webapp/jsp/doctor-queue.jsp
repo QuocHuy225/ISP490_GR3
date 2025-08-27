@@ -1,4 +1,3 @@
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="com.mycompany.isp490_gr3.model.User" %>
 <%@ page import="java.util.List" %>
@@ -31,6 +30,7 @@
                 /* Không có nền cụ thể, giữ màu mặc định của hàng bảng */
             }
             .separator {
+             
                 background-color: #e9ecef; /* Màu xám nhạt cho đường phân cách */
                 border-top: 3px solid #007bff !important;
                 border-bottom: 3px solid #007bff !important;
@@ -48,7 +48,8 @@
                 animation: .75s linear infinite spinner-border;
             }
             @keyframes spinner-border {
-                to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+                to { -webkit-transform: rotate(360deg);
+                transform: rotate(360deg); }
             }
         </style>
     </head>
@@ -57,7 +58,7 @@
             <div class="sidebar-header">
                 <h3>MENU</h3>
             </div>
-            <ul class="list-unstyled components">             
+            <ul class="list-unstyled components">      
                 <li><a href="${pageContext.request.contextPath}/homepage"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
                 <li class="active"><a href="${pageContext.request.contextPath}/doctor/queue"><i class="bi bi-calendar-check"></i> Lịch khám bệnh</a></li>
                 <li><a href="${pageContext.request.contextPath}/doctor/patients"><i class="bi bi-people"></i> Hồ sơ bệnh nhân</a></li>
@@ -156,7 +157,8 @@
                     <div class="col-md-6">
                         <label for="slotDate" class="form-label">Ngày hẹn</label>
                         <input type="date" class="form-control" id="slotDate" name="slotDate"
-                               value="${empty slotDate ? '' : slotDate}">
+                               value="${empty slotDate ?
+'' : slotDate}">
                     </div>
                 </div>
                 <div class="d-flex justify-content-end gap-2">
@@ -202,7 +204,7 @@
                         </div>
                     <nav aria-label="Page navigation">
                         <ul class="pagination justify-content-end" id="pagination">
-                            </ul>
+                        </ul>
                     </nav>
                 </div>
             </div>
@@ -329,13 +331,11 @@
                         document.getElementById("slotDate").value = "";
                         loadQueue(1, BASE_URL_FROM_JSP);
                     });
-
                     // Chuyển đổi sidebar 
                     document.getElementById('sidebarCollapse').addEventListener('click', function () {
                         document.getElementById('sidebar').classList.toggle('active');
                         document.getElementById('content').classList.toggle('active');
                     });
-
                     // Xử lý Modal Điều chỉnh trạng thái
                     const statusModal = document.getElementById('statusModal');
                     if (statusModal) {
@@ -350,15 +350,17 @@
                             modalQueueIdInput.value = queueId;
                             newStatusSelect.value = currentStatus;
                         });
-
                         const saveStatusButton = document.getElementById('saveStatusButton');
                         if (saveStatusButton) {
                             saveStatusButton.addEventListener('click', function() {
-                                const queueId = document.getElementById('modalQueueId').value;
-                                const newStatus = document.getElementById('newStatusSelect').value;
-                                
-                                // Gọi hàm cập nhật trạng thái đã định nghĩa trong queue-doctor.js
-                                window.performStatusUpdate(queueId, newStatus, BASE_URL_FROM_JSP, statusModal);
+                                // Thêm bước xác nhận
+                                if (confirm("Bạn có chắc chắn muốn cập nhật trạng thái này không?")) {
+                                    const queueId = document.getElementById('modalQueueId').value;
+                                    const newStatus = document.getElementById('newStatusSelect').value;
+                                    
+                                    // Gọi hàm cập nhật trạng thái đã định nghĩa trong queue-doctor.js
+                                    window.performStatusUpdate(queueId, newStatus, BASE_URL_FROM_JSP, statusModal);
+                                }
                             });
                         }
                     }
