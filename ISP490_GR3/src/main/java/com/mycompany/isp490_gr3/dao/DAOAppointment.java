@@ -1441,196 +1441,101 @@ public boolean checkinAppointment(int appointmentId, int priority, String descri
      * @return true nếu đổi thành công, false nếu thất bại
      */
     public boolean changeSlot(int appointmentId, int newSlotId) throws SQLException {
-        Connection conn = null;
-        try {
-            conn = DBContext.getConnection();
-            conn.setAutoCommit(false);
-            LOGGER.info("Starting changeSlot: appointmentId=" + appointmentId + ", newSlotId=" + newSlotId);
+    Connection conn = null;
+    try {
+        conn = DBContext.getConnection();
+        conn.setAutoCommit(false);
+        LOGGER.info("Bắt đầu changeSlot: appointmentId=" + appointmentId + ", newSlotId=" + newSlotId);
 
-            // Bước 1: Lấy thông tin lịch hẹn hiện tại và kiểm tra check-in
-            String getCurrentAppointmentSql = "SELECT patient_id, services_id, slot_id, checkin_time FROM appointment WHERE id = ? AND is_deleted = FALSE";
-            Integer patientId = null; // Dùng Integer để xử lý NULL
-            Integer servicesId = null;
-            int currentSlotId = -1;
-            boolean isCheckedIn = false;
-            LOGGER.log(Level.INFO, "Step 1: Querying current appointment info for ID: {0}", appointmentId);
-            try (PreparedStatement psGet = conn.prepareStatement(getCurrentAppointmentSql)) {
-                psGet.setInt(1, appointmentId);
-                try (ResultSet rs = psGet.executeQuery()) {
-                    if (rs.next()) {
-                        patientId = rs.getObject("patient_id") != null ? rs.getInt("patient_id") : null;
-                        servicesId = rs.getObject("services_id") != null ? rs.getInt("services_id") : null;
-                        currentSlotId = rs.getInt("slot_id");
-                        isCheckedIn = rs.getObject("checkin_time") != null;
-                        LOGGER.info("Step 1 completed: patientId=" + (patientId == null ? "NULL" : patientId)
-                                + ", servicesId=" + (servicesId == null ? "NULL" : servicesId)
-                                + ", currentSlotId=" + currentSlotId + ", isCheckedIn=" + isCheckedIn);
-                        if (patientId == null) {
-                            conn.rollback();
-                            LOGGER.warning("Step 1 failed: Lịch hẹn " + appointmentId + " không có bệnh nhân, không thể đổi slot");
-                            return false;
-                        }
-                        if (isCheckedIn) {
-                            conn.rollback();
-                            LOGGER.warning("Step 1 failed: Lịch hẹn " + appointmentId + " đã check-in, không thể đổi slot");
-                            return false;
-                        }
-                        if (servicesId == null) {
-                            conn.rollback();
-                            LOGGER.warning("Step 1 failed: Lịch hẹn " + appointmentId + " không có dịch vụ, không thể đổi slot");
-                            return false;
-                        }
-                    } else {
+        // Bước 1: Lấy thông tin lịch hẹn cũ và khóa bản ghi
+        String getCurrentAppointmentSql = "SELECT patient_id, services_id, slot_id, checkin_time FROM appointment WHERE id = ? AND is_deleted = FALSE FOR UPDATE";
+        Integer patientId = null;
+        Integer servicesId = null;
+        int currentSlotId = -1;
+        boolean isCheckedIn = false;
+        
+        try (PreparedStatement psGet = conn.prepareStatement(getCurrentAppointmentSql)) {
+            psGet.setInt(1, appointmentId);
+            try (ResultSet rs = psGet.executeQuery()) {
+                if (rs.next()) {
+                    patientId = rs.getObject("patient_id") != null ? rs.getInt("patient_id") : null;
+                    servicesId = rs.getObject("services_id") != null ? rs.getInt("services_id") : null;
+                    currentSlotId = rs.getInt("slot_id");
+                    isCheckedIn = rs.getObject("checkin_time") != null;
+                    
+                    if (patientId == null || isCheckedIn || servicesId == null) {
                         conn.rollback();
-                        LOGGER.warning("Step 1 failed: Lịch hẹn không tồn tại hoặc đã bị xóa: " + appointmentId);
+                        LOGGER.warning("Step 1 failed: Lịch hẹn không có bệnh nhân, đã check-in, hoặc không có dịch vụ. ID: " + appointmentId);
                         return false;
                     }
-                }
-            } catch (SQLException e) {
-                LOGGER.severe("Step 1 error: SQLException in querying appointment info: " + e.getMessage());
-                throw e;
-            }
-
-            // Kiểm tra nếu slot mới giống slot hiện tại
-            if (newSlotId == currentSlotId) {
-                conn.rollback();
-                LOGGER.warning("Step 2 skipped: newSlotId " + newSlotId + " giống currentSlotId " + currentSlotId + ", không cần đổi");
-                return false;
-            }
-
-            // Bước 2: Tìm một lịch hẹn trống trong slot mới
-            String findEmptyAppointmentSql = "SELECT id FROM appointment WHERE slot_id = ? AND patient_id IS NULL AND status = 'pending' AND is_deleted = FALSE LIMIT 1 FOR UPDATE";
-            int emptyAppointmentId = -1;
-            LOGGER.info("Step 2: Querying empty appointment for newSlotId: " + newSlotId);
-            try (PreparedStatement psFind = conn.prepareStatement(findEmptyAppointmentSql)) {
-                psFind.setQueryTimeout(10); // Giới hạn 10 giây để tránh lock timeout
-                psFind.setInt(1, newSlotId);
-                try (ResultSet rs = psFind.executeQuery()) {
-                    if (rs.next()) {
-                        emptyAppointmentId = rs.getInt("id");
-                        LOGGER.info("Step 2 completed: Found empty appointment ID: " + emptyAppointmentId);
-                    } else {
-                        conn.rollback();
-                        LOGGER.warning("Step 2 failed: Không tìm thấy lịch hẹn trống cho slotId: " + newSlotId);
-                        return false;
-                    }
-                }
-            } catch (SQLException e) {
-                LOGGER.severe("Step 2 error: SQLException in finding empty appointment: " + e.getMessage());
-                throw e;
-            }
-
-            // Bước 3: Gỡ bệnh nhân khỏi lịch hẹn hiện tại
-            LOGGER.info("Step 3: Unassigning patient from appointmentId: " + appointmentId);
-            String updateAppointmentSql = "UPDATE appointment SET patient_id = NULL, services_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_deleted = FALSE";
-            String softDeleteQueueSql = "UPDATE queue SET is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP WHERE appointment_id = ? AND is_deleted = FALSE";
-            boolean unassignSuccess = false;
-            try (PreparedStatement psUpdate = conn.prepareStatement(updateAppointmentSql)) {
-                psUpdate.setInt(1, appointmentId);
-                int affectedRows = psUpdate.executeUpdate();
-                unassignSuccess = affectedRows > 0;
-                LOGGER.info("Step 3: Update appointment result: affectedRows=" + affectedRows);
-            } catch (SQLException e) {
-                LOGGER.severe("Step 3 error: SQLException in updating appointment: " + e.getMessage());
-                throw e;
-            }
-            if (!unassignSuccess) {
-                conn.rollback();
-                LOGGER.warning("Step 3 failed: Không thể gỡ bệnh nhân khỏi lịch hẹn: " + appointmentId);
-                return false;
-            }
-            try (PreparedStatement psQueue = conn.prepareStatement(softDeleteQueueSql)) {
-                psQueue.setInt(1, appointmentId);
-                int queueRows = psQueue.executeUpdate();
-                LOGGER.info("Step 3: Soft delete queue result: affectedRows=" + queueRows);
-            } catch (SQLException e) {
-                LOGGER.severe("Step 3 error: SQLException in soft deleting queue: " + e.getMessage());
-                throw e;
-            }
-
-            // Bước 4: Gán bệnh nhân vào lịch hẹn trống trong slot mới
-            LOGGER.info("Step 4: Assigning patient to emptyAppointmentId: " + emptyAppointmentId + ", patientId=" + patientId + ", servicesId=" + servicesId);
-            String assignAppointmentSql = "UPDATE appointment SET patient_id = ?, services_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_deleted = FALSE";
-            boolean assignSuccess = false;
-            try (PreparedStatement psAssign = conn.prepareStatement(assignAppointmentSql)) {
-                psAssign.setInt(1, patientId);
-                psAssign.setInt(2, servicesId);
-                psAssign.setInt(3, emptyAppointmentId);
-                int affectedRows = psAssign.executeUpdate();
-                assignSuccess = affectedRows > 0;
-                LOGGER.info("Step 4: Update appointment result: affectedRows=" + affectedRows);
-            } catch (SQLException e) {
-                LOGGER.severe("Step 4 error: SQLException in updating appointment: " + e.getMessage());
-                throw e;
-            }
-            if (!assignSuccess) {
-                conn.rollback();
-                LOGGER.warning("Step 4 failed: Không thể gán bệnh nhân vào lịch hẹn trống: " + emptyAppointmentId);
-                return false;
-            }
-
-            // Lấy slot_id và doctor_id để thêm vào queue
-            String getSlotSql = "SELECT s.id AS slot_id, s.doctor_id FROM appointment a JOIN slot s ON a.slot_id = s.id WHERE a.id = ?";
-            int slotId = -1;
-            int doctorId = -1;
-            try (PreparedStatement psSlot = conn.prepareStatement(getSlotSql)) {
-                psSlot.setInt(1, emptyAppointmentId);
-                try (ResultSet rs = psSlot.executeQuery()) {
-                    if (rs.next()) {
-                        slotId = rs.getInt("slot_id");
-                        doctorId = rs.getInt("doctor_id");
-                        LOGGER.info("Step 4: Fetched slot info: slotId=" + slotId + ", doctorId=" + doctorId);
-                    } else {
-                        conn.rollback();
-                        LOGGER.warning("Step 4 failed: Không tìm thấy slot cho emptyAppointmentId: " + emptyAppointmentId);
-                        return false;
-                    }
-                }
-            } catch (SQLException e) {
-                LOGGER.severe("Step 4 error: SQLException in fetching slot info: " + e.getMessage());
-                throw e;
-            }
-
-            // Thêm vào hàng đợi (queue)
-            String insertQueueSql = "INSERT INTO queue (appointment_id, patient_id, doctor_id, slot_id, queue_type, priority, created_at) VALUES (?, ?, ?, ?, 'main', 0, CURRENT_TIMESTAMP)";
-            try (PreparedStatement psQueue = conn.prepareStatement(insertQueueSql)) {
-                psQueue.setInt(1, emptyAppointmentId);
-                psQueue.setInt(2, patientId);
-                psQueue.setInt(3, doctorId);
-                psQueue.setInt(4, slotId);
-                int queueRows = psQueue.executeUpdate();
-                LOGGER.info("Step 4: Insert queue result: affectedRows=" + queueRows);
-            } catch (SQLException e) {
-                LOGGER.severe("Step 4 error: SQLException in inserting queue: " + e.getMessage());
-                throw e;
-            }
-
-            conn.commit();
-            LOGGER.info("changeSlot completed successfully: appointmentId=" + appointmentId + " moved to newSlotId=" + newSlotId);
-            return true;
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "SQLException in changeSlot: appointmentId=" + appointmentId + ", newSlotId=" + newSlotId + ", error=" + e.getMessage(), e);
-            if (conn != null) {
-                try {
+                } else {
                     conn.rollback();
-                    LOGGER.info("Rolled back transaction for changeSlot");
-                } catch (SQLException ex) {
-                    LOGGER.log(Level.SEVERE, "Lỗi khi rollback: " + ex.getMessage(), ex);
-                }
-            }
-            throw e;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                    LOGGER.info("Connection closed");
-                } catch (SQLException ex) {
-                    LOGGER.log(Level.SEVERE, "Lỗi khi đóng connection: " + ex.getMessage(), ex);
+                    LOGGER.warning("Step 1 failed: Lịch hẹn không tồn tại hoặc đã bị xóa: " + appointmentId);
+                    return false;
                 }
             }
         }
+        
+        if (newSlotId == currentSlotId) {
+            conn.rollback();
+            LOGGER.info("Step 2 skipped: newSlotId giống currentSlotId, không cần đổi");
+            return true;
+        }
+
+        // Bước 2: Cập nhật trực tiếp slot_id cho lịch hẹn ban đầu.
+        String updateAppointmentSql = "UPDATE appointment SET slot_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_deleted = FALSE";
+        try (PreparedStatement psUpdate = conn.prepareStatement(updateAppointmentSql)) {
+            psUpdate.setInt(1, newSlotId);
+            psUpdate.setInt(2, appointmentId);
+            if (psUpdate.executeUpdate() == 0) {
+                conn.rollback();
+                LOGGER.warning("Không thể cập nhật slot cho lịch hẹn: " + appointmentId);
+                return false;
+            }
+        }
+
+        // Bước 3: Tạo lại một bản ghi lịch hẹn trống cho slot ban đầu.
+        String createEmptyAppointmentSql = "INSERT INTO appointment (slot_id, appointment_code, status, payment_status, is_deleted, created_at) VALUES (?, ?, 'pending', 'unpaid', FALSE, CURRENT_TIMESTAMP)";
+        String newEmptyCode = generateUniqueAppointmentCode(conn);
+        try (PreparedStatement psInsert = conn.prepareStatement(createEmptyAppointmentSql)) {
+            psInsert.setInt(1, currentSlotId);
+            psInsert.setString(2, newEmptyCode);
+            psInsert.executeUpdate();
+        }
+
+        // Bước 4: Cập nhật lại hàng đợi (queue) với slot_id mới.
+        String updateQueueSql = "UPDATE queue SET slot_id = ?, updated_at = CURRENT_TIMESTAMP WHERE appointment_id = ? AND is_deleted = FALSE";
+        try (PreparedStatement psQueueUpdate = conn.prepareStatement(updateQueueSql)) {
+            psQueueUpdate.setInt(1, newSlotId);
+            psQueueUpdate.setInt(2, appointmentId);
+            psQueueUpdate.executeUpdate();
+        }
+
+        conn.commit();
+        LOGGER.info("Đã chuyển slot thành công: appointmentId=" + appointmentId + " từ slot=" + currentSlotId + " sang slot=" + newSlotId);
+        return true;
+    } catch (SQLException e) {
+        LOGGER.log(Level.SEVERE, "Lỗi khi thay đổi slot: " + e.getMessage(), e);
+        if (conn != null) {
+            try {
+                conn.rollback();
+                LOGGER.info("Đã rollback giao dịch cho changeSlot");
+            } catch (SQLException ex) {
+                LOGGER.log(Level.SEVERE, "Lỗi khi rollback: " + ex.getMessage(), ex);
+            }
+        }
+        throw e;
+    } finally {
+        if (conn != null) {
+            try {
+                conn.setAutoCommit(true);
+                conn.close();
+            } catch (SQLException ex) {
+                LOGGER.log(Level.SEVERE, "Lỗi khi đóng connection: " + ex.getMessage(), ex);
+            }
+        }
     }
+}
 
     public boolean isSlotAssigned(int slotId) throws SQLException {
         String sql = "SELECT s.max_patients, "
